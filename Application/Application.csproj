@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Domain/Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="Mapster" Version="7.4.0" />
+    <PackageReference Include="MediatR" Version="14.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Exceptios/" />
+    <Folder Include="Features/Associations/Queries/" />
+    <Folder Include="Features/Identity/" />
+    <Folder Include="Features/Identity/Roles/" />
+    <Folder Include="Features/Identity/Roles/Commands/" />
+    <Folder Include="Features/Identity/Roles/Queries/" />
+    <Folder Include="Features/Identity/Token/" />
+    <Folder Include="Features/Identity/Token/Queries/" />
+    <Folder Include="Features/Identity/Users/" />
+    <Folder Include="Features/Identity/Users/Commands/" />
+    <Folder Include="Features/Identity/Users/Queries/" />
+    <Folder Include="Features/Tenancy/" />
+    <Folder Include="Features/Tenancy/Commands/" />
+    <Folder Include="Features/Tenancy/Queries/" />
+    <Folder Include="Pipelines/" />
+  </ItemGroup>
+
+</Project>
