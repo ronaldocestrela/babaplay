@@ -15,10 +15,10 @@ public class TenantService(IMultiTenantStore<BabaPlayTenantInfo> tenantStore, Ap
 
     public async Task<string> ActivateAsync(string id)
     {
-        var tenantInDb = await _tenantStore.GetByIdentifierAsync(id);
+        var tenantInDb = await _tenantStore.TryGetAsync(id);
         tenantInDb.IsActive = true;
 
-        await _tenantStore.UpdateAsync(tenantInDb);
+        await _tenantStore.TryUpdateAsync(tenantInDb);
         return tenantInDb.Identifier;
     }
 
@@ -37,13 +37,13 @@ public class TenantService(IMultiTenantStore<BabaPlayTenantInfo> tenantStore, Ap
             ValidUpTo = createTenant.ValidUpTo
         };
 
-        await _tenantStore.AddAsync(newTenant);
+        await _tenantStore.TryAddAsync(newTenant);
 
         // Seeding tenant data
         using var scope = _serviceProvider.CreateScope();
 
         _serviceProvider.GetRequiredService<IMultiTenantContextSetter>()
-            .MultiTenantContext = new MultiTenantContext<BabaPlayTenantInfo>(newTenant);
+            .MultiTenantContext = new MultiTenantContext<BabaPlayTenantInfo>();
         await scope.ServiceProvider.GetRequiredService<ApplicationDbSeeder>()
             .InitializeDatabaseAsync(ct);
 
@@ -52,16 +52,16 @@ public class TenantService(IMultiTenantStore<BabaPlayTenantInfo> tenantStore, Ap
 
     public async Task<string> DeactivateAsync(string id)
     {
-        var tenantInDb = await _tenantStore.GetByIdentifierAsync(id);
+        var tenantInDb = await _tenantStore.TryGetAsync(id);
         tenantInDb.IsActive = false;
 
-        await _tenantStore.UpdateAsync(tenantInDb);
+        await _tenantStore.TryUpdateAsync(tenantInDb);
         return tenantInDb.Identifier;
     }
 
     public async Task<TenantResponse> GetTenantByIdAsync(string id)
     {
-        var tenantInDb = await _tenantStore.GetByIdentifierAsync(id);
+        var tenantInDb = await _tenantStore.TryGetAsync(id);
 
         #region Manual Mapping
         //var tenantResponse = new TenantResponse
@@ -90,11 +90,11 @@ public class TenantService(IMultiTenantStore<BabaPlayTenantInfo> tenantStore, Ap
 
     public async Task<string> UpdateSubscriptionAsync(UpdateTenantSubscriptionRequest updateTenantSubscription)
     {
-        var tenantInDb = await _tenantStore.GetByIdentifierAsync(updateTenantSubscription.TenantId);
+        var tenantInDb = await _tenantStore.TryGetAsync(updateTenantSubscription.TenantId);
 
         tenantInDb.ValidUpTo = updateTenantSubscription.NewExpiryDate;
 
-        await _tenantStore.UpdateAsync(tenantInDb);
+        await _tenantStore.TryUpdateAsync(tenantInDb);
 
         return tenantInDb.Identifier;
     }

@@ -19,7 +19,7 @@ public static class AssociationFeature
     public const string Roles = nameof(Roles);
     public const string UserRoles = nameof(UserRoles);
     public const string RoleClaims = nameof(RoleClaims);
-    public const string Schools = nameof(Schools);
+    public const string Associations = nameof(Associations);
     public const string Tokens = nameof(Tokens);
 }
 
@@ -55,10 +55,10 @@ public static class AssociationPermissions
         new AssociationPermission(AssociationAction.Read, AssociationFeature.RoleClaims, "Read Role Claims/Permissions", "SystemAccess"),
         new AssociationPermission(AssociationAction.Update, AssociationFeature.RoleClaims, "Update Role Claims/Permissions", "SystemAccess"),
 
-        new AssociationPermission(AssociationAction.Read, AssociationFeature.Schools, "Read Schools", "Academics", IsBasic: true),
-        new AssociationPermission(AssociationAction.Create, AssociationFeature.Schools, "Create Schools", "Academics"),
-        new AssociationPermission(AssociationAction.Update, AssociationFeature.Schools, "Update Schools", "Academics"),
-        new AssociationPermission(AssociationAction.Delete, AssociationFeature.Schools, "Delete Schools", "Academics"),
+        new AssociationPermission(AssociationAction.Read, AssociationFeature.Associations, "Read Associations", "Academics", IsBasic: true),
+        new AssociationPermission(AssociationAction.Create, AssociationFeature.Associations, "Create Associations", "Academics"),
+        new AssociationPermission(AssociationAction.Update, AssociationFeature.Associations, "Update Associations", "Academics"),
+        new AssociationPermission(AssociationAction.Delete, AssociationFeature.Associations, "Delete Associations", "Academics"),
 
         new AssociationPermission(AssociationAction.RefreshToken, AssociationFeature.Tokens, "Generate Refresh Token", "SystemAccess", IsBasic: true)
     ];

@@ -1,0 +1,14 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: babaplay-sqlserver
+    ports:
+      - "3713:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Your_password123"
+    volumes:
+      - babaplay_sqlserver_data:/var/opt/mssql
+
+volumes:
+  babaplay_sqlserver_data:
