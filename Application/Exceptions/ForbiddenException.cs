@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace Application.Exceptios;
+namespace Application.Exceptions;
 
 public class ForbiddenException(List<string> errorMessages = default, HttpStatusCode statusCode = HttpStatusCode.Forbidden) : Exception
 {

@@ -18,14 +18,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Exceptios/" />
+    <Folder Include="Exceptions/" />
     <Folder Include="Features/Associations/Queries/" />
-    <Folder Include="Features/Identity/" />
     <Folder Include="Features/Identity/Roles/" />
     <Folder Include="Features/Identity/Roles/Commands/" />
     <Folder Include="Features/Identity/Roles/Queries/" />
-    <Folder Include="Features/Identity/Token/" />
-    <Folder Include="Features/Identity/Token/Queries/" />
+    <Folder Include="Features/Identity/Tokens/" />
     <Folder Include="Features/Identity/Users/" />
     <Folder Include="Features/Identity/Users/Commands/" />
     <Folder Include="Features/Identity/Users/Queries/" />

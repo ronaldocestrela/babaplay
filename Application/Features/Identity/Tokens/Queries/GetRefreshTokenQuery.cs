@@ -1,7 +1,7 @@
 using Application.Wrappers;
 using MediatR;
 
-namespace Application.Features.Identity.Token.Queries;
+namespace Application.Features.Identity.Tokens.Queries;
 
 public class GetRefreshTokenQuery : IRequest<IResponseWrapper>
 {

@@ -1,7 +1,7 @@
 using System;
 using System.Net;
 
-namespace Application.Exceptios;
+namespace Application.Exceptions;
 
 public class NotFoundException(List<string> errorMessages = default, HttpStatusCode statusCode = HttpStatusCode.NotFound) : Exception
 {

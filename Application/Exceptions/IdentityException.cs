@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace Application.Exceptios;
+namespace Application.Exceptions;
 
 public class IdentityException(List<string> errorMessages = default, HttpStatusCode statusCode = HttpStatusCode.InternalServerError) : Exception
 {

@@ -1,4 +1,4 @@
-namespace Application.Features.Identity.Token;
+namespace Application.Features.Identity.Tokens;
 
 public class RefreshTokenRequest
 {

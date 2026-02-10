@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace Application.Exceptios;
+namespace Application.Exceptions;
 
 public class UnauthorizedException(List<string> errorMessages = default, HttpStatusCode statusCode = HttpStatusCode.Unauthorized) : Exception
 {
