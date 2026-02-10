@@ -47,8 +47,11 @@ public class TenantDbSeeder(TenantDbContext tenantDbContext, IServiceProvider se
     {
         using var scope = _serviceProvider.CreateScope();
 
-        _serviceProvider.GetRequiredService<IMultiTenantContextSetter>()
-            .MultiTenantContext = new MultiTenantContext<BabaPlayTenantInfo>();
+        scope.ServiceProvider.GetRequiredService<IMultiTenantContextSetter>()
+            .MultiTenantContext = new MultiTenantContext<BabaPlayTenantInfo>
+            {
+                TenantInfo = currentTenant
+            };
 
         await scope.ServiceProvider.GetRequiredService<ApplicationDbSeeder>()
             .InitializeDatabaseAsync(ct);

@@ -3,6 +3,7 @@ using Application.Features.Identity.Roles;
 using Application.Features.Identity.Tokens;
 using Application.Features.Identity.Users;
 using Application.Features.Associations;
+using Application.Features.Associados;
 using Application.Features.Tenancy;
 using Application.Wrappers;
 using Finbuckle.MultiTenant;
@@ -31,6 +32,7 @@ using System.Net;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
+using Infrastructure.Associados;
 
 namespace Infrastructure;
 
@@ -52,6 +54,7 @@ public static class StartUp
             .AddTransient<ApplicationDbSeeder>()
             .AddTransient<ITenantService, TenantService>()
             .AddTransient<IAssociationService, AssociationService>()
+            .AddTransient<IAssociadoService, AssociadoService>()
             .AddIdentityService()
             .AddPermissions()
             .AddOpenApiDocumentation(configuration);

@@ -20,6 +20,7 @@ public static class AssociationFeature
     public const string UserRoles = nameof(UserRoles);
     public const string RoleClaims = nameof(RoleClaims);
     public const string Associations = nameof(Associations);
+    public const string Associados = nameof(Associados);
     public const string Tokens = nameof(Tokens);
 }
 
@@ -60,7 +61,12 @@ public static class AssociationPermissions
         new AssociationPermission(AssociationAction.Update, AssociationFeature.Associations, "Update Associations", "Academics"),
         new AssociationPermission(AssociationAction.Delete, AssociationFeature.Associations, "Delete Associations", "Academics"),
 
-        new AssociationPermission(AssociationAction.RefreshToken, AssociationFeature.Tokens, "Generate Refresh Token", "SystemAccess", IsBasic: true)
+        new AssociationPermission(AssociationAction.RefreshToken, AssociationFeature.Tokens, "Generate Refresh Token", "SystemAccess", IsBasic: true),
+
+        new AssociationPermission(AssociationAction.Read, AssociationFeature.Associados, "Read Associados", "Academics", IsBasic: true),
+        new AssociationPermission(AssociationAction.Create, AssociationFeature.Associados, "Create Associados", "Academics"),
+        new AssociationPermission(AssociationAction.Update, AssociationFeature.Associados, "Update Associados", "Academics"),
+        new AssociationPermission(AssociationAction.Delete, AssociationFeature.Associados, "Delete Associados", "Academics")
     ];
 
     public static IReadOnlyList<AssociationPermission> All { get; } 

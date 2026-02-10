@@ -82,4 +82,65 @@ internal class DbConfigurations
                 .HasMaxLength(60);
         }
     }
+
+    internal class AssociadoConfig : IEntityTypeConfiguration<Associado>
+    {
+        public void Configure(EntityTypeBuilder<Associado> builder)
+        {
+            builder
+                .ToTable("Associados", "Academics")
+                .IsMultiTenant();
+
+            builder
+                .Property(a => a.FullName)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            builder
+                .Property(a => a.CPF)
+                .IsRequired()
+                .HasMaxLength(11);
+
+            builder
+                .HasIndex(a => a.CPF);
+
+            builder
+                .Property(a => a.PhoneNumber)
+                .IsRequired()
+                .HasMaxLength(20);
+
+            builder
+                .Property(a => a.Address)
+                .IsRequired()
+                .HasMaxLength(300);
+
+            builder
+                .Property(a => a.City)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            builder
+                .Property(a => a.State)
+                .IsRequired()
+                .HasMaxLength(2);
+
+            builder
+                .Property(a => a.ZipCode)
+                .IsRequired()
+                .HasMaxLength(10);
+
+            builder
+                .Property(a => a.Position)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            builder
+                .Property(a => a.UserId)
+                .IsRequired();
+
+            builder
+                .HasIndex(a => a.UserId)
+                .IsUnique();
+        }
+    }
 }

@@ -15,4 +15,5 @@ public class ApplicationDbContext : BaseDbContext
     }
 
     public DbSet<Association> Associations => Set<Association>();
+    public DbSet<Associado> Associados => Set<Associado>();
 }
