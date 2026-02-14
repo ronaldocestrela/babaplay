@@ -42,8 +42,8 @@ public class TenantService(IMultiTenantStore<BabaPlayTenantInfo> tenantStore, Ap
         // Seeding tenant data
         using var scope = _serviceProvider.CreateScope();
 
-        _serviceProvider.GetRequiredService<IMultiTenantContextSetter>()
-            .MultiTenantContext = new MultiTenantContext<BabaPlayTenantInfo>();
+        scope.ServiceProvider.GetRequiredService<IMultiTenantContextSetter>()
+            .MultiTenantContext = new MultiTenantContext<BabaPlayTenantInfo> { TenantInfo = newTenant };
         await scope.ServiceProvider.GetRequiredService<ApplicationDbSeeder>()
             .InitializeDatabaseAsync(ct);
 
