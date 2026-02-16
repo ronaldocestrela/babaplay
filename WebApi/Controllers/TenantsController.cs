@@ -3,6 +3,7 @@ using Application.Features.Tenancy.Commands;
 using Application.Features.Tenancy.Queries;
 using Infrastructure.Constants;
 using Infrastructure.Identity.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers;
@@ -14,6 +15,18 @@ public class TenantsController : BaseApiController
     public async Task<IActionResult> CreateTenantAsync([FromBody] CreateTenantRequest createTenantRequest)
     {
         var response = await Sender.Send(new CreateTenantCommand { CreateTenant = createTenantRequest });
+        if (response.IsSuccessful)
+        {
+            return Ok(response);
+        }
+        return BadRequest(response);
+    }
+
+    [HttpPost("signup")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SignupAsync([FromBody] SignupRequest signupRequest)
+    {
+        var response = await Sender.Send(new SignupCommand { SignupRequest = signupRequest });
         if (response.IsSuccessful)
         {
             return Ok(response);

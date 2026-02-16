@@ -7,78 +7,100 @@ using Infrastructure.Identity;
 using Infrastructure.Identity.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Associados;
 
 public class AssociadoService(
     ApplicationDbContext context,
-    UserManager<ApplicationUser> userManager) : IAssociadoService
+    UserManager<ApplicationUser> userManager,
+    ILogger<AssociadoService> logger) : IAssociadoService
 {
     private readonly ApplicationDbContext _context = context;
     private readonly UserManager<ApplicationUser> _userManager = userManager;
+    private readonly ILogger<AssociadoService> _logger = logger;
 
     public async Task<string> CreateAsync(CreateAssociadoRequest request)
     {
-        if (request.Password != request.ConfirmPassword)
+        _logger.LogInformation("CreateAsync called for Email={Email}, CPF={CPF}", request?.Email, request?.CPF);
+
+        try
         {
-            throw new ConflictException(["Senhas não conferem."]);
+            if (request.Password != request.ConfirmPassword)
+            {
+                throw new ConflictException(["Senhas não conferem."]);
+            }
+
+            if (await _userManager.FindByEmailAsync(request.Email) is not null)
+            {
+                throw new ConflictException(["Email já está em uso."]);
+            }
+
+            if (await _context.Associados.AnyAsync(a => a.CPF == request.CPF))
+            {
+                throw new ConflictException(["CPF já cadastrado."]);
+            }
+
+            // Extract first/last name from FullName
+            var nameParts = (request.FullName ?? string.Empty).Trim().Split(' ', 2);
+            var firstName = nameParts.Length > 0 ? nameParts[0] : string.Empty;
+            var lastName = nameParts.Length > 1 ? nameParts[1] : firstName;
+
+            // Create ApplicationUser
+            var newUser = new ApplicationUser
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                Email = request.Email,
+                UserName = request.Email,
+                PhoneNumber = request.PhoneNumber,
+                IsActive = true,
+                EmailConfirmed = true
+            };
+
+            var identityResult = await _userManager.CreateAsync(newUser, request.Password);
+            if (!identityResult.Succeeded)
+            {
+                throw new IdentityException(IdentityHelper.GetIdentityResultErrorDescriptions(identityResult));
+            }
+
+            // Assign Basic role
+            await _userManager.AddToRoleAsync(newUser, RoleConstants.Basic);
+
+            // Create Associado linked to the user
+            var associado = new Associado
+            {
+                FullName = request.FullName,
+                CPF = request.CPF,
+                DateOfBirth = request.DateOfBirth,
+                PhoneNumber = request.PhoneNumber,
+                Address = request.Address,
+                City = request.City,
+                State = request.State,
+                ZipCode = request.ZipCode,
+                Position = request.Position,
+                UserId = newUser.Id
+            };
+
+            await _context.Associados.AddAsync(associado);
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
+            {
+                _logger.LogError(dbEx, "Database update error when creating associado for Email={Email}", request?.Email);
+                // Convert common DB errors into user-friendly ConflictException
+                throw new ConflictException(["Erro ao salvar associado. Verifique dados duplicados (CPF/Email) e tente novamente."]);
+            }
+
+            return associado.Id;
         }
-
-        if (await _userManager.FindByEmailAsync(request.Email) is not null)
+        catch (Exception ex)
         {
-            throw new ConflictException(["Email já está em uso."]);
+            _logger.LogError(ex, "Error creating associado for Email={Email}", request?.Email);
+            throw;
         }
-
-        if (await _context.Associados.AnyAsync(a => a.CPF == request.CPF))
-        {
-            throw new ConflictException(["CPF já cadastrado."]);
-        }
-
-        // Extract first/last name from FullName
-        var nameParts = request.FullName.Trim().Split(' ', 2);
-        var firstName = nameParts[0];
-        var lastName = nameParts.Length > 1 ? nameParts[1] : firstName;
-
-        // Create ApplicationUser
-        var newUser = new ApplicationUser
-        {
-            FirstName = firstName,
-            LastName = lastName,
-            Email = request.Email,
-            UserName = request.Email,
-            PhoneNumber = request.PhoneNumber,
-            IsActive = true,
-            EmailConfirmed = true
-        };
-
-        var identityResult = await _userManager.CreateAsync(newUser, request.Password);
-        if (!identityResult.Succeeded)
-        {
-            throw new IdentityException(IdentityHelper.GetIdentityResultErrorDescriptions(identityResult));
-        }
-
-        // Assign Basic role
-        await _userManager.AddToRoleAsync(newUser, RoleConstants.Basic);
-
-        // Create Associado linked to the user
-        var associado = new Associado
-        {
-            FullName = request.FullName,
-            CPF = request.CPF,
-            DateOfBirth = request.DateOfBirth,
-            PhoneNumber = request.PhoneNumber,
-            Address = request.Address,
-            City = request.City,
-            State = request.State,
-            ZipCode = request.ZipCode,
-            Position = request.Position,
-            UserId = newUser.Id
-        };
-
-        await _context.Associados.AddAsync(associado);
-        await _context.SaveChangesAsync();
-
-        return associado.Id;
     }
 
     public async Task<string> UpdateAsync(UpdateAssociadoRequest request, string id)
@@ -146,6 +168,8 @@ public class AssociadoService(
 
     public async Task<List<AssociadoResponse>> GetAllAsync()
     {
+        _logger.LogInformation("GetAllAsync called (AssociadoService)");
+
         var associados = await _context.Associados.ToListAsync();
 
         var responses = new List<AssociadoResponse>();

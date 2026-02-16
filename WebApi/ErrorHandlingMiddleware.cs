@@ -1,13 +1,17 @@
 using Application.Exceptions;
 using Application.Wrappers;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text.Json;
 
 namespace WebApi;
 
-public class ErrorHandlingMiddleware(RequestDelegate next)
+public class ErrorHandlingMiddleware(RequestDelegate next, IWebHostEnvironment env, ILogger<ErrorHandlingMiddleware> logger)
 {
     private readonly RequestDelegate _next = next;
+    private readonly IWebHostEnvironment _env = env;
+    private readonly ILogger<ErrorHandlingMiddleware> _logger = logger;
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -17,6 +21,8 @@ public class ErrorHandlingMiddleware(RequestDelegate next)
         }
         catch (Exception ex)
         {
+            // log full exception server-side
+            _logger.LogError(ex, "Unhandled exception caught by middleware");
 
             var response = context.Response;
             response.ContentType = "application/json";
@@ -47,7 +53,12 @@ public class ErrorHandlingMiddleware(RequestDelegate next)
                     break;
                 default:
                     response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    responseWrapper.Messages = [ex.Message];
+                    responseWrapper.Messages = new List<string> { ex.Message };
+                    // include full exception details in Development to help debugging
+                    if (_env.IsDevelopment())
+                    {
+                        responseWrapper.Messages.Add(ex.ToString());
+                    }
                     break;
             }
 

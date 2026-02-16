@@ -8,56 +8,41 @@ public class CurrentUserService : ICurrentUserService
 {
     private ClaimsPrincipal? _principal;
 
-    public string Name => _principal?.Identity?.Name!;
+    public string Name => _principal?.Identity?.Name ?? string.Empty;
 
     public IEnumerable<Claim> GetUserClaims()
     {
-        return _principal?.Claims!;
+        return _principal?.Claims ?? Enumerable.Empty<Claim>();
     }
 
     public string GetUserEmail()
     {
-        if (IsAuthenticated())
-        {
-            return _principal?.GetEmail()!;
-        }
-        return string.Empty;
+        return _principal?.GetEmail() ?? string.Empty;
     }
 
     public string GetUserId()
     {
-        if (IsAuthenticated())
-        {
-            return _principal?.GetUserId()!;
-        }
-        return string.Empty;
+        return _principal?.GetUserId() ?? string.Empty;
     }
 
     public string GetUserTenant()
     {
-        if (IsAuthenticated())
-        {
-            return _principal?.GetTenant()!;
-        }
-        return string.Empty;
+        return _principal?.GetTenant() ?? string.Empty;
     }
 
     public bool IsAuthenticated()
     {
-        return _principal!.Identity!.IsAuthenticated;
+        return _principal?.Identity?.IsAuthenticated ?? false;
     }
 
     public bool IsInRole(string roleName)
     {
-        return _principal!.IsInRole(roleName);
+        return _principal?.IsInRole(roleName) ?? false;
     }
 
     public void SetCurrentUser(ClaimsPrincipal principal)
     {
-        if (_principal is not null)
-        {
-            throw new ConflictException(["Invalid operation on claim."]);
-        }
+        // overwrite previous principal if any — safer for middleware re-entry
         _principal = principal;
     }
 }

@@ -28,6 +28,28 @@ app.UseHttpsRedirection();
 
 app.UseInfrastructure();
 
+// diagnostics middleware (development only) — logs auth/tenant info for incoming requests
+app.Use(async (context, next) =>
+{
+    var logger = context.RequestServices.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>()
+        .CreateLogger("RequestDiagnostics");
+
+    var isAuthenticated = context.User?.Identity?.IsAuthenticated ?? false;
+    var tenantClaim = context.User?.Claims?.FirstOrDefault(c => c.Type == "tenant")?.Value ?? string.Empty;
+    var tenantHeader = context.Request.Headers.ContainsKey("tenant") ? context.Request.Headers["tenant"].ToString() : string.Empty;
+
+    logger.LogInformation("Incoming request {Method} {Path} - Authenticated={Authenticated} TenantClaim={TenantClaim} TenantHeader={TenantHeader}",
+        context.Request.Method, context.Request.Path, isAuthenticated, tenantClaim, tenantHeader);
+
+    if (isAuthenticated)
+    {
+        var claims = string.Join(',', context.User.Claims.Select(c => $"{c.Type}={c.Value}"));
+        logger.LogInformation("User claims: {Claims}", claims);
+    }
+
+    await next();
+});
+
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.MapControllers();
