@@ -35,6 +35,12 @@ public class ApplicationDbSeeder(
         }
     }
 
+    // Exposed method to initialize only roles (used by public signup flow)
+    public async Task InitializeRolesAsync(CancellationToken ct)
+    {
+        await InitializeDefaultRolesAsync(ct);
+    }
+
     private async Task InitializeDefaultRolesAsync(CancellationToken ct)
     {
         foreach (var roleName in RoleConstants.DefaultRoles)
