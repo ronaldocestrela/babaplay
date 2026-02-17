@@ -47,7 +47,7 @@ public class UserService(
             var adminUsersCount = (await _userManager.GetUsersInRoleAsync(RoleConstants.Admin)).Count;
             if (userInDb.Email == TenancyConstants.Root.Email)
             {
-                if (_tenantContextAccessor.MultiTenantContext.TenantInfo.Id == TenancyConstants.Root.Id)
+                if (_tenantContextAccessor.MultiTenantContext?.TenantInfo?.Id == TenancyConstants.Root.Id)
                 {
                     throw new ConflictException(["Not allowed to remove Admin role for a Root Tenant User."]);
                 }

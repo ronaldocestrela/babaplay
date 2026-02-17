@@ -1,10 +1,12 @@
 using Application.Exceptions;
 using Application.Features.Associados;
 using Domain.Entities;
+using Finbuckle.MultiTenant.Abstractions;
 using Infrastructure.Constants;
 using Infrastructure.Contexts;
 using Infrastructure.Identity;
 using Infrastructure.Identity.Models;
+using Infrastructure.Tenancy;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -14,10 +16,12 @@ namespace Infrastructure.Associados;
 public class AssociadoService(
     ApplicationDbContext context,
     UserManager<ApplicationUser> userManager,
+    IMultiTenantContextAccessor<BabaPlayTenantInfo> tenantContextAccessor,
     ILogger<AssociadoService> logger) : IAssociadoService
 {
     private readonly ApplicationDbContext _context = context;
     private readonly UserManager<ApplicationUser> _userManager = userManager;
+    private readonly IMultiTenantContextAccessor<BabaPlayTenantInfo> _tenantContextAccessor = tenantContextAccessor;
     private readonly ILogger<AssociadoService> _logger = logger;
 
     public async Task<string> CreateAsync(CreateAssociadoRequest request)
@@ -26,6 +30,12 @@ public class AssociadoService(
 
         try
         {
+            // Validate tenant resolution (allows ClaimStrategy without header)
+            if (_tenantContextAccessor.MultiTenantContext?.TenantInfo is null)
+            {
+                throw new UnauthorizedException(["Tenant não identificado. Faça login ou forneça o header 'tenant'."]);
+            }
+
             if (request.Password != request.ConfirmPassword)
             {
                 throw new ConflictException(["Senhas não conferem."]);

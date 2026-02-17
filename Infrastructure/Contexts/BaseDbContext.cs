@@ -19,11 +19,11 @@ public abstract class BaseDbContext :
             ApplicationRoleClaim,
             IdentityUserToken<string>>
 {
-    private new BabaPlayTenantInfo TenantInfo { get; }
+    private new BabaPlayTenantInfo? TenantInfo { get; }
     protected BaseDbContext(IMultiTenantContextAccessor<BabaPlayTenantInfo> tenantInfoContextAccessor, DbContextOptions options)
             : base(tenantInfoContextAccessor, options)
     {
-        TenantInfo = tenantInfoContextAccessor.MultiTenantContext.TenantInfo;
+        TenantInfo = tenantInfoContextAccessor.MultiTenantContext?.TenantInfo;
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

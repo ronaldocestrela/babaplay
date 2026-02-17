@@ -166,7 +166,7 @@ public class TokenService(
                 new(ClaimTypes.Email, user.Email!),
                 new(ClaimTypes.Name, user.FirstName),
                 new(ClaimTypes.Surname, user.LastName),
-                new(ClaimConstants.Tenant, _tenantContextAccessor.MultiTenantContext.TenantInfo.Id),
+                new(ClaimConstants.Tenant, _tenantContextAccessor.MultiTenantContext.TenantInfo.Identifier!),
                 new(ClaimTypes.MobilePhone, user.PhoneNumber ?? string.Empty)
             }
         .Union(roleClaims)
