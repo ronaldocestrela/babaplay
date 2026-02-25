@@ -2,7 +2,7 @@ using Application;
 using Application.Exceptions;
 using Application.Features.Identity.Tokens;
 using Finbuckle.MultiTenant.Abstractions;
-using Infrastructure.Constants;
+using BabaPlayShared.Library.Constants;
 using Infrastructure.Identity.Models;
 using Infrastructure.Tenancy;
 using Microsoft.AspNetCore.Identity;
@@ -12,6 +12,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using BabaPlayShared.Library.Models.Responses.Token;
+using BabaPlayShared.Library.Models.Requests.Token;
 
 namespace Infrastructure.Identity.Tokens;
 

@@ -1,7 +1,7 @@
-using Application.Features.Associations;
 using Application.Features.Associations.Commands;
 using Application.Features.Associations.Queries;
-using Infrastructure.Constants;
+using BabaPlayShared.Library.Constants;
+using BabaPlayShared.Library.Models.Requests.Associations;
 using Infrastructure.Identity.Auth;
 using Microsoft.AspNetCore.Mvc;
 

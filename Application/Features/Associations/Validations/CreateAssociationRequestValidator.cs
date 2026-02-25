@@ -1,3 +1,4 @@
+using BabaPlayShared.Library.Models.Requests.Associations;
 using FluentValidation;
 
 namespace Application.Features.Associations.Validations;

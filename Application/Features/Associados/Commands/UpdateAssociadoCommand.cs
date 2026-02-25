@@ -1,5 +1,6 @@
 using Application.Pipelines;
-using Application.Wrappers;
+using BabaPlayShared.Library.Models.Requests.Associados;
+using BabaPlayShared.Library.Wrappers;
 using MediatR;
 
 namespace Application.Features.Associados.Commands;

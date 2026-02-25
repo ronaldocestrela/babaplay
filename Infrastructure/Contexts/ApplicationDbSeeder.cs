@@ -1,5 +1,5 @@
 using Finbuckle.MultiTenant.Abstractions;
-using Infrastructure.Constants;
+using BabaPlayShared.Library.Constants;
 using Infrastructure.Identity.Models;
 using Infrastructure.Tenancy;
 using Microsoft.AspNetCore.Identity;

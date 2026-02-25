@@ -2,7 +2,7 @@ using Application.Exceptions;
 using Application.Features.Associados;
 using Domain.Entities;
 using Finbuckle.MultiTenant.Abstractions;
-using Infrastructure.Constants;
+using BabaPlayShared.Library.Constants;
 using Infrastructure.Contexts;
 using Infrastructure.Identity;
 using Infrastructure.Identity.Models;
@@ -10,6 +10,8 @@ using Infrastructure.Tenancy;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using BabaPlayShared.Library.Models.Requests.Associados;
+using BabaPlayShared.Library.Models.Responses.Associados;
 
 namespace Infrastructure.Associados;
 
@@ -97,7 +99,7 @@ public class AssociadoService(
             {
                 await _context.SaveChangesAsync();
             }
-            catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
+            catch (DbUpdateException dbEx)
             {
                 _logger.LogError(dbEx, "Database update error when creating associado for Email={Email}", request?.Email);
                 // Convert common DB errors into user-friendly ConflictException

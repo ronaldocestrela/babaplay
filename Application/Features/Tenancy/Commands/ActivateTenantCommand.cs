@@ -1,4 +1,4 @@
-using Application.Wrappers;
+using BabaPlayShared.Library.Wrappers;
 using MediatR;
 
 namespace Application.Features.Tenancy.Commands;

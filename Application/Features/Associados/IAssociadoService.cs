@@ -1,4 +1,5 @@
-using Domain.Entities;
+using BabaPlayShared.Library.Models.Requests.Associados;
+using BabaPlayShared.Library.Models.Responses.Associados;
 
 namespace Application.Features.Associados;
 

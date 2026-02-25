@@ -1,5 +1,6 @@
 using FluentValidation;
 using Application.Features.Associados.Validations;
+using BabaPlayShared.Library.Models.Requests.Tenancy;
 
 namespace Application.Features.Tenancy.Validations;
 

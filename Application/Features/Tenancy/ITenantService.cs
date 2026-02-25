@@ -1,3 +1,6 @@
+using BabaPlayShared.Library.Models.Requests.Tenancy;
+using BabaPlayShared.Library.Models.Responses.Tenency;
+
 namespace Application.Features.Tenancy;
 
 public interface ITenantService

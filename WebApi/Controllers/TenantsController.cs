@@ -1,7 +1,7 @@
-using Application.Features.Tenancy;
 using Application.Features.Tenancy.Commands;
 using Application.Features.Tenancy.Queries;
-using Infrastructure.Constants;
+using BabaPlayShared.Library.Constants;
+using BabaPlayShared.Library.Models.Requests.Tenancy;
 using Infrastructure.Identity.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

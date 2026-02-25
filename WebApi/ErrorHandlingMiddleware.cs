@@ -1,5 +1,5 @@
 using Application.Exceptions;
-using Application.Wrappers;
+using BabaPlayShared.Library.Wrappers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Net;

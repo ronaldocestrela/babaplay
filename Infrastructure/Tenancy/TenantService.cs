@@ -7,6 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
+using BabaPlayShared.Library.Constants;
+using BabaPlayShared.Library.Models.Requests.Tenancy;
+using BabaPlayShared.Library.Models.Responses.Tenency;
 
 namespace Infrastructure.Tenancy;
 
@@ -173,10 +176,10 @@ END";
             if (!identityResult.Succeeded)
             {
                 try { await _tenantStore.TryRemoveAsync(newTenant.Id); } catch { }
-                throw new Application.Exceptions.IdentityException(Infrastructure.Identity.IdentityHelper.GetIdentityResultErrorDescriptions(identityResult));
+                throw new Application.Exceptions.IdentityException(Identity.IdentityHelper.GetIdentityResultErrorDescriptions(identityResult));
             }
 
-            await userManager.AddToRoleAsync(adminUser, Infrastructure.Constants.RoleConstants.Admin);
+            await userManager.AddToRoleAsync(adminUser, RoleConstants.Admin);
 
             // create associado record
             var associado = new Domain.Entities.Associado

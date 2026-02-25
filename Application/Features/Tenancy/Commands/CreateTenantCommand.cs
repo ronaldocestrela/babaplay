@@ -1,4 +1,5 @@
-using Application.Wrappers;
+using BabaPlayShared.Library.Models.Requests.Tenancy;
+using BabaPlayShared.Library.Wrappers;
 using MediatR;
 
 namespace Application.Features.Tenancy.Commands;
