@@ -4,14 +4,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Identity.Auth;
 
-public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionRequirement>
+public class PermissionAuthorizationHandler(ILogger<PermissionAuthorizationHandler> logger) : AuthorizationHandler<PermissionRequirement>
 {
-    private readonly Microsoft.Extensions.Logging.ILogger<PermissionAuthorizationHandler> _logger;
-
-    public PermissionAuthorizationHandler(Microsoft.Extensions.Logging.ILogger<PermissionAuthorizationHandler> logger)
-    {
-        _logger = logger;
-    }
+    private readonly ILogger<PermissionAuthorizationHandler> _logger = logger;
 
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PermissionRequirement requirement)
     {

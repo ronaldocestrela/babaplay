@@ -1,5 +1,3 @@
-using System;
-
 namespace Infrastructure.OpenApi;
 
 public class SwaggerSettings

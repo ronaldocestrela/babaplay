@@ -1,6 +1,6 @@
-namespace Application.Features.Tenancy;
-
 using Application.Features.Associados;
+
+namespace Application.Features.Tenancy;
 
 public class SignupRequest
 {

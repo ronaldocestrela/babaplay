@@ -10,7 +10,7 @@ public static class RoleConstants
     public static IReadOnlyList<string> DefaultRoles { get; } = new ReadOnlyCollection<string>(
     [
         Admin,
-            Basic
+        Basic
     ]);
 
     public static bool IsDefaultRole(string roleName) => DefaultRoles.Contains(roleName);

@@ -1,5 +1,3 @@
-using System;
-
 namespace Application.Features.Tenancy;
 
 public class TenantResponse
