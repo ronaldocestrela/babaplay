@@ -14,6 +14,9 @@ builder.Services.AddJwtAuthentication(builder.Services.GetJwtSettings(builder.Co
 
 builder.Services.AddApplicationServices();
 
+builder.Services.AddCors(o => o.AddPolicy("AllowBlazor",
+    p => p.WithOrigins("http://localhost:5145").AllowAnyHeader().AllowAnyMethod()));
+
 var app = builder.Build();
 
 await app.Services.AddDatabaseInitializerAsync();
@@ -43,7 +46,7 @@ app.Use(async (context, next) =>
 
     if (isAuthenticated)
     {
-        var claims = string.Join(',', context.User.Claims.Select(c => $"{c.Type}={c.Value}"));
+        var claims = string.Join(',', context.User!.Claims.Select(c => $"{c.Type}={c.Value}"));
         logger.LogInformation("User claims: {Claims}", claims);
     }
 
@@ -53,5 +56,7 @@ app.Use(async (context, next) =>
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.MapControllers();
+
+app.UseCors("AllowBlazor");
 
 app.Run();
