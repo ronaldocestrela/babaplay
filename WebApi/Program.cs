@@ -1,6 +1,9 @@
 using Infrastructure;
 using Application;
 using WebApi;
+using Microsoft.AspNetCore.Cors.Infrastructure;
+using Infrastructure.Cors;
+using Application.Features.Cors;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,8 +17,15 @@ builder.Services.AddJwtAuthentication(builder.Services.GetJwtSettings(builder.Co
 
 builder.Services.AddApplicationServices();
 
-builder.Services.AddCors(o => o.AddPolicy("AllowBlazor",
-    p => p.WithOrigins("http://localhost:5145").AllowAnyHeader().AllowAnyMethod()));
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ICorsPolicyProvider, DynamicCorsPolicyProvider>();
+builder.Services.AddScoped<ICorsOriginService, CorsOriginService>();
+
+// Dynamic CORS provider is used for all origins.  
+// Legacy development-only policy removed in favor of storing allowed
+// origins in the database or cache at startup if needed.
+// builder.Services.AddCors(o => o.AddPolicy("AllowBlazor",
+//     p => p.WithOrigins("http://localhost:5145").AllowAnyHeader().AllowAnyMethod()));
 
 var app = builder.Build();
 
@@ -28,6 +38,12 @@ await app.Services.AddDatabaseInitializerAsync();
 // }
 
 app.UseHttpsRedirection();
+
+// CORS must run before authentication/authorization and before mapping
+// controllers so the policy is applied to every request.  The empty
+// parameter causes the framework to resolve the policy via the
+// registered ICorsPolicyProvider (our DynamicCorsPolicyProvider).
+app.UseCors();
 
 app.UseInfrastructure();
 
@@ -56,7 +72,5 @@ app.Use(async (context, next) =>
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.MapControllers();
-
-app.UseCors("AllowBlazor");
 
 app.Run();

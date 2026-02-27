@@ -143,4 +143,29 @@ internal class DbConfigurations
                 .IsUnique();
         }
     }
+
+    internal class AllowedCorsConfig : IEntityTypeConfiguration<CorsOrigin>
+    {
+        public void Configure(EntityTypeBuilder<CorsOrigin> builder)
+        {
+            builder
+                .ToTable("CorsOrigins");
+
+            // This configuration is applied only by the *SharedDbContext*, which
+            // is pointed at the single shared database defined by
+            // DefaultConnection. Tenant-specific contexts intentionally skip this
+            // configuration so that the CORS table does **not** appear in each
+            // tenant database.
+
+            // NOTE: the entity itself is also not marked multi-tenant; the shared
+            // table is common for all tenants.
+
+            builder
+                .HasKey(x => x.Id); 
+            builder
+                .Property(x => x.Origin).IsRequired().HasMaxLength(255); 
+            builder
+                .HasIndex(x => x.Origin).IsUnique();
+        }
+    }
 }

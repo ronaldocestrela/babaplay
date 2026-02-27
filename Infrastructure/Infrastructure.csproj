@@ -25,6 +25,7 @@
   <ItemGroup>
     <Folder Include="Associations/" />
     <Folder Include="Contexts/" />
+    <Folder Include="Cors/" />
     <Folder Include="Identity/" />
     <Folder Include="Identity/Auth/" />
     <Folder Include="Identity/Models/" />

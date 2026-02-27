@@ -50,6 +50,10 @@ public static class StartUp
                 .Services
             .AddDbContext<ApplicationDbContext>(options => options
                 .UseSqlServer(configuration.GetConnectionString("DefaultConnection")))
+            // shared context for global tables such as CORS origins.  unaffected by
+            // multi-tenancy; always uses the default connection string.
+            .AddDbContext<SharedDbContext>(options => options
+                .UseSqlServer(configuration.GetConnectionString("DefaultConnection")))
             .AddTransient<ITenantDbSeeder, TenantDbSeeder>()
             .AddTransient<ApplicationDbSeeder>()
             .AddTransient<ITenantService, TenantService>()

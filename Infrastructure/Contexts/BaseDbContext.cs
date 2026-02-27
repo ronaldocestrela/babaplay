@@ -43,6 +43,11 @@ public abstract class BaseDbContext :
     {
         base.OnModelCreating(builder);
 
-        builder.ApplyConfigurationsFromAssembly(GetType().Assembly);
+        // apply all configurations except the one that maps CorsOrigin.  the
+        // CORS list lives in the shared database, so tenant databases must not
+        // contain that table.  we deliberately skip AllowedCorsConfig here.
+        builder.ApplyConfigurationsFromAssembly(
+            GetType().Assembly,
+            t => t != typeof(DbConfigurations.AllowedCorsConfig));
     }
 }

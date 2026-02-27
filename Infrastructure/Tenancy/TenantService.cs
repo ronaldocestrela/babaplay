@@ -22,10 +22,10 @@ public class TenantService(IMultiTenantStore<BabaPlayTenantInfo> tenantStore, Ap
     public async Task<string> ActivateAsync(string id)
     {
         var tenantInDb = await _tenantStore.TryGetAsync(id);
-        tenantInDb.IsActive = true;
+        tenantInDb!.IsActive = true;
 
         await _tenantStore.TryUpdateAsync(tenantInDb);
-        return tenantInDb.Identifier;
+        return tenantInDb.Identifier!;
     }
 
     public async Task<string> CreateTenantAsync(CreateTenantRequest createTenant, CancellationToken ct)
@@ -217,10 +217,10 @@ END";
     public async Task<string> DeactivateAsync(string id)
     {
         var tenantInDb = await _tenantStore.TryGetAsync(id);
-        tenantInDb.IsActive = false;
+        tenantInDb!.IsActive = false;
 
         await _tenantStore.TryUpdateAsync(tenantInDb);
-        return tenantInDb.Identifier;
+        return tenantInDb.Identifier!;
     }
 
     public async Task<TenantResponse> GetTenantByIdAsync(string id)
@@ -256,10 +256,10 @@ END";
     {
         var tenantInDb = await _tenantStore.TryGetAsync(updateTenantSubscription.TenantId);
 
-        tenantInDb.ValidUpTo = updateTenantSubscription.NewExpiryDate;
+        tenantInDb!.ValidUpTo = updateTenantSubscription.NewExpiryDate;
 
         await _tenantStore.TryUpdateAsync(tenantInDb);
 
-        return tenantInDb.Identifier;
+        return tenantInDb.Identifier!;
     }
 }

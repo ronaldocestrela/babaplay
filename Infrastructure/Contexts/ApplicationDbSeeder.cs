@@ -3,6 +3,7 @@ using BabaPlayShared.Library.Constants;
 using Infrastructure.Identity.Models;
 using Infrastructure.Tenancy;
 using Microsoft.AspNetCore.Identity;
+using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Contexts;
@@ -11,15 +12,18 @@ public class ApplicationDbSeeder(
         IMultiTenantContextAccessor<BabaPlayTenantInfo> tenantInfoContextAccessor,
         RoleManager<ApplicationRole> roleManager,
         UserManager<ApplicationUser> userManager,
-        ApplicationDbContext applicationDbContext)
+        ApplicationDbContext applicationDbContext,
+        SharedDbContext sharedDbContext)
 {
     private readonly IMultiTenantContextAccessor<BabaPlayTenantInfo> _tenantInfoContextAccessor = tenantInfoContextAccessor;
     private readonly RoleManager<ApplicationRole> _roleManager = roleManager;
     private readonly UserManager<ApplicationUser> _userManager = userManager;
     private readonly ApplicationDbContext _applicationDbContext = applicationDbContext;
+    private readonly SharedDbContext _sharedDbContext = sharedDbContext;
 
     public async Task InitializeDatabaseAsync(CancellationToken cancellationToken)
     {
+        // ensure tenant database exists & is migrated
         if (_applicationDbContext.Database.GetMigrations().Any())
         {
             if ((await _applicationDbContext.Database.GetPendingMigrationsAsync(cancellationToken)).Any())
@@ -31,6 +35,22 @@ public class ApplicationDbSeeder(
             {
                 await InitializeDefaultRolesAsync(cancellationToken);
                 await InitializeAdminUserAsync();
+            }
+        }
+
+        // always ensure shared database is ready; it uses the default
+        // connection string and holds the global CORS list.  migrations are
+        // applied once regardless of tenant state.
+        if (_sharedDbContext.Database.GetMigrations().Any())
+        {
+            if ((await _sharedDbContext.Database.GetPendingMigrationsAsync(cancellationToken)).Any())
+            {
+                await _sharedDbContext.Database.MigrateAsync(cancellationToken);
+            }
+
+            if (await _sharedDbContext.Database.CanConnectAsync(cancellationToken))
+            {
+                await InitializeDefaultCorsOriginsAsync(cancellationToken);
             }
         }
     }
@@ -96,6 +116,20 @@ public class ApplicationDbSeeder(
 
                 await _applicationDbContext.SaveChangesAsync(ct);
             }
+        }
+    }
+
+    private async Task InitializeDefaultCorsOriginsAsync(CancellationToken ct)
+    {
+        // ensure at least one entry exists in shared table for development
+        if (!await _sharedDbContext.CorsOrigins.AnyAsync(ct))
+        {
+            _sharedDbContext.CorsOrigins.Add(new CorsOrigin
+            {
+                Origin = "http://localhost:5145",
+                IsActive = true
+            });
+            await _sharedDbContext.SaveChangesAsync(ct);
         }
     }
 
