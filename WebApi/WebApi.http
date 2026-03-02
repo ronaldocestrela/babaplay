@@ -4,3 +4,36 @@ GET {{WebApi_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+# CORS origins CRUD (requires auth)
+
+POST {{WebApi_HostAddress}}/CorsOrigins
+Content-Type: application/json
+
+{
+  "origin": "https://example.com"
+}
+
+###
+
+GET {{WebApi_HostAddress}}/CorsOrigins
+
+###
+
+GET {{WebApi_HostAddress}}/CorsOrigins/{{id}}
+
+###
+
+PUT {{WebApi_HostAddress}}/CorsOrigins/{{id}}
+Content-Type: application/json
+
+{
+  "origin": "https://updated.com",
+  "isActive": true
+}
+
+###
+
+DELETE {{WebApi_HostAddress}}/CorsOrigins/{{id}}
+
+###

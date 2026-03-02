@@ -1,55 +1,65 @@
 using Application.Features.Cors;
-using Domain.Entities;
-using Infrastructure.Contexts;
-using Microsoft.AspNetCore.Authorization;
+using Application.Features.Cors.Commands;
+using Application.Features.Cors.Queries;
+using Application.Features.Cors.Models;
+using Application.Features.Cors.Constants;
+using BabaPlayShared.Library.Constants;
+using BabaPlayShared.Library.Wrappers;
+using Infrastructure.Identity.Auth;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using Microsoft.EntityFrameworkCore;
 
 namespace WebApi.Controllers;
 
-[Authorize(Roles = "Admin")]                           // restrict to administrators or adjust policy as needed
-public class CorsOriginsController(SharedDbContext context, ICorsOriginService corsService) : BaseApiController
+// feature-based permission attributes applied per endpoint
+public class CorsOriginsController : BaseApiController
 {
-    private readonly SharedDbContext _context = context;
-    private readonly ICorsOriginService _corsService = corsService;
-
-    /// <summary>
-    /// Adds a new allowed origin.  Only authenticated admins may call this endpoint.
-    /// </summary>
-    /// <param name="origin">Full URI (scheme+host[,port]) to allow.</param>
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] string origin)
+    [ShouldHavePermission(AssociationAction.Create, CorsFeature.CorsOrigins)]
+    public async Task<IActionResult> Create([FromBody] CreateCorsOriginRequest request)
     {
-        if (string.IsNullOrWhiteSpace(origin))
-            return BadRequest("Origin is required.");
-
-        if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri) ||
-            (uri.Scheme != "http" && uri.Scheme != "https"))
-        {
-            return BadRequest("Invalid origin URL. Must be a valid http or https URI.");
-        }
-
-        // prevent duplicates
-        if (await _context.CorsOrigins.AnyAsync(x => x.Origin == origin))
-        {
-            return Conflict("Origin already registered.");
-        }
-
-        var entity = new CorsOrigin { Origin = origin, IsActive = true };
-        _context.CorsOrigins.Add(entity);
-        await _context.SaveChangesAsync();
-
-        _corsService.ClearCache();
-        return CreatedAtAction(nameof(GetById), new { id = entity.Id }, entity);
+        var response = await Sender.Send(new CreateCorsOriginCommand { CreateCors = request });
+        if (response.IsSuccessful)
+            return Ok(response);
+        return BadRequest(response);
     }
 
-    // additional convenience endpoints (optional)
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id)
+    [HttpGet]
+    [ShouldHavePermission(AssociationAction.Read, CorsFeature.CorsOrigins)]
+    public async Task<IActionResult> List()
     {
-        var item = await _context.CorsOrigins.FindAsync(id);
-        if (item == null) return NotFound();
-        return Ok(item);
+        var response = await Sender.Send(new GetAllCorsOriginsQuery());
+        if (response.IsSuccessful)
+            return Ok(response);
+        return BadRequest(response);
+    }
+
+    [HttpGet("{id}")]
+    [ShouldHavePermission(AssociationAction.Read, CorsFeature.CorsOrigins)]
+    public async Task<IActionResult> GetById(string id)
+    {
+        var response = await Sender.Send(new GetCorsOriginByIdQuery { Id = id });
+        if (response.IsSuccessful)
+            return Ok(response);
+        return NotFound(response);
+    }
+
+    [HttpPut("{id}")]
+    [ShouldHavePermission(AssociationAction.Update, CorsFeature.CorsOrigins)]
+    public async Task<IActionResult> Update(string id, [FromBody] UpdateCorsOriginRequest request)
+    {
+        var response = await Sender.Send(new UpdateCorsOriginCommand { Id = id, UpdateCors = request });
+        if (response.IsSuccessful)
+            return Ok(response);
+        return BadRequest(response);
+    }
+
+    [HttpDelete("{id}")]
+    [ShouldHavePermission(AssociationAction.Delete, CorsFeature.CorsOrigins)]
+    public async Task<IActionResult> Delete(string id)
+    {
+        var response = await Sender.Send(new DeleteCorsOriginCommand { Id = id });
+        if (response.IsSuccessful)
+            return Ok(response);
+        return BadRequest(response);
     }
 }

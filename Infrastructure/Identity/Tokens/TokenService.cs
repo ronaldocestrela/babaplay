@@ -31,7 +31,7 @@ public class TokenService(
     public async Task<TokenResponse> LoginAsync(TokenRequest request)
     {
         #region Validations
-        if (!_tenantContextAccessor.MultiTenantContext.TenantInfo.IsActive)
+        if (!_tenantContextAccessor.MultiTenantContext.TenantInfo!.IsActive)
         {
             throw new UnauthorizedException(["Tenant subscription is not active. Contact Administrator."]);
         }
@@ -157,7 +157,7 @@ public class TokenService(
             roleClaims.Add(new Claim(ClaimTypes.Role, userRole));
             var currentRole = await _roleManager.FindByNameAsync(userRole);
 
-            var allPermissionsForCurrentRole = await _roleManager.GetClaimsAsync(currentRole);
+            var allPermissionsForCurrentRole = await _roleManager.GetClaimsAsync(currentRole!);
 
             permissionClaims.AddRange(allPermissionsForCurrentRole);
         }
@@ -168,7 +168,7 @@ public class TokenService(
                 new(ClaimTypes.Email, user.Email!),
                 new(ClaimTypes.Name, user.FirstName),
                 new(ClaimTypes.Surname, user.LastName),
-                new(ClaimConstants.Tenant, _tenantContextAccessor.MultiTenantContext.TenantInfo.Identifier!),
+                new(ClaimConstants.Tenant, _tenantContextAccessor.MultiTenantContext.TenantInfo!.Identifier!),
                 new(ClaimTypes.MobilePhone, user.PhoneNumber ?? string.Empty)
             }
         .Union(roleClaims)

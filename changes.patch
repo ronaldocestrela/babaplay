@@ -1,0 +1,406 @@
+diff --git a/Application/Exceptions/IdentityException.cs b/Application/Exceptions/IdentityException.cs
+index df6b078..f96f133 100644
+--- a/Application/Exceptions/IdentityException.cs
++++ b/Application/Exceptions/IdentityException.cs
+@@ -2,7 +2,7 @@ using System.Net;
+ 
+ namespace Application.Exceptions;
+ 
+-public class IdentityException(List<string> errorMessages = default, HttpStatusCode statusCode = HttpStatusCode.InternalServerError) : Exception
++public class IdentityException(List<string> errorMessages = default!, HttpStatusCode statusCode = HttpStatusCode.InternalServerError) : Exception
+ {
+     public List<string> ErrorMessages { get; set; } = errorMessages;
+     public HttpStatusCode StatusCode { get; set; } = statusCode;
+diff --git a/Application/Exceptions/NotFoundException.cs b/Application/Exceptions/NotFoundException.cs
+index 212a62d..b6dd382 100644
+--- a/Application/Exceptions/NotFoundException.cs
++++ b/Application/Exceptions/NotFoundException.cs
+@@ -2,7 +2,7 @@ using System.Net;
+ 
+ namespace Application.Exceptions;
+ 
+-public class NotFoundException(List<string> errorMessages = default, HttpStatusCode statusCode = HttpStatusCode.NotFound) : Exception
++public class NotFoundException(List<string> errorMessages = default!, HttpStatusCode statusCode = HttpStatusCode.NotFound) : Exception
+ {
+     public List<string> ErrorMessages { get; set; } = errorMessages;
+     public HttpStatusCode StatusCode { get; set; } = statusCode;
+diff --git a/Application/Exceptions/UnauthorizedException.cs b/Application/Exceptions/UnauthorizedException.cs
+index 1128bf1..08047e7 100644
+--- a/Application/Exceptions/UnauthorizedException.cs
++++ b/Application/Exceptions/UnauthorizedException.cs
+@@ -2,7 +2,7 @@ using System.Net;
+ 
+ namespace Application.Exceptions;
+ 
+-public class UnauthorizedException(List<string> errorMessages = default, HttpStatusCode statusCode = HttpStatusCode.Unauthorized) : Exception
++public class UnauthorizedException(List<string> errorMessages = default!, HttpStatusCode statusCode = HttpStatusCode.Unauthorized) : Exception
+ {
+     public List<string> ErrorMessages { get; set; } = errorMessages;
+     public HttpStatusCode StatusCode { get; set; } = statusCode;
+diff --git a/Application/Features/Cors/ICorsOriginService.cs b/Application/Features/Cors/ICorsOriginService.cs
+index 55f90de..c6365f7 100644
+--- a/Application/Features/Cors/ICorsOriginService.cs
++++ b/Application/Features/Cors/ICorsOriginService.cs
+@@ -1,7 +1,14 @@
+ namespace Application.Features.Cors;
+ 
++using Application.Features.Cors.Models;
++
+ public interface ICorsOriginService
+ {
++    Task<List<CorsOriginResponse>> GetAllAsync();
++    Task<CorsOriginResponse?> GetByIdAsync(string id);
++    Task<CorsOriginResponse> CreateAsync(CreateCorsOriginRequest request);
++    Task<CorsOriginResponse> UpdateAsync(string id, UpdateCorsOriginRequest request);
++    Task<bool> DeleteAsync(string id);
+     Task<List<string>> GetAllowedOriginsAsync();
+     void ClearCache();
+ }
+diff --git a/Infrastructure/Contexts/ApplicationDbSeeder.cs b/Infrastructure/Contexts/ApplicationDbSeeder.cs
+index 279dc9a..d077b88 100644
+--- a/Infrastructure/Contexts/ApplicationDbSeeder.cs
++++ b/Infrastructure/Contexts/ApplicationDbSeeder.cs
+@@ -4,6 +4,7 @@ using Infrastructure.Identity.Models;
+ using Infrastructure.Tenancy;
+ using Microsoft.AspNetCore.Identity;
+ using Domain.Entities;
++using Application.Features.Cors.Constants;
+ using Microsoft.EntityFrameworkCore;
+ 
+ namespace Infrastructure.Contexts;
+@@ -81,6 +82,28 @@ public class ApplicationDbSeeder(
+                 // Assign Admin Permissions
+                 await AssignPermissionsToRoleAsync(AssociationPermissions.Admin, incomingRole, ct);
+ 
++                // ensure CORS origins management is available even though the shared library
++                // doesn't yet include this feature constant (temporary local support).
++                var corsActions = new[] { AssociationAction.Create, AssociationAction.Read,
++                    AssociationAction.Update, AssociationAction.Delete };
++                var currentlyAssignedClaims = await _roleManager.GetClaimsAsync(incomingRole);
++                foreach (var act in corsActions)
++                {
++                    var permName = AssociationPermission.NameFor(act, Application.Features.Cors.Constants.CorsFeature.CorsOrigins);
++                    if (!currentlyAssignedClaims.Any(claim => claim.Type == ClaimConstants.Permission && claim.Value == permName))
++                    {
++                        await _applicationDbContext.RoleClaims.AddAsync(new ApplicationRoleClaim
++                        {
++                            RoleId = incomingRole.Id,
++                            ClaimType = ClaimConstants.Permission,
++                            ClaimValue = permName,
++                            Description = permName,
++                            Group = CorsFeature.CorsOrigins
++                        }, ct);
++                        await _applicationDbContext.SaveChangesAsync(ct);
++                    }
++                }
++
+                 if (_tenantInfoContextAccessor.MultiTenantContext.TenantInfo.Id == TenancyConstants.Root.Id)
+                 {
+                     await AssignPermissionsToRoleAsync(AssociationPermissions.Root, incomingRole, ct);
+diff --git a/Infrastructure/Cors/CorsOriginService.cs b/Infrastructure/Cors/CorsOriginService.cs
+index 4488753..63b2cf4 100644
+--- a/Infrastructure/Cors/CorsOriginService.cs
++++ b/Infrastructure/Cors/CorsOriginService.cs
+@@ -1,4 +1,6 @@
+ using Application.Features.Cors;
++using Application.Features.Cors.Models;
++using Domain.Entities;
+ using Infrastructure.Contexts;
+ using Microsoft.EntityFrameworkCore;
+ using Microsoft.Extensions.Caching.Memory;
+@@ -20,6 +22,66 @@ public class CorsOriginService(SharedDbContext context, IMemoryCache cache) : IC
+         _cache.Remove(CACHE_KEY);
+     }
+ 
++    public async Task<List<CorsOriginResponse>> GetAllAsync()
++    {
++        // no caching for administrative list
++        var entities = await _context.CorsOrigins.ToListAsync();
++        return entities.Select(x => new CorsOriginResponse(x.Id, x.Origin, x.IsActive)).ToList();
++    }
++
++    public async Task<CorsOriginResponse?> GetByIdAsync(string id)
++    {
++        var x = await _context.CorsOrigins.FindAsync(id);
++        if (x == null) return null;
++        return new CorsOriginResponse(x.Id, x.Origin, x.IsActive);
++    }
++
++    public async Task<CorsOriginResponse> CreateAsync(CreateCorsOriginRequest request)
++    {
++        // prevent duplicates
++        if (await _context.CorsOrigins.AnyAsync(x => x.Origin == request.Origin))
++            throw new Application.Exceptions.ConflictException(["Origin already registered."]);
++
++        var entity = new Domain.Entities.CorsOrigin
++        {
++            Origin = request.Origin,
++            IsActive = true
++        };
++
++        _context.CorsOrigins.Add(entity);
++        await _context.SaveChangesAsync();
++        ClearCache();
++        return new CorsOriginResponse(entity.Id, entity.Origin, entity.IsActive);
++    }
++
++    public async Task<CorsOriginResponse> UpdateAsync(string id, UpdateCorsOriginRequest request)
++    {
++        var existing = await _context.CorsOrigins.FindAsync(id);
++        if (existing == null)
++            throw new Application.Exceptions.NotFoundException(["Cors origin record not found."]);
++
++        // duplicate check on other id
++        if (await _context.CorsOrigins.AnyAsync(x => x.Origin == request.Origin && x.Id != id))
++            throw new Application.Exceptions.ConflictException(["Another entry with the same origin already exists."]);
++
++        existing.Origin = request.Origin;
++        existing.IsActive = request.IsActive;
++        await _context.SaveChangesAsync();
++        ClearCache();
++        return new CorsOriginResponse(existing.Id, existing.Origin, existing.IsActive);
++    }
++
++    public async Task<bool> DeleteAsync(string id)
++    {
++        var existing = await _context.CorsOrigins.FindAsync(id);
++        if (existing == null) return false;
++
++        _context.CorsOrigins.Remove(existing);
++        await _context.SaveChangesAsync();
++        ClearCache();
++        return true;
++    }
++
+     public async Task<List<string>> GetAllowedOriginsAsync()
+     {
+         if (_cache.TryGetValue(CACHE_KEY, out List<string>? origins))
+diff --git a/Infrastructure/Identity/Tokens/TokenService.cs b/Infrastructure/Identity/Tokens/TokenService.cs
+index 9f9f108..732c81b 100644
+--- a/Infrastructure/Identity/Tokens/TokenService.cs
++++ b/Infrastructure/Identity/Tokens/TokenService.cs
+@@ -31,7 +31,7 @@ public class TokenService(
+     public async Task<TokenResponse> LoginAsync(TokenRequest request)
+     {
+         #region Validations
+-        if (!_tenantContextAccessor.MultiTenantContext.TenantInfo.IsActive)
++        if (!_tenantContextAccessor.MultiTenantContext.TenantInfo!.IsActive)
+         {
+             throw new UnauthorizedException(["Tenant subscription is not active. Contact Administrator."]);
+         }
+@@ -157,7 +157,7 @@ public class TokenService(
+             roleClaims.Add(new Claim(ClaimTypes.Role, userRole));
+             var currentRole = await _roleManager.FindByNameAsync(userRole);
+ 
+-            var allPermissionsForCurrentRole = await _roleManager.GetClaimsAsync(currentRole);
++            var allPermissionsForCurrentRole = await _roleManager.GetClaimsAsync(currentRole!);
+ 
+             permissionClaims.AddRange(allPermissionsForCurrentRole);
+         }
+@@ -168,7 +168,7 @@ public class TokenService(
+                 new(ClaimTypes.Email, user.Email!),
+                 new(ClaimTypes.Name, user.FirstName),
+                 new(ClaimTypes.Surname, user.LastName),
+-                new(ClaimConstants.Tenant, _tenantContextAccessor.MultiTenantContext.TenantInfo.Identifier!),
++                new(ClaimConstants.Tenant, _tenantContextAccessor.MultiTenantContext.TenantInfo!.Identifier!),
+                 new(ClaimTypes.MobilePhone, user.PhoneNumber ?? string.Empty)
+             }
+         .Union(roleClaims)
+diff --git a/Infrastructure/OpenApi/SwaggerGlobalAuthProcessor.cs b/Infrastructure/OpenApi/SwaggerGlobalAuthProcessor.cs
+index 9a81873..b119492 100644
+--- a/Infrastructure/OpenApi/SwaggerGlobalAuthProcessor.cs
++++ b/Infrastructure/OpenApi/SwaggerGlobalAuthProcessor.cs
+@@ -90,8 +90,8 @@ public static class ObjectExtensions
+     /// This method uses reflection to dynamically retrieve property values. 
+     /// It is best used in scenarios where the type of the object or the properties are not known at compile time.
+     /// </remarks>
+-    public static T TryGetPropertyValue<T>(this object obj, string propertyName, T defaultValue = default) =>
++    public static T TryGetPropertyValue<T>(this object obj, string propertyName, T defaultValue = default!) =>
+         obj.GetType().GetRuntimeProperty(propertyName) is PropertyInfo propertyInfo
+-            ? (T)propertyInfo.GetValue(obj)
++            ? (T?)propertyInfo.GetValue(obj) ?? defaultValue
+             : defaultValue;
+ }
+diff --git a/Infrastructure/StartUp.cs b/Infrastructure/StartUp.cs
+index 43e12cd..5c1362f 100644
+--- a/Infrastructure/StartUp.cs
++++ b/Infrastructure/StartUp.cs
+@@ -5,6 +5,8 @@ using Application.Features.Identity.Users;
+ using Application.Features.Associations;
+ using Application.Features.Associados;
+ using Application.Features.Tenancy;
++using Application.Features.Cors;
++using Infrastructure.Cors;
+ using BabaPlayShared.Library.Wrappers;
+ using Finbuckle.MultiTenant;
+ using BabaPlayShared.Library.Constants;
+@@ -59,6 +61,7 @@ public static class StartUp
+             .AddTransient<ITenantService, TenantService>()
+             .AddTransient<IAssociationService, AssociationService>()
+             .AddTransient<IAssociadoService, AssociadoService>()
++            .AddTransient<ICorsOriginService, CorsOriginService>()
+             .AddIdentityService()
+             .AddPermissions()
+             .AddOpenApiDocumentation(configuration);
+diff --git a/WebApi/Controllers/CorsOriginsController.cs b/WebApi/Controllers/CorsOriginsController.cs
+index d77bd23..34084d0 100644
+--- a/WebApi/Controllers/CorsOriginsController.cs
++++ b/WebApi/Controllers/CorsOriginsController.cs
+@@ -1,55 +1,65 @@
+ using Application.Features.Cors;
+-using Domain.Entities;
+-using Infrastructure.Contexts;
+-using Microsoft.AspNetCore.Authorization;
++using Application.Features.Cors.Commands;
++using Application.Features.Cors.Queries;
++using Application.Features.Cors.Models;
++using Application.Features.Cors.Constants;
++using BabaPlayShared.Library.Constants;
++using BabaPlayShared.Library.Wrappers;
++using Infrastructure.Identity.Auth;
+ using Microsoft.AspNetCore.Mvc;
+-using System;
+-using Microsoft.EntityFrameworkCore;
+ 
+ namespace WebApi.Controllers;
+ 
+-[Authorize(Roles = "Admin")]                           // restrict to administrators or adjust policy as needed
+-public class CorsOriginsController(SharedDbContext context, ICorsOriginService corsService) : BaseApiController
++// feature-based permission attributes applied per endpoint
++public class CorsOriginsController : BaseApiController
+ {
+-    private readonly SharedDbContext _context = context;
+-    private readonly ICorsOriginService _corsService = corsService;
+-
+-    /// <summary>
+-    /// Adds a new allowed origin.  Only authenticated admins may call this endpoint.
+-    /// </summary>
+-    /// <param name="origin">Full URI (scheme+host[,port]) to allow.</param>
+     [HttpPost]
+-    public async Task<IActionResult> Create([FromBody] string origin)
++    [ShouldHavePermission(AssociationAction.Create, CorsFeature.CorsOrigins)]
++    public async Task<IActionResult> Create([FromBody] CreateCorsOriginRequest request)
+     {
+-        if (string.IsNullOrWhiteSpace(origin))
+-            return BadRequest("Origin is required.");
+-
+-        if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri) ||
+-            (uri.Scheme != "http" && uri.Scheme != "https"))
+-        {
+-            return BadRequest("Invalid origin URL. Must be a valid http or https URI.");
+-        }
++        var response = await Sender.Send(new CreateCorsOriginCommand { CreateCors = request });
++        if (response.IsSuccessful)
++            return Ok(response);
++        return BadRequest(response);
++    }
+ 
+-        // prevent duplicates
+-        if (await _context.CorsOrigins.AnyAsync(x => x.Origin == origin))
+-        {
+-            return Conflict("Origin already registered.");
+-        }
++    [HttpGet]
++    [ShouldHavePermission(AssociationAction.Read, CorsFeature.CorsOrigins)]
++    public async Task<IActionResult> List()
++    {
++        var response = await Sender.Send(new GetAllCorsOriginsQuery());
++        if (response.IsSuccessful)
++            return Ok(response);
++        return BadRequest(response);
++    }
+ 
+-        var entity = new CorsOrigin { Origin = origin, IsActive = true };
+-        _context.CorsOrigins.Add(entity);
+-        await _context.SaveChangesAsync();
++    [HttpGet("{id}")]
++    [ShouldHavePermission(AssociationAction.Read, CorsFeature.CorsOrigins)]
++    public async Task<IActionResult> GetById(string id)
++    {
++        var response = await Sender.Send(new GetCorsOriginByIdQuery { Id = id });
++        if (response.IsSuccessful)
++            return Ok(response);
++        return NotFound(response);
++    }
+ 
+-        _corsService.ClearCache();
+-        return CreatedAtAction(nameof(GetById), new { id = entity.Id }, entity);
++    [HttpPut("{id}")]
++    [ShouldHavePermission(AssociationAction.Update, CorsFeature.CorsOrigins)]
++    public async Task<IActionResult> Update(string id, [FromBody] UpdateCorsOriginRequest request)
++    {
++        var response = await Sender.Send(new UpdateCorsOriginCommand { Id = id, UpdateCors = request });
++        if (response.IsSuccessful)
++            return Ok(response);
++        return BadRequest(response);
+     }
+ 
+-    // additional convenience endpoints (optional)
+-    [HttpGet("{id}")]
+-    public async Task<IActionResult> GetById(int id)
++    [HttpDelete("{id}")]
++    [ShouldHavePermission(AssociationAction.Delete, CorsFeature.CorsOrigins)]
++    public async Task<IActionResult> Delete(string id)
+     {
+-        var item = await _context.CorsOrigins.FindAsync(id);
+-        if (item == null) return NotFound();
+-        return Ok(item);
++        var response = await Sender.Send(new DeleteCorsOriginCommand { Id = id });
++        if (response.IsSuccessful)
++            return Ok(response);
++        return BadRequest(response);
+     }
+ }
+diff --git a/WebApi/Program.cs b/WebApi/Program.cs
+index 8ee1217..4038b0c 100644
+--- a/WebApi/Program.cs
++++ b/WebApi/Program.cs
+@@ -19,7 +19,6 @@ builder.Services.AddApplicationServices();
+ 
+ builder.Services.AddMemoryCache();
+ builder.Services.AddSingleton<ICorsPolicyProvider, DynamicCorsPolicyProvider>();
+-builder.Services.AddScoped<ICorsOriginService, CorsOriginService>();
+ 
+ // Dynamic CORS provider is used for all origins.  
+ // Legacy development-only policy removed in favor of storing allowed
+diff --git a/WebApi/WebApi.http b/WebApi/WebApi.http
+index f83c362..f424638 100644
+--- a/WebApi/WebApi.http
++++ b/WebApi/WebApi.http
+@@ -4,3 +4,36 @@ GET {{WebApi_HostAddress}}/weatherforecast/
+ Accept: application/json
+ 
+ ###
++
++# CORS origins CRUD (requires auth)
++
++POST {{WebApi_HostAddress}}/CorsOrigins
++Content-Type: application/json
++
++{
++  "origin": "https://example.com"
++}
++
++###
++
++GET {{WebApi_HostAddress}}/CorsOrigins
++
++###
++
++GET {{WebApi_HostAddress}}/CorsOrigins/{{id}}
++
++###
++
++PUT {{WebApi_HostAddress}}/CorsOrigins/{{id}}
++Content-Type: application/json
++
++{
++  "origin": "https://updated.com",
++  "isActive": true
++}
++
++###
++
++DELETE {{WebApi_HostAddress}}/CorsOrigins/{{id}}
++
++###

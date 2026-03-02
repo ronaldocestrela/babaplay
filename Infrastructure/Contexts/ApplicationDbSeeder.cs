@@ -4,6 +4,7 @@ using Infrastructure.Identity.Models;
 using Infrastructure.Tenancy;
 using Microsoft.AspNetCore.Identity;
 using Domain.Entities;
+using Application.Features.Cors.Constants;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Contexts;
@@ -80,6 +81,28 @@ public class ApplicationDbSeeder(
             {
                 // Assign Admin Permissions
                 await AssignPermissionsToRoleAsync(AssociationPermissions.Admin, incomingRole, ct);
+
+                // ensure CORS origins management is available even though the shared library
+                // doesn't yet include this feature constant (temporary local support).
+                var corsActions = new[] { AssociationAction.Create, AssociationAction.Read,
+                    AssociationAction.Update, AssociationAction.Delete };
+                var currentlyAssignedClaims = await _roleManager.GetClaimsAsync(incomingRole);
+                foreach (var act in corsActions)
+                {
+                    var permName = AssociationPermission.NameFor(act, Application.Features.Cors.Constants.CorsFeature.CorsOrigins);
+                    if (!currentlyAssignedClaims.Any(claim => claim.Type == ClaimConstants.Permission && claim.Value == permName))
+                    {
+                        await _applicationDbContext.RoleClaims.AddAsync(new ApplicationRoleClaim
+                        {
+                            RoleId = incomingRole.Id,
+                            ClaimType = ClaimConstants.Permission,
+                            ClaimValue = permName,
+                            Description = permName,
+                            Group = CorsFeature.CorsOrigins
+                        }, ct);
+                        await _applicationDbContext.SaveChangesAsync(ct);
+                    }
+                }
 
                 if (_tenantInfoContextAccessor.MultiTenantContext.TenantInfo.Id == TenancyConstants.Root.Id)
                 {

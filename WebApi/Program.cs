@@ -19,7 +19,6 @@ builder.Services.AddApplicationServices();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ICorsPolicyProvider, DynamicCorsPolicyProvider>();
-builder.Services.AddScoped<ICorsOriginService, CorsOriginService>();
 
 // Dynamic CORS provider is used for all origins.  
 // Legacy development-only policy removed in favor of storing allowed

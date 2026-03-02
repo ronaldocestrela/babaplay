@@ -90,8 +90,8 @@ public static class ObjectExtensions
     /// This method uses reflection to dynamically retrieve property values. 
     /// It is best used in scenarios where the type of the object or the properties are not known at compile time.
     /// </remarks>
-    public static T TryGetPropertyValue<T>(this object obj, string propertyName, T defaultValue = default) =>
+    public static T TryGetPropertyValue<T>(this object obj, string propertyName, T defaultValue = default!) =>
         obj.GetType().GetRuntimeProperty(propertyName) is PropertyInfo propertyInfo
-            ? (T)propertyInfo.GetValue(obj)
+            ? (T?)propertyInfo.GetValue(obj) ?? defaultValue
             : defaultValue;
 }

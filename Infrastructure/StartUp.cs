@@ -5,6 +5,8 @@ using Application.Features.Identity.Users;
 using Application.Features.Associations;
 using Application.Features.Associados;
 using Application.Features.Tenancy;
+using Application.Features.Cors;
+using Infrastructure.Cors;
 using BabaPlayShared.Library.Wrappers;
 using Finbuckle.MultiTenant;
 using BabaPlayShared.Library.Constants;
@@ -59,6 +61,7 @@ public static class StartUp
             .AddTransient<ITenantService, TenantService>()
             .AddTransient<IAssociationService, AssociationService>()
             .AddTransient<IAssociadoService, AssociadoService>()
+            .AddTransient<ICorsOriginService, CorsOriginService>()
             .AddIdentityService()
             .AddPermissions()
             .AddOpenApiDocumentation(configuration);
