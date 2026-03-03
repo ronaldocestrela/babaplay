@@ -17,6 +17,9 @@ public class DynamicCorsPolicyProvider(IServiceProvider serviceProvider) : ICors
             
         var origins = await corsService.GetAllowedOriginsAsync();
         var builder = new CorsPolicyBuilder();
+        // allow wildcard subdomains (e.g. https://*.babaplay.com)
+        builder.SetIsOriginAllowedToAllowWildcardSubdomains();
+
         if (origins.Any())
         { 
             builder.WithOrigins(origins.ToArray())
