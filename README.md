@@ -72,7 +72,7 @@ Acesse `https://localhost:{PORT}/swagger` (normalmente `https://localhost:5001/s
 
 ## 🔐 Endpoints úteis
 
-- **Login**: `POST /api/token/login` (perceba que o endpoint exige o header `tenant`)
+- **Login (mobile/header)**: `POST /api/token/login` (o endpoint exige o header `tenant`)
   - Body:
 
 ```json
@@ -82,6 +82,8 @@ Acesse `https://localhost:{PORT}/swagger` (normalmente `https://localhost:5001/s
 }
 ```
   - Header: `tenant: root`
+
+- **Login (web/subdomain)**: `POST /api/token/login-web` — faça a requisição contra `https://{tenant}.babaplay.com` ou `https://{tenant}.localhost` em desenvolvimento; o tenant é automaticamente resolvido pelo host. O corpo é igual ao anterior, mas nenhum header é necessário.
 
 - **Refresh token**: `POST /api/token/refresh-token`
 - **Tenants management**: `POST /api/tenants/add`, `PUT /api/tenants/{id}/activate` etc.
