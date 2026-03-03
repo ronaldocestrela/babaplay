@@ -55,9 +55,15 @@ app.Use(async (context, next) =>
     var isAuthenticated = context.User?.Identity?.IsAuthenticated ?? false;
     var tenantClaim = context.User?.Claims?.FirstOrDefault(c => c.Type == "tenant")?.Value ?? string.Empty;
     var tenantHeader = context.Request.Headers.ContainsKey("tenant") ? context.Request.Headers["tenant"].ToString() : string.Empty;
+    var requestHost = context.Request.Host.ToString();
 
-    logger.LogInformation("Incoming request {Method} {Path} - Authenticated={Authenticated} TenantClaim={TenantClaim} TenantHeader={TenantHeader}",
-        context.Request.Method, context.Request.Path, isAuthenticated, tenantClaim, tenantHeader);
+    // attempt to read current tenant from Finbuckle
+    var tenantAccessor = context.RequestServices.GetService<Finbuckle.MultiTenant.Abstractions.IMultiTenantContextAccessor<Infrastructure.Tenancy.BabaPlayTenantInfo>>();
+    var resolvedTenant = tenantAccessor?.MultiTenantContext?.TenantInfo?.Identifier ?? "<none>";
+
+
+    logger.LogInformation("Incoming request {Method} {Path} - Host={Host} Authenticated={Authenticated} ResolvedTenant={ResolvedTenant} TenantClaim={TenantClaim} TenantHeader={TenantHeader}",
+        context.Request.Method, context.Request.Path, requestHost, isAuthenticated, resolvedTenant, tenantClaim, tenantHeader);
 
     if (isAuthenticated)
     {

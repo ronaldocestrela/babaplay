@@ -83,7 +83,9 @@ Acesse `https://localhost:{PORT}/swagger` (normalmente `https://localhost:5001/s
 ```
   - Header: `tenant: root`
 
-- **Login (web/subdomain)**: `POST /api/token/login-web` — faça a requisição contra `https://{tenant}.babaplay.com` ou `https://{tenant}.localhost` em desenvolvimento; o tenant é automaticamente resolvido pelo host. O corpo é igual ao anterior, mas nenhum header é necessário.
+- **Login (web/subdomain)**: `POST /api/token/login-web` — faça a requisição contra `https://{tenant}.babaplay.com` (por exemplo `https://root.babaplay.com`) ou `http://{tenant}.localhost:5148` em desenvolvimento. O tenant é inferido pelo subdomínio; nenhum header é necessário.
+
+  > **Configuração:** o template de host utilizado pelo middleware está em `Tenancy:HostTemplate` (`appsettings.json`). Ele deve conter `__tenant__` no lugar do slug (por exemplo `"__tenant__.babaplay.com"` ou `"__tenant__.localhost"`).
 
 - **Refresh token**: `POST /api/token/refresh-token`
 - **Tenants management**: `POST /api/tenants/add`, `PUT /api/tenants/{id}/activate` etc.
