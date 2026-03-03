@@ -1,4 +1,4 @@
-using Application.Features.Cors.Models;
+using BabaPlayShared.Library.Models.Responses.Cors;
 using BabaPlayShared.Library.Wrappers;
 using MediatR;
 

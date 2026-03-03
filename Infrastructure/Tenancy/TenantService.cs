@@ -35,12 +35,12 @@ public class TenantService(IMultiTenantStore<BabaPlayTenantInfo> tenantStore, Ap
             Id = createTenant.Identifier,
             Identifier = createTenant.Identifier,
             Name = createTenant.Name,
-            IsActive = createTenant.IsActive,
+            IsActive = (bool)createTenant.IsActive!,
             ConnectionString = createTenant.ConnectionString,
             Email = createTenant.Email,
             FirstName = createTenant.FirstName,
             LastName = createTenant.LastName,
-            ValidUpTo = createTenant.ValidUpTo
+            ValidUpTo = (DateTime)createTenant.ValidUpTo!
         };
 
         await _tenantStore.TryAddAsync(newTenant);
@@ -53,14 +53,14 @@ public class TenantService(IMultiTenantStore<BabaPlayTenantInfo> tenantStore, Ap
         await scope.ServiceProvider.GetRequiredService<ApplicationDbSeeder>()
             .InitializeDatabaseAsync(ct);
 
-        return newTenant.Identifier;
+        return newTenant.Identifier!;
     }
 
     public async Task<string> SignupAsync(SignupRequest request, CancellationToken ct)
     {
         // generate identifier (slug) if not provided
         var identifier = string.IsNullOrWhiteSpace(request.Identifier)
-            ? Regex.Replace(request.AssociationName.Trim().ToLowerInvariant(), "\\s+", "-")
+            ? Regex.Replace(request.AssociationName!.Trim().ToLowerInvariant(), "\\s+", "-")
             : request.Identifier.Trim();
 
         // ensure uniqueness of identifier and tenant email
@@ -70,7 +70,7 @@ public class TenantService(IMultiTenantStore<BabaPlayTenantInfo> tenantStore, Ap
             throw new Exception("Identifier já em uso.");
         }
 
-        if (existingTenants.Any(t => !string.IsNullOrEmpty(t.Email) && string.Equals(t.Email, request.Admin.Email, StringComparison.OrdinalIgnoreCase)))
+        if (existingTenants.Any(t => !string.IsNullOrEmpty(t.Email) && string.Equals(t.Email, request.Admin!.Email, StringComparison.OrdinalIgnoreCase)))
         {
             throw new Exception("Email já cadastrado em outro tenant.");
         }
@@ -84,7 +84,7 @@ public class TenantService(IMultiTenantStore<BabaPlayTenantInfo> tenantStore, Ap
         }
 
         // prepare tenant info
-        var nameParts = request.Admin.FullName.Trim().Split(' ', 2);
+        var nameParts = request.Admin!.FullName!.Trim().Split(' ', 2);
         var firstName = nameParts[0];
         var lastName = nameParts.Length > 1 ? nameParts[1] : nameParts[0];
 
@@ -154,7 +154,7 @@ END";
         {
             var userManager = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<Infrastructure.Identity.Models.ApplicationUser>>();
 
-            if (await userManager.FindByEmailAsync(request.Admin.Email) is not null)
+            if (await userManager.FindByEmailAsync(request.Admin.Email!) is not null)
             {
                 // rollback tenant creation and db
                 try { await _tenantStore.TryRemoveAsync(newTenant.Id); } catch { }
@@ -172,7 +172,7 @@ END";
                 IsActive = true
             };
 
-            var identityResult = await userManager.CreateAsync(adminUser, request.Admin.Password);
+            var identityResult = await userManager.CreateAsync(adminUser, request.Admin.Password!);
             if (!identityResult.Succeeded)
             {
                 try { await _tenantStore.TryRemoveAsync(newTenant.Id); } catch { }
@@ -185,21 +185,21 @@ END";
             var associado = new Domain.Entities.Associado
             {
                 FullName = request.Admin.FullName,
-                CPF = request.Admin.CPF,
-                DateOfBirth = request.Admin.DateOfBirth,
-                PhoneNumber = request.Admin.PhoneNumber,
-                Address = request.Admin.Address,
-                City = request.Admin.City,
-                State = request.Admin.State,
-                ZipCode = request.Admin.ZipCode,
-                Position = request.Admin.Position,
+                CPF = request.Admin.CPF!,
+                DateOfBirth = (DateTime)request.Admin.DateOfBirth!,
+                PhoneNumber = request.Admin.PhoneNumber!,
+                Address = request.Admin.Address!,
+                City = request.Admin.City!,
+                State = request.Admin.State!,
+                ZipCode = request.Admin.ZipCode!,
+                Position = request.Admin.Position!,
                 UserId = adminUser.Id
             };
 
             await appDbContext.Associados.AddAsync(associado, ct);
 
             // create a default Association entity in tenant DB
-            var association = new Domain.Entities.Association { Name = request.AssociationName, EstablishedDate = DateTime.UtcNow };
+            var association = new Domain.Entities.Association { Name = request.AssociationName!, EstablishedDate = DateTime.UtcNow };
             await appDbContext.Associations.AddAsync(association, ct);
 
             await appDbContext.SaveChangesAsync(ct);
@@ -254,9 +254,9 @@ END";
 
     public async Task<string> UpdateSubscriptionAsync(UpdateTenantSubscriptionRequest updateTenantSubscription)
     {
-        var tenantInDb = await _tenantStore.TryGetAsync(updateTenantSubscription.TenantId);
+        var tenantInDb = await _tenantStore.TryGetAsync(updateTenantSubscription.TenantId!);
 
-        tenantInDb!.ValidUpTo = updateTenantSubscription.NewExpiryDate;
+        tenantInDb!.ValidUpTo = (DateTime?)updateTenantSubscription.NewExpiryDate ?? DateTime.UtcNow.AddMonths(1);
 
         await _tenantStore.TryUpdateAsync(tenantInDb);
 

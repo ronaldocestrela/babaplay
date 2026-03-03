@@ -1,6 +1,5 @@
-using Application.Features.Cors.Models;
+using BabaPlayShared.Library.Models.Requests.Cors;
 using FluentValidation;
-using System;
 
 namespace Application.Features.Cors.Validations;
 

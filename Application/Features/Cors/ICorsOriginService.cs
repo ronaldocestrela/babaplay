@@ -1,6 +1,7 @@
-namespace Application.Features.Cors;
+using BabaPlayShared.Library.Models.Requests.Cors;
+using BabaPlayShared.Library.Models.Responses.Cors;
 
-using Application.Features.Cors.Models;
+namespace Application.Features.Cors;
 
 public interface ICorsOriginService
 {

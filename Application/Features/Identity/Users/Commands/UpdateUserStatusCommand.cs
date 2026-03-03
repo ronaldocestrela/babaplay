@@ -17,10 +17,10 @@ public class UpdateUserStatusCommandHandler(IUserService userService)
     public async Task<IResponseWrapper> Handle(UpdateUserStatusCommand request, CancellationToken cancellationToken)
     {
         var userId = await _userService
-            .ActivateOrDeactivateAsync(request.ChangeUserStatus.UserId, request.ChangeUserStatus.Activation);
+            .ActivateOrDeactivateAsync(request.ChangeUserStatus.UserId!, (bool)request.ChangeUserStatus.Activation!);
 
         return await ResponseWrapper<string>
-            .SuccessAsync(data: userId, message: request.ChangeUserStatus.Activation ?
+            .SuccessAsync(data: userId, message: (bool)request.ChangeUserStatus.Activation ?
                 "User activated successfully" : "User de-activated successfully");
     }
 }

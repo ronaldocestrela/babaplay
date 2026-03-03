@@ -38,12 +38,12 @@ public class AssociadoService(
                 throw new UnauthorizedException(["Tenant não identificado. Faça login ou forneça o header 'tenant'."]);
             }
 
-            if (request.Password != request.ConfirmPassword)
+            if (request!.Password != request.ConfirmPassword)
             {
                 throw new ConflictException(["Senhas não conferem."]);
             }
 
-            if (await _userManager.FindByEmailAsync(request.Email) is not null)
+            if (await _userManager.FindByEmailAsync(request.Email!) is not null)
             {
                 throw new ConflictException(["Email já está em uso."]);
             }
@@ -70,7 +70,7 @@ public class AssociadoService(
                 EmailConfirmed = true
             };
 
-            var identityResult = await _userManager.CreateAsync(newUser, request.Password);
+            var identityResult = await _userManager.CreateAsync(newUser, request.Password!);
             if (!identityResult.Succeeded)
             {
                 throw new IdentityException(IdentityHelper.GetIdentityResultErrorDescriptions(identityResult));
@@ -82,15 +82,15 @@ public class AssociadoService(
             // Create Associado linked to the user
             var associado = new Associado
             {
-                FullName = request.FullName,
-                CPF = request.CPF,
-                DateOfBirth = request.DateOfBirth,
-                PhoneNumber = request.PhoneNumber,
-                Address = request.Address,
-                City = request.City,
-                State = request.State,
-                ZipCode = request.ZipCode,
-                Position = request.Position,
+                FullName = request.FullName!,
+                CPF = request.CPF!,
+                DateOfBirth = (DateTime)request.DateOfBirth!,
+                PhoneNumber = request.PhoneNumber!,
+                Address = request.Address!,
+                City = request.City!,
+                State = request.State!,
+                ZipCode = request.ZipCode!,
+                Position = request.Position!,
                 UserId = newUser.Id
             };
 
@@ -121,20 +121,20 @@ public class AssociadoService(
             .FirstOrDefaultAsync(a => a.Id == id)
             ?? throw new NotFoundException(["Associado não encontrado."]);
 
-        associado.FullName = request.FullName;
-        associado.PhoneNumber = request.PhoneNumber;
-        associado.Address = request.Address;
-        associado.City = request.City;
-        associado.State = request.State;
-        associado.ZipCode = request.ZipCode;
-        associado.Position = request.Position;
+        associado.FullName = request.FullName!;
+        associado.PhoneNumber = request.PhoneNumber!;
+        associado.Address = request.Address!;
+        associado.City = request.City!;
+        associado.State = request.State!;
+        associado.ZipCode = request.ZipCode!;
+        associado.Position = request.Position!;
         associado.UpdatedAt = DateTime.UtcNow;
 
         // Update the linked user's name and phone
         var user = await _userManager.FindByIdAsync(associado.UserId);
         if (user is not null)
         {
-            var nameParts = request.FullName.Trim().Split(' ', 2);
+            var nameParts = request.FullName!.Trim().Split(' ', 2);
             user.FirstName = nameParts[0];
             user.LastName = nameParts.Length > 1 ? nameParts[1] : nameParts[0];
             user.PhoneNumber = request.PhoneNumber;

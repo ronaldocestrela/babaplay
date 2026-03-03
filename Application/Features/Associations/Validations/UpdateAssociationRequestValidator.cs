@@ -10,7 +10,7 @@ public class UpdateAssociationRequestValidator : AbstractValidator<UpdateAssocia
     {
         RuleFor(request => request.Id)
             .NotEmpty().WithMessage("Association ID is required.")
-            .MustAsync(async (id, cancellation) => await associationService.GetByIdAsync(id) is Association associationInDb && associationInDb.Id == id)
+            .MustAsync(async (id, cancellation) => await associationService.GetByIdAsync(id!) is Association associationInDb && associationInDb.Id == id)
             .WithMessage("Association with the specified ID does not exist.");
 
         RuleFor(request => request.Name)

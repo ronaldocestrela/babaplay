@@ -7,14 +7,9 @@ public class DeleteCorsOriginCommand : IRequest<IResponseWrapper>
 {
     public string Id { get; init; } = null!;
 
-    public class Handler : IRequestHandler<DeleteCorsOriginCommand, IResponseWrapper>
+    public class Handler(ICorsOriginService service) : IRequestHandler<DeleteCorsOriginCommand, IResponseWrapper>
     {
-        private readonly ICorsOriginService _service;
-
-        public Handler(ICorsOriginService service)
-        {
-            _service = service;
-        }
+        private readonly ICorsOriginService _service = service;
 
         public async Task<IResponseWrapper> Handle(DeleteCorsOriginCommand request, CancellationToken cancellationToken)
         {

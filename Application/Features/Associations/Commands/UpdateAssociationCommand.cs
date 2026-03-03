@@ -16,15 +16,15 @@ public class UpdateAssociationCommandHandler(IAssociationService associationServ
 
     public async Task<IResponseWrapper> Handle(UpdateAssociationCommand request, CancellationToken cancellationToken)
     {
-        var associationInDb = await _associationService.GetByIdAsync(request.UpdateAssociation.Id);
+        var associationInDb = await _associationService.GetByIdAsync(request.UpdateAssociation.Id!);
 
         if (associationInDb is null)
         {
             return await ResponseWrapper<string>.FailAsync(message: "Association not found.");
         }
 
-        associationInDb.Name = request.UpdateAssociation.Name;
-        associationInDb.EstablishedDate = request.UpdateAssociation.EstablishedDate;
+        associationInDb.Name = request.UpdateAssociation.Name!;
+        associationInDb.EstablishedDate = request.UpdateAssociation.EstablishedDate ?? DateTime.Now;
 
         var updatedAssociation = await _associationService.UpdateAsync(associationInDb);
 

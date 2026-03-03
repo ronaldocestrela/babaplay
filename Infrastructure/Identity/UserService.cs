@@ -44,7 +44,7 @@ public class UserService(
         var userInDb = await GetUserAsync(userId);
 
         if (await _userManager.IsInRoleAsync(userInDb, RoleConstants.Admin)
-            && request.UserRoles.Any(ur => !ur.IsAssigned && ur.Name == RoleConstants.Admin))
+            && request.UserRoles!.Any(ur => !(bool)ur.IsAssigned! && ur.Name == RoleConstants.Admin))
         {
             var adminUsersCount = (await _userManager.GetUsersInRoleAsync(RoleConstants.Admin)).Count;
             if (userInDb.Email == TenancyConstants.Root.Email)
@@ -60,18 +60,18 @@ public class UserService(
             }
         }
 
-        foreach (var userRole in request.UserRoles)
+        foreach (var userRole in request.UserRoles!)
         {
-            if (userRole.IsAssigned)
+            if ((bool)userRole.IsAssigned!)
             {
-                if (!await _userManager.IsInRoleAsync(userInDb, userRole.Name))
+                if (!await _userManager.IsInRoleAsync(userInDb, userRole.Name!))
                 {
-                    await _userManager.AddToRoleAsync(userInDb, userRole.Name);
+                    await _userManager.AddToRoleAsync(userInDb, userRole.Name!);
                 }
             }
             else
             {
-                await _userManager.RemoveFromRoleAsync(userInDb, userRole.Name);
+                await _userManager.RemoveFromRoleAsync(userInDb, userRole.Name!);
             }
         }
 
@@ -80,14 +80,14 @@ public class UserService(
 
     public async Task<string> ChangePasswordAsync(ChangePasswordRequest request)
     {
-        var userInDb = await GetUserAsync(request.UserId);
+        var userInDb = await GetUserAsync(request.UserId!);
 
         if (request.NewPassword != request.ConfirmNewPassword)
         {
             throw new ConflictException(["Passwords do not match."]);
         }
 
-        var result = await _userManager.ChangePasswordAsync(userInDb, request.CurrentPassword, request.NewPassword);
+        var result = await _userManager.ChangePasswordAsync(userInDb, request.CurrentPassword!, request.NewPassword!);
 
         if (!result.Succeeded)
         {
@@ -103,23 +103,23 @@ public class UserService(
             throw new ConflictException(["Passwords do not match."]);
         }
 
-        if (await IsEmailTakenAsync(request.Email))
+        if (await IsEmailTakenAsync(request.Email!))
         {
             throw new ConflictException(["Email already taken."]);
         }
 
         var newUser = new ApplicationUser
         {
-            FirstName = request.FirstName,
-            LastName = request.LastName,
+            FirstName = request.FirstName!,
+            LastName = request.LastName!,
             Email = request.Email,
             PhoneNumber = request.PhoneNumber,
-            IsActive = request.IsActive,
+            IsActive = (bool)request.IsActive!,
             UserName = request.Email,
             EmailConfirmed = true
         };
 
-        var result = await _userManager.CreateAsync(newUser, request.Password);
+        var result = await _userManager.CreateAsync(newUser, request.Password!);
         if (!result.Succeeded)
         {
             throw new IdentityException(IdentityHelper.GetIdentityResultErrorDescriptions(result));
@@ -167,17 +167,18 @@ public class UserService(
 
         foreach (var role in await _roleManager
             .Roles
-            .Where(r => userRolesNames.Contains(r.Name))
+            .Where(r => userRolesNames.Contains(r.Name!))
             .ToListAsync(ct))
         {
             permissions.AddRange(await _context
                 .RoleClaims
                 .Where(rc => rc.RoleId == role.Id && rc.ClaimType == ClaimConstants.Permission)
-                .Select(rc => rc.ClaimValue)
+                .Select(rc => rc.ClaimValue!)
+                .Where(cv => cv != null)
                 .ToListAsync(ct));
         }
 
-        return permissions.Distinct().ToList();
+        return [.. permissions.Distinct()];
     }
 
     public async Task<List<UserRoleResponse>> GetUserRolesAsync(string userId, CancellationToken ct)
@@ -195,7 +196,7 @@ public class UserService(
                 RoleId = role.Id,
                 Name = role.Name,
                 Description = role.Description,
-                IsAssigned = await _userManager.IsInRoleAsync(userInDb, role.Name),
+                IsAssigned = await _userManager.IsInRoleAsync(userInDb, role.Name!),
             });
         }
 
@@ -214,10 +215,10 @@ public class UserService(
 
     public async Task<string> UpdateAsync(UpdateUserRequest request)
     {
-        var userInDb = await GetUserAsync(request.Id);
+        var userInDb = await GetUserAsync(request.Id!);
 
-        userInDb.FirstName = request.FirstName;
-        userInDb.LastName = request.LastName;
+        userInDb.FirstName = request.FirstName!;
+        userInDb.LastName = request.LastName!;
         userInDb.PhoneNumber = request.PhoneNumber;
 
         var result = await _userManager.UpdateAsync(userInDb);

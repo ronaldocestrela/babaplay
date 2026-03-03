@@ -1,5 +1,6 @@
 using Application.Features.Cors;
-using Application.Features.Cors.Models;
+using BabaPlayShared.Library.Models.Requests.Cors;
+using BabaPlayShared.Library.Models.Responses.Cors;
 using Domain.Entities;
 using Infrastructure.Contexts;
 using Microsoft.EntityFrameworkCore;
