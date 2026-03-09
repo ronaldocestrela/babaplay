@@ -42,14 +42,30 @@ public static class StartUp
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-        return services
+        // tenant host template (e.g. "{__tenant__}.babaplay.com") is optional and read from config
+        var hostTemplate = configuration.GetSection("Tenancy")?.GetValue<string>("HostTemplate");
+        Console.WriteLine($"[Startup] Tenancy.HostTemplate='{hostTemplate}'");
+
+        // configure tenant store and resolution strategies
+        var multiTenantBuilder = services
             .AddDbContext<TenantDbContext>(options => options
                 .UseSqlServer(configuration.GetConnectionString("DefaultConnection")))
             .AddMultiTenant<BabaPlayTenantInfo>()
                 .WithHeaderStrategy(TenancyConstants.TenantIdName)
-                .WithClaimStrategy(TenancyConstants.TenantIdName)
-                .WithEFCoreStore<TenantDbContext, BabaPlayTenantInfo>()
-                .Services
+                .WithClaimStrategy(TenancyConstants.TenantIdName);
+
+        // register host strategy last so it isn't inadvertently overwritten by other calls
+        if (!string.IsNullOrWhiteSpace(hostTemplate))
+        {
+            Console.WriteLine("[Startup] registering host strategy");
+            multiTenantBuilder = multiTenantBuilder.WithHostStrategy(hostTemplate);
+        }
+
+        multiTenantBuilder = multiTenantBuilder
+                .WithEFCoreStore<TenantDbContext, BabaPlayTenantInfo>();
+
+        // continue fluent registration
+        return multiTenantBuilder.Services
             .AddDbContext<ApplicationDbContext>(options => options
                 .UseSqlServer(configuration.GetConnectionString("DefaultConnection")))
             // shared context for global tables such as CORS origins.  unaffected by

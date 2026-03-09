@@ -14,8 +14,22 @@ public class TokenController : BaseApiController
     [HttpPost("login")]
     [AllowAnonymous]
     [TenantHeader]
-    [OpenApiOperation("Used to obtain jwt for login.")]
+    [OpenApiOperation("Used to obtain jwt for login (mobile or header-based). Requires \"tenant\" HTTP header.")]
     public async Task<IActionResult> GetTokenAsync([FromBody] TokenRequest tokenRequest)
+    {
+        var response = await Sender.Send(new GetTokenQuery { TokenRequest = tokenRequest });
+
+        if (response.IsSuccessful)
+        {
+            return Ok(response);
+        }
+        return BadRequest(response);
+    }
+
+    [HttpPost("login-web")]
+    [AllowAnonymous]
+    [OpenApiOperation("Used to obtain jwt for web login via subdomain. Tenant is resolved from host; no header required.")]
+    public async Task<IActionResult> GetTokenWebAsync([FromBody] TokenRequest tokenRequest)
     {
         var response = await Sender.Send(new GetTokenQuery { TokenRequest = tokenRequest });
 
