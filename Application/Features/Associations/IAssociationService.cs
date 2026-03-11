@@ -10,4 +10,5 @@ public interface IAssociationService
     Task<Association> GetByIdAsync(string associationId);
     Task<List<Association>> GetAllAsync();
     Task<Association> GetByNameAsync(string name);
+    Task<bool> HasAnyAsync();
 }

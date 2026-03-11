@@ -80,4 +80,12 @@ public class AssociationsController : BaseApiController
         }
         return NotFound(response);
     }
+
+    [HttpGet("has-any")]
+    [ShouldHavePermission(AssociationAction.Read, AssociationFeature.Associations)]
+    public async Task<IActionResult> HasAnyAssociationAsync()
+    {
+        var response = await Sender.Send(new HasAssociationQuery());
+        return Ok(response);
+    }
 }

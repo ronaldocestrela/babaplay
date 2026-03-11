@@ -51,4 +51,9 @@ public class AssociationService(ApplicationDbContext context) : IAssociationServ
         await _context.SaveChangesAsync();
         return association.Id;
     }
+
+    public async Task<bool> HasAnyAsync()
+    {
+        return await _context.Associations.AnyAsync();
+    }
 }
