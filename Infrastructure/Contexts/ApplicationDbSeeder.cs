@@ -104,7 +104,7 @@ public class ApplicationDbSeeder(
                     }
                 }
 
-                if (_tenantInfoContextAccessor.MultiTenantContext.TenantInfo.Id == TenancyConstants.Root.Id)
+                if (_tenantInfoContextAccessor.MultiTenantContext.TenantInfo!.Id == TenancyConstants.Root.Id)
                 {
                     await AssignPermissionsToRoleAsync(AssociationPermissions.Root, incomingRole, ct);
                 }
@@ -158,7 +158,7 @@ public class ApplicationDbSeeder(
 
     private async Task InitializeAdminUserAsync()
     {
-        if (string.IsNullOrEmpty(_tenantInfoContextAccessor.MultiTenantContext.TenantInfo.Email)) return;
+        if (string.IsNullOrEmpty(_tenantInfoContextAccessor.MultiTenantContext.TenantInfo!.Email)) return;
 
         if (await _userManager.Users
             .SingleOrDefaultAsync(user => user.Email == _tenantInfoContextAccessor.MultiTenantContext.TenantInfo.Email)
@@ -166,8 +166,8 @@ public class ApplicationDbSeeder(
         {
             incomingUser = new ApplicationUser
             {
-                FirstName = _tenantInfoContextAccessor.MultiTenantContext.TenantInfo.FirstName,
-                LastName = _tenantInfoContextAccessor.MultiTenantContext.TenantInfo.LastName,
+                FirstName = _tenantInfoContextAccessor.MultiTenantContext.TenantInfo.FirstName!,
+                LastName = _tenantInfoContextAccessor.MultiTenantContext.TenantInfo.LastName!,
                 Email = _tenantInfoContextAccessor.MultiTenantContext.TenantInfo.Email,
                 UserName = _tenantInfoContextAccessor.MultiTenantContext.TenantInfo.Email,
                 EmailConfirmed = true,

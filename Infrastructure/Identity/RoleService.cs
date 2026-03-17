@@ -38,7 +38,7 @@ public class RoleService(
         {
             throw new IdentityException(IdentityHelper.GetIdentityResultErrorDescriptions(result));
         }
-        return newRole.Name;
+        return newRole.Name!;
     }
 
     public async Task<string> DeleteAsync(string id)
@@ -46,12 +46,12 @@ public class RoleService(
         var roleInDb = await _roleManager.FindByIdAsync(id)
             ?? throw new NotFoundException(["Role does not exist."]);
 
-        if (RoleConstants.IsDefaultRole(roleInDb.Name))
+        if (RoleConstants.IsDefaultRole(roleInDb.Name!))
         {
             throw new ConflictException([$"Not allowed to delete '{roleInDb.Name}' role."]);
         }
 
-        if ((await _userManager.GetUsersInRoleAsync(roleInDb.Name)).Count > 0)
+        if ((await _userManager.GetUsersInRoleAsync(roleInDb.Name!)).Count > 0)
         {
             throw new ConflictException([$"Not allowed to delete '{roleInDb.Name}' role as is currently assigned to users."]);
         }
@@ -62,7 +62,7 @@ public class RoleService(
             throw new IdentityException(IdentityHelper.GetIdentityResultErrorDescriptions(result));
         }
 
-        return roleInDb.Name;
+        return roleInDb.Name!;
     }
 
     public async Task<bool> DoesItExistsAsync(string name)
@@ -95,6 +95,8 @@ public class RoleService(
         role.Permissions = await _context.RoleClaims
             .Where(rc => rc.RoleId == id && rc.ClaimType == ClaimConstants.Permission)
             .Select(rc => rc.ClaimValue)
+            .Where(v => v != null)
+            .Cast<string>()
             .ToListAsync(ct);
 
         return role;
@@ -102,17 +104,17 @@ public class RoleService(
 
     public async Task<string> UpdateAsync(UpdateRoleRequest request)
     {
-        var roleInDb = await _roleManager.FindByIdAsync(request.Id)
+        var roleInDb = await _roleManager.FindByIdAsync(request.Id!)
             ?? throw new NotFoundException(["Role does not exist."]);
 
-        if (RoleConstants.IsDefaultRole(roleInDb.Name))
+        if (RoleConstants.IsDefaultRole(roleInDb.Name!))
         {
             throw new ConflictException([$"Changes not allowed on system role '{roleInDb.Name}'."]);
         }
 
         roleInDb.Name = request.Name;
         roleInDb.Description = request.Description;
-        roleInDb.NormalizedName = request.Name.ToUpperInvariant();
+        roleInDb.NormalizedName = request.Name!.ToUpperInvariant();
 
         var result = await _roleManager.UpdateAsync(roleInDb);
 
@@ -120,12 +122,12 @@ public class RoleService(
         {
             throw new IdentityException(IdentityHelper.GetIdentityResultErrorDescriptions(result));
         }
-        return roleInDb.Name;
+        return roleInDb.Name!;
     }
 
     public async Task<string> UpdatePermissionsAsync(UpdateRolePermissionsRequest request)
     {
-        var roleInDb = await _roleManager.FindByIdAsync(request.RoleId)
+        var roleInDb = await _roleManager.FindByIdAsync(request.RoleId!)
             ?? throw new NotFoundException(["Role does not exist."]);
 
         if (roleInDb.Name == RoleConstants.Admin)
@@ -133,15 +135,15 @@ public class RoleService(
             throw new ConflictException([$"Not allowed to change permissions for '{roleInDb.Name}' role."]);
         }
 
-        if (_tenantInfoContextAccessor.MultiTenantContext.TenantInfo.Id != TenancyConstants.Root.Id)
+        if (_tenantInfoContextAccessor.MultiTenantContext.TenantInfo!.Id != TenancyConstants.Root.Id)
         {
-            request.NewPermissions.RemoveAll(p => p.StartsWith("Permission.Tenants."));
+            request.NewPermissions!.RemoveAll(p => p.StartsWith("Permission.Tenants."));
         }
 
 
         var currentClaims = await _roleManager.GetClaimsAsync(roleInDb);
 
-        foreach (var claim in currentClaims.Where(c => !request.NewPermissions.Any(p => p == c.Value)))
+        foreach (var claim in currentClaims.Where(c => !request.NewPermissions!.Any(p => p == c.Value)))
         {
             var result = await _roleManager.RemoveClaimAsync(roleInDb, claim);
 
@@ -151,7 +153,7 @@ public class RoleService(
             }
         }
 
-        foreach (var newPermission in request.NewPermissions.Where(p => !currentClaims.Any(c => c.Value == p)))
+        foreach (var newPermission in request.NewPermissions!.Where(p => !currentClaims.Any(c => c.Value == p)))
         {
             await _context
                 .RoleClaims

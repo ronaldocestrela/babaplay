@@ -32,7 +32,6 @@ internal class UpdateAssociadoRequestValidator : AbstractValidator<UpdateAssocia
             .MaximumLength(10).WithMessage("CEP não pode exceder 10 caracteres.");
 
         RuleFor(r => r.Position)
-            .NotEmpty().WithMessage("Posição é obrigatória.")
-            .MaximumLength(50).WithMessage("Posição não pode exceder 50 caracteres.");
+            .NotEmpty().WithMessage("Posição é obrigatória.");
     }
 }

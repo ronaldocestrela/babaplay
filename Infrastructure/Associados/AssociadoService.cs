@@ -90,7 +90,7 @@ public class AssociadoService(
                 City = request.City!,
                 State = request.State!,
                 ZipCode = request.ZipCode!,
-                Position = request.Position!,
+                Position = request.Position!.Select(p => Enum.Parse<Domain.Enums.SoccerPosition>(p.ToString())).ToList(),
                 UserId = newUser.Id
             };
 
@@ -127,7 +127,7 @@ public class AssociadoService(
         associado.City = request.City!;
         associado.State = request.State!;
         associado.ZipCode = request.ZipCode!;
-        associado.Position = request.Position!;
+        associado.Position = request.Position!.Select(p => Enum.Parse<Domain.Enums.SoccerPosition>(p.ToString())).ToList();
         associado.UpdatedAt = DateTime.UtcNow;
 
         // Update the linked user's name and phone
@@ -207,7 +207,7 @@ public class AssociadoService(
             City = associado.City,
             State = associado.State,
             ZipCode = associado.ZipCode,
-            Position = associado.Position,
+            Position = [.. associado.Position.Select(p => Enum.Parse<BabaPlayShared.Library.Enum.SoccerPosition>(p.ToString()))],
             Email = user?.Email ?? string.Empty,
             UserId = associado.UserId,
             IsActive = user?.IsActive ?? false,

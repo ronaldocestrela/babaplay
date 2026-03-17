@@ -3,7 +3,10 @@ using Finbuckle.MultiTenant;
 using Infrastructure.Identity.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System.Text.Json;
 
 namespace Infrastructure.Contexts;
 
@@ -129,10 +132,34 @@ internal class DbConfigurations
                 .IsRequired()
                 .HasMaxLength(10);
 
+            // EF Core 8 treats List<enum> as a "primitive collection" and uses JsonCollectionReaderWriter
+            // to serialize it as JSON. The explicit HasColumnType("nvarchar(500)") + combined
+            // HasConversion(converter, comparer) overload is required to fully opt out of that
+            // JSON pipeline and store the values as a plain comma-delimited string instead.
+            var positionConverter = new ValueConverter<List<Domain.Enums.SoccerPosition>, string>(
+                v => string.Join(',', v.Select(p => p.ToString())),
+                v => ConvertPositionStringToList(v));
+
+            var positionComparer = new ValueComparer<List<Domain.Enums.SoccerPosition>>(
+                (l1, l2) => ReferenceEquals(l1, l2) || (l1 != null && l2 != null && l1.SequenceEqual(l2)),
+                l => l == null ? 0 : l.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                l => l == null ? new List<Domain.Enums.SoccerPosition>() : l.ToList());
+
             builder
                 .Property(a => a.Position)
                 .IsRequired()
-                .HasMaxLength(50);
+                .HasColumnType("nvarchar(500)")
+                .HasConversion(positionConverter, positionComparer);
+
+            // EF Core 8's PrimitiveCollectionConvention adds a "JsonValueReaderWriter"
+            // annotation to every List<TEnum> property. At query-compilation time EF
+            // checks that annotation and, when present, routes the column through
+            // JsonCollectionReaderWriter BEFORE the ValueConverter runs — causing the
+            // "invalid start of value" JSON exception for any non-JSON string stored in
+            // the column. Removing the annotation forces EF to use only the
+            // ValueConverter pipeline (string ↔ List<SoccerPosition>).
+            builder.Property(a => a.Position)
+                   .Metadata.RemoveAnnotation("JsonValueReaderWriter");
 
             builder
                 .Property(a => a.UserId)
@@ -141,6 +168,37 @@ internal class DbConfigurations
             builder
                 .HasIndex(a => a.UserId)
                 .IsUnique();
+        }
+
+        private static List<Domain.Enums.SoccerPosition> ConvertPositionStringToList(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return new List<Domain.Enums.SoccerPosition>();
+            }
+
+            // First, try JSON array (newer format produced by EF Core JSON conversion).
+            try
+            {
+                var list = JsonSerializer.Deserialize<List<Domain.Enums.SoccerPosition>>(value);
+                if (list is not null)
+                {
+                    return list;
+                }
+            }
+            catch
+            {
+                // ignore and fall back to legacy parsing
+            }
+
+            // Legacy: comma/semicolon-separated values (e.g. "GK,RB,CB")
+            return [.. value
+                .Split([',', ';'], StringSplitOptions.RemoveEmptyEntries)
+                .Select(token => token.Trim())
+                .Where(token => !string.IsNullOrEmpty(token))
+                .Select(token => Enum.TryParse<Domain.Enums.SoccerPosition>(token, true, out var pos) ? pos : (Domain.Enums.SoccerPosition?)null)
+                .Where(p => p.HasValue)
+                .Select(p => p!.Value)];
         }
     }
 

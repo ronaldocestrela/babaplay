@@ -14,7 +14,7 @@ public class PermissionAuthorizationHandler(ILogger<PermissionAuthorizationHandl
         {
             _logger.LogInformation("Authorization check for permission={Permission} - ClaimsCount={Count}", requirement.Permission, context.User?.Claims?.Count() ?? 0);
 
-            var permissions = context.User.Claims
+            var permissions = context.User!.Claims
                 .Where(claim => claim.Type == ClaimConstants.Permission
                     && claim.Value == requirement.Permission);
 

@@ -36,10 +36,10 @@ public class TokenService(
             throw new UnauthorizedException(["Tenant subscription is not active. Contact Administrator."]);
         }
 
-        var userInDb = await _userManager.FindByNameAsync(request.Username)
+        var userInDb = await _userManager.FindByNameAsync(request.Username!)
             ?? throw new UnauthorizedException(["Authentication not successful."]);
 
-        if (!await _userManager.CheckPasswordAsync(userInDb, request.Password))
+        if (!await _userManager.CheckPasswordAsync(userInDb, request.Password!))
         {
             throw new UnauthorizedException(["Incorrect Username or Password."]);
         }
@@ -64,7 +64,7 @@ public class TokenService(
 
     public async Task<TokenResponse> RefreshTokenAsync(RefreshTokenRequest request)
     {
-        var userPrincipal = GetClaimsPrincipalFromExpiringToken(request.CurrentJwt);
+        var userPrincipal = GetClaimsPrincipalFromExpiringToken(request.CurrentJwt!);
         var userEmail = userPrincipal.GetEmail();
 
         var userInDb = await _userManager.FindByEmailAsync(userEmail)

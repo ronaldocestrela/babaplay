@@ -1,8 +1,9 @@
 namespace Domain.Entities;
 
-public class Association
+public class Association : BaseEntity
 {
-    public string Id { get; set; } = new Guid().ToString();
     public required string Name { get; set; }
     public DateTime EstablishedDate { get; set; }
+    public string? Statute { get; set; }
+    public string? LogoUrl { get; set; }
 }

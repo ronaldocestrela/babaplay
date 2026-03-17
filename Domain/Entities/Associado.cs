@@ -1,3 +1,5 @@
+using Domain.Enums;
+
 namespace Domain.Entities;
 
 public class Associado : BaseEntity
@@ -10,6 +12,6 @@ public class Associado : BaseEntity
     public required string City { get; set; }
     public required string State { get; set; }
     public required string ZipCode { get; set; }
-    public required string Position { get; set; }
+    public required List<SoccerPosition> Position { get; set; }
     public required string UserId { get; set; }
 }

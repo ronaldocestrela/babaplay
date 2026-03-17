@@ -124,7 +124,7 @@ public static class StartUp
         var jwtSettingsConfig = config.GetSection(nameof(JwtSettings));
         services.Configure<JwtSettings>(jwtSettingsConfig);
 
-        return jwtSettingsConfig.Get<JwtSettings>();
+        return jwtSettingsConfig.Get<JwtSettings>()!;
     }
 
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, JwtSettings jwtSettings)
@@ -210,8 +210,8 @@ public static class StartUp
                 var propertyValue = prop.GetValue(null);
                 if (propertyValue is not null)
                 {
-                    options.AddPolicy(propertyValue.ToString(), policy => policy
-                        .RequireClaim(ClaimConstants.Permission, propertyValue.ToString()));
+                    options.AddPolicy(propertyValue.ToString()!, policy => policy
+                        .RequireClaim(ClaimConstants.Permission, propertyValue.ToString()!));
                 }
             }
         });
@@ -228,7 +228,7 @@ public static class StartUp
         {
             document.PostProcess = doc =>
             {
-                doc.Info.Title = swaggerSettings.Title;
+                doc.Info.Title = swaggerSettings!.Title;
                 doc.Info.Description = swaggerSettings.Description;
                 doc.Info.Contact = new OpenApiContact
                 {

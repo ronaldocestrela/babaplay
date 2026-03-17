@@ -192,7 +192,7 @@ END";
                 City = request.Admin.City!,
                 State = request.Admin.State!,
                 ZipCode = request.Admin.ZipCode!,
-                Position = request.Admin.Position!,
+                Position = [.. request.Admin.Position!.Select(p => Enum.Parse<Domain.Enums.SoccerPosition>(p.ToString()))],
                 UserId = adminUser.Id
             };
 
