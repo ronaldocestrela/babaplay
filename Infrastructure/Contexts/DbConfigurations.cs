@@ -202,6 +202,29 @@ internal class DbConfigurations
         }
     }
 
+    internal class DailyCheckInConfig : IEntityTypeConfiguration<DailyCheckIn>
+    {
+        public void Configure(EntityTypeBuilder<DailyCheckIn> builder)
+        {
+            builder
+                .ToTable("DailyCheckIns", "Academics")
+                .IsMultiTenant();
+
+            builder
+                .HasIndex(x => new { x.AssociadoId, x.Date })
+                .IsUnique();
+
+            builder
+                .Property(x => x.Date)
+                .IsRequired()
+                .HasColumnType("date");
+
+            builder
+                .Property(x => x.CheckInAtUtc)
+                .IsRequired();
+        }
+    }
+
     internal class AllowedCorsConfig : IEntityTypeConfiguration<CorsOrigin>
     {
         public void Configure(EntityTypeBuilder<CorsOrigin> builder)

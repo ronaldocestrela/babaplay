@@ -4,6 +4,7 @@ using Application.Features.Identity.Tokens;
 using Application.Features.Identity.Users;
 using Application.Features.Associations;
 using Application.Features.Associados;
+using Application.Features.CheckIns;
 using Application.Features.Tenancy;
 using Application.Features.Cors;
 using Infrastructure.Cors;
@@ -17,6 +18,7 @@ using Infrastructure.Identity.Models;
 using Infrastructure.Identity.Tokens;
 using Infrastructure.OpenApi;
 using Infrastructure.Associations;
+using Infrastructure.CheckIns;
 using Infrastructure.Tenancy;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -77,6 +79,7 @@ public static class StartUp
             .AddTransient<ITenantService, TenantService>()
             .AddTransient<IAssociationService, AssociationService>()
             .AddTransient<IAssociadoService, AssociadoService>()
+            .AddTransient<ICheckInService, CheckInService>()
             .AddTransient<ICorsOriginService, CorsOriginService>()
             .AddIdentityService()
             .AddPermissions()

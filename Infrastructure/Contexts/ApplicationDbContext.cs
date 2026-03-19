@@ -16,6 +16,7 @@ public class ApplicationDbContext : BaseDbContext
 
     public DbSet<Association> Associations => Set<Association>();
     public DbSet<Associado> Associados => Set<Associado>();
+    public DbSet<DailyCheckIn> DailyCheckIns => Set<DailyCheckIn>();
 
     // NOTE: CorsOrigin is intentionally *not* exposed here.  the CORS table
     // lives in the shared database and is accessed through SharedDbContext
