@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BabaPlay.Api/BabaPlay.Api.csproj" />
+    <Project Path="src/BabaPlay.Infrastructure/BabaPlay.Infrastructure.csproj" />
+    <Project Path="src/BabaPlay.SharedKernel/BabaPlay.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/">
+    <Project Path="src/Modules/BabaPlay.Modules.Associates/BabaPlay.Modules.Associates.csproj" />
+    <Project Path="src/Modules/BabaPlay.Modules.Associations/BabaPlay.Modules.Associations.csproj" />
+    <Project Path="src/Modules/BabaPlay.Modules.CheckIns/BabaPlay.Modules.CheckIns.csproj" />
+    <Project Path="src/Modules/BabaPlay.Modules.Financial/BabaPlay.Modules.Financial.csproj" />
+    <Project Path="src/Modules/BabaPlay.Modules.Identity/BabaPlay.Modules.Identity.csproj" />
+    <Project Path="src/Modules/BabaPlay.Modules.Platform/BabaPlay.Modules.Platform.csproj" />
+    <Project Path="src/Modules/BabaPlay.Modules.TeamGeneration/BabaPlay.Modules.TeamGeneration.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,25 @@
+## .NET / Visual Studio
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+TestResults/
+*.VisualState.xml
+[Dd]ebug/
+[Rr]elease/
+[Bb]uild/
+*.log
+*.pdb
+*.cache
+project.lock.json
+artifacts/
+
+## Rider
+.idea/
+
+## OS
+.DS_Store
+Thumbs.db
