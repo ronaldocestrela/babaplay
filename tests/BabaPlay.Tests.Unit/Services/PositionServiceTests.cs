@@ -11,15 +11,17 @@ namespace BabaPlay.Tests.Unit.Services;
 public sealed class PositionServiceTests
 {
     private readonly Mock<ITenantRepository<Position>> _repo;
+    private readonly Mock<ITenantRepository<AssociatePosition>> _associatePositions;
     private readonly Mock<ITenantUnitOfWork> _uow;
     private readonly PositionService _sut;
 
     public PositionServiceTests()
     {
         _repo = new Mock<ITenantRepository<Position>>();
+        _associatePositions = new Mock<ITenantRepository<AssociatePosition>>();
         _uow = new Mock<ITenantUnitOfWork>();
         _uow.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
-        _sut = new PositionService(_repo.Object, _uow.Object);
+        _sut = new PositionService(_repo.Object, _associatePositions.Object, _uow.Object);
     }
 
     // ── List ─────────────────────────────────────────────────────────────────
@@ -69,6 +71,92 @@ public sealed class PositionServiceTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Name.Should().Be("Forward");
         result.Value.SortOrder.Should().Be(1);
+        _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // ── Update ───────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Update_NotFound_ReturnsNotFound()
+    {
+        _repo.Setup(r => r.GetByIdAsync("x", It.IsAny<CancellationToken>())).ReturnsAsync((Position?)null);
+
+        var result = await _sut.UpdateAsync("x", "Name", 1, CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Status.Should().Be(ResultStatus.NotFound);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task Update_EmptyName_ReturnsInvalid(string name)
+    {
+        _repo.Setup(r => r.GetByIdAsync("id", It.IsAny<CancellationToken>()))
+             .ReturnsAsync(new Position { Id = "id", Name = "Old", SortOrder = 0 });
+
+        var result = await _sut.UpdateAsync("id", name, 1, CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Status.Should().Be(ResultStatus.Invalid);
+        _repo.Verify(r => r.Update(It.IsAny<Position>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Update_ValidData_PersistsAndReturnsPosition()
+    {
+        var existing = new Position { Id = "id", Name = "Old", SortOrder = 0 };
+        _repo.Setup(r => r.GetByIdAsync("id", It.IsAny<CancellationToken>())).ReturnsAsync(existing);
+
+        var result = await _sut.UpdateAsync("id", "New", 5, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Name.Should().Be("New");
+        result.Value.SortOrder.Should().Be(5);
+        result.Value.UpdatedAt.Should().NotBeNull();
+        _repo.Verify(r => r.Update(existing), Times.Once);
+        _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // ── Delete ─────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Delete_NotFound_ReturnsNotFound()
+    {
+        _repo.Setup(r => r.GetByIdAsync("x", It.IsAny<CancellationToken>())).ReturnsAsync((Position?)null);
+
+        var result = await _sut.DeleteAsync("x", CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Status.Should().Be(ResultStatus.NotFound);
+    }
+
+    [Fact]
+    public async Task Delete_InUse_ReturnsConflict()
+    {
+        var position = new Position { Id = "pid", Name = "G", SortOrder = 1 };
+        _repo.Setup(r => r.GetByIdAsync("pid", It.IsAny<CancellationToken>())).ReturnsAsync(position);
+        _associatePositions.Setup(r => r.Query()).Returns(
+            new[] { new AssociatePosition { PositionId = "pid" } }.AsAsyncQueryable());
+
+        var result = await _sut.DeleteAsync("pid", CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Status.Should().Be(ResultStatus.Conflict);
+        _repo.Verify(r => r.Remove(It.IsAny<Position>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Delete_NotInUse_RemovesAndSaves()
+    {
+        var position = new Position { Id = "pid", Name = "G", SortOrder = 1 };
+        _repo.Setup(r => r.GetByIdAsync("pid", It.IsAny<CancellationToken>())).ReturnsAsync(position);
+        _associatePositions.Setup(r => r.Query()).Returns(Array.Empty<AssociatePosition>().AsAsyncQueryable());
+
+        var result = await _sut.DeleteAsync("pid", CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        _repo.Verify(r => r.Remove(position), Times.Once);
         _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

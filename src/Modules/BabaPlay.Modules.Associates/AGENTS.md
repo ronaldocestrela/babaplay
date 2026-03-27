@@ -11,7 +11,7 @@
 ## Serviços
 
 - `AssociateService` — CRUD com gestão de links `AssociatePosition`.
-- `PositionService` — listar e criar posições.
+- `PositionService` — listar, criar, atualizar e eliminar posições (eliminar falha com conflito se estiver atribuída a associados).
 
 ## Controllers
 

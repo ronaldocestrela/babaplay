@@ -17,13 +17,18 @@ Edit `src/BabaPlay.Api/appsettings.json`:
 
 ## Run
 
+Execute a partir da raiz do repositório:
+
 ```bash
-cd src/BabaPlay.Api
-dotnet run
+# HTTP (porta 5077)
+dotnet run --project src/BabaPlay.Api --launch-profile http
+
+# HTTPS (portas 7166 / 5077)
+dotnet run --project src/BabaPlay.Api --launch-profile https
 ```
 
-- Swagger: `https://localhost:<port>/swagger`
-- Health: `/health`
+- Swagger: `http://localhost:5077/swagger` (http) ou `https://localhost:7166/swagger` (https)
+- Health: `http://localhost:5077/health`
 
 ## Multitenancy
 

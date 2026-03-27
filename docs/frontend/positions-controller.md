@@ -51,3 +51,48 @@ Posição criada (mesmo formato de um item do GET).
 ### Resposta 400
 
 Nome obrigatório.
+
+---
+
+## PUT /api/positions/{id}
+
+Atualiza nome e ordem de uma posição existente.
+
+### Payload
+
+```json
+{
+  "name": "string",
+  "sortOrder": 0
+}
+```
+
+### Resposta 200
+
+Posição atualizada (mesmo formato de um item do GET).
+
+### Resposta 400
+
+Nome obrigatório.
+
+### Resposta 404
+
+Posição não encontrada.
+
+---
+
+## DELETE /api/positions/{id}
+
+Remove uma posição.
+
+### Resposta 200
+
+Eliminação bem-sucedida (envelope vazio `data: null`).
+
+### Resposta 404
+
+Posição não encontrada.
+
+### Resposta 409
+
+A posição está atribuída a um ou mais associados; remova primeiro as atribuições.
