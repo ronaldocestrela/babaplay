@@ -66,6 +66,12 @@ dotnet ef migrations add Name --context PlatformDbContext --project src/BabaPlay
 dotnet ef migrations add Name --context TenantDbContext --project src/BabaPlay.Infrastructure --startup-project src/BabaPlay.Api --output-dir Persistence/Migrations/Tenant
 ```
 
+### Tenant migrations automáticas (startup)
+
+Ao arrancar a API, após migrar a base **platform**, um serviço em background (`TenantMigrationsHostedService`) percorre todos os registos em `Platform.Tenants` e aplica `Database.MigrateAsync()` em cada base tenant (`DatabaseName`), com as migrations pendentes do `TenantDbContext`. Falhas num tenant não bloqueiam os restantes; consulta os logs para o resumo (`migrated` / `failed` / `skippedEmptyDb`).
+
+Novos tenants criados via `POST .../subscription` continuam a ser migrados no provisionamento (`TenantDatabaseProvisioner`).
+
 ## Security notes (MVP)
 
 - `/api/platform/*` is currently **`[AllowAnonymous]`** for ease of setup; lock this down (separate auth, API keys, or network rules) before production.

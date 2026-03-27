@@ -1,7 +1,9 @@
+using BabaPlay.Modules.Associates.Dtos;
 using BabaPlay.Modules.Associates.Entities;
 using BabaPlay.Modules.Associates.Services;
 using BabaPlay.SharedKernel.Repositories;
 using BabaPlay.SharedKernel.Results;
+using BabaPlay.SharedKernel.Security;
 using BabaPlay.Tests.Unit.Helpers;
 using FluentAssertions;
 using Moq;
@@ -14,6 +16,7 @@ public sealed class AssociateServiceTests
     private readonly Mock<ITenantRepository<AssociatePosition>> _linkRepo;
     private readonly Mock<ITenantRepository<Position>> _positionRepo;
     private readonly Mock<ITenantUnitOfWork> _uow;
+    private readonly Mock<IAssociateUserProvisioner> _provisioner;
     private readonly AssociateService _sut;
 
     public AssociateServiceTests()
@@ -22,10 +25,14 @@ public sealed class AssociateServiceTests
         _linkRepo = new Mock<ITenantRepository<AssociatePosition>>();
         _positionRepo = new Mock<ITenantRepository<Position>>();
         _uow = new Mock<ITenantUnitOfWork>();
+        _provisioner = new Mock<IAssociateUserProvisioner>();
         _uow.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _provisioner
+            .Setup(p => p.ProvisionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success("user-1"));
 
         _sut = new AssociateService(
-            _associateRepo.Object, _linkRepo.Object, _positionRepo.Object, _uow.Object);
+            _associateRepo.Object, _linkRepo.Object, _positionRepo.Object, _uow.Object, _provisioner.Object);
     }
 
     // ── List ─────────────────────────────────────────────────────────────────
@@ -40,7 +47,7 @@ public sealed class AssociateServiceTests
         };
         _associateRepo.Setup(r => r.Query()).Returns(associates.AsAsyncQueryable());
 
-        var result = await _sut.ListAsync(CancellationToken.None);
+        Result<IReadOnlyList<AssociateResponse>> result = await _sut.ListAsync(CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(2);
@@ -67,7 +74,7 @@ public sealed class AssociateServiceTests
         _associateRepo.Setup(r => r.Query())
                       .Returns(new List<Associate> { associate }.AsAsyncQueryable());
 
-        var result = await _sut.GetAsync("a1", CancellationToken.None);
+        Result<AssociateResponse> result = await _sut.GetAsync("a1", CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Name.Should().Be("Ana");
@@ -89,7 +96,7 @@ public sealed class AssociateServiceTests
     [Fact]
     public async Task Create_ZeroPositions_ReturnsInvalid()
     {
-        var result = await _sut.CreateAsync("Ana", null, null, [], CancellationToken.None);
+        var result = await _sut.CreateAsync("Ana", "ana@test.com", null, [], CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Status.Should().Be(ResultStatus.Invalid);
@@ -99,7 +106,7 @@ public sealed class AssociateServiceTests
     [Fact]
     public async Task Create_FourPositions_ReturnsInvalid()
     {
-        var result = await _sut.CreateAsync("Ana", null, null, ["p1", "p2", "p3", "p4"], CancellationToken.None);
+        var result = await _sut.CreateAsync("Ana", "ana@test.com", null, ["p1", "p2", "p3", "p4"], CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Status.Should().Be(ResultStatus.Invalid);
@@ -111,10 +118,26 @@ public sealed class AssociateServiceTests
         _positionRepo.Setup(r => r.GetByIdAsync("p-missing", It.IsAny<CancellationToken>()))
                      .ReturnsAsync((Position?)null);
 
-        var result = await _sut.CreateAsync("Ana", null, null, ["p-missing"], CancellationToken.None);
+        var result = await _sut.CreateAsync("Ana", "ana@test.com", null, ["p-missing"], CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Status.Should().Be(ResultStatus.Invalid);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task Create_EmptyEmail_ReturnsInvalid(string? email)
+    {
+        var result = await _sut.CreateAsync("Ana", email, null, ["p1"], CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Status.Should().Be(ResultStatus.Invalid);
+        result.Error.Should().Be("Email is required.");
+        _provisioner.Verify(
+            p => p.ProvisionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -138,8 +161,13 @@ public sealed class AssociateServiceTests
         var result = await _sut.CreateAsync("Ana", "ana@test.com", null, ["p1"], CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
+        captured!.UserId.Should().Be("user-1");
+        _provisioner.Verify(
+            p => p.ProvisionAsync(captured.Id, "ana@test.com", It.IsAny<CancellationToken>()),
+            Times.Once);
         _associateRepo.Verify(r => r.AddAsync(It.IsAny<Associate>(), It.IsAny<CancellationToken>()), Times.Once);
         _linkRepo.Verify(r => r.AddAsync(It.IsAny<AssociatePosition>(), It.IsAny<CancellationToken>()), Times.Once);
+        _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // ── Update ───────────────────────────────────────────────────────────────
@@ -195,5 +223,48 @@ public sealed class AssociateServiceTests
         _associateRepo.Verify(r => r.Update(associate), Times.Once);
         _linkRepo.Verify(r => r.Remove(It.IsAny<AssociatePosition>()), Times.Once);
         _linkRepo.Verify(r => r.AddAsync(It.IsAny<AssociatePosition>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // ── SetActive ─────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task SetActive_NotFound_ReturnsNotFound()
+    {
+        _associateRepo.Setup(r => r.GetByIdAsync("missing", It.IsAny<CancellationToken>())).ReturnsAsync((Associate?)null);
+
+        var result = await _sut.SetActiveAsync("missing", false, CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Status.Should().Be(ResultStatus.NotFound);
+        _associateRepo.Verify(r => r.Update(It.IsAny<Associate>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SetActive_DeactivatesAndReturnsAssociate()
+    {
+        var associate = new Associate { Id = "a1", Name = "Ana", IsActive = true, Positions = new List<AssociatePosition>() };
+        _associateRepo.Setup(r => r.GetByIdAsync("a1", It.IsAny<CancellationToken>())).ReturnsAsync(associate);
+        _associateRepo.Setup(r => r.Query()).Returns(new List<Associate> { associate }.AsAsyncQueryable());
+
+        var result = await _sut.SetActiveAsync("a1", false, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        associate.IsActive.Should().BeFalse();
+        associate.UpdatedAt.Should().NotBeNull();
+        _associateRepo.Verify(r => r.Update(associate), Times.Once);
+        _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SetActive_Activates()
+    {
+        var associate = new Associate { Id = "a1", Name = "Ana", IsActive = false, Positions = new List<AssociatePosition>() };
+        _associateRepo.Setup(r => r.GetByIdAsync("a1", It.IsAny<CancellationToken>())).ReturnsAsync(associate);
+        _associateRepo.Setup(r => r.Query()).Returns(new List<Associate> { associate }.AsAsyncQueryable());
+
+        var result = await _sut.SetActiveAsync("a1", true, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        associate.IsActive.Should().BeTrue();
     }
 }

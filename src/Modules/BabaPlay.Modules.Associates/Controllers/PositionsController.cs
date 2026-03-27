@@ -17,15 +17,15 @@ public sealed class PositionsController : BaseController
     public async Task<IActionResult> List(CancellationToken ct) =>
         FromResult(await _service.ListAsync(ct));
 
-    public sealed record PositionBody(string Name, int SortOrder);
+    public sealed record PositionBody(string Name);
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] PositionBody body, CancellationToken ct) =>
-        FromResult(await _service.CreateAsync(body.Name, body.SortOrder, ct));
+        FromResult(await _service.CreateAsync(body.Name, ct));
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, [FromBody] PositionBody body, CancellationToken ct) =>
-        FromResult(await _service.UpdateAsync(id, body.Name, body.SortOrder, ct));
+        FromResult(await _service.UpdateAsync(id, body.Name, ct));
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id, CancellationToken ct) =>

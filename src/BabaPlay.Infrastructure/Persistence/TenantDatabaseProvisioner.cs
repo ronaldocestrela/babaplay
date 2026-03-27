@@ -22,7 +22,7 @@ public sealed class TenantDatabaseProvisioner : ITenantProvisioningService
     {
         await EnsureDatabaseExistsAsync(platformConnectionString, databaseName, cancellationToken);
 
-        var tenantCs = BuildConnectionString(platformConnectionString, databaseName);
+        var tenantCs = TenantConnectionStringFactory.ForDatabase(platformConnectionString, databaseName);
         var options = new DbContextOptionsBuilder<TenantDbContext>().UseSqlServer(tenantCs).Options;
         await using var ctx = new TenantDbContext(options);
         await ctx.Database.MigrateAsync(cancellationToken);
@@ -33,7 +33,7 @@ public sealed class TenantDatabaseProvisioner : ITenantProvisioningService
 
     private static async Task EnsureDatabaseExistsAsync(string platformConnectionString, string databaseName, CancellationToken ct)
     {
-        var master = BuildConnectionString(platformConnectionString, "master");
+        var master = TenantConnectionStringFactory.ForDatabase(platformConnectionString, "master");
         await using var conn = new SqlConnection(master);
         await conn.OpenAsync(ct);
         await using var cmd = conn.CreateCommand();
@@ -49,15 +49,6 @@ public sealed class TenantDatabaseProvisioner : ITenantProvisioningService
 
     private static string EscapeDatabaseName(string databaseName) =>
         databaseName.Replace("]", "]]", StringComparison.Ordinal);
-
-    private static string BuildConnectionString(string platformConnectionString, string databaseName)
-    {
-        var sb = new SqlConnectionStringBuilder(platformConnectionString)
-        {
-            InitialCatalog = databaseName
-        };
-        return sb.ConnectionString;
-    }
 
     private static async Task SeedTenantDefaultsAsync(TenantDbContext ctx, CancellationToken ct)
     {
@@ -124,14 +115,10 @@ public sealed class TenantDatabaseProvisioner : ITenantProvisioningService
 
         if (!await ctx.Positions.AnyAsync(ct))
         {
-            var positions = new[]
+            var names = new[] { "Goleiro", "Zagueiro", "Lateral", "Meia", "Atacante" };
+            foreach (var name in names)
             {
-                ("Goleiro", 1), ("Zagueiro", 2), ("Lateral", 3),
-                ("Meia", 4), ("Atacante", 5)
-            };
-            foreach (var (name, order) in positions)
-            {
-                await ctx.Positions.AddAsync(new Position { Name = name, SortOrder = order }, ct);
+                await ctx.Positions.AddAsync(new Position { Name = name }, ct);
             }
 
             await ctx.SaveChangesAsync(ct);

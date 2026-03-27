@@ -6,7 +6,7 @@ Implementação técnica: persistência, segurança, multitenancy, integrações
 
 ## Áreas
 
-- `Persistence/` — `PlatformDbContext`, `TenantDbContext`, repositórios EF (`EfPlatformRepository`, `EfTenantRepository`), `TenantDatabaseProvisioner`, **factories** de design-time, **Migrations/Platform** e **Migrations/Tenant**.
+- `Persistence/` — `PlatformDbContext`, `TenantDbContext`, repositórios EF (`EfPlatformRepository`, `EfTenantRepository`), `TenantDatabaseProvisioner`, `AssociateUserProvisioner` (`IAssociateUserProvisioner`), `TenantConnectionStringFactory`, `ITenantDatabaseMigrator` / `TenantDatabaseMigrator`, `TenantMigrationOrchestrator`, `TenantMigrationsHostedService` (migra tenants em massa no arranque), **factories** de design-time, **Migrations/Platform** e **Migrations/Tenant**.
 - `Multitenancy/` — `ITenantProvider`, `TenantProvider` (AsyncLocal), `TenantResolutionMiddleware`.
 - `Security/` — JWT (`JwtSettings`, `JwtAccessTokenIssuer`), CORS (`DynamicCorsPolicyProvider`, `AllowedOriginsCache`, sync worker), autorização por permissão (`PermissionRequirement`, `PermissionAuthorizationHandler`, `PermissionPolicyProvider` — policies `perm:nome`).
 - `DependencyInjection.cs` — registo de serviços, Identity (`AddIdentityCore` + roles), DbContext com connection string do tenant.

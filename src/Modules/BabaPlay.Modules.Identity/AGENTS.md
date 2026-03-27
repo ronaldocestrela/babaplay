@@ -6,7 +6,7 @@
 
 ## Serviços
 
-- `AuthService` — registo e login; JWT via `IAccessTokenIssuer`; permissões via `IPermissionResolver` (implementação na Infrastructure).
+- `AuthService` — registo e login; JWT via `IAccessTokenIssuer`; permissões via `IPermissionResolver` (implementação na Infrastructure). Login recusa associados inativos via `IAssociateStatusChecker` (consulta `Associate` por `UserId` no tenant).
 - `RoleAdminService` — listar roles, atribuir role a utilizador, listar permissions.
 
 ## Controllers

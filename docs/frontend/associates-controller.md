@@ -12,7 +12,7 @@ Regra: cada associado deve ter **entre 1 e 3** `positionIds` distintos.
 
 ## GET /api/associates
 
-Lista associados com posições incluídas (conforme query EF).
+Lista associados ordenados por `name`, com posições projetadas (DTO `AssociateResponse`; sem entidades EF aninhadas).
 
 ### Resposta 200
 
@@ -26,20 +26,11 @@ Lista associados com posições incluídas (conforme query EF).
       "email": "string | null",
       "phone": "string | null",
       "userId": "string | null",
+      "isActive": true,
       "positions": [
         {
-          "id": "string",
-          "associateId": "string",
           "positionId": "string",
-          "position": {
-            "id": "string",
-            "name": "Goleiro",
-            "sortOrder": 1,
-            "createdAt": "2026-01-01T12:00:00Z",
-            "updatedAt": null
-          },
-          "createdAt": "2026-01-01T12:00:00Z",
-          "updatedAt": null
+          "positionName": "Goleiro"
         }
       ],
       "createdAt": "2026-01-01T12:00:00Z",
@@ -50,8 +41,6 @@ Lista associados com posições incluídas (conforme query EF).
   "errors": null
 }
 ```
-
-*(A forma exacta de aninhamento pode incluir `associate: null` nos links — ignorar no UI se vier.)*
 
 ---
 
@@ -67,12 +56,14 @@ Um associado com `positions` (mesma estrutura).
 
 ## POST /api/associates
 
+Cria o associado e **provisiona automaticamente** um utilizador Identity com role **Associate** (ligado via `userId` / `AssociateId`). O e-mail é **obrigatório** (único no tenant); a senha inicial é gerada internamente — o associado deve usar o fluxo de redefinição de palavra-passe quando existir envio de e-mail.
+
 ### Payload
 
 ```json
 {
   "name": "string",
-  "email": "string | null",
+  "email": "string",
   "phone": "string | null",
   "positionIds": ["id1", "id2"]
 }
@@ -82,11 +73,11 @@ Um associado com `positions` (mesma estrutura).
 
 ### Resposta 200
 
-Associado criado (com posições).
+Associado criado (com posições e `userId` preenchido).
 
 ### Resposta 400
 
-Validação de posições ou nome em falta.
+Validação de posições, nome ou e-mail em falta; ou falha ao criar o utilizador (ex.: e-mail duplicado).
 
 ---
 
@@ -103,3 +94,25 @@ Associado atualizado.
 ### Resposta 404 / 400
 
 Não encontrado ou validação de posições.
+
+---
+
+## PATCH /api/associates/{id}/active
+
+Ativa ou desativa o associado (`isActive`). Associados **inativos** não podem fazer login (ver [auth-controller.md](auth-controller.md)).
+
+### Payload
+
+```json
+{
+  "isActive": false
+}
+```
+
+### Resposta 200
+
+Associado atualizado (mesma estrutura que GET).
+
+### Resposta 404
+
+Associado não encontrado.

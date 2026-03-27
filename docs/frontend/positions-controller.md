@@ -10,7 +10,7 @@ Envelope: [api-conventions.md](api-conventions.md).
 
 ## GET /api/positions
 
-Lista posições ordenadas por `sortOrder`, depois `name`.
+Lista posições ordenadas alfabeticamente por `name`.
 
 ### Resposta 200
 
@@ -21,7 +21,6 @@ Lista posições ordenadas por `sortOrder`, depois `name`.
     {
       "id": "string",
       "name": "string",
-      "sortOrder": 1,
       "createdAt": "2026-01-01T12:00:00Z",
       "updatedAt": null
     }
@@ -39,8 +38,7 @@ Lista posições ordenadas por `sortOrder`, depois `name`.
 
 ```json
 {
-  "name": "string",
-  "sortOrder": 0
+  "name": "string"
 }
 ```
 
@@ -56,14 +54,13 @@ Nome obrigatório.
 
 ## PUT /api/positions/{id}
 
-Atualiza nome e ordem de uma posição existente.
+Atualiza o nome de uma posição existente.
 
 ### Payload
 
 ```json
 {
-  "name": "string",
-  "sortOrder": 0
+  "name": "string"
 }
 ```
 

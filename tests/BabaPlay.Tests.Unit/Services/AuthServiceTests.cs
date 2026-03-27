@@ -16,6 +16,7 @@ public sealed class AuthServiceTests
     private readonly Mock<UserManager<ApplicationUser>> _users;
     private readonly Mock<IPermissionResolver> _permissions;
     private readonly Mock<IAccessTokenIssuer> _tokens;
+    private readonly Mock<IAssociateStatusChecker> _associateStatus;
     private readonly AuthService _sut;
 
     public AuthServiceTests()
@@ -37,8 +38,12 @@ public sealed class AuthServiceTests
 
         _permissions = new Mock<IPermissionResolver>();
         _tokens = new Mock<IAccessTokenIssuer>();
+        _associateStatus = new Mock<IAssociateStatusChecker>();
+        _associateStatus
+            .Setup(s => s.IsActiveByUserIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
-        _sut = new AuthService(_users.Object, _permissions.Object, _tokens.Object);
+        _sut = new AuthService(_users.Object, _permissions.Object, _tokens.Object, _associateStatus.Object);
     }
 
     // ── Register ────────────────────────────────────────────────────────────
@@ -149,5 +154,38 @@ public sealed class AuthServiceTests
         result.Value.AccessToken.Should().Be("jwt-token");
         result.Value.UserId.Should().Be("u1");
         result.Value.Roles.Should().Contain("Associate");
+    }
+
+    [Fact]
+    public async Task Login_InactiveAssociate_ReturnsForbidden()
+    {
+        var user = new ApplicationUser { Id = "u1", Email = "user@test.com", UserName = "user@test.com" };
+        _users.Setup(u => u.FindByEmailAsync("user@test.com")).ReturnsAsync(user);
+        _users.Setup(u => u.CheckPasswordAsync(user, "P@ssw0rd!")).ReturnsAsync(true);
+        _associateStatus.Setup(s => s.IsActiveByUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+        var result = await _sut.LoginAsync("user@test.com", "P@ssw0rd!");
+
+        result.IsFailure.Should().BeTrue();
+        result.Status.Should().Be(ResultStatus.Forbidden);
+        result.Error.Should().Contain("inactive");
+        _tokens.Verify(t => t.Issue(It.IsAny<IReadOnlyCollection<Claim>>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Login_ActiveAssociate_CallsCheckerAndReturnsToken()
+    {
+        var user = new ApplicationUser { Id = "u1", Email = "user@test.com", UserName = "user@test.com" };
+        _users.Setup(u => u.FindByEmailAsync("user@test.com")).ReturnsAsync(user);
+        _users.Setup(u => u.CheckPasswordAsync(user, "P@ssw0rd!")).ReturnsAsync(true);
+        _associateStatus.Setup(s => s.IsActiveByUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _users.Setup(u => u.GetRolesAsync(user)).ReturnsAsync(["Associate"]);
+        _permissions.Setup(p => p.GetPermissionNamesForUserAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _tokens.Setup(t => t.Issue(It.IsAny<IReadOnlyCollection<Claim>>())).Returns("jwt-token");
+
+        var result = await _sut.LoginAsync("user@test.com", "P@ssw0rd!");
+
+        result.IsSuccess.Should().BeTrue();
+        _associateStatus.Verify(s => s.IsActiveByUserIdAsync("u1", It.IsAny<CancellationToken>()), Times.Once);
     }
 }

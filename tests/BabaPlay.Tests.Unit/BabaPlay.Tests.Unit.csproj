@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\BabaPlay.Infrastructure\BabaPlay.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\BabaPlay.SharedKernel\BabaPlay.SharedKernel.csproj" />
     <ProjectReference Include="..\..\src\Modules\BabaPlay.Modules.Identity\BabaPlay.Modules.Identity.csproj" />
     <ProjectReference Include="..\..\src\Modules\BabaPlay.Modules.Platform\BabaPlay.Modules.Platform.csproj" />

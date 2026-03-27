@@ -27,13 +27,13 @@ public sealed class PositionServiceTests
     // ── List ─────────────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task List_ReturnsPositionsOrderedBySortOrderThenName()
+    public async Task List_ReturnsPositionsOrderedAlphabeticallyByName()
     {
         var positions = new List<Position>
         {
-            new() { Name = "Winger",   SortOrder = 2 },
-            new() { Name = "Forward",  SortOrder = 1 },
-            new() { Name = "Attacker", SortOrder = 1 }
+            new() { Name = "Winger" },
+            new() { Name = "Attacker" },
+            new() { Name = "Forward" }
         };
         _repo.Setup(r => r.Query()).Returns(positions.AsAsyncQueryable());
 
@@ -53,7 +53,7 @@ public sealed class PositionServiceTests
     [InlineData("   ")]
     public async Task Create_EmptyName_ReturnsInvalid(string name)
     {
-        var result = await _sut.CreateAsync(name, 1, CancellationToken.None);
+        var result = await _sut.CreateAsync(name, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Status.Should().Be(ResultStatus.Invalid);
@@ -66,11 +66,10 @@ public sealed class PositionServiceTests
         _repo.Setup(r => r.AddAsync(It.IsAny<Position>(), It.IsAny<CancellationToken>()))
              .Returns(Task.CompletedTask);
 
-        var result = await _sut.CreateAsync("Forward", 1, CancellationToken.None);
+        var result = await _sut.CreateAsync("Forward", CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Name.Should().Be("Forward");
-        result.Value.SortOrder.Should().Be(1);
         _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -81,7 +80,7 @@ public sealed class PositionServiceTests
     {
         _repo.Setup(r => r.GetByIdAsync("x", It.IsAny<CancellationToken>())).ReturnsAsync((Position?)null);
 
-        var result = await _sut.UpdateAsync("x", "Name", 1, CancellationToken.None);
+        var result = await _sut.UpdateAsync("x", "Name", CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Status.Should().Be(ResultStatus.NotFound);
@@ -93,9 +92,9 @@ public sealed class PositionServiceTests
     public async Task Update_EmptyName_ReturnsInvalid(string name)
     {
         _repo.Setup(r => r.GetByIdAsync("id", It.IsAny<CancellationToken>()))
-             .ReturnsAsync(new Position { Id = "id", Name = "Old", SortOrder = 0 });
+             .ReturnsAsync(new Position { Id = "id", Name = "Old" });
 
-        var result = await _sut.UpdateAsync("id", name, 1, CancellationToken.None);
+        var result = await _sut.UpdateAsync("id", name, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Status.Should().Be(ResultStatus.Invalid);
@@ -105,14 +104,13 @@ public sealed class PositionServiceTests
     [Fact]
     public async Task Update_ValidData_PersistsAndReturnsPosition()
     {
-        var existing = new Position { Id = "id", Name = "Old", SortOrder = 0 };
+        var existing = new Position { Id = "id", Name = "Old" };
         _repo.Setup(r => r.GetByIdAsync("id", It.IsAny<CancellationToken>())).ReturnsAsync(existing);
 
-        var result = await _sut.UpdateAsync("id", "New", 5, CancellationToken.None);
+        var result = await _sut.UpdateAsync("id", "New", CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Name.Should().Be("New");
-        result.Value.SortOrder.Should().Be(5);
         result.Value.UpdatedAt.Should().NotBeNull();
         _repo.Verify(r => r.Update(existing), Times.Once);
         _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -134,7 +132,7 @@ public sealed class PositionServiceTests
     [Fact]
     public async Task Delete_InUse_ReturnsConflict()
     {
-        var position = new Position { Id = "pid", Name = "G", SortOrder = 1 };
+        var position = new Position { Id = "pid", Name = "G" };
         _repo.Setup(r => r.GetByIdAsync("pid", It.IsAny<CancellationToken>())).ReturnsAsync(position);
         _associatePositions.Setup(r => r.Query()).Returns(
             new[] { new AssociatePosition { PositionId = "pid" } }.AsAsyncQueryable());
@@ -149,7 +147,7 @@ public sealed class PositionServiceTests
     [Fact]
     public async Task Delete_NotInUse_RemovesAndSaves()
     {
-        var position = new Position { Id = "pid", Name = "G", SortOrder = 1 };
+        var position = new Position { Id = "pid", Name = "G" };
         _repo.Setup(r => r.GetByIdAsync("pid", It.IsAny<CancellationToken>())).ReturnsAsync(position);
         _associatePositions.Setup(r => r.Query()).Returns(Array.Empty<AssociatePosition>().AsAsyncQueryable());
 

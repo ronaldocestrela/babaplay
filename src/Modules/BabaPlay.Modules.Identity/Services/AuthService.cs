@@ -10,12 +10,18 @@ public sealed class AuthService
     private readonly UserManager<ApplicationUser> _users;
     private readonly IPermissionResolver _permissions;
     private readonly IAccessTokenIssuer _tokens;
+    private readonly IAssociateStatusChecker _associateStatus;
 
-    public AuthService(UserManager<ApplicationUser> users, IPermissionResolver permissions, IAccessTokenIssuer tokens)
+    public AuthService(
+        UserManager<ApplicationUser> users,
+        IPermissionResolver permissions,
+        IAccessTokenIssuer tokens,
+        IAssociateStatusChecker associateStatus)
     {
         _users = users;
         _permissions = permissions;
         _tokens = tokens;
+        _associateStatus = associateStatus;
     }
 
     public async Task<Result<AuthResponse>> RegisterAsync(
@@ -56,6 +62,8 @@ public sealed class AuthService
         if (user is null) return Result.Unauthorized<AuthResponse>("Invalid credentials.");
         if (!await _users.CheckPasswordAsync(user, password))
             return Result.Unauthorized<AuthResponse>("Invalid credentials.");
+        if (!await _associateStatus.IsActiveByUserIdAsync(user.Id, cancellationToken))
+            return Result.Forbidden<AuthResponse>("Associate account is inactive.");
         return await BuildTokenAsync(user, cancellationToken);
     }
 

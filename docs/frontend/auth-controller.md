@@ -66,6 +66,10 @@ Igual à estrutura de `data` em register (`accessToken`, `userId`, `roles`, `per
 
 Credenciais inválidas (`success: false`).
 
+### Resposta 403
+
+Conta de associado **inativa** (`Associate.isActive === false` na BD do tenant). O utilizador existe e a password está correta, mas o login é recusado. Gerir estado com `PATCH /api/associates/{id}/active`.
+
 ### Resposta 400
 
 Email em falta / inválido.

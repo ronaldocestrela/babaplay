@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Tenant migrations on startup**: `TenantMigrationsHostedService` iterates `Platform.Tenants` and applies pending `TenantDbContext` migrations to each tenant database; failures are logged per tenant without blocking others.
+- **Associate `IsActive`**: column on tenant `Associates`; inactive associates cannot log in (`403` on `/api/auth/login`). `PATCH /api/associates/{id}/active` toggles status. `IAssociateStatusChecker` in SharedKernel, implemented in Infrastructure.
+- **Associate user provisioning**: `POST /api/associates` requires `email` and creates an Identity user with role **Associate**, linking `Associate.UserId` and `ApplicationUser.AssociateId`. `IAssociateUserProvisioner` (SharedKernel) implemented as `AssociateUserProvisioner` (Infrastructure).
+
+### Changed
+
+- **Associates API**: list/get/create/update/PATCH active return `AssociateResponse` with `positions[]` as `{ positionId, positionName }` (no nested EF entities; avoids JSON reference cycles).
+- **Position** (tenant): removed `SortOrder`; list ordering is alphabetical by `Name`. Tenant migration `RemovePositionSortOrder` drops column `Positions.SortOrder`. API payloads for `/api/positions` no longer accept or return `sortOrder`.
+
 ---
 
 ## [0.1.0-beta.1] — 2026-03-26

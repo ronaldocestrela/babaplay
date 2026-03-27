@@ -9,5 +9,8 @@ public class Associate : BaseEntity
     public string? Phone { get; set; }
     public string? UserId { get; set; }
 
+    /// <summary>When false, the linked user cannot sign in as an associate.</summary>
+    public bool IsActive { get; set; } = true;
+
     public ICollection<AssociatePosition> Positions { get; set; } = new List<AssociatePosition>();
 }

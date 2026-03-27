@@ -23,27 +23,26 @@ public sealed class PositionService
 
     public async Task<Result<IReadOnlyList<Position>>> ListAsync(CancellationToken ct)
     {
-        var list = await _repo.Query().OrderBy(p => p.SortOrder).ThenBy(p => p.Name).ToListAsync(ct);
+        var list = await _repo.Query().OrderBy(p => p.Name).ToListAsync(ct);
         return Result.Success<IReadOnlyList<Position>>(list);
     }
 
-    public async Task<Result<Position>> CreateAsync(string name, int sortOrder, CancellationToken ct)
+    public async Task<Result<Position>> CreateAsync(string name, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(name)) return Result.Invalid<Position>("Name is required.");
-        var p = new Position { Name = name.Trim(), SortOrder = sortOrder };
+        var p = new Position { Name = name.Trim() };
         await _repo.AddAsync(p, ct);
         await _uow.SaveChangesAsync(ct);
         return Result.Success(p);
     }
 
-    public async Task<Result<Position>> UpdateAsync(string id, string name, int sortOrder, CancellationToken ct)
+    public async Task<Result<Position>> UpdateAsync(string id, string name, CancellationToken ct)
     {
         var position = await _repo.GetByIdAsync(id, ct);
         if (position is null) return Result.NotFound<Position>("Position not found.");
         if (string.IsNullOrWhiteSpace(name)) return Result.Invalid<Position>("Name is required.");
 
         position.Name = name.Trim();
-        position.SortOrder = sortOrder;
         position.UpdatedAt = DateTime.UtcNow;
         _repo.Update(position);
         await _uow.SaveChangesAsync(ct);

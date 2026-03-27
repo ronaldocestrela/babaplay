@@ -26,6 +26,9 @@ public static class DependencyInjection
         services.AddSingleton<ITenantProvider, TenantProvider>();
         services.AddSingleton<AllowedOriginsCache>();
         services.AddHostedService<AllowedOriginsSyncWorker>();
+        services.AddSingleton<ITenantDatabaseMigrator, TenantDatabaseMigrator>();
+        services.AddSingleton<TenantMigrationOrchestrator>();
+        services.AddHostedService<TenantMigrationsHostedService>();
         services.AddSingleton<ICorsPolicyProvider, DynamicCorsPolicyProvider>();
 
         var dbOptions = configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>()
@@ -88,6 +91,8 @@ public static class DependencyInjection
         services.AddScoped<SharedKernel.Services.ITenantProvisioningService>(sp => sp.GetRequiredService<TenantDatabaseProvisioner>());
         services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
         services.AddScoped<IPermissionResolver, PermissionResolver>();
+        services.AddScoped<IAssociateStatusChecker, AssociateStatusChecker>();
+        services.AddScoped<IAssociateUserProvisioner, AssociateUserProvisioner>();
 
         services.AddCors();
         return services;

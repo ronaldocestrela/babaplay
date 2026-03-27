@@ -30,4 +30,10 @@ public sealed class AssociatesController : BaseController
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, [FromBody] AssociateBody body, CancellationToken ct) =>
         FromResult(await _service.UpdateAsync(id, body.Name, body.Email, body.Phone, body.PositionIds, ct));
+
+    public sealed record SetActiveBody(bool IsActive);
+
+    [HttpPatch("{id}/active")]
+    public async Task<IActionResult> SetActive(string id, [FromBody] SetActiveBody body, CancellationToken ct) =>
+        FromResult(await _service.SetActiveAsync(id, body.IsActive, ct));
 }

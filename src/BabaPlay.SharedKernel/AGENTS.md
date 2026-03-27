@@ -10,7 +10,7 @@ Código **compartilhado sem dependência de EF ou HTTP específicos além de `Fr
 - `Results/` — `Result`, `Result<T>`, `ResultStatus`, `ApiResponse<T>`.
 - `Repositories/` — `IPlatformRepository<T>`, `ITenantRepository<T>`, unit of work interfaces.
 - `Web/BaseController` — `FromResult`, `FromResult<T>`, `GetUserId`.
-- `Security/` — `IAccessTokenIssuer`, `IPermissionResolver`.
+- `Security/` — `IAccessTokenIssuer`, `IPermissionResolver`, `IAssociateUserProvisioner` (implementação na Infrastructure).
 - `Services/ITenantProvisioningService` — provisionar DB tenant sem acoplar módulo Platform à Infrastructure.
 
 ## Regras
