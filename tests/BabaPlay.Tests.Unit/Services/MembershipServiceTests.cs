@@ -1,10 +1,12 @@
 using BabaPlay.Modules.Financial.Entities;
+using BabaPlay.Modules.Financial.Dtos;
 using BabaPlay.Modules.Financial.Services;
 using BabaPlay.SharedKernel.Repositories;
 using BabaPlay.SharedKernel.Results;
 using BabaPlay.Tests.Unit.Helpers;
 using FluentAssertions;
 using Moq;
+using System.Text.Json;
 
 namespace BabaPlay.Tests.Unit.Services;
 
@@ -126,6 +128,7 @@ public sealed class MembershipServiceTests
         var result = await _sut.RegisterPaymentAsync("m1", 150m, "pix", CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeOfType<PaymentResponse>();
         result.Value.MembershipId.Should().Be("m1");
         result.Value.Amount.Should().Be(150m);
         result.Value.Method.Should().Be("pix");
@@ -149,5 +152,16 @@ public sealed class MembershipServiceTests
 
         result.IsSuccess.Should().BeTrue();
         _categoryRepo.Verify(r => r.AddAsync(It.Is<Category>(c => c.Type == CategoryType.Income && c.Name == "Pagamento de mensalidade"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void PaymentResponseApiEnvelope_SerializesWithoutCycles()
+    {
+        var payload = new PaymentResponse("p1", "m1", DateTime.UtcNow, 150m, "pix", DateTime.UtcNow, null);
+        var envelope = ApiResponse<PaymentResponse>.Ok(payload);
+
+        var act = () => JsonSerializer.Serialize(envelope);
+
+        act.Should().NotThrow();
     }
 }

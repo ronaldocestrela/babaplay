@@ -7,11 +7,9 @@ namespace BabaPlay.Modules.Associates.Controllers;
 
 [Authorize]
 [Route("api/[controller]")]
-public sealed class AssociatesController : BaseController
+public sealed class AssociatesController(AssociateService service) : BaseController
 {
-    private readonly AssociateService _service;
-
-    public AssociatesController(AssociateService service) => _service = service;
+    private readonly AssociateService _service = service;
 
     [HttpGet]
     public async Task<IActionResult> List(CancellationToken ct) =>

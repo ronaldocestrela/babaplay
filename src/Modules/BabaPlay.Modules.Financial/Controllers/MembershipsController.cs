@@ -7,11 +7,9 @@ namespace BabaPlay.Modules.Financial.Controllers;
 
 [Authorize]
 [Route("api/[controller]")]
-public sealed class MembershipsController : BaseController
+public sealed class MembershipsController(MembershipService service) : BaseController
 {
-    private readonly MembershipService _service;
-
-    public MembershipsController(MembershipService service) => _service = service;
+    private readonly MembershipService _service = service;
 
     [HttpGet("associate/{associateId}")]
     public async Task<IActionResult> ForAssociate(string associateId, CancellationToken ct) =>

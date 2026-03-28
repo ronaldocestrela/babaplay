@@ -1,4 +1,5 @@
 using BabaPlay.Modules.Financial.Entities;
+using BabaPlay.Modules.Financial.Dtos;
 using BabaPlay.SharedKernel.Repositories;
 using BabaPlay.SharedKernel.Results;
 using Microsoft.EntityFrameworkCore;
@@ -48,10 +49,10 @@ public sealed class MembershipService
         return Result.Success(m);
     }
 
-    public async Task<Result<Payment>> RegisterPaymentAsync(string membershipId, decimal amount, string method, CancellationToken ct)
+    public async Task<Result<PaymentResponse>> RegisterPaymentAsync(string membershipId, decimal amount, string method, CancellationToken ct)
     {
         var membership = await _memberships.GetByIdAsync(membershipId, ct);
-        if (membership is null) return Result.NotFound<Payment>("Membership not found.");
+        if (membership is null) return Result.NotFound<PaymentResponse>("Membership not found.");
 
         var payment = new Payment { MembershipId = membershipId, Amount = amount, Method = method, PaidAt = DateTime.UtcNow };
         await _payments.AddAsync(payment, ct);
@@ -83,8 +84,18 @@ public sealed class MembershipService
             ct);
 
         if (cashEntryResult.IsFailure)
-            return Result.Invalid<Payment>(cashEntryResult.Error ?? "Failed to register cash movement for payment.");
+            return Result.Invalid<PaymentResponse>(cashEntryResult.Error ?? "Failed to register cash movement for payment.");
 
-        return Result.Success(payment);
+        return Result.Success(MapToResponse(payment));
     }
+
+    private static PaymentResponse MapToResponse(Payment payment) =>
+        new(
+            payment.Id,
+            payment.MembershipId,
+            payment.PaidAt,
+            payment.Amount,
+            payment.Method,
+            payment.CreatedAt,
+            payment.UpdatedAt);
 }
