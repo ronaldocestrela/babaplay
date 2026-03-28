@@ -6,6 +6,11 @@ Cada **controller** HTTP tem um ficheiro próprio nesta pasta, com rotas, **payl
 
 Ver [api-conventions.md](api-conventions.md).
 
+Notas financeiras recentes:
+- `categories` agora exige `type` (`0 = Income`, `1 = Expense`) no `POST`.
+- `cashentries` agora retorna `currentBalance` e `category.type`.
+- Pagamentos em `memberships/{id}/payments` geram movimento de receita no caixa.
+
 ## Índice por controller
 
 | Ficheiro | Base path (resumo) |

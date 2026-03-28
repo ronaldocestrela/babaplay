@@ -1,3 +1,4 @@
+using BabaPlay.Modules.Financial.Entities;
 using BabaPlay.Modules.Financial.Services;
 using BabaPlay.SharedKernel.Web;
 using Microsoft.AspNetCore.Authorization;
@@ -17,9 +18,9 @@ public sealed class CategoriesController : BaseController
     public async Task<IActionResult> List(CancellationToken ct) =>
         FromResult(await _service.ListAsync(ct));
 
-    public sealed record CategoryBody(string Name);
+    public sealed record CategoryBody(string Name, CategoryType Type);
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CategoryBody body, CancellationToken ct) =>
-        FromResult(await _service.CreateAsync(body.Name, ct));
+        FromResult(await _service.CreateAsync(body.Name, body.Type, ct));
 }

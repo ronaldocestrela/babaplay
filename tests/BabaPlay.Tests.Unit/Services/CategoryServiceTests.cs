@@ -48,7 +48,7 @@ public sealed class CategoryServiceTests
     [InlineData("   ")]
     public async Task Create_EmptyName_ReturnsInvalid(string name)
     {
-        var result = await _sut.CreateAsync(name, CancellationToken.None);
+        var result = await _sut.CreateAsync(name, CategoryType.Income, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Status.Should().Be(ResultStatus.Invalid);
@@ -61,10 +61,20 @@ public sealed class CategoryServiceTests
         _repo.Setup(r => r.AddAsync(It.IsAny<Category>(), It.IsAny<CancellationToken>()))
              .Returns(Task.CompletedTask);
 
-        var result = await _sut.CreateAsync("  Mensalidade  ", CancellationToken.None);
+        var result = await _sut.CreateAsync("  Mensalidade  ", CategoryType.Expense, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Name.Should().Be("Mensalidade");
+        result.Value.Type.Should().Be(CategoryType.Expense);
         _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Create_InvalidType_ReturnsInvalid()
+    {
+        var result = await _sut.CreateAsync("Categoria", (CategoryType)9, CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Status.Should().Be(ResultStatus.Invalid);
     }
 }

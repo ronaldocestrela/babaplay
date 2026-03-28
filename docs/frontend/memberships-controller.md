@@ -72,6 +72,11 @@ Período inválido.
 
 Regista pagamento; atualiza a mensalidade para **Paid** (`status: 1`).
 
+Efeito adicional no caixa:
+- O pagamento gera automaticamente um movimento de caixa de receita.
+- Categoria usada: `Pagamento de mensalidade` (criada automaticamente se não existir).
+- Esse movimento impacta o saldo acumulado de `/api/cashentries`.
+
 ### Payload
 
 ```json

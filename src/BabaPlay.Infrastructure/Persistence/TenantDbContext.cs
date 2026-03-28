@@ -56,7 +56,13 @@ public sealed class TenantDbContext : IdentityDbContext<ApplicationUser, Applica
         modelBuilder.Entity<CashEntry>(e =>
         {
             e.Property(x => x.Amount).HasPrecision(18, 2);
+            e.Property(x => x.CurrentBalance).HasPrecision(18, 2);
             e.HasOne(x => x.Category).WithMany().HasForeignKey(x => x.CategoryId);
+            e.HasIndex(x => x.EntryDate);
+        });
+        modelBuilder.Entity<Category>(e =>
+        {
+            e.Property(x => x.Type).HasConversion<int>().HasDefaultValue(CategoryType.Income);
         });
         modelBuilder.Entity<Membership>(e =>
         {

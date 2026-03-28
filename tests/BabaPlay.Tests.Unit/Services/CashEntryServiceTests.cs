@@ -59,28 +59,45 @@ public sealed class CashEntryServiceTests
     [Fact]
     public async Task Create_ValidData_UsesProvidedEntryDate()
     {
-        var category = new Category { Id = "c1", Name = "Mensalidade" };
+        var entries = new List<CashEntry>();
+        var category = new Category { Id = "c1", Name = "Mensalidade", Type = CategoryType.Income };
         _categoryRepo.Setup(r => r.GetByIdAsync("c1", It.IsAny<CancellationToken>())).ReturnsAsync(category);
         _entryRepo.Setup(r => r.AddAsync(It.IsAny<CashEntry>(), It.IsAny<CancellationToken>()))
+                  .Callback<CashEntry, CancellationToken>((entry, _) =>
+                  {
+                      entry.Category = category;
+                      entries.Add(entry);
+                  })
                   .Returns(Task.CompletedTask);
+        _entryRepo.Setup(r => r.Update(It.IsAny<CashEntry>()));
+        _entryRepo.Setup(r => r.Query()).Returns(() => entries.AsAsyncQueryable());
 
         var date = new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Utc);
         var result = await _sut.CreateAsync(250m, "c1", "Pagamento mensal", date, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Amount.Should().Be(250m);
+        result.Value.CurrentBalance.Should().Be(250m);
         result.Value.EntryDate.Should().Be(date);
         result.Value.Description.Should().Be("Pagamento mensal");
-        _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
     [Fact]
     public async Task Create_NoEntryDate_UsesUtcNow()
     {
-        var category = new Category { Id = "c1" };
+        var entries = new List<CashEntry>();
+        var category = new Category { Id = "c1", Type = CategoryType.Income };
         _categoryRepo.Setup(r => r.GetByIdAsync("c1", It.IsAny<CancellationToken>())).ReturnsAsync(category);
         _entryRepo.Setup(r => r.AddAsync(It.IsAny<CashEntry>(), It.IsAny<CancellationToken>()))
+                  .Callback<CashEntry, CancellationToken>((entry, _) =>
+                  {
+                      entry.Category = category;
+                      entries.Add(entry);
+                  })
                   .Returns(Task.CompletedTask);
+        _entryRepo.Setup(r => r.Update(It.IsAny<CashEntry>()));
+        _entryRepo.Setup(r => r.Query()).Returns(() => entries.AsAsyncQueryable());
 
         var before = DateTime.UtcNow;
         var result = await _sut.CreateAsync(100m, "c1", null, null, CancellationToken.None);
@@ -88,5 +105,37 @@ public sealed class CashEntryServiceTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.EntryDate.Should().BeOnOrAfter(before).And.BeOnOrBefore(after);
+        result.Value.CurrentBalance.Should().Be(100m);
+    }
+
+    [Fact]
+    public async Task Create_ExpenseType_WithNegativeAmount_SubtractsAbsoluteValueFromBalance()
+    {
+        var existing = new CashEntry
+        {
+            Amount = 500m,
+            CurrentBalance = 500m,
+            Category = new Category { Id = "income", Type = CategoryType.Income },
+            CategoryId = "income",
+            EntryDate = DateTime.UtcNow.AddDays(-1)
+        };
+        var entries = new List<CashEntry> { existing };
+
+        var expenseCategory = new Category { Id = "expense", Type = CategoryType.Expense };
+        _categoryRepo.Setup(r => r.GetByIdAsync("expense", It.IsAny<CancellationToken>())).ReturnsAsync(expenseCategory);
+        _entryRepo.Setup(r => r.AddAsync(It.IsAny<CashEntry>(), It.IsAny<CancellationToken>()))
+            .Callback<CashEntry, CancellationToken>((entry, _) =>
+            {
+                entry.Category = expenseCategory;
+                entries.Add(entry);
+            })
+            .Returns(Task.CompletedTask);
+        _entryRepo.Setup(r => r.Update(It.IsAny<CashEntry>()));
+        _entryRepo.Setup(r => r.Query()).Returns(() => entries.AsAsyncQueryable());
+
+        var result = await _sut.CreateAsync(-120m, "expense", "Despesa", DateTime.UtcNow, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.CurrentBalance.Should().Be(380m);
     }
 }

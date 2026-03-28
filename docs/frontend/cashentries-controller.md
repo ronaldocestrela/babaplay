@@ -13,6 +13,12 @@ Envelope: [api-conventions.md](api-conventions.md).
 
 Lista movimentos de caixa com categoria incluída, mais recentes primeiro.
 
+Regra de saldo:
+- Cada item traz `currentBalance` (saldo acumulado após a transação).
+- O cálculo usa sempre `abs(amount)`.
+- Categoria `Income` soma no saldo.
+- Categoria `Expense` subtrai no saldo.
+
 ### Resposta 200
 
 ```json
@@ -22,12 +28,14 @@ Lista movimentos de caixa com categoria incluída, mais recentes primeiro.
     {
       "id": "string",
       "amount": 25.5,
+      "currentBalance": 1250.3,
       "categoryId": "string",
       "description": "string | null",
       "entryDate": "2026-01-01T12:00:00Z",
       "category": {
         "id": "string",
         "name": "string",
+        "type": 0,
         "createdAt": "2026-01-01T12:00:00Z",
         "updatedAt": null
       },

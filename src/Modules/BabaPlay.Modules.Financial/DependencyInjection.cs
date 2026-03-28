@@ -10,6 +10,7 @@ public static class DependencyInjection
         services.AddScoped<MembershipService>();
         services.AddScoped<CategoryService>();
         services.AddScoped<CashEntryService>();
+        services.AddScoped<ICashEntryService>(sp => sp.GetRequiredService<CashEntryService>());
         return services;
     }
 }

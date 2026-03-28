@@ -22,10 +22,12 @@ public sealed class CategoryService
         return Result.Success<IReadOnlyList<Category>>(list);
     }
 
-    public async Task<Result<Category>> CreateAsync(string name, CancellationToken ct)
+    public async Task<Result<Category>> CreateAsync(string name, CategoryType type, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(name)) return Result.Invalid<Category>("Name is required.");
-        var c = new Category { Name = name.Trim() };
+        if (!Enum.IsDefined(type)) return Result.Invalid<Category>("Invalid category type.");
+
+        var c = new Category { Name = name.Trim(), Type = type };
         await _repo.AddAsync(c, ct);
         await _uow.SaveChangesAsync(ct);
         return Result.Success(c);
