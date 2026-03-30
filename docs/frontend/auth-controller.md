@@ -14,16 +14,25 @@ Envelope: [api-conventions.md](api-conventions.md).
 
 ```json
 {
+  "name": "string",
   "email": "user@example.com",
   "password": "string",
   "userType": 2
 }
 ```
 
+- `name` (obrigatório): nome usado para criar o registo de `Associate` quando aplicável.
+
 - `userType` (enum, opcional; default **2** = Associate):
   - `0` — PlatformAdmin (mapeia role **Admin** no seed)
   - `1` — AssociationStaff → role **Manager**
   - `2` — Associate → role **Associate**
+
+### Regra de negócio no signup
+
+- `AssociationStaff` e `Associate` criam automaticamente um registo de `Associate` no tenant e ligam `associateId` no utilizador Identity.
+- `PlatformAdmin` não cria `Associate`.
+- Se houver falha parcial no fluxo (ex.: cria utilizador mas falha ao criar associado), o backend faz rollback compensatório e devolve erro.
 
 ### Resposta 200
 
@@ -43,7 +52,7 @@ Envelope: [api-conventions.md](api-conventions.md).
 
 ### Resposta 400
 
-Erros de validação ou Identity (`errors` com mensagens).
+Erros de validação, Identity ou sincronização com Associate (`errors` com mensagens).
 
 ---
 

@@ -11,32 +11,40 @@ public sealed class AuthService
     private readonly IPermissionResolver _permissions;
     private readonly IAccessTokenIssuer _tokens;
     private readonly IAssociateStatusChecker _associateStatus;
+    private readonly IAssociateSignupSynchronizer _associateSignup;
 
     public AuthService(
         UserManager<ApplicationUser> users,
         IPermissionResolver permissions,
         IAccessTokenIssuer tokens,
-        IAssociateStatusChecker associateStatus)
+        IAssociateStatusChecker associateStatus,
+        IAssociateSignupSynchronizer associateSignup)
     {
         _users = users;
         _permissions = permissions;
         _tokens = tokens;
         _associateStatus = associateStatus;
+        _associateSignup = associateSignup;
     }
 
     public async Task<Result<AuthResponse>> RegisterAsync(
+        string name,
         string email,
         string password,
         UserType userType,
         CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(name)) return Result.Invalid<AuthResponse>("Name is required.");
         if (string.IsNullOrWhiteSpace(email)) return Result.Invalid<AuthResponse>("Email is required.");
         if (string.IsNullOrWhiteSpace(password)) return Result.Invalid<AuthResponse>("Password is required.");
 
+        var normalizedName = name.Trim();
+        var normalizedEmail = email.Trim();
+
         var user = new ApplicationUser
         {
-            Email = email.Trim(),
-            UserName = email.Trim(),
+            Email = normalizedEmail,
+            UserName = normalizedEmail,
             UserType = userType
         };
 
@@ -51,7 +59,32 @@ public sealed class AuthService
             _ => "Associate"
         };
 
-        await _users.AddToRoleAsync(user, role);
+        var roleResult = await _users.AddToRoleAsync(user, role);
+        if (!roleResult.Succeeded)
+        {
+            await _users.DeleteAsync(user);
+            return Result.Invalid<AuthResponse>(roleResult.Errors.Select(e => e.Description));
+        }
+
+        if (userType is UserType.AssociationStaff or UserType.Associate)
+        {
+            var associateResult = await _associateSignup.CreateAsync(normalizedName, normalizedEmail, user.Id, cancellationToken);
+            if (!associateResult.IsSuccess)
+            {
+                await _users.DeleteAsync(user);
+                return Result.Invalid<AuthResponse>(associateResult.Errors);
+            }
+
+            user.AssociateId = associateResult.Value;
+            var updateUserResult = await _users.UpdateAsync(user);
+            if (!updateUserResult.Succeeded)
+            {
+                await _associateSignup.DeleteAsync(associateResult.Value, cancellationToken);
+                await _users.DeleteAsync(user);
+                return Result.Invalid<AuthResponse>(updateUserResult.Errors.Select(e => e.Description));
+            }
+        }
+
         return await BuildTokenAsync(user, cancellationToken);
     }
 

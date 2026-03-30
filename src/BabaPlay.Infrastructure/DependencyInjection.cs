@@ -93,6 +93,7 @@ public static class DependencyInjection
         services.AddScoped<IPermissionResolver, PermissionResolver>();
         services.AddScoped<IAssociateStatusChecker, AssociateStatusChecker>();
         services.AddScoped<IAssociateUserProvisioner, AssociateUserProvisioner>();
+        services.AddScoped<IAssociateSignupSynchronizer, AssociateSignupSynchronizer>();
 
         services.AddCors();
         return services;

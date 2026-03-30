@@ -7,11 +7,9 @@ namespace BabaPlay.Modules.Platform.Controllers;
 
 [AllowAnonymous]
 [Route("api/platform/[controller]")]
-public sealed class TenantsController : BaseController
+public sealed class TenantsController(TenantSubscriptionService service) : BaseController
 {
-    private readonly TenantSubscriptionService _service;
-
-    public TenantsController(TenantSubscriptionService service) => _service = service;
+    private readonly TenantSubscriptionService _service = service;
 
     [HttpGet]
     public async Task<IActionResult> List(CancellationToken ct) =>
