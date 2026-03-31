@@ -1,0 +1,21 @@
+services:
+  api:
+    container_name: babaplay-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: babaplay-api:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: ${ASPNETCORE_URLS:-http://+:8080}
+      Database__PlatformConnectionString: "Server=${SQL_SERVER_HOST},${SQL_SERVER_PORT};Database=${PLATFORM_DB_NAME};User Id=${SQL_SA_USER};Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;"
+      Database__TenantTemplateConnectionString: "Server=${SQL_SERVER_HOST},${SQL_SERVER_PORT};Database=${TENANT_TEMPLATE_DB_NAME};User Id=${SQL_SA_USER};Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;"
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
+      Jwt__SigningKey: ${JWT_SIGNING_KEY}
+      Jwt__AccessTokenMinutes: ${JWT_ACCESS_TOKEN_MINUTES:-120}
+    ports:
+      - "${API_PUBLIC_PORT:-5077}:8080"

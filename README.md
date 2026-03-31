@@ -5,7 +5,8 @@ Multitenant SaaS API for sports associations. Stack: **.NET 10**, **ASP.NET Core
 ## Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- SQL Server (local or Docker)
+- SQL Server (local or external service)
+- Docker (for containerized production run)
 
 ## Configuration
 
@@ -29,6 +30,40 @@ dotnet run --project src/BabaPlay.Api --launch-profile https
 
 - Swagger: `http://localhost:5077/swagger` (http) ou `https://localhost:7166/swagger` (https)
 - Health: `http://localhost:5077/health`
+
+## Docker (Production with external database)
+
+The production compose runs only the API container. SQL Server must be provided by an external service.
+
+1. Create your environment file from template:
+
+```bash
+cp .env.example .env
+```
+
+2. Edit `.env` and set real values, especially:
+
+- `SQL_SERVER_HOST`
+- `SQL_SA_PASSWORD`
+- `JWT_SIGNING_KEY` (32+ chars)
+
+3. Build and start:
+
+```bash
+docker compose --env-file .env -f docker-compose.prod.yml up -d --build
+```
+
+4. Stop:
+
+```bash
+docker compose --env-file .env -f docker-compose.prod.yml down
+```
+
+Notes:
+
+- API is exposed on `API_PUBLIC_PORT` (default `5077`).
+- API uses env vars (`Database__*`, `Jwt__*`) and does not require editing `appsettings.json` for production.
+- Keep `.env` out of source control; `.env.example` is the committed template.
 
 ## Multitenancy
 
