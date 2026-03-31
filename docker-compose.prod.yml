@@ -21,3 +21,6 @@ services:
       - "${API_PUBLIC_PORT:-5077}:8080"
     networks:
       - app_net
+networks:
+  app_net:
+    driver: bridge
