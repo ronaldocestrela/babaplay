@@ -19,3 +19,5 @@ services:
       Jwt__AccessTokenMinutes: ${JWT_ACCESS_TOKEN_MINUTES:-120}
     ports:
       - "${API_PUBLIC_PORT:-5077}:8080"
+    networks:
+      - app_net
