@@ -12,19 +12,22 @@ public sealed class AuthService
     private readonly IAccessTokenIssuer _tokens;
     private readonly IAssociateStatusChecker _associateStatus;
     private readonly IAssociateSignupSynchronizer _associateSignup;
+    private readonly IAssociateInvitationService _associateInvitations;
 
     public AuthService(
         UserManager<ApplicationUser> users,
         IPermissionResolver permissions,
         IAccessTokenIssuer tokens,
         IAssociateStatusChecker associateStatus,
-        IAssociateSignupSynchronizer associateSignup)
+        IAssociateSignupSynchronizer associateSignup,
+        IAssociateInvitationService associateInvitations)
     {
         _users = users;
         _permissions = permissions;
         _tokens = tokens;
         _associateStatus = associateStatus;
         _associateSignup = associateSignup;
+        _associateInvitations = associateInvitations;
     }
 
     public async Task<Result<AuthResponse>> RegisterAsync(
@@ -100,6 +103,49 @@ public sealed class AuthService
         return await BuildTokenAsync(user, cancellationToken);
     }
 
+    public async Task<Result<AuthResponse>> RegisterWithInvitationAsync(
+        string invitationToken,
+        string name,
+        string? email,
+        string password,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(invitationToken))
+            return Result.Invalid<AuthResponse>("Invitation token is required.");
+
+        var invitation = await _associateInvitations.ValidateAsync(invitationToken, cancellationToken);
+        if (invitation.IsFailure)
+            return FailFromResult<AuthResponse>(invitation);
+
+        var registrationEmail = invitation.Value.IsSingleUse
+            ? invitation.Value.Email
+            : email;
+
+        if (string.IsNullOrWhiteSpace(registrationEmail))
+            return Result.Invalid<AuthResponse>("Email is required.");
+
+        var register = await RegisterAsync(
+            name,
+            registrationEmail,
+            password,
+            UserType.Associate,
+            cancellationToken);
+
+        if (register.IsFailure)
+            return register;
+
+        var accepted = await _associateInvitations.MarkAcceptedAsync(
+            invitationToken,
+            register.Value.UserId,
+            cancellationToken);
+
+        if (accepted.IsSuccess)
+            return register;
+
+        await RollbackRegisteredAssociateAsync(register.Value.UserId, cancellationToken);
+        return FailFromResult<AuthResponse>(accepted);
+    }
+
     private async Task<Result<AuthResponse>> BuildTokenAsync(ApplicationUser user, CancellationToken cancellationToken)
     {
         var roles = await _users.GetRolesAsync(user);
@@ -117,6 +163,29 @@ public sealed class AuthService
 
         var token = _tokens.Issue(claims);
         return Result.Success(new AuthResponse(token, user.Id, roles.ToList(), perms));
+    }
+
+    private async Task RollbackRegisteredAssociateAsync(string userId, CancellationToken cancellationToken)
+    {
+        var user = await _users.FindByIdAsync(userId);
+        if (user is null)
+            return;
+
+        if (!string.IsNullOrWhiteSpace(user.AssociateId))
+            await _associateSignup.DeleteAsync(user.AssociateId, cancellationToken);
+
+        await _users.DeleteAsync(user);
+    }
+
+    private static Result<T> FailFromResult<T>(Result result)
+    {
+        if (result.Errors.Count > 0)
+            return Result.Fail<T>(result.Errors, result.Status);
+
+        if (!string.IsNullOrWhiteSpace(result.Error))
+            return Result.Fail<T>(result.Error, result.Status);
+
+        return Result.Fail<T>("Operation failed.", result.Status);
     }
 }
 

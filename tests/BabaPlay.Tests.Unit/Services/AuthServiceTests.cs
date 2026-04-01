@@ -18,6 +18,7 @@ public sealed class AuthServiceTests
     private readonly Mock<IAccessTokenIssuer> _tokens;
     private readonly Mock<IAssociateStatusChecker> _associateStatus;
     private readonly Mock<IAssociateSignupSynchronizer> _associateSignup;
+    private readonly Mock<IAssociateInvitationService> _associateInvitations;
     private readonly AuthService _sut;
 
     public AuthServiceTests()
@@ -41,6 +42,7 @@ public sealed class AuthServiceTests
         _tokens = new Mock<IAccessTokenIssuer>();
         _associateStatus = new Mock<IAssociateStatusChecker>();
         _associateSignup = new Mock<IAssociateSignupSynchronizer>();
+        _associateInvitations = new Mock<IAssociateInvitationService>();
         _associateStatus
             .Setup(s => s.IsActiveByUserIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
@@ -50,8 +52,14 @@ public sealed class AuthServiceTests
         _associateSignup
             .Setup(s => s.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success());
+        _associateInvitations
+            .Setup(s => s.ValidateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(new AssociateInvitationValidationResult("token-1", null, false, DateTime.UtcNow.AddDays(7))));
+        _associateInvitations
+            .Setup(s => s.MarkAcceptedAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success());
 
-        _sut = new AuthService(_users.Object, _permissions.Object, _tokens.Object, _associateStatus.Object, _associateSignup.Object);
+        _sut = new AuthService(_users.Object, _permissions.Object, _tokens.Object, _associateStatus.Object, _associateSignup.Object, _associateInvitations.Object);
     }
 
     // ── Register ────────────────────────────────────────────────────────────
@@ -316,5 +324,76 @@ public sealed class AuthServiceTests
 
         result.IsSuccess.Should().BeTrue();
         _associateStatus.Verify(s => s.IsActiveByUserIdAsync("u1", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // ── Register with invitation ────────────────────────────────────────────
+
+    [Fact]
+    public async Task RegisterWithInvitation_InvalidToken_ReturnsFailure()
+    {
+        _associateInvitations.Setup(s => s.ValidateAsync("bad-token", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.NotFound<AssociateInvitationValidationResult>("Invitation not found."));
+
+        var result = await _sut.RegisterWithInvitationAsync("bad-token", "User", "invite@test.com", "P@ssw0rd!");
+
+        result.IsFailure.Should().BeTrue();
+        result.Status.Should().Be(ResultStatus.NotFound);
+    }
+
+    [Fact]
+    public async Task RegisterWithInvitation_ValidToken_RegistersAssociateAndMarksAccepted()
+    {
+        _users.Setup(u => u.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+            .ReturnsAsync(IdentityResult.Success);
+        _users.Setup(u => u.AddToRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+            .ReturnsAsync(IdentityResult.Success);
+        _users.Setup(u => u.UpdateAsync(It.IsAny<ApplicationUser>()))
+            .ReturnsAsync(IdentityResult.Success);
+        _users.Setup(u => u.GetRolesAsync(It.IsAny<ApplicationUser>()))
+            .ReturnsAsync(["Associate"]);
+        _permissions.Setup(p => p.GetPermissionNamesForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        _tokens.Setup(t => t.Issue(It.IsAny<IReadOnlyCollection<Claim>>()))
+            .Returns("jwt-token");
+
+        var result = await _sut.RegisterWithInvitationAsync("token-1", "Invite User", "invite@test.com", "P@ssw0rd!");
+
+        result.IsSuccess.Should().BeTrue();
+        _associateSignup.Verify(
+            s => s.CreateAsync("Invite User", "invite@test.com", It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        _associateInvitations.Verify(
+            s => s.MarkAcceptedAsync("token-1", It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task RegisterWithInvitation_WhenAcceptFails_RollsBackUserAndAssociate()
+    {
+        _users.Setup(u => u.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+            .ReturnsAsync(IdentityResult.Success);
+        _users.Setup(u => u.AddToRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+            .ReturnsAsync(IdentityResult.Success);
+        _users.Setup(u => u.UpdateAsync(It.IsAny<ApplicationUser>()))
+            .ReturnsAsync(IdentityResult.Success);
+        _users.Setup(u => u.GetRolesAsync(It.IsAny<ApplicationUser>()))
+            .ReturnsAsync(["Associate"]);
+        _permissions.Setup(p => p.GetPermissionNamesForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        _tokens.Setup(t => t.Issue(It.IsAny<IReadOnlyCollection<Claim>>()))
+            .Returns("jwt-token");
+        _associateInvitations.Setup(s => s.MarkAcceptedAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure("Invitation already used.", ResultStatus.Conflict));
+
+        var createdUser = new ApplicationUser { Id = "u1", AssociateId = "assoc-1", Email = "invite@test.com" };
+        _users.Setup(u => u.FindByIdAsync(It.IsAny<string>())).ReturnsAsync(createdUser);
+        _users.Setup(u => u.DeleteAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(IdentityResult.Success);
+
+        var result = await _sut.RegisterWithInvitationAsync("token-1", "Invite User", "invite@test.com", "P@ssw0rd!");
+
+        result.IsFailure.Should().BeTrue();
+        result.Status.Should().Be(ResultStatus.Conflict);
+        _associateSignup.Verify(s => s.DeleteAsync("assoc-1", It.IsAny<CancellationToken>()), Times.Once);
+        _users.Verify(u => u.DeleteAsync(It.IsAny<ApplicationUser>()), Times.Once);
     }
 }
