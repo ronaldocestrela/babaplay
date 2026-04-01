@@ -15,6 +15,8 @@ Edit `src/BabaPlay.Api/appsettings.json`:
 - `Database:PlatformConnectionString` – central catalog (tenants, plans, subscriptions, CORS origins).
 - `Database:TenantTemplateConnectionString` – optional; used by EF tooling for tenant model design-time (`TenantDbContext` factory).
 - `Jwt:SigningKey` – use a long random secret (32+ characters).
+- `Email:ApiKey` – Resend API key.
+- `Email:DefaultFromEmail` – validated sender email/domain configured in Resend.
 
 ## Run
 
@@ -46,6 +48,8 @@ cp .env.example .env
 - `SQL_SERVER_HOST`
 - `SQL_SA_PASSWORD`
 - `JWT_SIGNING_KEY` (32+ chars)
+- `RESEND_API_KEY`
+- `RESEND_FROM_EMAIL`
 
 3. Build and start:
 
@@ -111,3 +115,9 @@ Novos tenants criados via `POST .../subscription` continuam a ser migrados no pr
 
 - `/api/platform/*` is currently **`[AllowAnonymous]`** for ease of setup; lock this down (separate auth, API keys, or network rules) before production.
 - Configure CORS origins in the `AllowedOrigins` table (platform DB); localhost origins are allowed by policy for development.
+
+## Versionamento
+
+- Politica de versionamento: `docs/VERSIONING.md`
+- Processo de release: `docs/RELEASE_PROCESS.md`
+- Historico de mudancas: `CHANGELOG.md`

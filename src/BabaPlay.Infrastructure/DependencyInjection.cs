@@ -1,9 +1,11 @@
 using BabaPlay.Infrastructure.Multitenancy;
+using BabaPlay.Infrastructure.Messaging;
 using BabaPlay.Infrastructure.Persistence;
 using BabaPlay.Infrastructure.Security;
 using BabaPlay.Modules.Identity;
 using BabaPlay.SharedKernel.Repositories;
 using BabaPlay.SharedKernel.Security;
+using BabaPlay.SharedKernel.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors.Infrastructure;
@@ -22,6 +24,7 @@ public static class DependencyInjection
     {
         services.Configure<DatabaseOptions>(configuration.GetSection(DatabaseOptions.SectionName));
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+        services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
 
         services.AddSingleton<ITenantProvider, TenantProvider>();
         services.AddSingleton<AllowedOriginsCache>();
@@ -94,6 +97,11 @@ public static class DependencyInjection
         services.AddScoped<IAssociateStatusChecker, AssociateStatusChecker>();
         services.AddScoped<IAssociateUserProvisioner, AssociateUserProvisioner>();
         services.AddScoped<IAssociateSignupSynchronizer, AssociateSignupSynchronizer>();
+        services.AddHttpClient<ResendEmailService>(client =>
+        {
+            client.BaseAddress = new Uri("https://api.resend.com/");
+        });
+        services.AddScoped<IEmailService>(sp => sp.GetRequiredService<ResendEmailService>());
 
         services.AddCors();
         return services;
