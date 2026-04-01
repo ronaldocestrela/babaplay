@@ -19,6 +19,12 @@ public sealed class AuthController : BaseController
     public async Task<IActionResult> Register([FromBody] RegisterRequest body, CancellationToken ct) =>
         FromResult(await _auth.RegisterAsync(body.Name, body.Email, body.Password, body.UserType, ct));
 
+    public sealed record RegisterWithInvitationRequest(string InvitationToken, string Name, string? Email, string Password);
+
+    [HttpPost("register-with-invitation")]
+    public async Task<IActionResult> RegisterWithInvitation([FromBody] RegisterWithInvitationRequest body, CancellationToken ct) =>
+        FromResult(await _auth.RegisterWithInvitationAsync(body.InvitationToken, body.Name, body.Email, body.Password, ct));
+
     public sealed record LoginRequest(string Email, string Password);
 
     [HttpPost("login")]

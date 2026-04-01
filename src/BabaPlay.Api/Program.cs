@@ -17,7 +17,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddPlatformModule();
 builder.Services.AddIdentityModule();
 builder.Services.AddAssociationsModule();
-builder.Services.AddAssociatesModule();
+builder.Services.AddAssociatesModule(builder.Configuration);
 builder.Services.AddCheckInsModule();
 builder.Services.AddTeamGenerationModule();
 builder.Services.AddFinancialModule();

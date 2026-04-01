@@ -1,15 +1,23 @@
 using BabaPlay.Modules.Associates.Services;
+using BabaPlay.SharedKernel.Results;
+using BabaPlay.SharedKernel.Security;
 using BabaPlay.SharedKernel.Web;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace BabaPlay.Modules.Associates.Controllers;
 
 [Authorize]
 [Route("api/[controller]")]
-public sealed class AssociatesController(AssociateService service) : BaseController
+public sealed class AssociatesController(
+    AssociateService service,
+    IAssociateInvitationService invitations,
+    IOptions<InvitationLinkOptions> invitationOptions) : BaseController
 {
     private readonly AssociateService _service = service;
+    private readonly IAssociateInvitationService _invitations = invitations;
+    private readonly InvitationLinkOptions _invitationOptions = invitationOptions.Value;
 
     [HttpGet]
     public async Task<IActionResult> List(CancellationToken ct) =>
@@ -34,4 +42,69 @@ public sealed class AssociatesController(AssociateService service) : BaseControl
     [HttpPatch("{id}/active")]
     public async Task<IActionResult> SetActive(string id, [FromBody] SetActiveBody body, CancellationToken ct) =>
         FromResult(await _service.SetActiveAsync(id, body.IsActive, ct));
+
+    public sealed record CreateInvitationBody(string? Email = null, bool IsSingleUse = false);
+
+    public sealed record InvitationResponse(string Token, string? Email, bool IsSingleUse, DateTime ExpiresAt, string Link);
+
+    [Authorize(Roles = "Admin,Manager")]
+    [HttpPost("invitations")]
+    public async Task<IActionResult> CreateInvitation([FromBody] CreateInvitationBody body, CancellationToken ct)
+    {
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return FromResult(Result.Unauthorized<InvitationResponse>("Authenticated user is required."));
+
+        var invitation = await _invitations.CreateAsync(body.Email, body.IsSingleUse, userId, TimeSpan.FromDays(7), ct);
+        if (invitation.IsFailure)
+            return FromResult(FailFromResult<InvitationResponse>(invitation));
+
+        var payload = new InvitationResponse(
+            invitation.Value.Token,
+            invitation.Value.Email,
+            body.IsSingleUse,
+            invitation.Value.ExpiresAt,
+            BuildInvitationLink(invitation.Value.Token));
+
+        return FromResult(Result.Success(payload));
+    }
+
+    public sealed record InvitationValidationResponse(string Token, string? Email, bool IsSingleUse, DateTime ExpiresAt);
+
+    [AllowAnonymous]
+    [HttpGet("invitations/{token}")]
+    public async Task<IActionResult> ValidateInvitation(string token, CancellationToken ct)
+    {
+        var invitation = await _invitations.ValidateAsync(token, ct);
+        if (invitation.IsFailure)
+            return FromResult(FailFromResult<InvitationValidationResponse>(invitation));
+
+        var payload = new InvitationValidationResponse(
+            invitation.Value.Token,
+            invitation.Value.Email,
+            invitation.Value.IsSingleUse,
+            invitation.Value.ExpiresAt);
+
+        return FromResult(Result.Success(payload));
+    }
+
+    private string BuildInvitationLink(string token)
+    {
+        var baseUrl = _invitationOptions.FrontendBaseUrl;
+        if (string.IsNullOrWhiteSpace(baseUrl))
+            baseUrl = $"{Request.Scheme}://{Request.Host.Value}";
+
+        return $"{baseUrl.TrimEnd('/')}/convite/{Uri.EscapeDataString(token)}";
+    }
+
+    private static Result<T> FailFromResult<T>(Result result)
+    {
+        if (result.Errors.Count > 0)
+            return Result.Fail<T>(result.Errors, result.Status);
+
+        if (!string.IsNullOrWhiteSpace(result.Error))
+            return Result.Fail<T>(result.Error, result.Status);
+
+        return Result.Fail<T>("Operation failed.", result.Status);
+    }
 }
