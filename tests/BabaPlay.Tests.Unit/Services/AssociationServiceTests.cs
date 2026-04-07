@@ -67,12 +67,22 @@ public sealed class AssociationServiceTests
 
     // ── UpsertSingle ─────────────────────────────────────────────────────────
 
+    [Fact]
+    public async Task Upsert_PlayersPerTeamLessThan2_ReturnsInvalid()
+    {
+        var result = await _sut.UpsertSingleAsync(null, "Alpha SC", null, null, 1, CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Status.Should().Be(ResultStatus.Invalid);
+        result.Error.Should().Contain("Players per team");
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
     public async Task Upsert_EmptyName_ReturnsInvalid(string name)
     {
-        var result = await _sut.UpsertSingleAsync(null, name, null, null, CancellationToken.None);
+        var result = await _sut.UpsertSingleAsync(null, name, null, null, 5, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Status.Should().Be(ResultStatus.Invalid);
@@ -84,7 +94,7 @@ public sealed class AssociationServiceTests
         _repo.Setup(r => r.AddAsync(It.IsAny<Association>(), It.IsAny<CancellationToken>()))
              .Returns(Task.CompletedTask);
 
-        var result = await _sut.UpsertSingleAsync(null, "Alpha SC", "Rua A, 1", null, CancellationToken.None);
+        var result = await _sut.UpsertSingleAsync(null, "Alpha SC", "Rua A, 1", null, 5, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Name.Should().Be("Alpha SC");
@@ -98,7 +108,7 @@ public sealed class AssociationServiceTests
         var existing = new Association { Id = "a1", Name = "Old Name" };
         _repo.Setup(r => r.GetByIdAsync("a1", It.IsAny<CancellationToken>())).ReturnsAsync(existing);
 
-        var result = await _sut.UpsertSingleAsync("a1", "New Name", "Rua B, 2", "Regulamento v2", CancellationToken.None);
+        var result = await _sut.UpsertSingleAsync("a1", "New Name", "Rua B, 2", "Regulamento v2", 5, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Name.Should().Be("New Name");
@@ -112,7 +122,7 @@ public sealed class AssociationServiceTests
     {
         _repo.Setup(r => r.GetByIdAsync("a99", It.IsAny<CancellationToken>())).ReturnsAsync((Association?)null);
 
-        var result = await _sut.UpsertSingleAsync("a99", "Name", null, null, CancellationToken.None);
+        var result = await _sut.UpsertSingleAsync("a99", "Name", null, null, 5, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Status.Should().Be(ResultStatus.NotFound);

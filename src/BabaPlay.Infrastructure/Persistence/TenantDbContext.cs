@@ -16,6 +16,7 @@ public sealed class TenantDbContext : IdentityDbContext<ApplicationUser, Applica
 
     public DbSet<Association> Associations => Set<Association>();
     public DbSet<Associate> Associates => Set<Associate>();
+    public DbSet<AssociateInvitation> AssociateInvitations => Set<AssociateInvitation>();
     public DbSet<Position> Positions => Set<Position>();
     public DbSet<AssociatePosition> AssociatePositions => Set<AssociatePosition>();
     public DbSet<Permission> Permissions => Set<Permission>();
@@ -33,9 +34,24 @@ public sealed class TenantDbContext : IdentityDbContext<ApplicationUser, Applica
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<Association>(e =>
+        {
+            e.Property(x => x.PlayersPerTeam).HasDefaultValue(5);
+        });
         modelBuilder.Entity<Associate>(e =>
         {
             e.HasMany(x => x.Positions).WithOne(x => x.Associate).HasForeignKey(x => x.AssociateId);
+        });
+        modelBuilder.Entity<AssociateInvitation>(e =>
+        {
+            e.Property(x => x.Email).HasMaxLength(256);
+            e.Property(x => x.Token).HasMaxLength(64);
+            e.Property(x => x.IsSingleUse).HasDefaultValue(false);
+            e.Property(x => x.UsesCount).HasDefaultValue(0);
+            e.HasIndex(x => x.Token).IsUnique();
+            e.HasIndex(x => x.Email);
+            e.HasIndex(x => new { x.IsSingleUse, x.Email, x.ExpiresAt });
+            e.HasIndex(x => x.ExpiresAt);
         });
         modelBuilder.Entity<AssociatePosition>(e =>
         {

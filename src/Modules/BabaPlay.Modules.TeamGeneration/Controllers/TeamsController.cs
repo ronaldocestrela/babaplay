@@ -13,11 +13,11 @@ public sealed class TeamsController : BaseController
 
     public TeamsController(TeamGenerationService service) => _service = service;
 
-    public sealed record GenerateBody(string SessionId, int TeamCount = 2);
+    public sealed record GenerateBody(string SessionId);
 
     [HttpPost("generate")]
     public async Task<IActionResult> Generate([FromBody] GenerateBody body, CancellationToken ct) =>
-        FromResult(await _service.GenerateFromSessionAsync(body.SessionId, body.TeamCount, ct));
+        FromResult(await _service.GenerateFromSessionAsync(body.SessionId, ct));
 
     [HttpGet("by-session/{sessionId}")]
     public async Task<IActionResult> BySession(string sessionId, CancellationToken ct) =>

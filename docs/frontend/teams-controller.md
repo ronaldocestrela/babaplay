@@ -6,7 +6,7 @@
 
 Envelope: [api-conventions.md](api-conventions.md).
 
-A geração usa check-ins da **sessão**: ordem de chegada (primeira hora de check-in por associado) e distribuição **round-robin** em `teamCount` equipas. Apaga equipas/membros anteriores **da mesma sessão** antes de gerar de novo.
+A geração usa check-ins da **sessão**: ordem de chegada (primeira hora de check-in por associado) e distribuição **round-robin**. O **número de equipas** vem da associação: lê-se `playersPerTeam` em `GET/POST /api/associations` e calcula-se `max(2, totalComCheckIn / playersPerTeam)` (divisão inteira). Apaga equipas/membros anteriores **da mesma sessão** antes de gerar de novo.
 
 ---
 
@@ -16,12 +16,11 @@ A geração usa check-ins da **sessão**: ordem de chegada (primeira hora de che
 
 ```json
 {
-  "sessionId": "string",
-  "teamCount": 2
+  "sessionId": "string"
 }
 ```
 
-`teamCount` opcional; default no servidor **2**. Mínimo **2** equipas.
+---
 
 ### Resposta 200
 
@@ -46,7 +45,7 @@ A geração usa check-ins da **sessão**: ordem de chegada (primeira hora de che
 
 ### Resposta 400
 
-`teamCount < 2` ou sessão sem check-ins.
+Sessão sem check-ins, `playersPerTeam` inválido na associação (&lt; 2), ou configuração inconsistente.
 
 ---
 

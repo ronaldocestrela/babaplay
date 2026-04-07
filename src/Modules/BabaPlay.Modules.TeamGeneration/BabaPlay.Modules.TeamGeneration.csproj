@@ -10,6 +10,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\BabaPlay.SharedKernel\BabaPlay.SharedKernel.csproj" />
+    <ProjectReference Include="..\BabaPlay.Modules.Associations\BabaPlay.Modules.Associations.csproj" />
     <ProjectReference Include="..\BabaPlay.Modules.CheckIns\BabaPlay.Modules.CheckIns.csproj" />
   </ItemGroup>
 </Project>

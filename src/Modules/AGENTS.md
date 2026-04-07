@@ -13,4 +13,4 @@
 
 ## Referências cruzadas
 
-- `BabaPlay.Modules.TeamGeneration` referencia `BabaPlay.Modules.CheckIns` por usar entidade `CheckIn` no serviço. Evite novas referências entre módulos; prefira eventos ou contratos no SharedKernel se o domínio crescer.
+- `BabaPlay.Modules.TeamGeneration` referencia `BabaPlay.Modules.CheckIns` e `BabaPlay.Modules.Associations` (check-in + `PlayersPerTeam`). Evite novas referências entre módulos; prefira eventos ou contratos no SharedKernel se o domínio crescer.

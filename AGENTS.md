@@ -7,7 +7,7 @@ API multitenant (.NET 10) para gestão de associações esportivas: banco **cent
 ## Regras gerais
 
 - **Retornos de negócio:** serviços expõem `Result` / `Result<T>` ([SharedKernel](src/BabaPlay.SharedKernel)). Controllers usam `FromResult` em [BaseController](src/BabaPlay.SharedKernel/Web/BaseController.cs) e envelope `ApiResponse<T>`.
-- **Dependências:** módulos referenciam apenas `BabaPlay.SharedKernel`. `BabaPlay.Infrastructure` referencia SharedKernel + todos os módulos (EF, Identity, multitenancy). `BabaPlay.Api` referencia Infrastructure + todos os módulos.
+- **Dependências:** módulos referenciam `BabaPlay.SharedKernel`; exceções pontuais entre módulos só quando o domínio o exige (ex.: `TeamGeneration` → `CheckIns`, `Associations`). `BabaPlay.Infrastructure` referencia SharedKernel + todos os módulos (EF, Identity, multitenancy). `BabaPlay.Api` referencia Infrastructure + todos os módulos.
 - **Multitenancy:** rotas de plataforma usam prefixo `/api/platform/*` (sem resolução de tenant). Demais rotas exigem subdomínio ou header `X-Tenant-Subdomain`.
 - **Migrações EF:** em `src/BabaPlay.Infrastructure/Persistence/Migrations/` (`Platform` e `Tenant`). Novas propriedades em entidades de módulo exigem atualizar `TenantDbContext` / `PlatformDbContext` e gerar migração.
 

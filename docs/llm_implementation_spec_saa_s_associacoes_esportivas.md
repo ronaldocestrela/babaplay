@@ -145,6 +145,7 @@ Campos:
 - Name
 - Address
 - Regulation (opcional)
+- PlayersPerTeam — número alvo de jogadores por equipa na geração de times (ex.: 5 futsal, 11 futebol); mínimo 2; default 5
 
 ---
 
@@ -213,8 +214,10 @@ Regra:
 - TeamGenerationService
 
 Algoritmo:
-1. ordenar por chegada
-2. distribuir por posição
+1. Ordenar associados pela **primeira** hora de check-in na sessão (ordem de chegada).
+2. Ler **PlayersPerTeam** da associação no tenant (default 5 se não existir registo).
+3. Calcular número de equipas: `max(2, totalDeAssociadosComCheckIn / PlayersPerTeam)` (divisão inteira).
+4. Distribuir associados em **round-robin** pelas equipas (excedentes repartidos pelos primeiros times).
 
 ---
 
@@ -232,6 +235,7 @@ Algoritmo:
 - 1 check-in por dia
 - associado precisa de posição
 - roles configuráveis
+- geração de times: `PlayersPerTeam` na associação (mínimo 2); número de equipas derivado dos check-ins da sessão (ver FASE 9)
 
 ---
 

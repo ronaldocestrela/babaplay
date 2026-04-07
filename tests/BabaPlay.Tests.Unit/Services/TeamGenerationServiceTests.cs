@@ -1,3 +1,4 @@
+using BabaPlay.Modules.Associations.Entities;
 using BabaPlay.Modules.CheckIns.Entities;
 using BabaPlay.Modules.TeamGeneration.Entities;
 using BabaPlay.Modules.TeamGeneration.Services;
@@ -11,6 +12,7 @@ namespace BabaPlay.Tests.Unit.Services;
 
 public sealed class TeamGenerationServiceTests
 {
+    private readonly Mock<ITenantRepository<Association>> _assocRepo;
     private readonly Mock<ITenantRepository<CheckIn>> _checkInRepo;
     private readonly Mock<ITenantRepository<Team>> _teamRepo;
     private readonly Mock<ITenantRepository<TeamMember>> _memberRepo;
@@ -19,28 +21,35 @@ public sealed class TeamGenerationServiceTests
 
     public TeamGenerationServiceTests()
     {
+        _assocRepo = new Mock<ITenantRepository<Association>>();
         _checkInRepo = new Mock<ITenantRepository<CheckIn>>();
         _teamRepo = new Mock<ITenantRepository<Team>>();
         _memberRepo = new Mock<ITenantRepository<TeamMember>>();
         _uow = new Mock<ITenantUnitOfWork>();
         _uow.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
+        _assocRepo.Setup(r => r.Query()).Returns(new List<Association> { new() { PlayersPerTeam = 5 } }.AsAsyncQueryable());
+
         _sut = new TeamGenerationService(
-            _checkInRepo.Object, _teamRepo.Object, _memberRepo.Object, _uow.Object);
+            _assocRepo.Object, _checkInRepo.Object, _teamRepo.Object, _memberRepo.Object, _uow.Object);
     }
 
     // ── GenerateFromSession ───────────────────────────────────────────────────
 
-    [Theory]
-    [InlineData(0)]
-    [InlineData(1)]
-    public async Task Generate_LessThanTwoTeams_ReturnsInvalid(int teamCount)
+    [Fact]
+    public async Task Generate_AssociationPlayersPerTeamInvalid_ReturnsInvalid()
     {
-        var result = await _sut.GenerateFromSessionAsync("s1", teamCount, CancellationToken.None);
+        _assocRepo.Setup(r => r.Query()).Returns(new List<Association> { new() { PlayersPerTeam = 1 } }.AsAsyncQueryable());
+        _checkInRepo.Setup(r => r.Query()).Returns(new List<CheckIn>
+        {
+            new() { SessionId = "s1", AssociateId = "a1", CheckedInAt = DateTime.UtcNow }
+        }.AsAsyncQueryable());
+
+        var result = await _sut.GenerateFromSessionAsync("s1", CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Status.Should().Be(ResultStatus.Invalid);
-        result.Error.Should().Contain("At least two teams");
+        result.Error.Should().Contain("Players per team");
     }
 
     [Fact]
@@ -48,7 +57,7 @@ public sealed class TeamGenerationServiceTests
     {
         _checkInRepo.Setup(r => r.Query()).Returns(new List<CheckIn>().AsAsyncQueryable());
 
-        var result = await _sut.GenerateFromSessionAsync("s1", 2, CancellationToken.None);
+        var result = await _sut.GenerateFromSessionAsync("s1", CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Status.Should().Be(ResultStatus.Invalid);
@@ -56,7 +65,7 @@ public sealed class TeamGenerationServiceTests
     }
 
     [Fact]
-    public async Task Generate_ValidData_CreatesRequestedNumberOfTeams()
+    public async Task Generate_ValidData_CreatesTeamsFromPlayersPerTeamSetting()
     {
         var checkIns = new List<CheckIn>
         {
@@ -72,9 +81,10 @@ public sealed class TeamGenerationServiceTests
         _teamRepo.Setup(r => r.AddAsync(It.IsAny<Team>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _memberRepo.Setup(r => r.AddAsync(It.IsAny<TeamMember>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
-        var result = await _sut.GenerateFromSessionAsync("s1", 2, CancellationToken.None);
+        var result = await _sut.GenerateFromSessionAsync("s1", CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
+        // 4 associates, playersPerTeam 5 → max(2, 4/5) = 2 teams
         result.Value.Should().HaveCount(2);
         _teamRepo.Verify(r => r.AddAsync(It.IsAny<Team>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
         _memberRepo.Verify(r => r.AddAsync(It.IsAny<TeamMember>(), It.IsAny<CancellationToken>()), Times.Exactly(4));
@@ -83,7 +93,6 @@ public sealed class TeamGenerationServiceTests
     [Fact]
     public async Task Generate_DuplicateCheckIns_CountsAssociateOnce()
     {
-        // Two check-in records for the same associate — only first should count
         var checkIns = new List<CheckIn>
         {
             new() { SessionId = "s1", AssociateId = "a1", CheckedInAt = DateTime.UtcNow.AddMinutes(-10) },
@@ -97,10 +106,9 @@ public sealed class TeamGenerationServiceTests
         _teamRepo.Setup(r => r.AddAsync(It.IsAny<Team>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _memberRepo.Setup(r => r.AddAsync(It.IsAny<TeamMember>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
-        var result = await _sut.GenerateFromSessionAsync("s1", 2, CancellationToken.None);
+        var result = await _sut.GenerateFromSessionAsync("s1", CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        // Only 2 distinct associates → 2 team members added
         _memberRepo.Verify(r => r.AddAsync(It.IsAny<TeamMember>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
@@ -120,10 +128,29 @@ public sealed class TeamGenerationServiceTests
         _teamRepo.Setup(r => r.AddAsync(It.IsAny<Team>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _memberRepo.Setup(r => r.AddAsync(It.IsAny<TeamMember>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
-        await _sut.GenerateFromSessionAsync("s1", 2, CancellationToken.None);
+        await _sut.GenerateFromSessionAsync("s1", CancellationToken.None);
 
         _memberRepo.Verify(r => r.Remove(existingMember), Times.Once);
         _teamRepo.Verify(r => r.Remove(existingTeam), Times.Once);
+    }
+
+    [Fact]
+    public async Task Generate_FifteenAssociatesPlayersPerTeam5_CreatesThreeTeams()
+    {
+        var checkIns = Enumerable.Range(1, 15).Select(i =>
+            new CheckIn { SessionId = "s1", AssociateId = $"a{i}", CheckedInAt = DateTime.UtcNow.AddMinutes(-i) }).ToList();
+
+        _checkInRepo.Setup(r => r.Query()).Returns(checkIns.AsAsyncQueryable());
+        _teamRepo.Setup(r => r.Query()).Returns(new List<Team>().AsAsyncQueryable());
+        _memberRepo.Setup(r => r.Query()).Returns(new List<TeamMember>().AsAsyncQueryable());
+        _teamRepo.Setup(r => r.AddAsync(It.IsAny<Team>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _memberRepo.Setup(r => r.AddAsync(It.IsAny<TeamMember>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        var result = await _sut.GenerateFromSessionAsync("s1", CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().HaveCount(3);
+        _teamRepo.Verify(r => r.AddAsync(It.IsAny<Team>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
     }
 
     // ── GetWithMembers ────────────────────────────────────────────────────────
@@ -135,7 +162,7 @@ public sealed class TeamGenerationServiceTests
         {
             new() { SessionId = "s1", Name = "Team 2" },
             new() { SessionId = "s1", Name = "Team 1" },
-            new() { SessionId = "s2", Name = "Team X" }  // different session
+            new() { SessionId = "s2", Name = "Team X" }
         };
         _teamRepo.Setup(r => r.Query()).Returns(teams.AsAsyncQueryable());
 
