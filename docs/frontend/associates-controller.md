@@ -1,8 +1,8 @@
 # AssociatesController
 
 **Base path:** `/api/associates`  
-**Auth:** Bearer JWT.  
-**Tenant:** sim.
+**Auth:** Bearer JWT (exceto `GET .../invitations/{token}`, ver abaixo).  
+**Tenant:** sim — enviar `X-Tenant-Subdomain` (ou subdomínio no host) em **todas** as rotas, incluindo a validação anónima do convite.
 
 Envelope: [api-conventions.md](api-conventions.md).
 
@@ -116,3 +116,72 @@ Associado atualizado (mesma estrutura que GET).
 ### Resposta 404
 
 Associado não encontrado.
+
+---
+
+## POST /api/associates/invitations
+
+Cria um convite para registo de novo associado (ligação com token e expiração). Exige utilizador autenticado com role **Admin** ou **Manager**.
+
+### Payload
+
+```json
+{
+  "email": "user@example.com",
+  "isSingleUse": false
+}
+```
+
+- `email` — opcional. Convites **single-use** ligados a e-mail podem exigir `email` consoante a regra do serviço; convites **partilhados** (multi-uso) costumam omitir `email`.
+- `isSingleUse` — opcional; default **false** (link reutilizável).
+
+### Resposta 200
+
+```json
+{
+  "success": true,
+  "data": {
+    "token": "string",
+    "email": "string | null",
+    "isSingleUse": false,
+    "expiresAt": "2026-01-01T12:00:00Z",
+    "link": "https://frontend.example.com/convite/{token}"
+  },
+  "error": null,
+  "errors": null
+}
+```
+
+- `link` — URL absoluta para o frontend: base configurada em `InvitationLinkOptions:FrontendBaseUrl` (appsettings), ou em último caso `scheme://host` do pedido; path `/convite/{token}` (token URL-encoded).
+
+### Resposta 401 / 400
+
+Utilizador não autenticado, ou falha de validação/negócio ao criar o convite.
+
+---
+
+## GET /api/associates/invitations/{token}
+
+Valida um convite pelo token (antes do registo). **`[AllowAnonymous]`** — não envia JWT; o **tenant** continua a ser resolvido pelo header/subdomínio.
+
+### Resposta 200
+
+```json
+{
+  "success": true,
+  "data": {
+    "token": "string",
+    "email": "string | null",
+    "isSingleUse": false,
+    "expiresAt": "2026-01-01T12:00:00Z"
+  },
+  "error": null,
+  "errors": null
+}
+```
+
+*(Sem campo `link` — o cliente constrói a rota ou reutiliza o link devolvido na criação.)*
+
+### Resposta 400 / 404
+
+Token inválido, expirado ou convite já consumido (mensagens no envelope de erro).
