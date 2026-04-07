@@ -11,7 +11,7 @@
 
 ## Convenções
 
-- Novo módulo: pasta em `Modules/`, `.csproj`, referência a `SharedKernel` apenas; registar serviços e `AddApplicationPart` na API.
+- Novo módulo: pasta em `Modules/`, `.csproj`, referência a `SharedKernel` por defeito; `ProjectReference` a outro módulo só quando necessário (ex.: `TeamGeneration` → `CheckIns`, `Associations`). Registar serviços e `AddApplicationPart` na API.
 - Código gerado `bin/` e `obj/` — ignorar em alterações.
 
 ## Multitenancy (lembrete)

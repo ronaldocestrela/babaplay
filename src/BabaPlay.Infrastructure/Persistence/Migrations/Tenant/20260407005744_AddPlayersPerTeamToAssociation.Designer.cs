@@ -4,6 +4,7 @@ using BabaPlay.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
 {
     [DbContext(typeof(TenantDbContext))]
-    partial class TenantDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260407005744_AddPlayersPerTeamToAssociation")]
+    partial class AddPlayersPerTeamToAssociation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,7 +54,7 @@ namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasKey("Id");
 
-                    b.ToTable("Associates", (string)null);
+                    b.ToTable("Associates");
                 });
 
             modelBuilder.Entity("BabaPlay.Modules.Associates.Entities.AssociateInvitation", b =>
@@ -108,7 +111,7 @@ namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasIndex("IsSingleUse", "Email", "ExpiresAt");
 
-                    b.ToTable("AssociateInvitations", (string)null);
+                    b.ToTable("AssociateInvitations");
                 });
 
             modelBuilder.Entity("BabaPlay.Modules.Associates.Entities.AssociatePosition", b =>
@@ -137,7 +140,7 @@ namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
                     b.HasIndex("AssociateId", "PositionId")
                         .IsUnique();
 
-                    b.ToTable("AssociatePositions", (string)null);
+                    b.ToTable("AssociatePositions");
                 });
 
             modelBuilder.Entity("BabaPlay.Modules.Associates.Entities.Position", b =>
@@ -157,7 +160,7 @@ namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasKey("Id");
 
-                    b.ToTable("Positions", (string)null);
+                    b.ToTable("Positions");
                 });
 
             modelBuilder.Entity("BabaPlay.Modules.Associations.Entities.Association", b =>
@@ -188,7 +191,7 @@ namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasKey("Id");
 
-                    b.ToTable("Associations", (string)null);
+                    b.ToTable("Associations");
                 });
 
             modelBuilder.Entity("BabaPlay.Modules.CheckIns.Entities.CheckIn", b =>
@@ -219,7 +222,7 @@ namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasIndex("AssociateId", "CheckedInAt");
 
-                    b.ToTable("CheckIns", (string)null);
+                    b.ToTable("CheckIns");
                 });
 
             modelBuilder.Entity("BabaPlay.Modules.CheckIns.Entities.CheckInSession", b =>
@@ -244,7 +247,7 @@ namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasKey("Id");
 
-                    b.ToTable("CheckInSessions", (string)null);
+                    b.ToTable("CheckInSessions");
                 });
 
             modelBuilder.Entity("BabaPlay.Modules.Financial.Entities.CashEntry", b =>
@@ -282,7 +285,7 @@ namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasIndex("EntryDate");
 
-                    b.ToTable("CashEntries", (string)null);
+                    b.ToTable("CashEntries");
                 });
 
             modelBuilder.Entity("BabaPlay.Modules.Financial.Entities.Category", b =>
@@ -307,7 +310,7 @@ namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("BabaPlay.Modules.Financial.Entities.Membership", b =>
@@ -343,7 +346,7 @@ namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
                     b.HasIndex("AssociateId", "Year", "Month")
                         .IsUnique();
 
-                    b.ToTable("Memberships", (string)null);
+                    b.ToTable("Memberships");
                 });
 
             modelBuilder.Entity("BabaPlay.Modules.Financial.Entities.Payment", b =>
@@ -376,7 +379,7 @@ namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasIndex("MembershipId");
 
-                    b.ToTable("Payments", (string)null);
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("BabaPlay.Modules.Identity.ApplicationRole", b =>
@@ -497,7 +500,7 @@ namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasKey("Id");
 
-                    b.ToTable("Permissions", (string)null);
+                    b.ToTable("Permissions");
                 });
 
             modelBuilder.Entity("BabaPlay.Modules.Identity.Entities.RolePermission", b =>
@@ -526,7 +529,7 @@ namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
                     b.HasIndex("RoleId", "PermissionId")
                         .IsUnique();
 
-                    b.ToTable("RolePermissions", (string)null);
+                    b.ToTable("RolePermissions");
                 });
 
             modelBuilder.Entity("BabaPlay.Modules.TeamGeneration.Entities.Team", b =>
@@ -549,7 +552,7 @@ namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasKey("Id");
 
-                    b.ToTable("Teams", (string)null);
+                    b.ToTable("Teams");
                 });
 
             modelBuilder.Entity("BabaPlay.Modules.TeamGeneration.Entities.TeamMember", b =>
@@ -578,7 +581,7 @@ namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("TeamMembers", (string)null);
+                    b.ToTable("TeamMembers");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

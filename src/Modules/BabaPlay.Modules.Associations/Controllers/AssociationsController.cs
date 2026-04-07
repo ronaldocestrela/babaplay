@@ -21,9 +21,9 @@ public sealed class AssociationsController : BaseController
     public async Task<IActionResult> Get(string id, CancellationToken ct) =>
         FromResult(await _service.GetAsync(id, ct));
 
-    public sealed record UpsertBody(string? Id, string Name, string? Address, string? Regulation);
+    public sealed record UpsertBody(string? Id, string Name, string? Address, string? Regulation, int PlayersPerTeam = 5);
 
     [HttpPost]
     public async Task<IActionResult> Upsert([FromBody] UpsertBody body, CancellationToken ct) =>
-        FromResult(await _service.UpsertSingleAsync(body.Id, body.Name, body.Address, body.Regulation, ct));
+        FromResult(await _service.UpsertSingleAsync(body.Id, body.Name, body.Address, body.Regulation, body.PlayersPerTeam, ct));
 }

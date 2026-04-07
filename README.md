@@ -81,6 +81,8 @@ Notes:
 
 Create a tenant via `POST /api/platform/tenants`, then call `POST /api/platform/tenants/{id}/subscription` with a `planId` to create the tenant SQL database and apply migrations (tenant model).
 
+**Associação (tenant):** `POST /api/associations` pode definir `playersPerTeam` (mínimo 2, default 5). Esse valor determina quantas equipas são criadas em `POST /api/teams/generate` a partir dos check-ins da sessão (ver [docs/frontend/teams-controller.md](docs/frontend/teams-controller.md)).
+
 ## API responses (Result)
 
 All business results use `Result` / `Result<T>` in services. HTTP responses wrap payloads in:

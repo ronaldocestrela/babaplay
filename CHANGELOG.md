@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Association `PlayersPerTeam`**: campo no tenant (`Associations`) — alvo de jogadores por equipa na geração de times (default 5, mínimo 2). `POST /api/associations` aceita `playersPerTeam`; migração tenant `AddPlayersPerTeamToAssociation`.
 - **Tenant migrations on startup**: `TenantMigrationsHostedService` iterates `Platform.Tenants` and applies pending `TenantDbContext` migrations to each tenant database; failures are logged per tenant without blocking others.
 - **Associate `IsActive`**: column on tenant `Associates`; inactive associates cannot log in (`403` on `/api/auth/login`). `PATCH /api/associates/{id}/active` toggles status. `IAssociateStatusChecker` in SharedKernel, implemented in Infrastructure.
 - **Associate user provisioning**: `POST /api/associates` requires `email` and creates an Identity user with role **Associate**, linking `Associate.UserId` and `ApplicationUser.AssociateId`. `IAssociateUserProvisioner` (SharedKernel) implemented as `AssociateUserProvisioner` (Infrastructure).
@@ -22,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Teams generation**: `POST /api/teams/generate` deixa de aceitar `teamCount`; o número de equipas é `max(2, checkedInAssociates / playersPerTeam)` com `playersPerTeam` lido da associação no tenant.
 - **Associates API**: list/get/create/update/PATCH active return `AssociateResponse` with `positions[]` as `{ positionId, positionName }` (no nested EF entities; avoids JSON reference cycles).
 - **Position** (tenant): removed `SortOrder`; list ordering is alphabetical by `Name`. Tenant migration `RemovePositionSortOrder` drops column `Positions.SortOrder`. API payloads for `/api/positions` no longer accept or return `sortOrder`.
 - **Invitation registration payload**: `/api/auth/register-with-invitation` now accepts optional `email`; required for shared links and ignored for single-use email-bound invitations.

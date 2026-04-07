@@ -2,7 +2,7 @@
 
 ## Domínio
 
-**Association** — dados institucionais da associação no tenant (nome, morada, regulamento opcional).
+**Association** — dados institucionais da associação no tenant (nome, morada, regulamento opcional, **PlayersPerTeam** para geração de times).
 
 ## Serviços
 

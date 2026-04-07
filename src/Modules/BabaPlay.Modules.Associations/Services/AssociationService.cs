@@ -28,14 +28,15 @@ public sealed class AssociationService
         return entity is null ? Result.NotFound<Association>("Association not found.") : Result.Success(entity);
     }
 
-    public async Task<Result<Association>> UpsertSingleAsync(string? id, string name, string? address, string? regulation, CancellationToken ct)
+    public async Task<Result<Association>> UpsertSingleAsync(string? id, string name, string? address, string? regulation, int playersPerTeam, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(name)) return Result.Invalid<Association>("Name is required.");
+        if (playersPerTeam < 2) return Result.Invalid<Association>("Players per team must be at least 2.");
 
         Association entity;
         if (string.IsNullOrEmpty(id))
         {
-            entity = new Association { Name = name.Trim(), Address = address, Regulation = regulation };
+            entity = new Association { Name = name.Trim(), Address = address, Regulation = regulation, PlayersPerTeam = playersPerTeam };
             await _repo.AddAsync(entity, ct);
         }
         else
@@ -46,6 +47,7 @@ public sealed class AssociationService
             entity.Name = name.Trim();
             entity.Address = address;
             entity.Regulation = regulation;
+            entity.PlayersPerTeam = playersPerTeam;
             entity.UpdatedAt = DateTime.UtcNow;
             _repo.Update(entity);
         }

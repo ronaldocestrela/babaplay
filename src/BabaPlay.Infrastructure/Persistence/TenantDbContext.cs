@@ -34,6 +34,10 @@ public sealed class TenantDbContext : IdentityDbContext<ApplicationUser, Applica
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<Association>(e =>
+        {
+            e.Property(x => x.PlayersPerTeam).HasDefaultValue(5);
+        });
         modelBuilder.Entity<Associate>(e =>
         {
             e.HasMany(x => x.Positions).WithOne(x => x.Associate).HasForeignKey(x => x.AssociateId);

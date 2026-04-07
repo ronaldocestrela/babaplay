@@ -6,6 +6,9 @@ Cada **controller** HTTP tem um ficheiro próprio nesta pasta, com rotas, **payl
 
 Ver [api-conventions.md](api-conventions.md).
 
+Notas recentes:
+- **Associações / times:** `POST /api/associations` aceita `playersPerTeam` (default 5); `POST /api/teams/generate` envia só `sessionId` — o número de equipas deriva desse valor e dos check-ins (ver [associations-controller.md](associations-controller.md), [teams-controller.md](teams-controller.md)).
+
 Notas financeiras recentes:
 - `categories` agora exige `type` (`0 = Income`, `1 = Expense`) no `POST`.
 - `cashentries` agora retorna `currentBalance` e `category.type`.
