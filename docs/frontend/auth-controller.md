@@ -2,7 +2,7 @@
 
 **Base path:** `/api/auth`  
 **Auth:** não (`[AllowAnonymous]`).  
-**Tenant:** **sim** — para `register` / `login` o utilizador é criado na BD do tenant; enviar `X-Tenant-Subdomain` (ou subdomínio no host).
+**Tenant:** **sim** — para `register` / `login` o utilizador é criado na BD do tenant; enviar `X-Tenant-Subdomain`, ou **`?tenant={subdomain}`** quando a app corre num único domínio (sem subdomínio por tenant), ou subdomínio no host se aplicável.
 
 Envelope: [api-conventions.md](api-conventions.md).
 

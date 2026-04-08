@@ -2,7 +2,7 @@
 
 **Base path:** `/api/associates`  
 **Auth:** Bearer JWT (exceto `GET .../invitations/{token}`, ver abaixo).  
-**Tenant:** sim — enviar `X-Tenant-Subdomain` (ou subdomínio no host) em **todas** as rotas, incluindo a validação anónima do convite.
+**Tenant:** sim — em **todas** as rotas (incluindo validação anónima do convite): preferir **`X-Tenant-Subdomain`**; em ambientes **sem** multitenant por subdomínio (apenas um domínio tipo `https://app.seudominio.com`), use o query **`?tenant={subdomain}`** com o mesmo slug do tenant na plataforma; se existir multitenant por host (`https://{subdomain}.seudominio.com`), o primeiro segmento do host também resolve o tenant.
 
 Envelope: [api-conventions.md](api-conventions.md).
 

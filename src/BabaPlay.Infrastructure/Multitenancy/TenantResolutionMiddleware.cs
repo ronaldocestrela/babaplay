@@ -1,4 +1,5 @@
 using BabaPlay.Infrastructure.Persistence;
+using BabaPlay.SharedKernel.Web;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,12 +30,15 @@ public sealed class TenantResolutionMiddleware
             return;
         }
 
-        var slug = ResolveTenantSlug(context);
+        var slug = TenantSlugResolver.Resolve(context.Request);
         if (string.IsNullOrWhiteSpace(slug))
         {
             _logger.LogWarning("Tenant slug missing for {Path}", path);
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            await context.Response.WriteAsJsonAsync(new { error = "Tenant not specified (subdomain or X-Tenant-Subdomain header)." });
+            await context.Response.WriteAsJsonAsync(new
+            {
+                error = "Tenant not specified (X-Tenant-Subdomain header, tenant query parameter, or tenant subdomain in host)."
+            });
             return;
         }
 
@@ -59,26 +63,6 @@ public sealed class TenantResolutionMiddleware
         path.StartsWith("/api/platform", StringComparison.OrdinalIgnoreCase)
         || path.StartsWith("/swagger", StringComparison.OrdinalIgnoreCase)
         || path.StartsWith("/health", StringComparison.OrdinalIgnoreCase);
-
-    private static string? ResolveTenantSlug(HttpContext context)
-    {
-        if (context.Request.Headers.TryGetValue("X-Tenant-Subdomain", out var header) &&
-            !string.IsNullOrWhiteSpace(header))
-            return header.ToString().Trim();
-
-        var host = context.Request.Host.Host;
-        if (string.IsNullOrEmpty(host)) return null;
-
-        var parts = host.Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (parts.Length >= 2)
-        {
-            var sub = parts[0];
-            if (!sub.Equals("www", StringComparison.OrdinalIgnoreCase))
-                return sub;
-        }
-
-        return null;
-    }
 
     private static string BuildTenantConnectionString(string platformConnectionString, string databaseName)
     {
