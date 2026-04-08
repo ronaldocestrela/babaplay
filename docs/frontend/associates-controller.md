@@ -121,7 +121,7 @@ Associado não encontrado.
 
 ## POST /api/associates/invitations
 
-Cria um convite para registo de novo associado (ligação com token e expiração). Exige utilizador autenticado com role **Admin** ou **Manager**. O pedido **deve** permitir resolver o tenant (`X-Tenant-Subdomain` ou subdomínio no host); caso contrário a API devolve **400** — o link gerado inclui o subdomínio para o frontend saber qual tenant usar nas chamadas seguintes.
+Cria um convite para registo de novo associado (ligação com token e expiração). Exige utilizador autenticado com role **Admin** ou **Manager**. O pedido **deve** permitir resolver o tenant (`X-Tenant-Subdomain` ou subdomínio no host); caso contrário a API devolve **400**. A base do URL do convite vem sempre de **`Invitations:FrontendBaseUrl`** no backend (obrigatório em produção); não use o host da API como base do link — o convite aponta para o **frontend** (`/convite/...`), não para `/api/...`.
 
 ### Payload
 
@@ -152,11 +152,11 @@ Cria um convite para registo de novo associado (ligação com token e expiraçã
 }
 ```
 
-- `link` — URL absoluta para o frontend: base configurada em `InvitationLinkOptions:FrontendBaseUrl` (appsettings), ou em último caso `scheme://host` do pedido; path `/convite/{token}` (token URL-encoded) e query **`tenant`** com o subdomínio do tenant (URL-encoded). O cliente deve ler o parâmetro `tenant` e enviar o mesmo valor no header **`X-Tenant-Subdomain`** ao chamar `GET .../invitations/{token}` e `POST .../register-with-invitation` (ver [auth-controller.md](auth-controller.md)).
+- `link` — URL absoluta para o frontend: **base obrigatória** em `Invitations:FrontendBaseUrl` (ex.: `https://app.seudominio.com`); path `/convite/{token}` (token URL-encoded) e query **`tenant`** com o subdomínio do tenant (URL-encoded). Sem `FrontendBaseUrl` configurado, a API não gera o link (erro **400**). O cliente deve ler o parâmetro `tenant` e enviar o mesmo valor no header **`X-Tenant-Subdomain`** ao chamar `GET .../invitations/{token}` e `POST .../register-with-invitation` (ver [auth-controller.md](auth-controller.md)).
 
 ### Resposta 401 / 400
 
-Utilizador não autenticado; falha de validação/negócio ao criar o convite; ou **tenant não resolvido** (mensagem indicando que falta `X-Tenant-Subdomain` ou host com subdomínio).
+Utilizador não autenticado; falha de validação/negócio ao criar o convite; **tenant não resolvido**; ou **`FrontendBaseUrl` não configurado** no servidor (não é possível montar o link do convite).
 
 ---
 

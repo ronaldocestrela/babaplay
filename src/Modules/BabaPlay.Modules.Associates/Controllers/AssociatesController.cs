@@ -60,6 +60,10 @@ public sealed class AssociatesController(
             return FromResult(Result.Invalid<InvitationResponse>(
                 "Tenant subdomain could not be resolved; send X-Tenant-Subdomain or use a tenant host."));
 
+        if (string.IsNullOrWhiteSpace(_invitationOptions.FrontendBaseUrl))
+            return FromResult(Result.Invalid<InvitationResponse>(
+                "Invitation link cannot be generated: FrontendBaseUrl is not configured."));
+
         var invitation = await _invitations.CreateAsync(body.Email, body.IsSingleUse, userId, TimeSpan.FromDays(7), ct);
         if (invitation.IsFailure)
             return FromResult(FailFromResult<InvitationResponse>(invitation));
@@ -93,21 +97,15 @@ public sealed class AssociatesController(
         return FromResult(Result.Success(payload));
     }
 
-    private static string BuildInvitationLink(string token, string tenantSubdomain, string baseUrl)
+    internal static string BuildInvitationLink(string token, string tenantSubdomain, string baseUrl)
     {
         var path = $"/convite/{Uri.EscapeDataString(token)}";
         var query = $"tenant={Uri.EscapeDataString(tenantSubdomain)}";
         return $"{baseUrl.TrimEnd('/')}{path}?{query}";
     }
 
-    private string BuildInvitationLink(string token, string tenantSubdomain)
-    {
-        var baseUrl = _invitationOptions.FrontendBaseUrl;
-        if (string.IsNullOrWhiteSpace(baseUrl))
-            baseUrl = $"{Request.Scheme}://{Request.Host.Value}";
-
-        return BuildInvitationLink(token, tenantSubdomain, baseUrl);
-    }
+    private string BuildInvitationLink(string token, string tenantSubdomain) =>
+        BuildInvitationLink(token, tenantSubdomain, _invitationOptions.FrontendBaseUrl);
 
     private static Result<T> FailFromResult<T>(Result result)
     {
