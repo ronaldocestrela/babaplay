@@ -1,0 +1,28 @@
+---
+description: Consultar AGENTS.md e arquitetura antes de implementar; atualizar docs quando faltar referência
+alwaysApply: true
+---
+
+# Contexto obrigatório (BabaPlay Backend)
+
+## Antes de implementar ou alterar comportamento relevante
+
+1. Ler **`AGENTS.md`** na raiz do repositório (convenções, multitenancy, `Result`/`ApiResponse`, repositórios, migrações, `Program.cs`).
+2. Ler **`docs/Arquitetura_BabaPlay_Backend.md`** (visão do sistema, módulos, fluxos, decisões).
+3. Para requisitos de produto, usar **`docs/llm_implementation_spec_saa_s_associacoes_esportivas.md`** quando aplicável.
+
+Se o pedido for só refactor interno sem mudar contratos ou regras, não é obrigatório reabrir os docs inteiros; mantém as convenções já descritas neles.
+
+## Quando alimentar a documentação
+
+Actualizar **na mesma entrega** (ou pedir explicitamente ao utilizador se a entrega for só exploratória):
+
+- **`docs/Arquitetura_BabaPlay_Backend.md`**: novo fluxo, novo módulo ou boundary, decisão técnica, invariante de multitenancy/permissões que ainda não esteja descrita.
+- **`AGENTS.md`**: novo comando operacional, nova convenção transversal, armadilha recorrente, ou alteração de processo (ex.: registo de controllers).
+
+Contratos HTTP para clientes: manter **`docs/frontend/`** alinhado quando endpoints/payloads mudarem.
+
+## Onde não duplicar
+
+- **Arquitetura**: o quê e porquê (fluxos, módulos, decisões).
+- **AGENTS.md**: como trabalhar, comandos, checklist rápido.
