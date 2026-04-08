@@ -55,6 +55,11 @@ public sealed class AssociatesController(
         if (string.IsNullOrWhiteSpace(userId))
             return FromResult(Result.Unauthorized<InvitationResponse>("Authenticated user is required."));
 
+        var tenantSubdomain = GetTenantSubdomain();
+        if (string.IsNullOrWhiteSpace(tenantSubdomain))
+            return FromResult(Result.Invalid<InvitationResponse>(
+                "Tenant subdomain could not be resolved; send X-Tenant-Subdomain or use a tenant host."));
+
         var invitation = await _invitations.CreateAsync(body.Email, body.IsSingleUse, userId, TimeSpan.FromDays(7), ct);
         if (invitation.IsFailure)
             return FromResult(FailFromResult<InvitationResponse>(invitation));
@@ -64,7 +69,7 @@ public sealed class AssociatesController(
             invitation.Value.Email,
             body.IsSingleUse,
             invitation.Value.ExpiresAt,
-            BuildInvitationLink(invitation.Value.Token));
+            BuildInvitationLink(invitation.Value.Token, tenantSubdomain));
 
         return FromResult(Result.Success(payload));
     }
@@ -88,13 +93,20 @@ public sealed class AssociatesController(
         return FromResult(Result.Success(payload));
     }
 
-    private string BuildInvitationLink(string token)
+    private static string BuildInvitationLink(string token, string tenantSubdomain, string baseUrl)
+    {
+        var path = $"/convite/{Uri.EscapeDataString(token)}";
+        var query = $"tenant={Uri.EscapeDataString(tenantSubdomain)}";
+        return $"{baseUrl.TrimEnd('/')}{path}?{query}";
+    }
+
+    private string BuildInvitationLink(string token, string tenantSubdomain)
     {
         var baseUrl = _invitationOptions.FrontendBaseUrl;
         if (string.IsNullOrWhiteSpace(baseUrl))
             baseUrl = $"{Request.Scheme}://{Request.Host.Value}";
 
-        return $"{baseUrl.TrimEnd('/')}/convite/{Uri.EscapeDataString(token)}";
+        return BuildInvitationLink(token, tenantSubdomain, baseUrl);
     }
 
     private static Result<T> FailFromResult<T>(Result result)

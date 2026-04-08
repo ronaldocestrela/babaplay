@@ -121,7 +121,7 @@ Associado não encontrado.
 
 ## POST /api/associates/invitations
 
-Cria um convite para registo de novo associado (ligação com token e expiração). Exige utilizador autenticado com role **Admin** ou **Manager**.
+Cria um convite para registo de novo associado (ligação com token e expiração). Exige utilizador autenticado com role **Admin** ou **Manager**. O pedido **deve** permitir resolver o tenant (`X-Tenant-Subdomain` ou subdomínio no host); caso contrário a API devolve **400** — o link gerado inclui o subdomínio para o frontend saber qual tenant usar nas chamadas seguintes.
 
 ### Payload
 
@@ -145,24 +145,24 @@ Cria um convite para registo de novo associado (ligação com token e expiraçã
     "email": "string | null",
     "isSingleUse": false,
     "expiresAt": "2026-01-01T12:00:00Z",
-    "link": "https://frontend.example.com/convite/{token}"
+    "link": "https://frontend.example.com/convite/{token}?tenant={subdomain}"
   },
   "error": null,
   "errors": null
 }
 ```
 
-- `link` — URL absoluta para o frontend: base configurada em `InvitationLinkOptions:FrontendBaseUrl` (appsettings), ou em último caso `scheme://host` do pedido; path `/convite/{token}` (token URL-encoded).
+- `link` — URL absoluta para o frontend: base configurada em `InvitationLinkOptions:FrontendBaseUrl` (appsettings), ou em último caso `scheme://host` do pedido; path `/convite/{token}` (token URL-encoded) e query **`tenant`** com o subdomínio do tenant (URL-encoded). O cliente deve ler o parâmetro `tenant` e enviar o mesmo valor no header **`X-Tenant-Subdomain`** ao chamar `GET .../invitations/{token}` e `POST .../register-with-invitation` (ver [auth-controller.md](auth-controller.md)).
 
 ### Resposta 401 / 400
 
-Utilizador não autenticado, ou falha de validação/negócio ao criar o convite.
+Utilizador não autenticado; falha de validação/negócio ao criar o convite; ou **tenant não resolvido** (mensagem indicando que falta `X-Tenant-Subdomain` ou host com subdomínio).
 
 ---
 
 ## GET /api/associates/invitations/{token}
 
-Valida um convite pelo token (antes do registo). **`[AllowAnonymous]`** — não envia JWT; o **tenant** continua a ser resolvido pelo header/subdomínio.
+Valida um convite pelo token (antes do registo). **`[AllowAnonymous]`** — não envia JWT; o **tenant** continua a ser resolvido pelo header/subdomínio. Se o utilizador chegou pela `link` devolvida na criação, use o query param **`tenant`** como valor de **`X-Tenant-Subdomain`**.
 
 ### Resposta 200
 
@@ -180,7 +180,7 @@ Valida um convite pelo token (antes do registo). **`[AllowAnonymous]`** — não
 }
 ```
 
-*(Sem campo `link` — o cliente constrói a rota ou reutiliza o link devolvido na criação.)*
+*(Sem campo `link` — reutilize o `link` da criação ou construa a rota com o mesmo `token` e o parâmetro `tenant` da query string.)*
 
 ### Resposta 400 / 404
 

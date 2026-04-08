@@ -82,3 +82,31 @@ Conta de associado **inativa** (`Associate.isActive === false` na BD do tenant).
 ### Resposta 400
 
 Email em falta / inválido.
+
+---
+
+## POST /api/auth/register-with-invitation
+
+Registo com convite de associado. **`[AllowAnonymous]`**. **Tenant:** obrigatório — enviar **`X-Tenant-Subdomain`** (ou subdomínio no host). Se o utilizador abriu o convite pela `link` devolvida em `POST /api/associates/invitations`, use o valor do query param **`tenant`** como `X-Tenant-Subdomain`.
+
+### Payload
+
+```json
+{
+  "invitationToken": "string",
+  "name": "string",
+  "email": "user@example.com",
+  "password": "string"
+}
+```
+
+- Convites **single-use** com e-mail fixo: o e-mail do registo vem do convite; o campo `email` no body pode ser ignorado conforme regra do backend.
+- Convites **partilhados**: `email` no body é necessário.
+
+### Resposta 200
+
+Estrutura igual a `POST /api/auth/register` (`accessToken`, `userId`, `roles`, `permissions`).
+
+### Resposta 400 / 404 / 409
+
+Token inválido, expirado, convite já usado, ou erros de validação/Identity (ver envelope).

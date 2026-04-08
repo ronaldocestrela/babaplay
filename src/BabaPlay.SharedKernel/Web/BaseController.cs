@@ -1,3 +1,4 @@
+using System;
 using System.Security.Claims;
 using BabaPlay.SharedKernel.Results;
 using Microsoft.AspNetCore.Http;
@@ -27,6 +28,29 @@ public abstract class BaseController : ControllerBase
     protected string? GetUserId() =>
         User.FindFirstValue(ClaimTypes.NameIdentifier)
         ?? User.FindFirstValue("sub");
+
+    /// <summary>
+    /// Resolves the tenant slug from <c>X-Tenant-Subdomain</c> or the first host label (same order as tenant middleware).
+    /// </summary>
+    protected string? GetTenantSubdomain()
+    {
+        if (Request.Headers.TryGetValue("X-Tenant-Subdomain", out var val) && !string.IsNullOrWhiteSpace(val))
+            return val.ToString().Trim();
+
+        var host = Request.Host.Host;
+        if (string.IsNullOrEmpty(host))
+            return null;
+
+        var parts = host.Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length >= 2)
+        {
+            var sub = parts[0];
+            if (!sub.Equals("www", StringComparison.OrdinalIgnoreCase))
+                return sub;
+        }
+
+        return null;
+    }
 
     private IActionResult MapFailure(ResultStatus status, string? error, IReadOnlyList<string> errors)
     {
