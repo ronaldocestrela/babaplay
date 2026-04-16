@@ -36,6 +36,23 @@ public sealed class TenantSubscriptionServiceTests
             _uow.Object, _provisioning.Object, config.Object);
     }
 
+    [Fact]
+    public void Ctor_MissingPlatformConnectionString_ThrowsInvalidOperationException()
+    {
+        var config = new Mock<IConfiguration>();
+        config.Setup(c => c["Database:PlatformConnectionString"]).Returns((string?)null);
+
+        var act = () => new TenantSubscriptionService(
+            _tenantRepo.Object,
+            _subRepo.Object,
+            _planRepo.Object,
+            _uow.Object,
+            _provisioning.Object,
+            config.Object);
+
+        act.Should().Throw<InvalidOperationException>();
+    }
+
     // ── ListTenants ──────────────────────────────────────────────────────────
 
     [Fact]
@@ -142,6 +159,36 @@ public sealed class TenantSubscriptionServiceTests
         result.Status.Should().Be(ResultStatus.NotFound);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task UpdateTenant_EmptyName_ReturnsInvalid(string name)
+    {
+        var tenant = new Tenant { Id = "t1", Name = "Current", Subdomain = "club" };
+        _tenantRepo.Setup(r => r.GetByIdAsync("t1", It.IsAny<CancellationToken>())).ReturnsAsync(tenant);
+
+        var result = await _sut.UpdateTenantAsync("t1", name, "newsub", CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Status.Should().Be(ResultStatus.Invalid);
+        _tenantRepo.Verify(r => r.Update(It.IsAny<Tenant>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task UpdateTenant_EmptySubdomain_ReturnsInvalid(string subdomain)
+    {
+        var tenant = new Tenant { Id = "t1", Name = "Current", Subdomain = "club" };
+        _tenantRepo.Setup(r => r.GetByIdAsync("t1", It.IsAny<CancellationToken>())).ReturnsAsync(tenant);
+
+        var result = await _sut.UpdateTenantAsync("t1", "Updated", subdomain, CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Status.Should().Be(ResultStatus.Invalid);
+        _tenantRepo.Verify(r => r.Update(It.IsAny<Tenant>()), Times.Never);
+    }
+
     [Fact]
     public async Task UpdateTenant_DuplicateSubdomainOnOtherTenant_ReturnsConflict()
     {
@@ -225,6 +272,9 @@ public sealed class TenantSubscriptionServiceTests
 
         result.IsFailure.Should().BeTrue();
         result.Status.Should().Be(ResultStatus.NotFound);
+        _provisioning.Verify(
+            p => p.ProvisionDatabaseAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
