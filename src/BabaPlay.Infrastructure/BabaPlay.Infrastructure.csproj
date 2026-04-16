@@ -23,5 +23,6 @@
     <ProjectReference Include="..\Modules\BabaPlay.Modules.CheckIns\BabaPlay.Modules.CheckIns.csproj" />
     <ProjectReference Include="..\Modules\BabaPlay.Modules.TeamGeneration\BabaPlay.Modules.TeamGeneration.csproj" />
     <ProjectReference Include="..\Modules\BabaPlay.Modules.Financial\BabaPlay.Modules.Financial.csproj" />
+    <ProjectReference Include="..\Modules\BabaPlay.Modules.MatchReports\BabaPlay.Modules.MatchReports.csproj" />
   </ItemGroup>
 </Project>

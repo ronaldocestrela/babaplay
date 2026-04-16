@@ -4,6 +4,7 @@ using BabaPlay.Modules.CheckIns.Entities;
 using BabaPlay.Modules.Financial.Entities;
 using BabaPlay.Modules.Identity;
 using BabaPlay.Modules.Identity.Entities;
+using BabaPlay.Modules.MatchReports.Entities;
 using BabaPlay.Modules.TeamGeneration.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,9 @@ public sealed class TenantDbContext : IdentityDbContext<ApplicationUser, Applica
     public DbSet<CheckIn> CheckIns => Set<CheckIn>();
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
+    public DbSet<MatchReport> MatchReports => Set<MatchReport>();
+    public DbSet<MatchReportGame> MatchReportGames => Set<MatchReportGame>();
+    public DbSet<MatchReportPlayerStat> MatchReportPlayerStats => Set<MatchReportPlayerStat>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<CashEntry> CashEntries => Set<CashEntry>();
     public DbSet<Membership> Memberships => Set<Membership>();
@@ -93,6 +97,29 @@ public sealed class TenantDbContext : IdentityDbContext<ApplicationUser, Applica
         modelBuilder.Entity<TeamMember>(e =>
         {
             e.HasOne(x => x.Team).WithMany(x => x.Members).HasForeignKey(x => x.TeamId);
+        });
+        modelBuilder.Entity<MatchReport>(e =>
+        {
+            e.Property(x => x.SessionId).HasMaxLength(64);
+            e.Property(x => x.Notes).HasMaxLength(2000);
+            e.Property(x => x.Status).HasConversion<int>().HasDefaultValue(MatchReportStatus.Draft);
+            e.Property(x => x.FinalizedByUserId).HasMaxLength(64);
+            e.HasIndex(x => x.SessionId).IsUnique();
+        });
+        modelBuilder.Entity<MatchReportGame>(e =>
+        {
+            e.Property(x => x.Title).HasMaxLength(120);
+            e.Property(x => x.Notes).HasMaxLength(2000);
+            e.HasOne(x => x.MatchReport).WithMany(x => x.Games).HasForeignKey(x => x.MatchReportId);
+            e.HasIndex(x => new { x.MatchReportId, x.GameNumber }).IsUnique();
+        });
+        modelBuilder.Entity<MatchReportPlayerStat>(e =>
+        {
+            e.Property(x => x.AssociateId).HasMaxLength(64);
+            e.Property(x => x.Observations).HasMaxLength(1000);
+            e.HasOne(x => x.MatchReportGame).WithMany(x => x.PlayerStats).HasForeignKey(x => x.MatchReportGameId);
+            e.HasIndex(x => new { x.MatchReportGameId, x.AssociateId }).IsUnique();
+            e.HasIndex(x => x.AssociateId);
         });
     }
 

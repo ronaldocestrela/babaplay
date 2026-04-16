@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Match reports (tenant)**: new `MatchReportsController` with per-session match reports supporting multiple games, per-player stats (`goals`, `assists`, `yellowCards`, `redCards`, `observations`), finalization, and admin-only edits after finalization.
 - **Backend unit tests (platform/web):** added coverage for `TenantSubscriptionService` constructor/config validation, tenant update input validation, and provisioning non-invocation when plan is missing; added `BaseController` tests for `Result` -> HTTP status mapping and `GetUserId` claim fallback behavior.
 - **Association `PlayersPerTeam`**: campo no tenant (`Associations`) — alvo de jogadores por equipa na geração de times (default 5, mínimo 2). `POST /api/associations` aceita `playersPerTeam`; migração tenant `AddPlayersPerTeamToAssociation`.
 - **Tenant migrations on startup**: `TenantMigrationsHostedService` iterates `Platform.Tenants` and applies pending `TenantDbContext` migrations to each tenant database; failures are logged per tenant without blocking others.

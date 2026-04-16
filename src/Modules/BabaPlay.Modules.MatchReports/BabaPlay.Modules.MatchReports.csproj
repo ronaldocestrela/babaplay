@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>BabaPlay.Modules.MatchReports</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\BabaPlay.SharedKernel\BabaPlay.SharedKernel.csproj" />
+    <ProjectReference Include="..\BabaPlay.Modules.Associates\BabaPlay.Modules.Associates.csproj" />
+    <ProjectReference Include="..\BabaPlay.Modules.CheckIns\BabaPlay.Modules.CheckIns.csproj" />
+  </ItemGroup>
+</Project>

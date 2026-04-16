@@ -6,6 +6,7 @@ using BabaPlay.Modules.Associations;
 using BabaPlay.Modules.CheckIns;
 using BabaPlay.Modules.Financial;
 using BabaPlay.Modules.Identity;
+using BabaPlay.Modules.MatchReports;
 using BabaPlay.Modules.Platform;
 using BabaPlay.Modules.Platform.Entities;
 using BabaPlay.Modules.TeamGeneration;
@@ -21,6 +22,7 @@ builder.Services.AddAssociatesModule(builder.Configuration);
 builder.Services.AddCheckInsModule();
 builder.Services.AddTeamGenerationModule();
 builder.Services.AddFinancialModule();
+builder.Services.AddMatchReportsModule();
 
 builder.Services.AddControllers()
     .AddApplicationPart(typeof(BabaPlay.Modules.Platform.Controllers.PlansController).Assembly)
@@ -29,7 +31,8 @@ builder.Services.AddControllers()
     .AddApplicationPart(typeof(BabaPlay.Modules.Associates.Controllers.AssociatesController).Assembly)
     .AddApplicationPart(typeof(BabaPlay.Modules.CheckIns.Controllers.CheckInsController).Assembly)
     .AddApplicationPart(typeof(BabaPlay.Modules.TeamGeneration.Controllers.TeamsController).Assembly)
-    .AddApplicationPart(typeof(BabaPlay.Modules.Financial.Controllers.MembershipsController).Assembly);
+    .AddApplicationPart(typeof(BabaPlay.Modules.Financial.Controllers.MembershipsController).Assembly)
+    .AddApplicationPart(typeof(BabaPlay.Modules.MatchReports.Controllers.MatchReportsController).Assembly);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(o =>
 {

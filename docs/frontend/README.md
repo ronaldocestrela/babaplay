@@ -26,6 +26,7 @@ Notas financeiras recentes:
 | [positions-controller.md](positions-controller.md) | `/api/positions` |
 | [checkins-controller.md](checkins-controller.md) | `/api/checkins` |
 | [teams-controller.md](teams-controller.md) | `/api/teams` |
+| [matchreports-controller.md](matchreports-controller.md) | `/api/matchreports` |
 | [memberships-controller.md](memberships-controller.md) | `/api/memberships` |
 | [categories-controller.md](categories-controller.md) | `/api/categories` |
 | [cashentries-controller.md](cashentries-controller.md) | `/api/CashEntries` |

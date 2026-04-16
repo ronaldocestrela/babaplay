@@ -10,6 +10,7 @@
     <Project Path="src/Modules/BabaPlay.Modules.CheckIns/BabaPlay.Modules.CheckIns.csproj" />
     <Project Path="src/Modules/BabaPlay.Modules.Financial/BabaPlay.Modules.Financial.csproj" />
     <Project Path="src/Modules/BabaPlay.Modules.Identity/BabaPlay.Modules.Identity.csproj" />
+    <Project Path="src/Modules/BabaPlay.Modules.MatchReports/BabaPlay.Modules.MatchReports.csproj" />
     <Project Path="src/Modules/BabaPlay.Modules.Platform/BabaPlay.Modules.Platform.csproj" />
     <Project Path="src/Modules/BabaPlay.Modules.TeamGeneration/BabaPlay.Modules.TeamGeneration.csproj" />
   </Folder>
