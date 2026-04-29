@@ -36,6 +36,19 @@ Sem corpo.
 }
 ```
 
+### Resposta 409
+
+Já existe uma sessão de check-in para hoje (regra por tenant, UTC).
+
+```json
+{
+  "success": false,
+  "data": null,
+  "error": "A check-in session for today already exists.",
+  "errors": null
+}
+```
+
 ---
 
 ## POST /api/checkins

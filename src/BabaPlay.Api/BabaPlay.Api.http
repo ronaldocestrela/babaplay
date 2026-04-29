@@ -1,6 +1,33 @@
 @BabaPlay.Api_HostAddress = http://localhost:5077
+@token = SEU_JWT_AQUI
+@tenantSubdomain = SEU_TENANT_AQUI
 
 GET {{BabaPlay.Api_HostAddress}}/weatherforecast/
 Accept: application/json
+
+###
+
+### Listar sessões de check-in
+GET {{BabaPlay.Api_HostAddress}}/api/checkins/sessions
+Accept: application/json
+Authorization: Bearer {{token}}
+X-Tenant-Subdomain: {{tenantSubdomain}}
+
+###
+
+### Criar nova sessão de check-in
+POST {{BabaPlay.Api_HostAddress}}/api/checkins/sessions
+Accept: application/json
+Authorization: Bearer {{token}}
+X-Tenant-Subdomain: {{tenantSubdomain}}
+
+###
+
+### Listar check-ins de uma sessão
+# @name listSession
+GET {{BabaPlay.Api_HostAddress}}/api/checkins/sessions/SESSION_ID_AQUI
+Accept: application/json
+Authorization: Bearer {{token}}
+X-Tenant-Subdomain: {{tenantSubdomain}}
 
 ###

@@ -7,6 +7,7 @@
 ## Regras
 
 - **Um check-in por dia e por associado** (UTC): verificação em `CheckInService.RegisterCheckInAsync`.
+- **Uma sessão de check-in por dia por tenant** (UTC): verificação em `CheckInService.StartSessionAsync`. Tentativa de criar segunda sessão no mesmo dia UTC retorna **409 Conflict**. Protegida também por índice único `IX_CheckInSessions_StartedAtDateUtc` (coluna computada persistida `CAST([StartedAt] AS DATE)`).
 
 ## Serviços
 

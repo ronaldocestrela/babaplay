@@ -85,6 +85,7 @@ await using (var scope = app.Services.CreateAsyncScope())
     {
         platform.AllowedOrigins.Add(new AllowedOrigin { Origin = "http://localhost:5173" });
         platform.AllowedOrigins.Add(new AllowedOrigin { Origin = "http://localhost:3000" });
+        platform.AllowedOrigins.Add(new AllowedOrigin { Origin = "http://172.27.216.86:8080" });
         await platform.SaveChangesAsync();
     }
 }

@@ -13,6 +13,10 @@ public sealed class CheckInsController : BaseController
 
     public CheckInsController(CheckInService service) => _service = service;
 
+    [HttpGet("sessions")]
+    public async Task<IActionResult> ListSessions(CancellationToken ct) =>
+        FromResult(await _service.ListSessionsAsync(ct));
+
     [HttpPost("sessions")]
     public async Task<IActionResult> StartSession(CancellationToken ct) =>
         FromResult(await _service.StartSessionAsync(GetUserId(), ct));

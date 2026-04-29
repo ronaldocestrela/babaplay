@@ -23,6 +23,13 @@ public sealed class CheckInService
 
     public async Task<Result<CheckInSession>> StartSessionAsync(string? createdByUserId, CancellationToken ct)
     {
+        var today = DateTime.UtcNow.Date;
+        var tomorrow = today.AddDays(1);
+        var alreadyToday = await _sessions.Query()
+            .AnyAsync(s => s.StartedAt >= today && s.StartedAt < tomorrow, ct);
+        if (alreadyToday)
+            return Result.Conflict<CheckInSession>("A check-in session for today already exists.");
+
         var session = new CheckInSession { CreatedByUserId = createdByUserId };
         await _sessions.AddAsync(session, ct);
         await _uow.SaveChangesAsync(ct);

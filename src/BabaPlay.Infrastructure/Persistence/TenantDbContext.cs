@@ -62,6 +62,16 @@ public sealed class TenantDbContext : IdentityDbContext<ApplicationUser, Applica
             e.HasIndex(x => new { x.AssociateId, x.PositionId }).IsUnique();
             e.HasOne(x => x.Position).WithMany().HasForeignKey(x => x.PositionId);
         });
+        modelBuilder.Entity<CheckInSession>(e =>
+        {
+            e.Property(x => x.StartedAtDateUtc)
+                .HasColumnType("date")
+                .HasComputedColumnSql("CAST([StartedAt] AS DATE)", stored: true);
+            e.HasIndex(x => x.StartedAtDateUtc)
+                .IsUnique()
+                .HasDatabaseName("IX_CheckInSessions_StartedAtDateUtc")
+                .HasFilter(null); // SQL Server não permite filtros em índices sobre colunas computadas
+        });
         modelBuilder.Entity<CheckIn>(e =>
         {
             e.HasOne(x => x.Session).WithMany(x => x.CheckIns).HasForeignKey(x => x.SessionId);

@@ -29,6 +29,7 @@ public sealed class CheckInServiceTests
     [Fact]
     public async Task StartSession_CreatesAndReturnsSession()
     {
+        _sessionRepo.Setup(r => r.Query()).Returns(new List<CheckInSession>().AsAsyncQueryable());
         _sessionRepo.Setup(r => r.AddAsync(It.IsAny<CheckInSession>(), It.IsAny<CancellationToken>()))
                     .Returns(Task.CompletedTask);
 
@@ -43,6 +44,7 @@ public sealed class CheckInServiceTests
     [Fact]
     public async Task StartSession_NullUserId_StillCreatesSession()
     {
+        _sessionRepo.Setup(r => r.Query()).Returns(new List<CheckInSession>().AsAsyncQueryable());
         _sessionRepo.Setup(r => r.AddAsync(It.IsAny<CheckInSession>(), It.IsAny<CancellationToken>()))
                     .Returns(Task.CompletedTask);
 
@@ -50,6 +52,59 @@ public sealed class CheckInServiceTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.CreatedByUserId.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task StartSession_SessionAlreadyExistsToday_ReturnsConflict()
+    {
+        var today = DateTime.UtcNow.Date;
+        var existing = new List<CheckInSession>
+        {
+            new() { Id = "s-old", StartedAt = today.AddHours(9) }
+        };
+        _sessionRepo.Setup(r => r.Query()).Returns(existing.AsAsyncQueryable());
+
+        var result = await _sut.StartSessionAsync("user1", CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Status.Should().Be(ResultStatus.Conflict);
+        result.Error.Should().Contain("session");
+        _sessionRepo.Verify(r => r.AddAsync(It.IsAny<CheckInSession>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task StartSession_SessionExistsYesterday_CreatesNewSession()
+    {
+        var yesterday = DateTime.UtcNow.Date.AddDays(-1);
+        var existing = new List<CheckInSession>
+        {
+            new() { Id = "s-old", StartedAt = yesterday.AddHours(10) }
+        };
+        _sessionRepo.Setup(r => r.Query()).Returns(existing.AsAsyncQueryable());
+        _sessionRepo.Setup(r => r.AddAsync(It.IsAny<CheckInSession>(), It.IsAny<CancellationToken>()))
+                    .Returns(Task.CompletedTask);
+
+        var result = await _sut.StartSessionAsync("user1", CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        _sessionRepo.Verify(r => r.AddAsync(It.IsAny<CheckInSession>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task StartSession_OnlyOldSessions_CreatesNewSession()
+    {
+        var old = new List<CheckInSession>
+        {
+            new() { Id = "s1", StartedAt = DateTime.UtcNow.Date.AddDays(-7) },
+            new() { Id = "s2", StartedAt = DateTime.UtcNow.Date.AddDays(-14) }
+        };
+        _sessionRepo.Setup(r => r.Query()).Returns(old.AsAsyncQueryable());
+        _sessionRepo.Setup(r => r.AddAsync(It.IsAny<CheckInSession>(), It.IsAny<CancellationToken>()))
+                    .Returns(Task.CompletedTask);
+
+        var result = await _sut.StartSessionAsync("user1", CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
     }
 
     // ── RegisterCheckIn ──────────────────────────────────────────────────────
