@@ -237,16 +237,51 @@ Construir um sistema SaaS escalável, com:
 
 ## 🌐 Fase 16 — Frontend (React)
 
-### Ordem
+### 1. Auth ✅ CONCLUÍDA
 
-1. Auth
-2. Dashboard
-3. Players
-4. Check-in
-5. Times
-6. Partidas
-7. Ranking
-8. Financeiro
+#### Stack
+- React 19 + Vite 8 + TypeScript 6
+- TailwindCSS 4
+- Zustand + persist (auth state)
+- TanStack React Query v5
+- TanStack Router (guards via `beforeLoad`)
+- Axios + interceptor queue (silent refresh)
+- Zod (validação de formulários)
+- MSW 2 + Vitest + Testing Library (TDD)
+
+#### Entregas
+- `authService`: `login`, `refreshToken`, `logout` (revogação server-side), `getCurrentUser`
+- `authStore` (Zustand): `accessToken`, `refreshToken`, `isAuthenticated`, `currentUser`; `setTokens`, `setCurrentUser`, `clearTokens` atômico
+- `useLogin`: mutation com pré-fetch de perfil após login
+- `useLogout`: mutation com `onSettled` — limpa store + cache + navega independente de erro
+- `useCurrentUser`: query habilitada por `isAuthenticated`, popula `currentUser` no store
+- `AuthHeader`: exibe email do usuário + botão Sair
+- `ErrorBoundary`: captura erros de renderização, exibe fallback + reload
+- `ProtectedLayout`: integra `AuthHeader` + aciona `useCurrentUser`
+- Router guards: redirecionamento automático autenticado/não-autenticado
+- Contrato de erros: `ProblemDetails.title` → `getErrorCode()`
+
+#### Testes — 52 total (100% passando)
+| Suíte | Testes |
+|---|---|
+| authStore | 6 |
+| loginSchema | 5 |
+| apiClient (interceptors) | 4 |
+| authService | 10 |
+| useLogin | 5 |
+| useLogout | 3 |
+| useCurrentUser | 4 |
+| LoginForm | 7 |
+| AuthHeader | 4 |
+| ErrorBoundary | 4 |
+
+### 2. Dashboard — pendente
+### 3. Players — pendente
+### 4. Check-in — pendente
+### 5. Times — pendente
+### 6. Partidas — pendente
+### 7. Ranking — pendente
+### 8. Financeiro — pendente
 
 ---
 

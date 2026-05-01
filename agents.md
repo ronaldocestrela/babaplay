@@ -135,21 +135,44 @@ src/
 
 ### Stack
 
-- React 18+
-- Vite
-- TypeScript
-- React Query (server state)
-- Zustand (state global)
-- Tailwind CSS
-- Axios
-- React Hook Form
-- Zod (validação)
+- React 19 + Vite 8 + TypeScript 6
+- TailwindCSS 4
+- TanStack React Query v5 (server state)
+- Zustand + persist (estado global)
+- TanStack Router (roteamento + guards)
+- Axios + interceptor queue (silent refresh)
+- React Hook Form + Zod (formulários/validação)
+- MSW 2 + Vitest + Testing Library (testes)
 
 ### Padrões
 
-- Component-based
-- Hooks
-- Separação por feature
+- Feature-based (`src/features/<feature>/`)
+- Hooks (mutations via React Query, estado via Zustand)
+- Erros de API: `ProblemDetails.title` → `getErrorCode()`
+- TDD obrigatório: Red → Green → Refactor
+
+### Estrutura
+
+```
+web/src/
+ ├── core/
+ │    ├── api/          # apiClient (Axios + interceptors)
+ │    ├── components/   # AuthHeader, ErrorBoundary
+ │    ├── constants/    # apiRoutes
+ │    ├── providers/    # AppProviders (QueryClient, Router)
+ │    └── utils/        # getErrorCode
+ ├── features/
+ │    └── auth/
+ │         ├── components/  # LoginForm
+ │         ├── hooks/       # useLogin, useLogout, useCurrentUser
+ │         ├── schemas/     # loginSchema (Zod)
+ │         ├── services/    # authService
+ │         ├── store/       # authStore (Zustand)
+ │         └── types/       # AuthResponse, UserProfile, LoginRequest...
+ ├── layouts/          # ProtectedLayout, PublicLayout
+ ├── pages/            # LoginPage, DashboardPage
+ └── test/             # MSW handlers, setup, utils
+```
 
 ---
 
@@ -296,6 +319,33 @@ Código sem:
 
 #### Migration
 - `InitialMaster` gerada em `src/BabaPlay.Infrastructure/Persistence/Migrations/`
+
+---
+
+### Fase 16 — Frontend (React): 1. Auth ✅
+
+#### Arquitetura de autenticação
+- `authStore` (Zustand persist): `accessToken`, `refreshToken`, `isAuthenticated`, `currentUser: UserProfile | null`
+- `apiClient` (Axios): injeta Bearer token via request interceptor; fila de retry em 401 com silent refresh; fallback para `clearTokens` + redirect
+- `authService`: `login`, `refreshToken`, `logout` (POST com revogação), `getCurrentUser` (GET /me)
+
+#### Hooks
+| Hook | Descrição |
+|---|---|
+| `useLogin` | mutation; pré-fetcha perfil no cache após `setTokens` |
+| `useLogout` | mutation; `onSettled` garante limpeza de store + cache + redirect mesmo em erro |
+| `useCurrentUser` | query; `enabled: isAuthenticated`; persiste `UserProfile` no store |
+
+#### Componentes
+| Componente | Descrição |
+|---|---|
+| `AuthHeader` | Logo + email do usuário + botão Sair |
+| `ErrorBoundary` | Class component; captura erros de render; fallback com reload |
+| `ProtectedLayout` | Monta `AuthHeader` + aciona `useCurrentUser` |
+| `LoginForm` | Formulário Zod + React Hook Form + exibe códigos de erro da API |
+
+#### Testes — 52 total (100% passando, TDD)
+- 10 suítes cobrindo: store, schema, interceptors, service, hooks, componentes
 
 ---
 

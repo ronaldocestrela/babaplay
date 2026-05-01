@@ -1,8 +1,13 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { authService } from '../authService'
-import { mockAuthResponse } from '@/test/handlers'
+import { mockAuthResponse, mockUserProfile } from '@/test/handlers'
+import { useAuthStore } from '../../store/authStore'
 
 describe('authService', () => {
+  beforeEach(() => {
+    useAuthStore.getState().clearTokens()
+  })
+
   describe('login', () => {
     it('deve retornar AuthResponse com credenciais válidas', async () => {
       const result = await authService.login({
@@ -42,6 +47,36 @@ describe('authService', () => {
 
     it('deve lançar erro 401 com refresh token inválido', async () => {
       await expect(authService.refreshToken('invalid-token-xyz')).rejects.toMatchObject({
+        response: { status: 401 },
+      })
+    })
+  })
+
+  describe('logout', () => {
+    it('deve realizar logout com refresh token válido sem erros', async () => {
+      await expect(authService.logout('mock-refresh-token')).resolves.toBeUndefined()
+    })
+
+    it('deve lançar erro 401 com refresh token inválido no logout', async () => {
+      await expect(authService.logout('invalid-logout-token')).rejects.toMatchObject({
+        response: { status: 401 },
+      })
+    })
+  })
+
+  describe('getCurrentUser', () => {
+    it('deve retornar UserProfile com token válido', async () => {
+      useAuthStore.getState().setTokens(mockAuthResponse)
+      const result = await authService.getCurrentUser()
+      expect(result.id).toBe(mockUserProfile.id)
+      expect(result.email).toBe(mockUserProfile.email)
+      expect(result.roles).toEqual(mockUserProfile.roles)
+      expect(result.isActive).toBe(true)
+    })
+
+    it('deve lançar erro 401 sem token de autorização', async () => {
+      // store limpo (clearTokens no beforeEach) → sem Bearer header
+      await expect(authService.getCurrentUser()).rejects.toMatchObject({
         response: { status: 401 },
       })
     })
