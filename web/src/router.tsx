@@ -1,0 +1,66 @@
+import {
+  createRouter,
+  createRootRoute,
+  createRoute,
+  Outlet,
+  redirect,
+} from '@tanstack/react-router'
+import { useAuthStore } from '@/features/auth/store/authStore'
+import { LoginPage } from '@/pages/LoginPage'
+import { DashboardPage } from '@/pages/DashboardPage'
+import { PublicLayout } from '@/layouts/PublicLayout'
+import { ProtectedLayout } from '@/layouts/ProtectedLayout'
+
+// ── Root ─────────────────────────────────────────────────────────────────────
+const rootRoute = createRootRoute({ component: () => <Outlet /> })
+
+// ── Public routes ─────────────────────────────────────────────────────────────
+const publicRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: 'public',
+  component: PublicLayout,
+})
+
+const loginRoute = createRoute({
+  getParentRoute: () => publicRoute,
+  path: '/login',
+  beforeLoad: () => {
+    if (useAuthStore.getState().isAuthenticated) {
+      throw redirect({ to: '/' })
+    }
+  },
+  component: LoginPage,
+})
+
+// ── Protected routes ──────────────────────────────────────────────────────────
+const protectedRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: 'protected',
+  beforeLoad: () => {
+    if (!useAuthStore.getState().isAuthenticated) {
+      throw redirect({ to: '/login' })
+    }
+  },
+  component: ProtectedLayout,
+})
+
+const dashboardRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/',
+  component: DashboardPage,
+})
+
+// ── Router ────────────────────────────────────────────────────────────────────
+const routeTree = rootRoute.addChildren([
+  publicRoute.addChildren([loginRoute]),
+  protectedRoute.addChildren([dashboardRoute]),
+])
+
+export const router = createRouter({ routeTree })
+
+// Declaração de tipo global para type-safe navigation
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router
+  }
+}
