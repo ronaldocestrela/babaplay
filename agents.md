@@ -2,14 +2,14 @@
 
 ## Visão Geral
 
-BabaPlay Sistema SaaS para gestão de associações esportivas (futebol) com:
+Sistema SaaS para gestão de associações esportivas (futebol) com:
 
 - Multi-tenant (1 banco por associação)
 - Tempo real (SignalR)
 - Notificações push (Firebase)
-- Backend: .NET (Clean Architecture + CQRS + TDD obrigatório)
+- Backend: .NET 10 (Clean Architecture + CQRS + TDD obrigatório)
 - Banco: SQL Server
-- Frontend: React + Vite + TypeScript
+- Web: React + Vite + TypeScript
 - Mobile: Flutter
 
 Escala alvo inicial:
@@ -23,20 +23,14 @@ Escala alvo inicial:
 ### 1. TDD (Test Driven Development)
 
 - Todo código deve ser iniciado por teste
-- Não é permitido código sem teste
-- Fluxo obrigatório:
-  1. Red (teste falha)
-  2. Green (implementação mínima)
-  3. Refactor
+- Fluxo obrigatório: Red → Green → Refactor
+- Cobertura mínima: 80%
 
 ### 2. CQRS
 
-Separação obrigatória:
-
 - Commands → escrita
 - Queries → leitura
-
-NUNCA misturar responsabilidades.
+- Proibido misturar responsabilidades
 
 ### 3. Clean Architecture
 
@@ -47,19 +41,13 @@ NUNCA misturar responsabilidades.
 
 ### 4. Identity
 
-Uso obrigatório do ASP.NET Identity para:
+- Uso obrigatório do ASP.NET Identity
+- Base para autenticação e autorização
 
-- Autenticação
-- Gestão de usuários
-- Roles base
+### 5. Documentação
 
-Customizações devem respeitar o Identity.
-
-### 5. Documentação Atualizada
-
-- Toda feature deve atualizar documentação
-- API deve ser documentada (Swagger obrigatório)
-- Mudança de regra → atualização obrigatória no AGENTS.md
+- Swagger obrigatório
+- Toda alteração exige atualização da documentação
 
 ---
 
@@ -67,46 +55,31 @@ Customizações devem respeitar o Identity.
 
 ### Master Database
 
-Responsável por:
-
 - Autenticação global (Identity)
-- Gestão de tenants
-- Assinaturas (SaaS)
-- Vínculo usuário ↔ associação
-
-#### Tabelas
-
-- AspNetUsers
-- AspNetRoles
 - Tenants
+- Assinaturas
 - UserTenants
-- Subscriptions
-- Plans
 
----
-
-### Tenant Database (1 por associação)
-
-Responsável por:
+### Tenant Database
 
 - Jogadores
 - Check-ins
 - Partidas
 - Times
-- Eventos de jogo
 - Financeiro
 - RBAC
 
 ---
 
-## Backend (.NET)
+## Backend (.NET 10)
 
 ### Stack
 
-- .NET 8
+- .NET 10
 - ASP.NET Core
 - Entity Framework Core
 - SQL Server
+- MediatR (CQRS)
 - SignalR
 - Firebase Admin SDK
 
@@ -134,7 +107,7 @@ src/
 - 1 banco por tenant
 - Connection string dinâmica
 
-### Componentes obrigatórios
+### Componentes
 
 - ITenantResolver
 - TenantMiddleware
@@ -153,11 +126,54 @@ src/
 
 ## Notificações (Firebase)
 
-### Casos
+- Firebase Cloud Messaging (FCM)
+- Tokens por dispositivo
 
-- Check-in aberto
-- Início de jogo
-- Resultado
+---
+
+## Frontend Web (React + Vite)
+
+### Stack
+
+- React 18+
+- Vite
+- TypeScript
+- React Query (server state)
+- Zustand (state global)
+- Tailwind CSS
+- Axios
+- React Hook Form
+- Zod (validação)
+
+### Padrões
+
+- Component-based
+- Hooks
+- Separação por feature
+
+---
+
+## Mobile (Flutter)
+
+### Stack
+
+- Flutter (última versão estável)
+- Dart
+- Riverpod (state management)
+- Dio (HTTP client)
+- GoRouter (navegação)
+- Firebase Messaging (push)
+- Geolocator (GPS)
+
+### Estrutura
+
+```
+lib/
+ ├── core
+ ├── features
+ ├── services
+ ├── widgets
+```
 
 ---
 
@@ -186,50 +202,24 @@ src/
 ### Padrão
 
 - Controllers leves
-- Toda lógica via Handlers (CQRS)
-
-Exemplo:
-
-```
-POST /matches
-→ CreateMatchCommand
-```
-
----
-
-## Frontend (React)
-
-- React + TS
-- React Query
-- Zustand
-
----
-
-## Mobile (Flutter)
-
-- Check-in GPS
-- Push notifications
+- Lógica via Handlers (CQRS)
 
 ---
 
 ## Testes
 
-Obrigatórios:
-
 - Unitários (Domain + Application)
 - Integração (API)
-
-Cobertura mínima:
-
-- 80%
+- Falha de teste bloqueia deploy
 
 ---
 
 ## DevOps
 
 - Docker
-- CI/CD obrigatório com testes
-- Falha de teste bloqueia deploy
+- CI/CD
+- Redis (cache + SignalR backplane)
+- Migrations por tenant
 
 ---
 
@@ -246,31 +236,67 @@ Cobertura mínima:
 
 ---
 
-## Roadmap
+## REGRA FINAL
 
-1. Auth + Identity
-2. Multi-tenancy
-3. Players
-4. Check-in
-5. Matches
-6. Score
-7. Notificações
-8. Financeiro
+Código sem:
+- teste
+- CQRS
+- documentação
+
+→ NÃO É ACEITO
 
 ---
 
-## REGRA FINAL
+## Estado de Implementação
 
-Qualquer código que:
+### Fase 0 — Fundação ✅
 
-- não tenha teste
-- não siga CQRS
-- não respeite Clean Architecture
-- não atualize documentação
+- Solução `.NET 10` com 5 projetos (`Api`, `Application`, `Domain`, `Infrastructure`, `Tests`)
+- Clean Architecture com dependências corretas entre camadas
+- CQRS via contratos próprios (`ICommand<T>`, `ICommandHandler`, `IQuery<T>`, `IQueryHandler`)
+- `Result<T>` / `Result` para fluxo sem exceções
+- Vertical slice Ping (command + query + controller)
+- `GlobalExceptionHandler` com `ProblemDetails`
+- Swagger com docs XML
+- 7 testes (unit + integração) — ciclo TDD Red-Green-Refactor
 
-→ DEVE ser considerado inválido
+### Fase 1 — Identity + Auth ✅
+
+#### JWT
+- Algoritmo: HmacSha256; ClockSkew: `TimeSpan.Zero`
+- Claims: `sub` (userId), `email`, `jti` (Guid), `iat`, `ClaimTypes.Role` por role
+- Configuração via `JwtSettings` (seção `Jwt` no appsettings)
+
+#### Refresh Token
+- Persistido no Master DB (`RefreshTokens`); rotacionado a cada uso; revogável via `RevokedAt` (nullable)
+- `IsRevoked` é propriedade computada (ignorada pelo EF via `e.Ignore`)
+- Gerado com 64 bytes criptográficos (Base64)
+
+#### Master DB — tabelas
+| Tabela | Observação |
+|---|---|
+| `AspNetUsers` | `ApplicationUser` com `IsActive` e `CreatedAt` |
+| `AspNetRoles` / tabelas Identity | padrão |
+| `RefreshTokens` | índice único em `Token` |
+| `Tenants` | slug único; `ConnectionString` `HasMaxLength(2000)` |
+| `UserTenants` | PK composta (UserId, TenantId) |
+| `Plans` | `Price` decimal(18,2) |
+| `Subscriptions` | FK → Tenant + Plan; enum `SubscriptionStatus` (Active/Expired/Cancelled) |
+
+#### Endpoints
+| Método | Rota | Sucesso | Erros |
+|---|---|---|---|
+| POST | `/api/v1/auth/login` | 200 `AuthResponse` | 401 INVALID_CREDENTIALS · 422 USER_INACTIVE |
+| POST | `/api/v1/auth/refresh-token` | 200 `AuthResponse` | 401 INVALID_TOKEN · 401 TOKEN_EXPIRED |
+
+#### Testes — 27 total (100% passando)
+- 5 unitários `LoginCommandHandler`
+- 5 unitários `RefreshTokenCommandHandler`
+- 7 integração `AuthIntegrationTests` (SQLite in-memory via `AuthWebApplicationFactory`)
+
+#### Migration
+- `InitialMaster` gerada em `src/BabaPlay.Infrastructure/Persistence/Migrations/`
 
 ---
 
 Fim.
-

@@ -13,7 +13,7 @@ Construir um sistema SaaS escalável, com:
 
 ---
 
-## 🧱 Fase 0 — Fundação
+## 🧱 Fase 0 — Fundação ✅ CONCLUÍDA
 
 ### Entregas
 
@@ -30,20 +30,30 @@ Construir um sistema SaaS escalável, com:
   - xUnit + FluentAssertions
   - Swagger
 
+### Testes (7 total — 100% passando)
+
+- Unitários: `PingCommandHandler`, `PingQueryHandler`, `EntityBase`
+- Integração: `PingIntegrationTests`
+
 ---
 
-## 🔐 Fase 1 — Identity + Auth
+## 🔐 Fase 1 — Identity + Auth ✅ CONCLUÍDA
 
 ### Entregas
 
-- ASP.NET Identity
-- JWT + Refresh Token
+- ASP.NET Identity (`ApplicationUser : IdentityUser` + `IsActive`)
+- JWT com HmacSha256 (claims: sub, email, jti, iat, role); ClockSkew = Zero
+- Refresh Token persistido no DB, rotacionado a cada uso, revogável
+- Master DB: Tenants, UserTenants, Plans, Subscriptions (SaaS full)
+- EF Core migration: `InitialMaster`
+- `POST /api/v1/auth/login` — retorna `AuthResponse` (accessToken + refreshToken)
+- `POST /api/v1/auth/refresh-token` — rotação de token
+- Swagger com Bearer JWT security definition
 
-### Testes
+### Testes (27 total — 100% passando)
 
-- Login válido
-- Login inválido
-- Refresh token
+- 10 testes unitários (LoginCommandHandler × 5, RefreshTokenCommandHandler × 5)
+- 7 testes de integração (login válido, inválido, email desconhecido, refresh válido, expirado, inválido, token revogado)
 
 ---
 

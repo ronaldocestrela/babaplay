@@ -1,13 +1,14 @@
 using BabaPlay.Api.Middlewares;
 using BabaPlay.Application;
 using BabaPlay.Infrastructure;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // --- Services ---
 builder.Services
     .AddApplicationServices()
-    .AddInfrastructureServices();
+    .AddInfrastructureServices(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -21,6 +22,27 @@ builder.Services.AddSwaggerGen(options =>
         Title = "BabaPlay API",
         Version = "v1",
         Description = "SaaS backend para gestão de associações esportivas"
+    });
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Informe o token JWT: Bearer {token}",
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            Array.Empty<string>()
+        }
     });
 
     var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
@@ -41,6 +63,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
@@ -49,8 +72,3 @@ app.Run();
 // Partial class para permitir acesso em testes de integração (WebApplicationFactory<Program>)
 public partial class Program { }
 
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
