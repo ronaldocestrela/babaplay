@@ -73,17 +73,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
-          cache: "npm"
-          cache-dependency-path: web/package-lock.json
+          cache: "yarn"
+          cache-dependency-path: web/yarn.lock
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Lint
-        run: npm run lint
+        run: yarn lint
 
       - name: Run tests with coverage
-        run: npm run coverage
+        run: yarn coverage
 
       - name: Upload frontend test results
         uses: actions/upload-artifact@v4
