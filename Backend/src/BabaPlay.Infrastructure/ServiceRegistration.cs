@@ -1,11 +1,13 @@
 using System.Text;
 using BabaPlay.Application.Interfaces;
+using BabaPlay.Infrastructure.Authorization;
 using BabaPlay.Infrastructure.Entities;
 using BabaPlay.Infrastructure.Persistence;
 using BabaPlay.Infrastructure.Repositories;
 using BabaPlay.Infrastructure.Services;
 using BabaPlay.Infrastructure.Settings;
 using BabaPlay.Infrastructure.Workers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -69,6 +71,14 @@ public static class ServiceRegistration
             };
         });
 
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("TenantMember", policy =>
+                policy.Requirements.Add(new TenantMemberRequirement()));
+        });
+
+        services.AddScoped<IAuthorizationHandler, TenantMemberAuthorizationHandler>();
+
         // --- Application-level service abstractions ---
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IUserRepository, UserRepository>();
@@ -85,6 +95,11 @@ public static class ServiceRegistration
 
         // --- Tenant-scoped repositories (Fase 3) ---
         services.AddScoped<IPlayerRepository, PlayerRepository>();
+
+        // --- RBAC repositories (Fase 4) ---
+        services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<IPermissionRepository, PermissionRepository>();
+        services.AddScoped<IUserRoleRepository, UserRoleRepository>();
 
         return services;
     }

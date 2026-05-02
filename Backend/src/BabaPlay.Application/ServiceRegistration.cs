@@ -1,12 +1,14 @@
 using BabaPlay.Application.Commands.Auth;
 using BabaPlay.Application.Commands.Ping;
 using BabaPlay.Application.Commands.Players;
+using BabaPlay.Application.Commands.Roles;
 using BabaPlay.Application.Commands.Tenants;
 using BabaPlay.Application.Common;
 using BabaPlay.Application.DTOs;
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Application.Queries.Ping;
 using BabaPlay.Application.Queries.Players;
+using BabaPlay.Application.Queries.Roles;
 using BabaPlay.Application.Queries.Tenants;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -34,6 +36,12 @@ public static class ServiceRegistration
         services.AddScoped<IQueryHandler<GetPlayersQuery, Result<IReadOnlyList<PlayerResponse>>>, GetPlayersQueryHandler>();
         services.AddScoped<ICommandHandler<UpdatePlayerCommand, Result<PlayerResponse>>, UpdatePlayerCommandHandler>();
         services.AddScoped<ICommandHandler<DeletePlayerCommand, Result>, DeletePlayerCommandHandler>();
+
+        // RBAC — Fase 4
+        services.AddScoped<ICommandHandler<CreateRoleCommand, Result<RoleResponse>>, CreateRoleCommandHandler>();
+        services.AddScoped<IQueryHandler<GetRolesQuery, Result<IReadOnlyList<RoleResponse>>>, GetRolesQueryHandler>();
+        services.AddScoped<ICommandHandler<AssignRoleToUserCommand, Result>, AssignRoleToUserCommandHandler>();
+        services.AddScoped<ICommandHandler<AddPermissionToRoleCommand, Result<RoleResponse>>, AddPermissionToRoleCommandHandler>();
 
         return services;
     }

@@ -120,18 +120,51 @@ Construir um sistema SaaS escalável, com:
 
 ---
 
-## 🔐 Fase 4 — RBAC
+## 🔐 Fase 4 — RBAC 🚧 EM ANDAMENTO
 
 ### Entregas
 
-- Roles
-- Permissions
-- Middleware de autorização
+- Domain (RBAC por tenant):
+  - `Role` entity (`Create`, `Rename`, `AddPermission`, `RemovePermission`, `Deactivate`)
+  - `Permission` entity (`Create`, normalização de código)
+  - `RolePermission` (N:N)
+  - `UserRole` (atribuição de role para usuário no tenant)
+- Infrastructure (tenant DB):
+  - `TenantDbContext` com `DbSet<Role>`, `DbSet<Permission>`, `DbSet<RolePermission>`, `DbSet<UserRole>`
+  - Índices: único em `(TenantId, NormalizedName)` para roles e único em `NormalizedCode` para permissions
+  - EF Core migration: `AddRbac` (banco por-tenant)
+- Application (CQRS + contratos):
+  - Interfaces: `IRoleRepository`, `IPermissionRepository`, `IUserRoleRepository`
+  - DTO: `RoleResponse`
+  - Commands/Handlers:
+    - `CreateRoleCommand`
+    - `AssignRoleToUserCommand`
+    - `AddPermissionToRoleCommand`
+  - Query/Handler:
+    - `GetRolesQuery`
+- API + autorização:
+  - `RoleController` (`POST /api/v1/role`, `GET /api/v1/role`, `POST /api/v1/role/{roleId}/users/{userId}`, `POST /api/v1/role/{roleId}/permissions`)
+  - Policy `TenantMember` + `TenantMemberAuthorizationHandler` (valida usuário autenticado pertencente ao tenant resolvido)
 
 ### Testes
 
-- Permissão válida
-- Permissão negada
+- Unit Domain (novos):
+  - `RoleTests`
+  - `PermissionTests`
+  - `RolePermissionTests`
+  - `UserRoleTests`
+- Unit Application (novos):
+  - `CreateRoleCommandHandlerTests`
+  - `GetRolesQueryHandlerTests`
+  - `AssignRoleToUserCommandHandlerTests`
+  - `AddPermissionToRoleCommandHandlerTests`
+- Status atual da suíte backend: **108 testes, 100% passando**
+
+### Pendências para concluir a Fase 4
+
+- Seed padrão no provisioning: `Admin`, `Manager`, `Member`, `Viewer` + matriz inicial de permissions
+- Policy de autorização por permission (além de membership)
+- Testes de integração RBAC (permitido/negado por tenant)
 
 ---
 
