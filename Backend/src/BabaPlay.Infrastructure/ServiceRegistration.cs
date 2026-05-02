@@ -83,6 +83,9 @@ public static class ServiceRegistration
         services.AddSingleton<ITenantProvisioningQueue, TenantProvisioningQueue>();
         services.AddHostedService<TenantProvisioningWorker>();
 
+        // --- Tenant-scoped repositories (Fase 3) ---
+        services.AddScoped<IPlayerRepository, PlayerRepository>();
+
         return services;
     }
 }

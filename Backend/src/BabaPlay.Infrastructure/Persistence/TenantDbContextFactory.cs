@@ -7,7 +7,7 @@ namespace BabaPlay.Infrastructure.Persistence;
 /// Creates a <see cref="TenantDbContext"/> pointing to the tenant's isolated database.
 /// The connection string is looked up from the Master DB at runtime.
 /// </summary>
-public sealed class TenantDbContextFactory
+public class TenantDbContextFactory
 {
     private readonly MasterDbContext _masterDb;
 
@@ -18,7 +18,7 @@ public sealed class TenantDbContextFactory
     /// for the given tenant. Throws <see cref="NotFoundException"/> if the tenant does
     /// not exist or its database has not been provisioned yet.
     /// </summary>
-    public async Task<TenantDbContext> CreateAsync(Guid tenantId, CancellationToken ct = default)
+    public virtual async Task<TenantDbContext> CreateAsync(Guid tenantId, CancellationToken ct = default)
     {
         var tenant = await _masterDb.Tenants
             .AsNoTracking()

@@ -1,10 +1,12 @@
 using BabaPlay.Application.Commands.Auth;
 using BabaPlay.Application.Commands.Ping;
+using BabaPlay.Application.Commands.Players;
 using BabaPlay.Application.Commands.Tenants;
 using BabaPlay.Application.Common;
 using BabaPlay.Application.DTOs;
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Application.Queries.Ping;
+using BabaPlay.Application.Queries.Players;
 using BabaPlay.Application.Queries.Tenants;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,6 +27,13 @@ public static class ServiceRegistration
         // Tenants — Fase 2
         services.AddScoped<ICommandHandler<CreateTenantCommand, Result<TenantResponse>>, CreateTenantCommandHandler>();
         services.AddScoped<IQueryHandler<GetTenantStatusQuery, Result<TenantResponse>>, GetTenantStatusQueryHandler>();
+
+        // Players — Fase 3
+        services.AddScoped<ICommandHandler<CreatePlayerCommand, Result<PlayerResponse>>, CreatePlayerCommandHandler>();
+        services.AddScoped<IQueryHandler<GetPlayerQuery, Result<PlayerResponse>>, GetPlayerQueryHandler>();
+        services.AddScoped<IQueryHandler<GetPlayersQuery, Result<IReadOnlyList<PlayerResponse>>>, GetPlayersQueryHandler>();
+        services.AddScoped<ICommandHandler<UpdatePlayerCommand, Result<PlayerResponse>>, UpdatePlayerCommandHandler>();
+        services.AddScoped<ICommandHandler<DeletePlayerCommand, Result>, DeletePlayerCommandHandler>();
 
         return services;
     }
