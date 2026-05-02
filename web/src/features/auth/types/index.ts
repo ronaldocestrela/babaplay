@@ -25,3 +25,22 @@ export interface UserProfile {
 export interface LogoutRequest {
   refreshToken: string
 }
+
+export interface TenantContext {
+  slug: string
+  source: 'subdomain' | 'query'
+}
+
+/** Espelha TenantResponse do backend (TenantController). */
+export interface TenantResponse {
+  id: string
+  name: string
+  slug: string
+  provisioningStatus: string
+}
+
+/** Payload enviado para POST /api/v1/tenant. */
+export interface CreateTenantRequest {
+  name: string
+  slug: string
+}

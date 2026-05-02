@@ -5,7 +5,9 @@ using BabaPlay.Infrastructure.Persistence;
 using BabaPlay.Infrastructure.Repositories;
 using BabaPlay.Infrastructure.Services;
 using BabaPlay.Infrastructure.Settings;
+using BabaPlay.Infrastructure.Workers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -71,6 +73,15 @@ public static class ServiceRegistration
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+
+        // --- Multi-tenancy (Fase 2) ---
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, RequestTenantContext>();
+        services.AddScoped<ITenantRepository, TenantRepository>();
+        services.AddScoped<IUserTenantRepository, UserTenantRepository>();
+        services.AddScoped<TenantDbContextFactory>();
+        services.AddSingleton<ITenantProvisioningQueue, TenantProvisioningQueue>();
+        services.AddHostedService<TenantProvisioningWorker>();
 
         return services;
     }

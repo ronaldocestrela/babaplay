@@ -57,20 +57,33 @@ Construir um sistema SaaS escalável, com:
 
 ---
 
-## 🏢 Fase 2 — Multi-Tenancy
+## 🏢 Fase 2 — Multi-Tenancy ✅ CONCLUÍDA
 
 ### Entregas
 
-- Tenants
-- UserTenants
-- Middleware de tenant
-- DbContext dinâmico
-- Provisionamento automático de banco
+- `ProvisioningStatus` enum (Pending/InProgress/Ready/Failed) — Domain
+- `ITenantRepository`, `IUserTenantRepository`, `ITenantContext`, `ITenantProvisioningQueue` — Application interfaces
+- `CreateTenantCommand` + `CreateTenantCommandHandler` (valida slug único, enfileira provisioning)
+- `GetTenantStatusQuery` + `GetTenantStatusQueryHandler`
+- `TenantRepository`, `UserTenantRepository` — Infrastructure, acesso ao MasterDb
+- `RequestTenantContext` — contexto escoped por request (sem HTTP direto)
+- `TenantProvisioningQueue` — `System.Threading.Channels` singleton
+- `TenantProvisioningWorker` — `BackgroundService`; cria DB isolado + roda migrations do TenantDbContext
+- `TenantMiddleware` — resolve `X-Tenant-Slug` header e popula `ITenantContext`
+- `TenantController` — `POST /api/v1/tenant` (201 / 409 / 422) · `GET /api/v1/tenant/{id}/status` (200 / 404)
+- EF Core migration: `AddTenantProvisioningStatus`
+- Swagger: `TenantSlugHeaderOperationFilter` documenta `X-Tenant-Slug` em todas as operações
+- Frontend: `tenantService.ts` com `parseTenantSlug` + `getTenantFromUrl` (subdomain-first, fallback `?tenant=`)
+- Frontend: `router.tsx` resolve tenant no `beforeLoad` da rota raiz
+- Frontend: `TenantResponse` / `CreateTenantRequest` adicionados aos tipos
+- Frontend: MSW handlers para `POST /api/v1/tenant` e `GET /api/v1/tenant/:id/status`
 
-### Testes
+### Testes (49 total — 100% passando)
 
-- Isolamento de dados
-- Troca de tenant
+- 5 unit: `CreateTenantCommandHandlerTests`
+- 3 unit: `GetTenantStatusQueryHandlerTests`
+- 7 integration: `TenantIntegrationTests` (via `TenantWebApplicationFactory` + `TestAuthHandler`)
+- 14 frontend unit: `tenantService.test.ts`
 
 ---
 

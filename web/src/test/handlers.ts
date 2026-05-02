@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import type { AuthResponse, UserProfile } from '@/features/auth/types'
+import type { TenantResponse } from '@/features/auth/types'
 
 const BASE_URL = 'http://localhost:5050'
 
@@ -99,5 +100,61 @@ export const handlers = [
     }
 
     return HttpResponse.json(mockUserProfile)
+  }),
+
+  // POST /api/v1/tenant
+  http.post(`${BASE_URL}/api/v1/tenant`, async ({ request }) => {
+    const body = (await request.json()) as { name: string; slug: string }
+
+    if (!body.name) {
+      return HttpResponse.json(
+        { title: 'TENANT_NAME_REQUIRED', detail: 'Name is required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (!body.slug) {
+      return HttpResponse.json(
+        { title: 'TENANT_SLUG_REQUIRED', detail: 'Slug is required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (body.slug === 'taken-slug') {
+      return HttpResponse.json(
+        { title: 'TENANT_SLUG_TAKEN', detail: 'Slug already in use', status: 409 },
+        { status: 409 },
+      )
+    }
+
+    const response: TenantResponse = {
+      id: 'tenant-123',
+      name: body.name,
+      slug: body.slug.toLowerCase(),
+      provisioningStatus: 'Pending',
+    }
+
+    return HttpResponse.json(response, { status: 201 })
+  }),
+
+  // GET /api/v1/tenant/:id/status
+  http.get(`${BASE_URL}/api/v1/tenant/:id/status`, ({ params }) => {
+    const { id } = params
+
+    if (id === 'unknown-tenant-id') {
+      return HttpResponse.json(
+        { title: 'TENANT_NOT_FOUND', detail: 'Tenant not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    const response: TenantResponse = {
+      id: id as string,
+      name: 'Mock Tenant',
+      slug: 'mock-tenant',
+      provisioningStatus: 'Ready',
+    }
+
+    return HttpResponse.json(response)
   }),
 ]

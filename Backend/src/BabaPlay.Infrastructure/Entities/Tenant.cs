@@ -1,3 +1,5 @@
+using BabaPlay.Domain.Enums;
+
 namespace BabaPlay.Infrastructure.Entities;
 
 /// <summary>
@@ -14,6 +16,10 @@ public sealed class Tenant
     public string DatabaseName { get; set; } = string.Empty;
     public string ConnectionString { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
+
+    /// <summary>Lifecycle state of the tenant's isolated database.</summary>
+    public ProvisioningStatus ProvisioningStatus { get; set; } = ProvisioningStatus.Pending;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<UserTenant> UserTenants { get; set; } = new List<UserTenant>();

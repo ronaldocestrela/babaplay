@@ -3,6 +3,7 @@ import type { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import type { ProblemDetails } from '@/core/types/api'
 import { API_ROUTES } from '@/core/constants/apiRoutes'
 import { useAuthStore } from '@/features/auth/store/authStore'
+import { getTenantFromUrl, TENANT_HEADER_NAME } from '@/features/auth/services/tenantService'
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5050'
 
@@ -15,6 +16,13 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = useAuthStore.getState().accessToken
   if (token) config.headers.Authorization = `Bearer ${token}`
+
+  const tenant = getTenantFromUrl()
+  if (tenant) {
+    config.headers[TENANT_HEADER_NAME] = tenant.slug
+    useAuthStore.getState().setCurrentTenant(tenant)
+  }
+
   return config
 })
 
@@ -57,12 +65,19 @@ apiClient.interceptors.response.use(
     }
 
     try {
+      const tenant = getTenantFromUrl()
       const { data } = await axios.post<{
         accessToken: string
         refreshToken: string
         expiresIn: number
         tokenType: string
-      }>(`${BASE_URL}${API_ROUTES.AUTH.REFRESH_TOKEN}`, { refreshToken })
+      }>(
+        `${BASE_URL}${API_ROUTES.AUTH.REFRESH_TOKEN}`,
+        { refreshToken },
+        {
+          headers: tenant ? { [TENANT_HEADER_NAME]: tenant.slug } : undefined,
+        },
+      )
 
       setTokens(data)
       flushQueue(null, data.accessToken)

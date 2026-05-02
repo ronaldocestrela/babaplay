@@ -10,6 +10,7 @@ const BASE_URL = 'http://localhost:5050'
 describe('apiClient', () => {
   beforeEach(() => {
     useAuthStore.getState().clearTokens()
+    window.history.replaceState({}, '', 'http://localhost:3000/')
   })
 
   describe('request interceptor', () => {
@@ -40,6 +41,21 @@ describe('apiClient', () => {
 
       await apiClient.get('/api/v1/ping')
       expect(capturedHeader).toBe(`Bearer ${mockAuthResponse.accessToken}`)
+    })
+
+    it('deve injetar X-Tenant-Slug a partir da query string em localhost', async () => {
+      window.history.replaceState({}, '', 'http://localhost:3000/?tenant=falcons')
+      let capturedTenantHeader: string | null = null
+
+      server.use(
+        http.get(`${BASE_URL}/api/v1/ping`, ({ request }) => {
+          capturedTenantHeader = request.headers.get('X-Tenant-Slug')
+          return HttpResponse.json({ ok: true })
+        }),
+      )
+
+      await apiClient.get('/api/v1/ping')
+      expect(capturedTenantHeader).toBe('falcons')
     })
   })
 
@@ -87,6 +103,45 @@ describe('apiClient', () => {
 
       await expect(apiClient.get('/api/v1/protected')).rejects.toBeDefined()
       expect(useAuthStore.getState().isAuthenticated).toBe(false)
+    })
+
+    it('deve enviar X-Tenant-Slug também na requisição de refresh token', async () => {
+      window.history.replaceState({}, '', 'http://localhost:3000/?tenant=wolves')
+      useAuthStore.getState().setTokens({
+        ...mockAuthResponse,
+        accessToken: 'expired-access-token',
+      })
+
+      let requestCount = 0
+      let refreshTenantHeader: string | null = null
+
+      server.use(
+        http.get(`${BASE_URL}/api/v1/protected`, ({ request }) => {
+          requestCount++
+          const auth = request.headers.get('Authorization')
+          if (auth === 'Bearer expired-access-token') {
+            return HttpResponse.json(
+              { title: 'UNAUTHORIZED', status: 401 },
+              { status: 401 },
+            )
+          }
+          return HttpResponse.json({ data: 'secret' })
+        }),
+        http.post(`${BASE_URL}/api/v1/auth/refresh-token`, ({ request }) => {
+          refreshTenantHeader = request.headers.get('X-Tenant-Slug')
+          return HttpResponse.json({
+            ...mockAuthResponse,
+            accessToken: 'new-access-token',
+            refreshToken: 'new-refresh-token',
+          })
+        }),
+      )
+
+      const result = await apiClient.get('/api/v1/protected')
+
+      expect(result.data).toEqual({ data: 'secret' })
+      expect(requestCount).toBe(2)
+      expect(refreshTenantHeader).toBe('wolves')
     })
   })
 })

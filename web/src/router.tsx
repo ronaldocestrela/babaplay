@@ -6,13 +6,22 @@ import {
   redirect,
 } from '@tanstack/react-router'
 import { useAuthStore } from '@/features/auth/store/authStore'
+import { getTenantFromUrl } from '@/features/auth/services/tenantService'
 import { LoginPage } from '@/pages/LoginPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { PublicLayout } from '@/layouts/PublicLayout'
 import { ProtectedLayout } from '@/layouts/ProtectedLayout'
 
 // ── Root ─────────────────────────────────────────────────────────────────────
-const rootRoute = createRootRoute({ component: () => <Outlet /> })
+const rootRoute = createRootRoute({
+  // Resolve tenant once per navigation; store it so components and API
+  // interceptors always have access to the current tenant context.
+  beforeLoad: () => {
+    const tenant = getTenantFromUrl()
+    useAuthStore.getState().setCurrentTenant(tenant)
+  },
+  component: () => <Outlet />,
+})
 
 // ── Public routes ─────────────────────────────────────────────────────────────
 const publicRoute = createRoute({

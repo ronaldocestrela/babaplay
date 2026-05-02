@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useAuthStore } from '../authStore'
-import type { UserProfile } from '../../types'
+import type { TenantContext, UserProfile } from '../../types'
 
 const mockAuth = {
   accessToken: 'access-token-abc',
@@ -15,6 +15,11 @@ const mockUser: UserProfile = {
   roles: ['Player'],
   isActive: true,
   createdAt: '2024-01-01T00:00:00Z',
+}
+
+const mockTenant: TenantContext = {
+  slug: 'eagles',
+  source: 'subdomain',
 }
 
 describe('authStore', () => {
@@ -69,5 +74,13 @@ describe('authStore', () => {
     useAuthStore.getState().setCurrentUser(mockUser)
     useAuthStore.getState().clearTokens()
     expect(useAuthStore.getState().currentUser).toBeNull()
+  })
+
+  it('deve armazenar e limpar o tenant atual', () => {
+    useAuthStore.getState().setCurrentTenant(mockTenant)
+    expect(useAuthStore.getState().currentTenant).toEqual(mockTenant)
+
+    useAuthStore.getState().clearTokens()
+    expect(useAuthStore.getState().currentTenant).toBeNull()
   })
 })

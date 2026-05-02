@@ -8,6 +8,29 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Fase 2: Multi-Tenancy
+
+- `ProvisioningStatus` enum (Pending/InProgress/Ready/Failed) no domínio
+- `ITenantContext`, `ITenantRepository`, `IUserTenantRepository`, `ITenantProvisioningQueue` — interfaces de Application
+- `CreateTenantCommand` / `CreateTenantCommandHandler` — cria tenant, valida slug único, enfileira provisionamento
+- `GetTenantStatusQuery` / `GetTenantStatusQueryHandler` — retorna status de provisionamento
+- `TenantRepository` / `UserTenantRepository` — acesso ao Master DB via EF Core
+- `RequestTenantContext` — implementação de `ITenantContext` escopada por request
+- `TenantProvisioningQueue` — fila interna com `System.Threading.Channels` (singleton)
+- `TenantProvisioningWorker` — `BackgroundService` que cria banco SQL Server isolado + migra `TenantDbContext`
+- `TenantMiddleware` — lê `X-Tenant-Slug` e popula `ITenantContext`; erros 404 via `NotFoundException`
+- `POST /api/v1/tenant` → 201 `TenantResponse` (Pending) | 409 TENANT_SLUG_TAKEN | 422 TENANT_NAME_REQUIRED / TENANT_SLUG_REQUIRED
+- `GET /api/v1/tenant/{id}/status` → 200 `TenantResponse` | 404 TENANT_NOT_FOUND
+- EF Core migration `AddTenantProvisioningStatus` — adiciona coluna `ProvisioningStatus int NOT NULL DEFAULT 0` na tabela `Tenants`
+- `TenantSlugHeaderOperationFilter` — documenta `X-Tenant-Slug` no Swagger para todos os endpoints
+- `TestAuthHandler` + `TenantWebApplicationFactory` — infraestrutura de testes de integração com SQLite in-memory e bypass de JWT
+- Frontend: `tenantService.ts` com `parseTenantSlug` (subdomain extractor) e `getTenantFromUrl` (subdomain → `?tenant=`)
+- Frontend: `router.tsx` com resolução de tenant no `beforeLoad` da rota raiz
+- Frontend: `TenantResponse` e `CreateTenantRequest` adicionados a `features/auth/types/index.ts`
+- Frontend: MSW handlers para `POST /api/v1/tenant` e `GET /api/v1/tenant/:id/status`
+- 49 novos testes (8 unit + 7 integration backend; 14 frontend); total acumulado: 111 testes (100% passando)
+
+
 ### Added — Fase 1: Identity + Auth
 
 - `ApplicationUser : IdentityUser` com propriedades `IsActive` e `CreatedAt`

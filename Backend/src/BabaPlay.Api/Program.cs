@@ -1,3 +1,4 @@
+using BabaPlay.Api.Filters;
 using BabaPlay.Api.Middlewares;
 using BabaPlay.Application;
 using BabaPlay.Infrastructure;
@@ -62,6 +63,8 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 
+    options.OperationFilter<TenantSlugHeaderOperationFilter>();
+
     var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     if (File.Exists(xmlPath))
@@ -81,6 +84,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("FrontendPolicy");
 app.UseHttpsRedirection();
+app.UseTenantResolution();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
