@@ -12,6 +12,8 @@ public sealed class TenantDbContext : DbContext
     public TenantDbContext(DbContextOptions<TenantDbContext> options) : base(options) { }
 
     public DbSet<Player> Players => Set<Player>();
+    public DbSet<Position> Positions => Set<Position>();
+    public DbSet<PlayerPosition> PlayerPositions => Set<PlayerPosition>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
@@ -26,6 +28,32 @@ public sealed class TenantDbContext : DbContext
             e.Property(p => p.Nickname).HasMaxLength(50);
             e.Property(p => p.Phone).HasMaxLength(20);
             e.HasIndex(p => p.UserId).IsUnique();
+        });
+
+        builder.Entity<Position>(e =>
+        {
+            e.HasKey(p => p.Id);
+            e.Property(p => p.TenantId).IsRequired();
+            e.Property(p => p.Code).IsRequired().HasMaxLength(50);
+            e.Property(p => p.NormalizedCode).IsRequired().HasMaxLength(50);
+            e.Property(p => p.Name).IsRequired().HasMaxLength(100);
+            e.Property(p => p.Description).HasMaxLength(300);
+            e.HasIndex(p => new { p.TenantId, p.NormalizedCode }).IsUnique();
+        });
+
+        builder.Entity<PlayerPosition>(e =>
+        {
+            e.HasKey(pp => new { pp.PlayerId, pp.PositionId });
+
+            e.HasOne<Player>()
+                .WithMany(p => p.Positions)
+                .HasForeignKey(pp => pp.PlayerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne<Position>()
+                .WithMany()
+                .HasForeignKey(pp => pp.PositionId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<Role>(e =>

@@ -8,6 +8,41 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Fase 5: Positions
+
+- `Position` entity (Domain): `Create()`, `Update()`, `Deactivate()` com `TenantId`, `Code`, `NormalizedCode`, `Name`, `Description`, `IsActive`
+- `PlayerPosition` entity (Domain): vínculo N:N entre `Player` e `Position`
+- `Player.SetPositions(...)` no domínio para sincronização completa da lista de posições
+- `IPositionRepository` (Application): operações de consulta, persistência e verificação de uso (`IsInUseAsync`)
+- `PositionResponse` e `PlayerPositionsResponse` DTOs
+- CQRS Positions:
+	- `CreatePositionCommand` / `CreatePositionCommandHandler`
+	- `GetPositionQuery` / `GetPositionQueryHandler`
+	- `GetPositionsQuery` / `GetPositionsQueryHandler`
+	- `UpdatePositionCommand` / `UpdatePositionCommandHandler`
+	- `DeletePositionCommand` / `DeletePositionCommandHandler`
+- CQRS Players:
+	- `UpdatePlayerPositionsCommand` / `UpdatePlayerPositionsCommandHandler`
+- Regra de negócio:
+	- máximo de 3 posições por jogador
+	- bloqueio de `positionIds` duplicados (`DUPLICATE_POSITIONS`)
+	- bloqueio de `positionIds` com `Guid.Empty` (`INVALID_POSITION_ID`)
+	- bloqueio de deleção de posição em uso (`POSITION_IN_USE`)
+- Infrastructure:
+	- `PositionRepository`
+	- `TenantDbContext` com `DbSet<Position>` e `DbSet<PlayerPosition>`
+	- índice único `(TenantId, NormalizedCode)`
+	- migration tenant `AddPositionsAndPlayerPositions`
+- API:
+	- novo `PositionController` com CRUD completo em `/api/v1/position`
+	- novo endpoint `PUT /api/v1/player/{id}/positions`
+	- `DELETE /api/v1/position/{id}` retorna 409 quando posição está em uso
+- Testes novos/atualizados:
+	- Unit Domain: `PositionTests`, `PlayerPositionTests`, extensão de `PlayerTests`
+	- Unit Application: suítes de commands/queries de Positions e `UpdatePlayerPositionsCommandHandlerTests`
+	- Integration: `PositionIntegrationTests` e cenários de `PUT /player/{id}/positions` em `PlayerIntegrationTests`
+- Status atual backend: **154 testes, 100% passando**
+
 ### Added — Fase 3: Players
 
 - `Player` entity (Domain): `Create()`, `Update()`, `Deactivate()` (soft delete via `IsActive`); `UserId` como FK lógica cross-DB ao `ApplicationUser`

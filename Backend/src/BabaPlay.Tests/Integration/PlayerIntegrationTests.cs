@@ -57,6 +57,19 @@ public sealed class PlayerIntegrationTests : IClassFixture<PlayerWebApplicationF
         return body!;
     }
 
+    private async Task<Guid> CreateValidPositionAsync(string code, string name)
+    {
+        var response = await _client.PostAsync("/api/v1/position", JsonContent.Create(new
+        {
+            code,
+            name,
+            description = (string?)null,
+        }));
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var body = await response.Content.ReadFromJsonAsync<PositionResponse>(JsonOptions);
+        return body!.Id;
+    }
+
     // ── POST /api/v1/player ──────────────────────────────────────────────────
 
     [Fact]
@@ -229,5 +242,85 @@ public sealed class PlayerIntegrationTests : IClassFixture<PlayerWebApplicationF
         var response = await _client.DeleteAsync($"/api/v1/player/{Guid.NewGuid()}");
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    // ── PUT /api/v1/player/{id}/positions ──────────────────────────────────
+
+    [Fact]
+    public async Task PutPositions_ValidRequest_ShouldReturn200WithPositions()
+    {
+        var player = await CreateValidPlayerAsync(
+            PlayerWebApplicationFactory.TestUserIds[5],
+            "Player With Positions");
+        var gkId = await CreateValidPositionAsync("GK-INTEG", "Goleiro Integ");
+        var cmId = await CreateValidPositionAsync("CM-INTEG", "Meia Integ");
+
+        var response = await _client.PutAsJsonAsync(
+            $"/api/v1/player/{player.Id}/positions",
+            new { positionIds = new[] { gkId, cmId } });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var body = await response.Content.ReadFromJsonAsync<PlayerPositionsResponse>(JsonOptions);
+        body.Should().NotBeNull();
+        body!.PositionIds.Should().BeEquivalentTo(new[] { gkId, cmId });
+    }
+
+    [Fact]
+    public async Task PutPositions_MoreThanThree_ShouldReturn422()
+    {
+        var player = await CreateValidPlayerAsync(
+            PlayerWebApplicationFactory.TestUserIds[6],
+            "Player With Too Many Positions");
+
+        var p1 = await CreateValidPositionAsync("P1-INTEG", "Pos 1");
+        var p2 = await CreateValidPositionAsync("P2-INTEG", "Pos 2");
+        var p3 = await CreateValidPositionAsync("P3-INTEG", "Pos 3");
+        var p4 = await CreateValidPositionAsync("P4-INTEG", "Pos 4");
+
+        var response = await _client.PutAsJsonAsync(
+            $"/api/v1/player/{player.Id}/positions",
+            new { positionIds = new[] { p1, p2, p3, p4 } });
+
+        response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        problem.GetProperty("title").GetString().Should().Be("POSITIONS_LIMIT_EXCEEDED");
+    }
+
+    [Fact]
+    public async Task PutPositions_DuplicatePositionIds_ShouldReturn422()
+    {
+        var player = await CreateValidPlayerAsync(
+            PlayerWebApplicationFactory.TestUserIds[8],
+            "Player With Duplicate Positions");
+
+        var repeated = await CreateValidPositionAsync("DUP-INTEG", "Duplicada");
+
+        var response = await _client.PutAsJsonAsync(
+            $"/api/v1/player/{player.Id}/positions",
+            new { positionIds = new[] { repeated, repeated } });
+
+        response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        problem.GetProperty("title").GetString().Should().Be("DUPLICATE_POSITIONS");
+    }
+
+    [Fact]
+    public async Task PutPositions_EmptyPositionId_ShouldReturn422()
+    {
+        var player = await CreateValidPlayerAsync(
+            PlayerWebApplicationFactory.TestUserIds[7],
+            "Player With Empty Position Id");
+
+        var response = await _client.PutAsJsonAsync(
+            $"/api/v1/player/{player.Id}/positions",
+            new { positionIds = new[] { Guid.Empty } });
+
+        response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        problem.GetProperty("title").GetString().Should().Be("INVALID_POSITION_ID");
     }
 }

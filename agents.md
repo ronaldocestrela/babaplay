@@ -361,6 +361,49 @@ Código sem:
 
 ---
 
+### Fase 5 — Positions ✅
+
+#### Domínio
+- `Position` entity (sealed, extends `EntityBase`): `TenantId`, `Code`, `NormalizedCode`, `Name`, `Description`, `IsActive`
+- `PlayerPosition` entity para vínculo N:N `Player` ↔ `Position`
+- `Player.SetPositions(...)` para sincronização completa da lista de posições
+
+#### Application
+- `IPositionRepository`: `GetByIdAsync`, `GetAllActiveAsync`, `ExistsByNormalizedCodeAsync`, `GetByIdsAsync`, `IsInUseAsync`, `AddAsync`, `UpdateAsync`, `SaveChangesAsync`
+- DTOs: `PositionResponse`, `PlayerPositionsResponse`
+- Handlers CQRS:
+	- Positions: Create, GetPosition, GetPositions, Update, Delete
+	- Players: `UpdatePlayerPositions`
+
+#### Infrastructure
+- `PositionRepository` com contexto por operação via `TenantDbContextFactory` + `ITenantContext`
+- `TenantDbContext`: `DbSet<Position>` e `DbSet<PlayerPosition>` com PK composta `(PlayerId, PositionId)`
+- Índice único por tenant: `(TenantId, NormalizedCode)`
+- Migration `AddPositionsAndPlayerPositions` em `Persistence/Migrations/Tenant/`
+
+#### Endpoints
+| Método | Rota | Sucesso | Erros |
+|---|---|---|---|
+| POST | `/api/v1/position` | 201 `PositionResponse` | 409 POSITION_ALREADY_EXISTS · 422 INVALID_CODE/INVALID_NAME |
+| GET | `/api/v1/position` | 200 `IReadOnlyList<PositionResponse>` | — |
+| GET | `/api/v1/position/{id}` | 200 `PositionResponse` | 404 POSITION_NOT_FOUND |
+| PUT | `/api/v1/position/{id}` | 200 `PositionResponse` | 404 POSITION_NOT_FOUND · 409 POSITION_ALREADY_EXISTS · 422 INVALID_CODE/INVALID_NAME |
+| DELETE | `/api/v1/position/{id}` | 204 | 404 POSITION_NOT_FOUND · 409 POSITION_IN_USE |
+| PUT | `/api/v1/player/{id}/positions` | 200 `PlayerPositionsResponse` | 404 PLAYER_NOT_FOUND/POSITION_NOT_FOUND · 422 POSITIONS_LIMIT_EXCEEDED/DUPLICATE_POSITIONS/INVALID_POSITION_ID |
+
+#### Regras de negócio
+- Máximo de 3 posições por jogador
+- IDs de posição duplicados são rejeitados
+- IDs de posição vazios são rejeitados
+- Posição vinculada a jogador não pode ser deletada (`POSITION_IN_USE`)
+
+#### Testes — 154 total (100% passando)
+- Unit Domain: `PositionTests`, `PlayerPositionTests`, `PlayerTests` (SetPositions)
+- Unit Application: suítes de Commands/Queries de Positions e `UpdatePlayerPositionsCommandHandlerTests`
+- Integration: `PositionIntegrationTests` + cenários de `PUT /player/{id}/positions` em `PlayerIntegrationTests`
+
+---
+
 ### Fase 16 — Frontend (React): 1. Auth ✅
 
 #### Arquitetura de autenticação

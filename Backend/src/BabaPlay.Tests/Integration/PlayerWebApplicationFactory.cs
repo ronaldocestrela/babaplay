@@ -33,6 +33,10 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
         Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-000000000003"), // Put success
         Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-000000000004"), // Delete success
         Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-000000000005"), // Post duplicate (used twice)
+        Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-000000000006"), // Player positions success
+        Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-000000000007"), // Player positions limit
+        Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-000000000008"), // Positions integration usage conflict
+        Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-000000000009"), // Player positions duplicate validation
     ];
 
     public const string TestUserEmail = "player-test@babaplay.com";

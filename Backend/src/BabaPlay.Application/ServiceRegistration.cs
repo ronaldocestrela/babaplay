@@ -1,6 +1,7 @@
 using BabaPlay.Application.Commands.Auth;
 using BabaPlay.Application.Commands.Ping;
 using BabaPlay.Application.Commands.Players;
+using BabaPlay.Application.Commands.Positions;
 using BabaPlay.Application.Commands.Roles;
 using BabaPlay.Application.Commands.Tenants;
 using BabaPlay.Application.Common;
@@ -8,6 +9,7 @@ using BabaPlay.Application.DTOs;
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Application.Queries.Ping;
 using BabaPlay.Application.Queries.Players;
+using BabaPlay.Application.Queries.Positions;
 using BabaPlay.Application.Queries.Roles;
 using BabaPlay.Application.Queries.Tenants;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,6 +38,14 @@ public static class ServiceRegistration
         services.AddScoped<IQueryHandler<GetPlayersQuery, Result<IReadOnlyList<PlayerResponse>>>, GetPlayersQueryHandler>();
         services.AddScoped<ICommandHandler<UpdatePlayerCommand, Result<PlayerResponse>>, UpdatePlayerCommandHandler>();
         services.AddScoped<ICommandHandler<DeletePlayerCommand, Result>, DeletePlayerCommandHandler>();
+        services.AddScoped<ICommandHandler<UpdatePlayerPositionsCommand, Result<PlayerPositionsResponse>>, UpdatePlayerPositionsCommandHandler>();
+
+        // Positions — Fase 5
+        services.AddScoped<ICommandHandler<CreatePositionCommand, Result<PositionResponse>>, CreatePositionCommandHandler>();
+        services.AddScoped<IQueryHandler<GetPositionQuery, Result<PositionResponse>>, GetPositionQueryHandler>();
+        services.AddScoped<IQueryHandler<GetPositionsQuery, Result<IReadOnlyList<PositionResponse>>>, GetPositionsQueryHandler>();
+        services.AddScoped<ICommandHandler<UpdatePositionCommand, Result<PositionResponse>>, UpdatePositionCommandHandler>();
+        services.AddScoped<ICommandHandler<DeletePositionCommand, Result>, DeletePositionCommandHandler>();
 
         // RBAC — Fase 4
         services.AddScoped<ICommandHandler<CreateRoleCommand, Result<RoleResponse>>, CreateRoleCommandHandler>();

@@ -24,7 +24,10 @@ public sealed class PlayerRepository : IPlayerRepository
     public async Task<Player?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
-        return await db.Players.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id, ct);
+        return await db.Players
+            .Include(p => p.Positions)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == id, ct);
     }
 
     /// <inheritdoc />
@@ -32,6 +35,7 @@ public sealed class PlayerRepository : IPlayerRepository
     {
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
         return await db.Players
+            .Include(p => p.Positions)
             .AsNoTracking()
             .Where(p => p.IsActive)
             .OrderBy(p => p.Name)
@@ -57,7 +61,24 @@ public sealed class PlayerRepository : IPlayerRepository
     public async Task UpdateAsync(Player player, CancellationToken ct = default)
     {
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
-        db.Players.Update(player);
+
+        var existing = await db.Players
+            .Include(p => p.Positions)
+            .FirstOrDefaultAsync(p => p.Id == player.Id, ct);
+
+        if (existing is null)
+        {
+            db.Players.Update(player);
+            await db.SaveChangesAsync(ct);
+            return;
+        }
+
+        db.Entry(existing).CurrentValues.SetValues(player);
+
+        db.PlayerPositions.RemoveRange(existing.Positions);
+        foreach (var positionId in player.PositionIds)
+            db.PlayerPositions.Add(PlayerPosition.Create(existing.Id, positionId));
+
         await db.SaveChangesAsync(ct);
     }
 

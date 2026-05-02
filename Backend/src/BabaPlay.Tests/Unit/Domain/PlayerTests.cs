@@ -145,4 +145,50 @@ public class PlayerTests
         act.Should().NotThrow();
         player.IsActive.Should().BeFalse();
     }
+
+    // ── Positions ─────────────────────────────────────────────────────────
+
+    [Fact]
+    public void SetPositions_UpToThreePositions_ShouldReplacePlayerPositions()
+    {
+        var player = Player.Create(Guid.NewGuid(), "Player", null, null, null);
+        var positionIds = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
+
+        player.SetPositions(positionIds);
+
+        player.PositionIds.Should().BeEquivalentTo(positionIds);
+    }
+
+    [Fact]
+    public void SetPositions_AboveThreePositions_ShouldThrowValidationException()
+    {
+        var player = Player.Create(Guid.NewGuid(), "Player", null, null, null);
+        var positionIds = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
+
+        var act = () => player.SetPositions(positionIds);
+
+        act.Should().Throw<ValidationException>();
+    }
+
+    [Fact]
+    public void SetPositions_WithDuplicateIds_ShouldThrowValidationException()
+    {
+        var player = Player.Create(Guid.NewGuid(), "Player", null, null, null);
+        var sameId = Guid.NewGuid();
+
+        var act = () => player.SetPositions([sameId, sameId]);
+
+        act.Should().Throw<ValidationException>();
+    }
+
+    [Fact]
+    public void SetPositions_Null_ShouldClearPositions()
+    {
+        var player = Player.Create(Guid.NewGuid(), "Player", null, null, null);
+        player.SetPositions([Guid.NewGuid(), Guid.NewGuid()]);
+
+        player.SetPositions(null);
+
+        player.PositionIds.Should().BeEmpty();
+    }
 }

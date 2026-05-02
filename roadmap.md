@@ -173,16 +173,71 @@ Construir um sistema SaaS escalável, com:
 
 ---
 
-## ⚽ Fase 5 — Posições
+## ⚽ Fase 5 — Posições ✅ CONCLUÍDA
 
 ### Entregas
 
-- Positions
-- PlayerPositions
+- Domain:
+  - `Position` entity (`Create`, `Update`, `Deactivate`) com `TenantId`, `Code`/`NormalizedCode`, `Name`, `Description`, `IsActive`
+  - `PlayerPosition` (vínculo N:N Player↔Position)
+  - `Player.SetPositions(...)` para atualização completa da lista de posições
+- Application (CQRS + contratos):
+  - Interface `IPositionRepository`
+  - DTOs `PositionResponse` e `PlayerPositionsResponse`
+  - Commands/Handlers:
+    - `CreatePositionCommand`
+    - `UpdatePositionCommand`
+    - `DeletePositionCommand`
+    - `UpdatePlayerPositionsCommand` (substitui lista completa de posições do jogador)
+  - Queries/Handlers:
+    - `GetPositionQuery`
+    - `GetPositionsQuery`
+- Infrastructure (tenant DB):
+  - `TenantDbContext` com `DbSet<Position>` e `DbSet<PlayerPosition>`
+  - Mapeamento EF para tabela de vínculo com PK composta `(PlayerId, PositionId)`
+  - Índice único em posições por tenant: `(TenantId, NormalizedCode)`
+  - `PositionRepository`
+  - Migration tenant: `AddPositionsAndPlayerPositions`
+- API:
+  - `PositionController` com CRUD completo:
+    - `POST /api/v1/position`
+    - `GET /api/v1/position`
+    - `GET /api/v1/position/{id}`
+    - `PUT /api/v1/position/{id}`
+    - `DELETE /api/v1/position/{id}`
+  - `PlayerController`:
+    - `PUT /api/v1/player/{id}/positions` (atualização completa da lista)
+
+### Regras de negócio
+
+- Máximo de 3 posições por jogador
+- IDs de posições não podem ser vazios
+- IDs de posições não podem ser duplicados
+- Deleção de posição em uso é bloqueada (`409 POSITION_IN_USE`)
 
 ### Testes
 
-- Limite de 3 posições
+- Unit Domain (novos):
+  - `PositionTests`
+  - `PlayerTests` (cenários de `SetPositions`)
+- Unit Application (novos):
+  - `CreatePositionCommandHandlerTests`
+  - `GetPositionQueryHandlerTests`
+  - `GetPositionsQueryHandlerTests`
+  - `UpdatePositionCommandHandlerTests`
+  - `DeletePositionCommandHandlerTests`
+  - `UpdatePlayerPositionsCommandHandlerTests`
+- Integration (novos/atualizados):
+  - `PositionIntegrationTests`
+  - `PlayerIntegrationTests` (cenários de `PUT /player/{id}/positions`)
+- Regra validada:
+  - Limite de 3 posições por jogador
+  - Duplicidade e `Guid.Empty` em `positionIds` retornam 422
+  - `DELETE /position/{id}` retorna 409 quando a posição está em uso
+
+### Status atual
+
+- Suíte backend executada após o fechamento da Fase 5: **154 testes, 100% passando**
 
 ---
 

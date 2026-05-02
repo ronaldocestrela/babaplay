@@ -22,6 +22,7 @@ public sealed class PlayerController : ControllerBase
     private readonly IQueryHandler<GetPlayerQuery, Result<PlayerResponse>> _getHandler;
     private readonly IQueryHandler<GetPlayersQuery, Result<IReadOnlyList<PlayerResponse>>> _listHandler;
     private readonly ICommandHandler<UpdatePlayerCommand, Result<PlayerResponse>> _updateHandler;
+    private readonly ICommandHandler<UpdatePlayerPositionsCommand, Result<PlayerPositionsResponse>> _updatePositionsHandler;
     private readonly ICommandHandler<DeletePlayerCommand, Result> _deleteHandler;
 
     public PlayerController(
@@ -29,12 +30,14 @@ public sealed class PlayerController : ControllerBase
         IQueryHandler<GetPlayerQuery, Result<PlayerResponse>> getHandler,
         IQueryHandler<GetPlayersQuery, Result<IReadOnlyList<PlayerResponse>>> listHandler,
         ICommandHandler<UpdatePlayerCommand, Result<PlayerResponse>> updateHandler,
+        ICommandHandler<UpdatePlayerPositionsCommand, Result<PlayerPositionsResponse>> updatePositionsHandler,
         ICommandHandler<DeletePlayerCommand, Result> deleteHandler)
     {
         _createHandler = createHandler;
         _getHandler = getHandler;
         _listHandler = listHandler;
         _updateHandler = updateHandler;
+        _updatePositionsHandler = updatePositionsHandler;
         _deleteHandler = deleteHandler;
     }
 
@@ -136,6 +139,40 @@ public sealed class PlayerController : ControllerBase
         return Ok(result.Value);
     }
 
+    /// <summary>Replaces the full position list of a player (max 3).</summary>
+    /// <response code="200">Player positions updated successfully.</response>
+    /// <response code="404">Player or one of the positions was not found.</response>
+    /// <response code="422">Position list is invalid (duplicates, empty id, or above limit).</response>
+    [HttpPut("{id:guid}/positions")]
+    [ProducesResponseType(typeof(PlayerPositionsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> UpdatePositions(Guid id, [FromBody] UpdatePlayerPositionsRequest request, CancellationToken ct)
+    {
+        var result = await _updatePositionsHandler.HandleAsync(
+            new UpdatePlayerPositionsCommand(id, request.PositionIds),
+            ct);
+
+        if (!result.IsSuccess)
+        {
+            var statusCode = result.ErrorCode switch
+            {
+                "PLAYER_NOT_FOUND" => StatusCodes.Status404NotFound,
+                "POSITION_NOT_FOUND" => StatusCodes.Status404NotFound,
+                _ => StatusCodes.Status422UnprocessableEntity,
+            };
+
+            return StatusCode(statusCode, new ProblemDetails
+            {
+                Status = statusCode,
+                Title = result.ErrorCode,
+                Detail = result.ErrorMessage,
+            });
+        }
+
+        return Ok(result.Value);
+    }
+
     /// <summary>Soft-deletes a player (sets IsActive = false). Idempotent.</summary>
     /// <response code="204">Player deactivated.</response>
     /// <response code="404">Player not found (PLAYER_NOT_FOUND).</response>
@@ -174,3 +211,6 @@ public sealed record UpdatePlayerRequest(
     string? Nickname,
     string? Phone,
     DateOnly? DateOfBirth);
+
+/// <summary>Request body for replacing player position assignments.</summary>
+public sealed record UpdatePlayerPositionsRequest(IReadOnlyList<Guid> PositionIds);
