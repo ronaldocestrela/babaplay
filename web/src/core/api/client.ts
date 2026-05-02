@@ -28,7 +28,7 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
 // ── Response: renovação silenciosa do access token em caso de 401 ────────────
 let refreshing = false
-let pendingQueue: Array<{ ok: (t: string) => void; fail: (e: unknown) => void }> = []
+const pendingQueue: Array<{ ok: (t: string) => void; fail: (e: unknown) => void }> = []
 
 function flushQueue(err: unknown, token: string | null) {
   pendingQueue.splice(0).forEach((p) => (err ? p.fail(err) : p.ok(token!)))
