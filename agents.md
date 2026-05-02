@@ -322,6 +322,45 @@ Código sem:
 
 ---
 
+### Fase 3 — Players ✅
+
+#### Domínio
+- `Player` entity (sealed, extends `EntityBase`): `UserId` (Guid, FK lógica), `Name`, `Nickname`, `Phone`, `DateOfBirth`, `IsActive`
+- `static Create(...)` lança `ValidationException` em nome vazio/nulo ou `UserId` vazio
+- `Update(...)` + `Deactivate()` (idempotente)
+
+#### Application
+- `IPlayerRepository`: GetByIdAsync, GetAllActiveAsync, ExistsByUserIdAsync, AddAsync, UpdateAsync, SaveChangesAsync
+- `PlayerResponse` sealed record DTO
+- 5 handlers CQRS: Create, GetPlayer, GetPlayers, Update, Delete
+
+#### Infrastructure
+- `PlayerRepository`: injeta `TenantDbContextFactory` + `ITenantContext`; cria contexto por operação
+- `TenantDbContext`: adicionado `DbSet<Player>`, índice único `UserId`, max lengths
+- `TenantDbContextDesignTimeFactory` para migrations
+- Migration `AddPlayers` em `Persistence/Migrations/Tenant/`
+- `TenantDbContextFactory`: `sealed` → `class`, `CreateAsync` → `virtual`
+
+#### Endpoints
+| Método | Rota | Sucesso | Erros |
+|---|---|---|---|
+| POST | `/api/v1/player` | 201 `PlayerResponse` | 404 USER_NOT_FOUND · 409 PLAYER_ALREADY_EXISTS · 422 INVALID_NAME |
+| GET | `/api/v1/player` | 200 `IReadOnlyList<PlayerResponse>` | — |
+| GET | `/api/v1/player/{id}` | 200 `PlayerResponse` | 404 PLAYER_NOT_FOUND |
+| PUT | `/api/v1/player/{id}` | 200 `PlayerResponse` | 404 PLAYER_NOT_FOUND · 422 INVALID_NAME |
+| DELETE | `/api/v1/player/{id}` | 204 | 404 PLAYER_NOT_FOUND |
+
+#### Testes — 81 total (100% passando, +32)
+- 10 unit `PlayerTests` (domínio)
+- 5 unit `CreatePlayerCommandHandlerTests`
+- 3 unit `GetPlayerQueryHandlerTests`
+- 3 unit `GetPlayersQueryHandlerTests`
+- 4 unit `UpdatePlayerCommandHandlerTests`
+- 3 unit `DeletePlayerCommandHandlerTests`
+- 10 integration `PlayerIntegrationTests` (`PlayerWebApplicationFactory` + SQLite in-memory dual)
+
+---
+
 ### Fase 16 — Frontend (React): 1. Auth ✅
 
 #### Arquitetura de autenticação

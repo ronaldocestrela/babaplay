@@ -87,17 +87,36 @@ Construir um sistema SaaS escalável, com:
 
 ---
 
-## 👤 Fase 3 — Players
+## 👤 Fase 3 — Players ✅ CONCLUÍDA
 
 ### Entregas
 
-- Player (perfil do usuário)
-- CRUD completo
+- `Player` entity (Domain): `Create()`, `Update()`, `Deactivate()` — soft delete via `IsActive`
+- `IPlayerRepository` — interface de Application (GetById, GetAllActive, ExistsByUserId, Add, Update, SaveChanges)
+- `PlayerResponse` DTO
+- `CreatePlayerCommand` + `CreatePlayerCommandHandler` — valida nome, verifica UserId no Master DB, impede duplicidade por tenant
+- `GetPlayerQuery` + `GetPlayerQueryHandler` — busca por Id
+- `GetPlayersQuery` + `GetPlayersQueryHandler` — lista todos os ativos
+- `UpdatePlayerCommand` + `UpdatePlayerCommandHandler` — atualiza nome/apelido/telefone/nascimento
+- `DeletePlayerCommand` + `DeletePlayerCommandHandler` — soft delete (idempotente)
+- `PlayerRepository` — implementação Infrastructure; usa `TenantDbContextFactory` + `ITenantContext` por operação
+- `TenantDbContext` atualizado: `DbSet<Player>` + índice único em `UserId` + `OnModelCreating` com max lengths
+- `TenantDbContextDesignTimeFactory` — factory para EF Migrations
+- EF Core migration: `AddPlayers` (tabela `Players` no banco por-tenant)
+- `TenantDbContextFactory` — `sealed` → `class`, `CreateAsync` → `virtual` (permite override em testes)
+- `PlayerController` — `[Authorize]` · POST 201 · GET 200 (lista) · GET {id} 200 · PUT {id} 200 · DELETE {id} 204
+- Códigos de erro: `INVALID_NAME` 422 · `USER_NOT_FOUND` 404 · `PLAYER_ALREADY_EXISTS` 409 · `PLAYER_NOT_FOUND` 404
+- `PlayerWebApplicationFactory` — SQLite in-memory para Master + Tenant; `TestTenantDbContextFactory` override
 
-### Testes
+### Testes (32 novos — 100% passando · total acumulado: 81)
 
-- Criação
-- Atualização
+- 10 unit: `PlayerTests` (domínio — Create, Update, Deactivate, trim, validações)
+- 5 unit: `CreatePlayerCommandHandlerTests`
+- 3 unit: `GetPlayerQueryHandlerTests`
+- 3 unit: `GetPlayersQueryHandlerTests`
+- 4 unit: `UpdatePlayerCommandHandlerTests`
+- 3 unit: `DeletePlayerCommandHandlerTests`
+- 10 integration: `PlayerIntegrationTests` (POST válido, POST duplicado, POST usuário desconhecido, POST nome vazio, GET lista, GET por id, GET id desconhecido, PUT, PUT id desconhecido, DELETE, DELETE id desconhecido)
 
 ---
 

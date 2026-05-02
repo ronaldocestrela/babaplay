@@ -8,6 +8,30 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Fase 3: Players
+
+- `Player` entity (Domain): `Create()`, `Update()`, `Deactivate()` (soft delete via `IsActive`); `UserId` como FK lógica cross-DB ao `ApplicationUser`
+- `IPlayerRepository` — interface de Application com GetByIdAsync, GetAllActiveAsync, ExistsByUserIdAsync, AddAsync, UpdateAsync, SaveChangesAsync
+- `PlayerResponse` sealed record DTO
+- `CreatePlayerCommand` / `CreatePlayerCommandHandler` — valida nome, verifica UserId no Master DB via `IUserRepository`, impede duplicidade por tenant via `ExistsByUserIdAsync`
+- `GetPlayerQuery` / `GetPlayerQueryHandler` — retorna player por Id ou `PLAYER_NOT_FOUND`
+- `GetPlayersQuery` / `GetPlayersQueryHandler` — retorna todos os players ativos, ordenados por nome
+- `UpdatePlayerCommand` / `UpdatePlayerCommandHandler` — atualiza name/nickname/phone/dateOfBirth
+- `DeletePlayerCommand` / `DeletePlayerCommandHandler` — soft delete idempotente (`Deactivate()`)
+- `PlayerRepository` — Infrastructure; cria `TenantDbContext` por operação via `TenantDbContextFactory` + `ITenantContext`
+- `TenantDbContext` atualizado: `DbSet<Player>`, índice único em `UserId`, `HasMaxLength` em Name(100)/Nickname(50)/Phone(20)
+- `TenantDbContextDesignTimeFactory` — `IDesignTimeDbContextFactory` para suporte a `dotnet ef migrations`
+- EF Core migration `AddPlayers` — cria tabela `Players` no banco por-tenant (Persistence/Migrations/Tenant/)
+- `TenantDbContextFactory` refatorado para `class virtual CreateAsync` (permite override em testes de integração)
+- `POST /api/v1/player` → 201 `PlayerResponse` | 404 USER_NOT_FOUND | 409 PLAYER_ALREADY_EXISTS | 422 INVALID_NAME
+- `GET /api/v1/player` → 200 `IReadOnlyList<PlayerResponse>`
+- `GET /api/v1/player/{id}` → 200 `PlayerResponse` | 404 PLAYER_NOT_FOUND
+- `PUT /api/v1/player/{id}` → 200 `PlayerResponse` | 404 PLAYER_NOT_FOUND | 422 INVALID_NAME
+- `DELETE /api/v1/player/{id}` → 204 | 404 PLAYER_NOT_FOUND
+- `PlayerWebApplicationFactory` + `PlayerIntegrationTests` — SQLite in-memory para Master e Tenant; 5 usuários pré-seedados (um por teste de escrita); `TestTenantDbContextFactory` ignora tenantId
+- 32 novos testes (28 unit + 10 integration); total acumulado: 81 testes (100% passando)
+
+
 ### Added — Fase 2: Multi-Tenancy
 
 - `ProvisioningStatus` enum (Pending/InProgress/Ready/Failed) no domínio
