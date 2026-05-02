@@ -1,4 +1,6 @@
 using BabaPlay.Application.Interfaces;
+using BabaPlay.Application.Common;
+using BabaPlay.Domain.Entities;
 using BabaPlay.Domain.Enums;
 using BabaPlay.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -83,6 +85,7 @@ public sealed class TenantProvisioningWorker : BackgroundService
 
             await using var tenantCtx = new TenantDbContext(tenantOptions);
             await tenantCtx.Database.MigrateAsync(ct);
+            await SeedDefaultRbacAsync(tenantCtx, tenantId, ct);
 
             await tenantRepo.UpdateProvisioningAsync(tenantId, ProvisioningStatus.Ready, tenantConnectionString, ct);
             _logger.LogInformation("Tenant {TenantId} provisioned successfully (db: {DbName}).", tenantId, dbName);
@@ -119,5 +122,54 @@ public sealed class TenantProvisioningWorker : BackgroundService
             InitialCatalog = dbName
         };
         return builder.ConnectionString;
+    }
+
+    private static async Task SeedDefaultRbacAsync(TenantDbContext tenantCtx, Guid tenantId, CancellationToken ct)
+    {
+        var permissionByNormalized = await tenantCtx.Permissions
+            .ToDictionaryAsync(p => p.NormalizedCode, StringComparer.OrdinalIgnoreCase, ct);
+
+        foreach (var permissionCode in RbacCatalog.AllPermissions)
+        {
+            var normalizedCode = permissionCode.Trim().ToUpperInvariant();
+            if (permissionByNormalized.ContainsKey(normalizedCode))
+                continue;
+
+            var permission = Permission.Create(permissionCode, $"Default permission: {permissionCode}");
+            tenantCtx.Permissions.Add(permission);
+            permissionByNormalized[normalizedCode] = permission;
+        }
+
+        await tenantCtx.SaveChangesAsync(ct);
+
+        var roleByNormalized = await tenantCtx.Roles
+            .Include(r => r.Permissions)
+            .ToDictionaryAsync(r => r.NormalizedName, StringComparer.OrdinalIgnoreCase, ct);
+
+        foreach (var roleName in RbacCatalog.DefaultRolePermissions.Keys)
+        {
+            var normalizedName = roleName.Trim().ToUpperInvariant();
+            if (roleByNormalized.ContainsKey(normalizedName))
+                continue;
+
+            var role = Role.Create(tenantId, roleName, "Seeded default role");
+            tenantCtx.Roles.Add(role);
+            roleByNormalized[normalizedName] = role;
+        }
+
+        await tenantCtx.SaveChangesAsync(ct);
+
+        foreach (var roleEntry in RbacCatalog.DefaultRolePermissions)
+        {
+            var role = roleByNormalized[roleEntry.Key.Trim().ToUpperInvariant()];
+
+            foreach (var permissionCode in roleEntry.Value)
+            {
+                var permission = permissionByNormalized[permissionCode.Trim().ToUpperInvariant()];
+                role.AddPermission(permission.Id);
+            }
+        }
+
+        await tenantCtx.SaveChangesAsync(ct);
     }
 }

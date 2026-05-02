@@ -120,7 +120,7 @@ Construir um sistema SaaS escalável, com:
 
 ---
 
-## 🔐 Fase 4 — RBAC 🚧 EM ANDAMENTO
+## 🔐 Fase 4 — RBAC ✅ CONCLUÍDA
 
 ### Entregas
 
@@ -145,6 +145,12 @@ Construir um sistema SaaS escalável, com:
 - API + autorização:
   - `RoleController` (`POST /api/v1/role`, `GET /api/v1/role`, `POST /api/v1/role/{roleId}/users/{userId}`, `POST /api/v1/role/{roleId}/permissions`)
   - Policy `TenantMember` + `TenantMemberAuthorizationHandler` (valida usuário autenticado pertencente ao tenant resolvido)
+  - Policy por permission com `PermissionRequirement` + `PermissionAuthorizationHandler`
+  - Policies aplicadas por endpoint: `RbacRolesRead`, `RbacRolesWrite`, `RbacRolesAssign`, `RbacPermissionsWrite`
+- Provisioning:
+  - Seed idempotente de RBAC no `TenantProvisioningWorker`
+  - Roles padrão: `Admin`, `Manager`, `Member`, `Viewer`
+  - Matriz inicial de permissions via catálogo central `RbacCatalog`
 
 ### Testes
 
@@ -158,13 +164,12 @@ Construir um sistema SaaS escalável, com:
   - `GetRolesQueryHandlerTests`
   - `AssignRoleToUserCommandHandlerTests`
   - `AddPermissionToRoleCommandHandlerTests`
-- Status atual da suíte backend: **108 testes, 100% passando**
-
-### Pendências para concluir a Fase 4
-
-- Seed padrão no provisioning: `Admin`, `Manager`, `Member`, `Viewer` + matriz inicial de permissions
-- Policy de autorização por permission (além de membership)
-- Testes de integração RBAC (permitido/negado por tenant)
+- Integration RBAC (novos):
+  - `RbacIntegrationTests`:
+    - permitido (membro com permission)
+    - negado por falta de permission
+    - negado por isolamento de tenant
+- Status atual da suíte backend: **111 testes, 100% passando**
 
 ---
 

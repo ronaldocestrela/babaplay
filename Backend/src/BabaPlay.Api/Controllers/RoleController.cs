@@ -11,7 +11,7 @@ namespace BabaPlay.Api.Controllers;
 /// <summary>Manages tenant-scoped roles and permissions.</summary>
 [ApiController]
 [Route("api/v1/[controller]")]
-[Authorize(Policy = "TenantMember")]
+[Authorize(Policy = AuthorizationPolicyNames.TenantMember)]
 public sealed class RoleController : ControllerBase
 {
     private readonly ICommandHandler<CreateRoleCommand, Result<RoleResponse>> _createRoleHandler;
@@ -32,6 +32,7 @@ public sealed class RoleController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthorizationPolicyNames.RbacRolesWrite)]
     [ProducesResponseType(typeof(RoleResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
@@ -47,6 +48,7 @@ public sealed class RoleController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = AuthorizationPolicyNames.RbacRolesRead)]
     [ProducesResponseType(typeof(IReadOnlyList<RoleResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
@@ -55,6 +57,7 @@ public sealed class RoleController : ControllerBase
     }
 
     [HttpPost("{roleId:guid}/users/{userId}")]
+    [Authorize(Policy = AuthorizationPolicyNames.RbacRolesAssign)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
@@ -70,6 +73,7 @@ public sealed class RoleController : ControllerBase
     }
 
     [HttpPost("{roleId:guid}/permissions")]
+    [Authorize(Policy = AuthorizationPolicyNames.RbacPermissionsWrite)]
     [ProducesResponseType(typeof(RoleResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]

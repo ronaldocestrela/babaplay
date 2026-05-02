@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,8 @@ public sealed class TestAuthHandler : AuthenticationHandler<AuthenticationScheme
     public const string SchemeName = "TestAuthScheme";
     public const string TestUserId = "test-user-id";
     public const string TestUserEmail = "test@babaplay.com";
+    public const string UserIdHeader = "X-Test-UserId";
+    public const string UserEmailHeader = "X-Test-UserEmail";
 
     public TestAuthHandler(
         IOptionsMonitor<AuthenticationSchemeOptions> options,
@@ -25,11 +28,20 @@ public sealed class TestAuthHandler : AuthenticationHandler<AuthenticationScheme
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
+        var userId = Request.Headers.TryGetValue(UserIdHeader, out var userIdValues)
+            ? userIdValues.ToString()
+            : TestUserId;
+
+        var email = Request.Headers.TryGetValue(UserEmailHeader, out var emailValues)
+            ? emailValues.ToString()
+            : TestUserEmail;
+
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, TestUserId),
-            new Claim(ClaimTypes.Email, TestUserEmail),
-            new Claim(ClaimTypes.Name, TestUserEmail),
+            new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(JwtRegisteredClaimNames.Sub, userId),
+            new Claim(ClaimTypes.Email, email),
+            new Claim(ClaimTypes.Name, email),
         };
 
         var identity = new ClaimsIdentity(claims, SchemeName);

@@ -1,0 +1,65 @@
+namespace BabaPlay.Application.Common;
+
+/// <summary>
+/// RBAC permission codes and default role matrix used during tenant provisioning.
+/// </summary>
+public static class RbacCatalog
+{
+    public static class Roles
+    {
+        public const string Admin = "Admin";
+        public const string Manager = "Manager";
+        public const string Member = "Member";
+        public const string Viewer = "Viewer";
+    }
+
+    public static class Permissions
+    {
+        public const string RbacRolesRead = "rbac.roles.read";
+        public const string RbacRolesWrite = "rbac.roles.write";
+        public const string RbacRolesAssign = "rbac.roles.assign";
+        public const string RbacPermissionsWrite = "rbac.permissions.write";
+
+        public const string PlayersRead = "players.read";
+        public const string PlayersWrite = "players.write";
+        public const string TenantRead = "tenant.read";
+    }
+
+    public static readonly IReadOnlyDictionary<string, IReadOnlyList<string>> DefaultRolePermissions =
+        new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase)
+        {
+            [Roles.Admin] =
+            [
+                Permissions.RbacRolesRead,
+                Permissions.RbacRolesWrite,
+                Permissions.RbacRolesAssign,
+                Permissions.RbacPermissionsWrite,
+                Permissions.PlayersRead,
+                Permissions.PlayersWrite,
+                Permissions.TenantRead,
+            ],
+            [Roles.Manager] =
+            [
+                Permissions.RbacRolesRead,
+                Permissions.PlayersRead,
+                Permissions.PlayersWrite,
+                Permissions.TenantRead,
+            ],
+            [Roles.Member] =
+            [
+                Permissions.PlayersRead,
+                Permissions.TenantRead,
+            ],
+            [Roles.Viewer] =
+            [
+                Permissions.PlayersRead,
+                Permissions.TenantRead,
+            ],
+        };
+
+    public static IReadOnlyList<string> AllPermissions { get; } =
+        DefaultRolePermissions.Values
+            .SelectMany(x => x)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+}

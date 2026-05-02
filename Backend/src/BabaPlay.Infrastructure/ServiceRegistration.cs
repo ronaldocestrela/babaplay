@@ -1,4 +1,5 @@
 using System.Text;
+using BabaPlay.Application.Common;
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Infrastructure.Authorization;
 using BabaPlay.Infrastructure.Entities;
@@ -73,11 +74,36 @@ public static class ServiceRegistration
 
         services.AddAuthorization(options =>
         {
-            options.AddPolicy("TenantMember", policy =>
+            options.AddPolicy(AuthorizationPolicyNames.TenantMember, policy =>
                 policy.Requirements.Add(new TenantMemberRequirement()));
+
+            options.AddPolicy(AuthorizationPolicyNames.RbacRolesRead, policy =>
+            {
+                policy.Requirements.Add(new TenantMemberRequirement());
+                policy.Requirements.Add(new PermissionRequirement(RbacCatalog.Permissions.RbacRolesRead));
+            });
+
+            options.AddPolicy(AuthorizationPolicyNames.RbacRolesWrite, policy =>
+            {
+                policy.Requirements.Add(new TenantMemberRequirement());
+                policy.Requirements.Add(new PermissionRequirement(RbacCatalog.Permissions.RbacRolesWrite));
+            });
+
+            options.AddPolicy(AuthorizationPolicyNames.RbacRolesAssign, policy =>
+            {
+                policy.Requirements.Add(new TenantMemberRequirement());
+                policy.Requirements.Add(new PermissionRequirement(RbacCatalog.Permissions.RbacRolesAssign));
+            });
+
+            options.AddPolicy(AuthorizationPolicyNames.RbacPermissionsWrite, policy =>
+            {
+                policy.Requirements.Add(new TenantMemberRequirement());
+                policy.Requirements.Add(new PermissionRequirement(RbacCatalog.Permissions.RbacPermissionsWrite));
+            });
         });
 
         services.AddScoped<IAuthorizationHandler, TenantMemberAuthorizationHandler>();
+        services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
         // --- Application-level service abstractions ---
         services.AddScoped<ITokenService, JwtTokenService>();
