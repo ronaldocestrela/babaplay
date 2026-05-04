@@ -63,6 +63,35 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 - Status da fase atualizado para concluída no roadmap com escopo explícito de backend MVP.
 - Delimitação de escopo futuro adicionada (template PDF avançado, versionamento/auditoria e UI Web/Mobile) como incrementos não bloqueantes.
 
+### Added — Fase 11: endpoints operacionais adicionais
+
+- API:
+	- `GET /api/v1/match-summary/{summaryId}` para metadata por id
+	- `DELETE /api/v1/match-summary/{summaryId}` para desativação da súmula
+- Application (CQRS):
+	- `GetMatchSummaryQuery` / `GetMatchSummaryQueryHandler`
+	- `DeleteMatchSummaryCommand` / `DeleteMatchSummaryCommandHandler`
+- Storage:
+	- `IMatchSummaryStorageService.DeleteAsync(...)`
+	- implementação em `LocalMatchSummaryStorageService` com validação de path traversal
+- Testes:
+	- Unit Application: `GetMatchSummaryQueryHandlerTests`, `DeleteMatchSummaryCommandHandlerTests`
+	- Unit Infrastructure: cenários de `DeleteAsync` em `LocalMatchSummaryStorageServiceTests`
+	- Integration: cenários de GET por id e DELETE em `MatchSummaryIntegrationTests`
+- Validação atualizada:
+	- filtro `FullyQualifiedName~MatchSummary`: 39 testes passando
+	- regressão backend completa: 354 testes passando
+
+### Changed — Fase 11: hardening de persistência
+
+- Application:
+	- `GenerateMatchSummaryCommandHandler` agora realiza cleanup do arquivo no storage quando ocorre exceção ao persistir metadata no banco.
+	- novo erro retornado no fluxo de geração: `MATCH_SUMMARY_PERSISTENCE_FAILED`.
+- Testes TDD:
+	- `GenerateMatchSummaryCommandHandlerTests` recebeu cenário de falha de persistência com validação explícita de chamada ao `DeleteAsync` do storage.
+- Validação atualizada:
+	- filtro `FullyQualifiedName~MatchSummary`: 40 testes passando
+
 ### Changed — Fase 9: Partidas (hardening RBAC + TDD)
 
 - Segurança/RBAC:

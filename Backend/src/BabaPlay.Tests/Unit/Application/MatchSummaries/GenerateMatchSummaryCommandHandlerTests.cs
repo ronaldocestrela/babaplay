@@ -126,4 +126,49 @@ public class GenerateMatchSummaryCommandHandlerTests
         _summaryRepository.Verify(x => x.AddAsync(It.IsAny<MatchSummary>(), It.IsAny<CancellationToken>()), Times.Once);
         _summaryRepository.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task Handle_PersistenceFails_ShouldCleanupStoredFile()
+    {
+        var match = DomainMatch.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "final");
+        match.ChangeStatus(MatchStatus.Scheduled);
+        match.ChangeStatus(MatchStatus.InProgress);
+        match.ChangeStatus(MatchStatus.Completed);
+
+        _matchRepository
+            .Setup(x => x.GetByIdAsync(match.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        _summaryRepository
+            .Setup(x => x.GetByMatchIdAsync(match.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MatchSummary?)null);
+
+        _matchEventRepository
+            .Setup(x => x.GetActiveByMatchAsync(match.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        _pdfGenerator
+            .Setup(x => x.GenerateAsync(It.IsAny<MatchSummaryPdfInput>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([1, 2, 3]);
+
+        var storedFile = new MatchSummaryStoredFile(
+            "match-summaries/tenant/file.pdf",
+            "summary-file.pdf",
+            "application/pdf",
+            3);
+
+        _storageService
+            .Setup(x => x.SaveAsync(It.IsAny<MatchSummaryFileSaveRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(storedFile);
+
+        _summaryRepository
+            .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("db error"));
+
+        var result = await _handler.HandleAsync(new GenerateMatchSummaryCommand(match.Id));
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorCode.Should().Be("MATCH_SUMMARY_PERSISTENCE_FAILED");
+        _storageService.Verify(x => x.DeleteAsync(storedFile.StoragePath, It.IsAny<CancellationToken>()), Times.Once);
+    }
 }

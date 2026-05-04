@@ -593,8 +593,10 @@ Construir um sistema SaaS escalável, com:
 - API:
   - `MatchSummaryController`
   - `POST /api/v1/match-summary`
+  - `GET /api/v1/match-summary/{summaryId}`
   - `GET /api/v1/match-summary/match/{matchId}`
   - `GET /api/v1/match-summary/{summaryId}/file`
+  - `DELETE /api/v1/match-summary/{summaryId}`
 
 ### Regras já aplicadas
 
@@ -629,8 +631,13 @@ Construir um sistema SaaS escalável, com:
   - Integration: cenários negativos adicionados em `MatchSummaryIntegrationTests`
     - `POST /match-summary` com `matchId` inexistente
     - `POST /match-summary` com partida não concluída
+    - `GET /match-summary/{summaryId}` inexistente
     - `GET /match-summary/match/{matchId}` inexistente
     - `GET /match-summary/{summaryId}/file` inexistente
+    - `DELETE /match-summary/{summaryId}` inexistente
+  - Novos endpoints de operação:
+    - `GET /match-summary/{summaryId}` para metadata por id
+    - `DELETE /match-summary/{summaryId}` para desativação da súmula e remoção do arquivo no storage
 - Hardening operacional:
   - storage local configurável por `MatchSummaryStorage:RootPath`
   - proteção contra path traversal no read do storage local
@@ -638,8 +645,21 @@ Construir um sistema SaaS escalável, com:
 
 ### Status de testes após slice 2
 
-- Filtro `FullyQualifiedName~MatchSummary`: **27 testes, 100% passando**
-- Regressão backend completa: **342 testes, 100% passando**
+- Filtro `FullyQualifiedName~MatchSummary`: **39 testes, 100% passando**
+- Regressão backend completa: **354 testes, 100% passando**
+
+### Entregas iniciadas (slice 3)
+
+- Hardening de persistência na geração de súmula:
+  - `GenerateMatchSummaryCommandHandler` agora faz cleanup do arquivo no storage quando falha ao persistir metadata no banco
+  - novo erro de negócio: `MATCH_SUMMARY_PERSISTENCE_FAILED`
+- Testes TDD adicionais:
+  - Unit Application: `GenerateMatchSummaryCommandHandlerTests`
+    - cenário novo: falha de persistência aciona `DeleteAsync` no storage para evitar arquivo órfão
+
+### Status de testes após slice 3
+
+- Filtro `FullyQualifiedName~MatchSummary`: **40 testes, 100% passando**
 
 ### Fechamento oficial da fase
 
@@ -653,7 +673,17 @@ Construir um sistema SaaS escalável, com:
 
 ## 🧠 Fase 12 — Score e Ranking
 
-### Regras
+### Status
+
+- 🚧 Planejada (backend primeiro, frontend de consumo na Fase 16.7)
+
+### Objetivo da fase
+
+- Consolidar pontuação por jogador por tenant com rastreabilidade por origem de evento
+- Expor consultas de ranking geral, artilharia e presença com filtros por período
+- Garantir consistência do cálculo em operações de create/update/delete (eventos, check-ins e status de partidas)
+
+### Regras de pontuação (fonte única)
 
 - Presença: +1
 - Vitória: +3
@@ -662,11 +692,128 @@ Construir um sistema SaaS escalável, com:
 - Amarelo: -1
 - Vermelho: -3
 
-### Entregas
+### Fórmula oficial
 
-- Ranking geral
-- Artilharia
-- Presença
+- `ScoreTotal = (Presencas*1) + (Vitorias*3) + (Empates*1) + (Gols*2) - (Amarelos*1) - (Vermelhos*3)`
+
+### Escopo funcional
+
+- Ranking geral por tenant com paginação e ordenação por `ScoreTotal` (desempate: gols, presenças, nome)
+- Artilharia por tenant com total de gols e posição no período
+- Presença por tenant com total de check-ins válidos e taxa de presença por período
+- Filtro temporal em todas as consultas (`fromUtc`, `toUtc`) e filtro opcional por `gameDayId`
+
+### Fora de escopo desta fase
+
+- Cache distribuído de ranking (Redis) para leitura massiva
+- Premiações/gamificação
+- Ranking cross-tenant
+
+### Arquitetura e modelagem (Clean + CQRS)
+
+- Domain:
+  - Novo agregado `PlayerScore` (snapshot materializado por jogador/tenant)
+  - Value Objects: `ScoreBreakdown` e `RankingPeriod`
+  - Regras de domínio para incremento/decremento idempotente por tipo de evento
+- Application (somente CQRS):
+  - Commands (write):
+    - `RebuildTenantRankingCommand` (reprocessamento completo por tenant/período)
+    - `ApplyScoreDeltaCommand` (atualização incremental por evento de origem)
+  - Queries (read):
+    - `GetRankingQuery`
+    - `GetTopScorersQuery`
+    - `GetAttendanceRankingQuery`
+  - DTOs:
+    - `RankingEntryResponse`
+    - `TopScorerEntryResponse`
+    - `AttendanceEntryResponse`
+  - Interfaces:
+    - `IPlayerScoreRepository`
+    - `IScoreComputationService`
+- Infrastructure:
+  - `PlayerScoreRepository` (tenant DB)
+  - `ScoreComputationService` com regra central de cálculo
+  - Migração tenant: tabela `PlayerScores` + índices:
+    - `(TenantId, PlayerId)` único
+    - `(TenantId, ScoreTotal desc)` para ranking
+    - `(TenantId, Goals desc)` para artilharia
+    - `(TenantId, AttendanceCount desc)` para presença
+- API:
+  - `RankingController`
+    - `GET /api/v1/ranking`
+    - `GET /api/v1/ranking/top-scorers`
+    - `GET /api/v1/ranking/attendance`
+    - `POST /api/v1/ranking/rebuild` (operação administrativa)
+
+### Integrações com fases anteriores
+
+- Check-in (Fase 7): cria/remove presença no score
+- MatchEvents (Fase 10): gols/cartões atualizam score
+- Match (Fase 9): resultado final de partida aplica vitória/empate
+- RBAC (Fase 4): novas permissões `ranking.read` e `ranking.write`
+
+### Políticas e segurança
+
+- `TenantMember` obrigatório em todos os endpoints
+- Policies:
+  - `RankingRead` para GETs
+  - `RankingWrite` para rebuild/reprocessamento
+
+### Estratégia de implementação (TDD por slices)
+
+- Slice 1 — Domínio + cálculo puro:
+  - Red: testes de `ScoreComputationService` e `PlayerScore` cobrindo todas as regras
+  - Green: implementação mínima da fórmula e validações
+  - Refactor: eliminar duplicidade e centralizar constantes de pontuação
+- Slice 2 — Persistência + CQRS de leitura:
+  - Red: testes de handlers de queries com filtros/período/paginação
+  - Green: repositório + handlers de leitura
+  - Refactor: otimizar projeções e ordenações
+- Slice 3 — Atualização incremental:
+  - Red: testes de `ApplyScoreDeltaCommandHandler` (create/update/delete de origem)
+  - Green: aplicação de deltas idempotente
+  - Refactor: proteção contra dupla aplicação por `SourceEventId`
+- Slice 4 — Rebuild administrativo + API:
+  - Red: integração HTTP + autorização + multi-tenant isolation
+  - Green: endpoint de rebuild e wiring completo
+  - Refactor: hardening de erros e observabilidade
+
+### Cenários obrigatórios de teste
+
+- Unit Domain:
+  - fórmula completa de score com combinações mistas
+  - limites e idempotência de atualização incremental
+- Unit Application:
+  - handlers de query (ordenação, paginação, período)
+  - handlers de command (delta + rebuild)
+- Integration API:
+  - `GET /ranking`, `GET /ranking/top-scorers`, `GET /ranking/attendance`
+  - `POST /ranking/rebuild` com sucesso, sem permissão e tenant inválido
+  - isolamento entre tenants (dados nunca cruzam)
+- Meta da fase:
+  - Cobertura mínima >= 80%
+  - Regressão backend 100% passando
+
+### Códigos de erro planejados
+
+- `INVALID_PERIOD`
+- `PLAYER_SCORE_NOT_FOUND`
+- `RANKING_REBUILD_FAILED`
+- `DUPLICATE_SCORE_EVENT`
+
+### Documentação obrigatória
+
+- Swagger atualizado com contratos de ranking
+- Tabela de regras de pontuação em docs de API
+- Changelog com escopo da fase e impactos em integrações (Check-in, Match, MatchEvents)
+
+### Critérios de aceite (Definition of Done)
+
+- Queries de ranking, artilharia e presença publicadas e protegidas por RBAC
+- Cálculo validado por TDD com rastreabilidade de origem
+- Rebuild administrativo funcional para recomputar inconsistências
+- Migração tenant aplicada e validada em testes de integração
+- Documentação (Swagger + roadmap + changelog) atualizada
 
 ---
 

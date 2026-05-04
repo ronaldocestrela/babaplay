@@ -565,21 +565,24 @@ Código sem:
 #### API
 - `MatchSummaryController` com endpoints:
 	- `POST /api/v1/match-summary`
+	- `GET /api/v1/match-summary/{summaryId}`
 	- `GET /api/v1/match-summary/match/{matchId}`
 	- `GET /api/v1/match-summary/{summaryId}/file`
+	- `DELETE /api/v1/match-summary/{summaryId}`
 
 #### Regras aplicadas
 - Geração permitida apenas para partida concluída (`MATCH_NOT_COMPLETED`)
 - Duplicidade bloqueada por partida (`MATCH_SUMMARY_ALREADY_EXISTS`)
 - Not found padronizado para partida/súmula/arquivo (`MATCH_NOT_FOUND`, `MATCH_SUMMARY_NOT_FOUND`, `MATCH_SUMMARY_FILE_NOT_FOUND`)
+- Cleanup de arquivo no storage quando ocorre falha de persistência da metadata (`MATCH_SUMMARY_PERSISTENCE_FAILED`)
 
 #### Testes
 - Unit Domain: `MatchSummaryTests`
 - Unit Application: `GenerateMatchSummaryCommandHandlerTests`, `GetMatchSummaryByMatchQueryHandlerTests`, `GetMatchSummaryFileQueryHandlerTests`
 - Unit Infrastructure: `LocalMatchSummaryStorageServiceTests`, `MinimalPdfMatchSummaryGeneratorTests`
 - Integration: `MatchSummaryIntegrationTests`
-- Execução filtrada por MatchSummary: 27 testes (100% passando)
-- Regressão backend após fechamento da fase: 342 testes (100% passando)
+- Execução filtrada por MatchSummary: 40 testes (100% passando)
+- Regressão backend após fechamento da fase: 354 testes (100% passando)
 
 ---
 

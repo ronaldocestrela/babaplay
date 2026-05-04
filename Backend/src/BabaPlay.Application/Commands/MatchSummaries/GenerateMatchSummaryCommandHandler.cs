@@ -77,8 +77,18 @@ public sealed class GenerateMatchSummaryCommandHandler
             storedFile.ContentType,
             storedFile.SizeBytes);
 
-        await _summaryRepository.AddAsync(summary, ct);
-        await _summaryRepository.SaveChangesAsync(ct);
+        try
+        {
+            await _summaryRepository.AddAsync(summary, ct);
+            await _summaryRepository.SaveChangesAsync(ct);
+        }
+        catch
+        {
+            _ = await _storageService.DeleteAsync(storedFile.StoragePath, ct);
+            return Result<MatchSummaryResponse>.Fail(
+                "MATCH_SUMMARY_PERSISTENCE_FAILED",
+                "Failed to persist match summary metadata.");
+        }
 
         return Result<MatchSummaryResponse>.Ok(ToResponse(summary));
     }

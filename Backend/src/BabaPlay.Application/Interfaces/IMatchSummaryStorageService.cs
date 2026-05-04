@@ -5,6 +5,8 @@ public interface IMatchSummaryStorageService
     Task<MatchSummaryStoredFile> SaveAsync(MatchSummaryFileSaveRequest request, CancellationToken ct = default);
 
     Task<byte[]?> ReadAsync(string storagePath, CancellationToken ct = default);
+
+    Task<bool> DeleteAsync(string storagePath, CancellationToken ct = default);
 }
 
 public sealed record MatchSummaryFileSaveRequest(

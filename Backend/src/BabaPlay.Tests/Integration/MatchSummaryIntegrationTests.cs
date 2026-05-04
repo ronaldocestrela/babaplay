@@ -58,6 +58,22 @@ public sealed class MatchSummaryIntegrationTests : IClassFixture<PlayerWebApplic
     }
 
     [Fact]
+    public async Task GetById_ExistingSummary_ShouldReturn200()
+    {
+        var match = await CreateCompletedMatchAsync("MS Rodada 2B", "MS Team C1", "MS Team D1");
+
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/match-summary", new { matchId = match.Id });
+        var created = await createResponse.Content.ReadFromJsonAsync<MatchSummaryResponse>(JsonOptions);
+
+        var response = await _client.GetAsync($"/api/v1/match-summary/{created!.Id}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<MatchSummaryResponse>(JsonOptions);
+        body.Should().NotBeNull();
+        body!.Id.Should().Be(created.Id);
+    }
+
+    [Fact]
     public async Task Post_DuplicateSummary_ShouldReturn409()
     {
         var match = await CreateCompletedMatchAsync("MS Rodada 3", "MS Team E", "MS Team F");
@@ -142,6 +158,41 @@ public sealed class MatchSummaryIntegrationTests : IClassFixture<PlayerWebApplic
     public async Task GetFile_NotFound_ShouldReturn404()
     {
         var response = await _client.GetAsync($"/api/v1/match-summary/{Guid.NewGuid()}/file");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        problem.GetProperty("title").GetString().Should().Be("MATCH_SUMMARY_NOT_FOUND");
+    }
+
+    [Fact]
+    public async Task GetById_NotFound_ShouldReturn404()
+    {
+        var response = await _client.GetAsync($"/api/v1/match-summary/{Guid.NewGuid()}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        problem.GetProperty("title").GetString().Should().Be("MATCH_SUMMARY_NOT_FOUND");
+    }
+
+    [Fact]
+    public async Task Delete_ExistingSummary_ShouldReturn204AndHideMetadata()
+    {
+        var match = await CreateCompletedMatchAsync("MS Rodada 5", "MS Team I", "MS Team J");
+
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/match-summary", new { matchId = match.Id });
+        var created = await createResponse.Content.ReadFromJsonAsync<MatchSummaryResponse>(JsonOptions);
+
+        var deleteResponse = await _client.DeleteAsync($"/api/v1/match-summary/{created!.Id}");
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var getResponse = await _client.GetAsync($"/api/v1/match-summary/{created.Id}");
+        getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Delete_NotFound_ShouldReturn404()
+    {
+        var response = await _client.DeleteAsync($"/api/v1/match-summary/{Guid.NewGuid()}");
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         var problem = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);

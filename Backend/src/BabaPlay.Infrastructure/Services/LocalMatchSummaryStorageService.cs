@@ -63,4 +63,26 @@ public sealed class LocalMatchSummaryStorageService : IMatchSummaryStorageServic
 
         return await File.ReadAllBytesAsync(fullPath, ct);
     }
+
+    public Task<bool> DeleteAsync(string storagePath, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(storagePath))
+            return Task.FromResult(false);
+
+        var fullPath = Path.GetFullPath(
+            Path.Combine(_storageRoot, storagePath.Replace('/', Path.DirectorySeparatorChar)));
+
+        var rootWithSeparator = _storageRoot.EndsWith(Path.DirectorySeparatorChar)
+            ? _storageRoot
+            : _storageRoot + Path.DirectorySeparatorChar;
+
+        if (!fullPath.StartsWith(rootWithSeparator, StringComparison.Ordinal))
+            return Task.FromResult(false);
+
+        if (!File.Exists(fullPath))
+            return Task.FromResult(true);
+
+        File.Delete(fullPath);
+        return Task.FromResult(true);
+    }
 }

@@ -46,6 +46,39 @@ public class LocalMatchSummaryStorageServiceTests : IDisposable
         read.Should().BeNull();
     }
 
+    [Fact]
+    public async Task Delete_ExistingFile_ShouldReturnTrueAndRemoveFile()
+    {
+        var sut = CreateSut(_tempRoot);
+        var stored = await sut.SaveAsync(new MatchSummaryFileSaveRequest(Guid.NewGuid(), Guid.NewGuid(), [7, 8, 9]));
+
+        var deleted = await sut.DeleteAsync(stored.StoragePath);
+        var read = await sut.ReadAsync(stored.StoragePath);
+
+        deleted.Should().BeTrue();
+        read.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Delete_MissingFile_ShouldReturnTrue()
+    {
+        var sut = CreateSut(_tempRoot);
+
+        var deleted = await sut.DeleteAsync("match-summaries/tenant/not-found.pdf");
+
+        deleted.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Delete_PathTraversalAttempt_ShouldReturnFalse()
+    {
+        var sut = CreateSut(_tempRoot);
+
+        var deleted = await sut.DeleteAsync("../outside.pdf");
+
+        deleted.Should().BeFalse();
+    }
+
     private IMatchSummaryStorageService CreateSut(string rootPath)
     {
         var hostEnv = new FakeHostEnvironment { ContentRootPath = rootPath };

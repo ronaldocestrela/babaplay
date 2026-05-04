@@ -62,6 +62,8 @@ public static class ServiceRegistration
 
         // Match summaries — Fase 11
         services.AddScoped<ICommandHandler<GenerateMatchSummaryCommand, Result<MatchSummaryResponse>>, GenerateMatchSummaryCommandHandler>();
+        services.AddScoped<ICommandHandler<DeleteMatchSummaryCommand, Result>, DeleteMatchSummaryCommandHandler>();
+        services.AddScoped<IQueryHandler<GetMatchSummaryQuery, Result<MatchSummaryResponse>>, GetMatchSummaryQueryHandler>();
         services.AddScoped<IQueryHandler<GetMatchSummaryByMatchQuery, Result<MatchSummaryResponse>>, GetMatchSummaryByMatchQueryHandler>();
         services.AddScoped<IQueryHandler<GetMatchSummaryFileQuery, Result<MatchSummaryFileResponse>>, GetMatchSummaryFileQueryHandler>();
 
