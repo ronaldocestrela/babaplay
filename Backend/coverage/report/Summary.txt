@@ -1,129 +1,190 @@
 Summary
-  Generated on: 05/02/2026 - 10:24:12
-  Coverage date: 05/02/2026 - 10:23:55
+  Generated on: 05/03/2026 - 22:44:43
+  Coverage date: 05/03/2026 - 22:44:41
   Parser: MultiReport (2x Cobertura)
   Assemblies: 4
-  Classes: 101
-  Files: 95
-  Line coverage: 32.3%
-  Covered lines: 1187
-  Uncovered lines: 2484
-  Coverable lines: 3671
-  Total lines: 5817
-  Branch coverage: 65% (190 of 292)
-  Covered branches: 190
-  Total branches: 292
-  Method coverage: 81% (295 of 364)
-  Full method coverage: 78.2% (285 of 364)
-  Covered methods: 295
-  Fully covered methods: 285
-  Total methods: 364
+  Classes: 162
+  Files: 153
+  Line coverage: 34.1%
+  Covered lines: 2232
+  Uncovered lines: 4302
+  Coverable lines: 6534
+  Total lines: 9993
+  Branch coverage: 71.8% (399 of 555)
+  Covered branches: 399
+  Total branches: 555
+  Method coverage: 85.4% (534 of 625)
+  Full method coverage: 80.4% (503 of 625)
+  Covered methods: 534
+  Fully covered methods: 503
+  Total methods: 625
 
-BabaPlay.Api                                                                           84.7%
-  BabaPlay.Api.Controllers.AddPermissionRequest                                           0%
-  BabaPlay.Api.Controllers.AuthController                                               100%
-  BabaPlay.Api.Controllers.CreatePlayerRequest                                          100%
-  BabaPlay.Api.Controllers.CreateRoleRequest                                              0%
-  BabaPlay.Api.Controllers.CreateTenantRequest                                          100%
-  BabaPlay.Api.Controllers.LoginRequest                                                 100%
-  BabaPlay.Api.Controllers.PingController                                               100%
-  BabaPlay.Api.Controllers.PingRequest                                                  100%
-  BabaPlay.Api.Controllers.PlayerController                                             100%
-  BabaPlay.Api.Controllers.RefreshTokenRequest                                          100%
-  BabaPlay.Api.Controllers.RoleController                                              28.2%
-  BabaPlay.Api.Controllers.TenantController                                             100%
-  BabaPlay.Api.Controllers.UpdatePlayerRequest                                          100%
-  BabaPlay.Api.Filters.TenantSlugHeaderOperationFilter                                    0%
-  BabaPlay.Api.Middlewares.GlobalExceptionHandler                                      85.7%
-  BabaPlay.Api.Middlewares.TenantMiddleware                                             100%
-  BabaPlay.Api.Middlewares.TenantMiddlewareExtensions                                   100%
-  Program                                                                               100%
+BabaPlay.Api                                                                             80.1%
+  BabaPlay.Api.Controllers.AddPermissionRequest                                             0%
+  BabaPlay.Api.Controllers.AuthController                                                 100%
+  BabaPlay.Api.Controllers.ChangeGameDayStatusRequest                                     100%
+  BabaPlay.Api.Controllers.CheckinController                                             78.4%
+  BabaPlay.Api.Controllers.CreateCheckinRequest                                           100%
+  BabaPlay.Api.Controllers.CreateGameDayRequest                                           100%
+  BabaPlay.Api.Controllers.CreatePlayerRequest                                            100%
+  BabaPlay.Api.Controllers.CreatePositionRequest                                          100%
+  BabaPlay.Api.Controllers.CreateRoleRequest                                                0%
+  BabaPlay.Api.Controllers.CreateTenantRequest                                            100%
+  BabaPlay.Api.Controllers.GameDayController                                               60%
+  BabaPlay.Api.Controllers.LoginRequest                                                   100%
+  BabaPlay.Api.Controllers.PingController                                                 100%
+  BabaPlay.Api.Controllers.PingRequest                                                    100%
+  BabaPlay.Api.Controllers.PlayerController                                              97.7%
+  BabaPlay.Api.Controllers.PositionController                                            83.7%
+  BabaPlay.Api.Controllers.RefreshTokenRequest                                            100%
+  BabaPlay.Api.Controllers.RoleController                                                28.2%
+  BabaPlay.Api.Controllers.TenantController                                               100%
+  BabaPlay.Api.Controllers.UpdateGameDayRequest                                             0%
+  BabaPlay.Api.Controllers.UpdatePlayerPositionsRequest                                   100%
+  BabaPlay.Api.Controllers.UpdatePlayerRequest                                            100%
+  BabaPlay.Api.Controllers.UpdatePositionRequest                                          100%
+  BabaPlay.Api.Filters.TenantSlugHeaderOperationFilter                                      0%
+  BabaPlay.Api.Middlewares.GlobalExceptionHandler                                        85.7%
+  BabaPlay.Api.Middlewares.TenantMiddleware                                               100%
+  BabaPlay.Api.Middlewares.TenantMiddlewareExtensions                                     100%
+  Program                                                                                 100%
 
-BabaPlay.Application                                                                   89.3%
-  BabaPlay.Application.Commands.Auth.LoginCommand                                       100%
-  BabaPlay.Application.Commands.Auth.LoginCommandHandler                                100%
-  BabaPlay.Application.Commands.Auth.RefreshTokenCommand                                100%
-  BabaPlay.Application.Commands.Auth.RefreshTokenCommandHandler                         100%
-  BabaPlay.Application.Commands.Ping.PingCommand                                        100%
-  BabaPlay.Application.Commands.Ping.PingCommandHandler                                 100%
-  BabaPlay.Application.Commands.Players.CreatePlayerCommand                             100%
-  BabaPlay.Application.Commands.Players.CreatePlayerCommandHandler                      100%
-  BabaPlay.Application.Commands.Players.DeletePlayerCommand                             100%
-  BabaPlay.Application.Commands.Players.DeletePlayerCommandHandler                      100%
-  BabaPlay.Application.Commands.Players.UpdatePlayerCommand                             100%
-  BabaPlay.Application.Commands.Players.UpdatePlayerCommandHandler                      100%
-  BabaPlay.Application.Commands.Roles.AddPermissionToRoleCommand                        100%
-  BabaPlay.Application.Commands.Roles.AddPermissionToRoleCommandHandler                93.1%
-  BabaPlay.Application.Commands.Roles.AssignRoleToUserCommand                           100%
-  BabaPlay.Application.Commands.Roles.AssignRoleToUserCommandHandler                   84.8%
-  BabaPlay.Application.Commands.Roles.CreateRoleCommand                                 100%
-  BabaPlay.Application.Commands.Roles.CreateRoleCommandHandler                         95.8%
-  BabaPlay.Application.Commands.Tenants.CreateTenantCommand                             100%
-  BabaPlay.Application.Commands.Tenants.CreateTenantCommandHandler                      100%
-  BabaPlay.Application.Common.RbacCatalog                                                 0%
-  BabaPlay.Application.Common.Result                                                    100%
-  BabaPlay.Application.Common.Result<T>                                                 100%
-  BabaPlay.Application.DTOs.AuthResponse                                                100%
-  BabaPlay.Application.DTOs.PingStatusDto                                               100%
-  BabaPlay.Application.DTOs.PlayerResponse                                              100%
-  BabaPlay.Application.DTOs.RoleResponse                                                100%
-  BabaPlay.Application.DTOs.StoredRefreshTokenDto                                       100%
-  BabaPlay.Application.DTOs.TenantInfoDto                                              85.7%
-  BabaPlay.Application.DTOs.TenantResponse                                              100%
-  BabaPlay.Application.DTOs.UserAuthDto                                                 100%
-  BabaPlay.Application.Queries.Ping.PingQueryHandler                                    100%
-  BabaPlay.Application.Queries.Players.GetPlayerQuery                                   100%
-  BabaPlay.Application.Queries.Players.GetPlayerQueryHandler                            100%
-  BabaPlay.Application.Queries.Players.GetPlayersQuery                                  100%
-  BabaPlay.Application.Queries.Players.GetPlayersQueryHandler                           100%
-  BabaPlay.Application.Queries.Roles.GetRolesQuery                                      100%
-  BabaPlay.Application.Queries.Roles.GetRolesQueryHandler                               100%
-  BabaPlay.Application.Queries.Tenants.GetTenantStatusQuery                             100%
-  BabaPlay.Application.Queries.Tenants.GetTenantStatusQueryHandler                      100%
-  BabaPlay.Application.ServiceRegistration                                              100%
+BabaPlay.Application                                                                     93.9%
+  BabaPlay.Application.Commands.Auth.LoginCommand                                         100%
+  BabaPlay.Application.Commands.Auth.LoginCommandHandler                                  100%
+  BabaPlay.Application.Commands.Auth.RefreshTokenCommand                                  100%
+  BabaPlay.Application.Commands.Auth.RefreshTokenCommandHandler                           100%
+  BabaPlay.Application.Commands.Checkins.CancelCheckinCommand                             100%
+  BabaPlay.Application.Commands.Checkins.CancelCheckinCommandHandler                      100%
+  BabaPlay.Application.Commands.Checkins.CreateCheckinCommand                             100%
+  BabaPlay.Application.Commands.Checkins.CreateCheckinCommandHandler                     96.9%
+  BabaPlay.Application.Commands.GameDays.ChangeGameDayStatusCommand                       100%
+  BabaPlay.Application.Commands.GameDays.ChangeGameDayStatusCommandHandler                100%
+  BabaPlay.Application.Commands.GameDays.CreateGameDayCommand                             100%
+  BabaPlay.Application.Commands.GameDays.CreateGameDayCommandHandler                     97.2%
+  BabaPlay.Application.Commands.GameDays.DeleteGameDayCommand                             100%
+  BabaPlay.Application.Commands.GameDays.DeleteGameDayCommandHandler                      100%
+  BabaPlay.Application.Commands.GameDays.UpdateGameDayCommand                             100%
+  BabaPlay.Application.Commands.GameDays.UpdateGameDayCommandHandler                     90.6%
+  BabaPlay.Application.Commands.Ping.PingCommand                                          100%
+  BabaPlay.Application.Commands.Ping.PingCommandHandler                                   100%
+  BabaPlay.Application.Commands.Players.CreatePlayerCommand                               100%
+  BabaPlay.Application.Commands.Players.CreatePlayerCommandHandler                        100%
+  BabaPlay.Application.Commands.Players.DeletePlayerCommand                               100%
+  BabaPlay.Application.Commands.Players.DeletePlayerCommandHandler                        100%
+  BabaPlay.Application.Commands.Players.UpdatePlayerCommand                               100%
+  BabaPlay.Application.Commands.Players.UpdatePlayerCommandHandler                        100%
+  BabaPlay.Application.Commands.Players.UpdatePlayerPositionsCommand                      100%
+  BabaPlay.Application.Commands.Players.UpdatePlayerPositionsCommandHandler              96.2%
+  BabaPlay.Application.Commands.Positions.CreatePositionCommand                           100%
+  BabaPlay.Application.Commands.Positions.CreatePositionCommandHandler                     96%
+  BabaPlay.Application.Commands.Positions.DeletePositionCommand                           100%
+  BabaPlay.Application.Commands.Positions.DeletePositionCommandHandler                    100%
+  BabaPlay.Application.Commands.Positions.UpdatePositionCommand                           100%
+  BabaPlay.Application.Commands.Positions.UpdatePositionCommandHandler                   96.1%
+  BabaPlay.Application.Commands.Roles.AddPermissionToRoleCommand                          100%
+  BabaPlay.Application.Commands.Roles.AddPermissionToRoleCommandHandler                  93.1%
+  BabaPlay.Application.Commands.Roles.AssignRoleToUserCommand                             100%
+  BabaPlay.Application.Commands.Roles.AssignRoleToUserCommandHandler                     84.8%
+  BabaPlay.Application.Commands.Roles.CreateRoleCommand                                   100%
+  BabaPlay.Application.Commands.Roles.CreateRoleCommandHandler                           95.8%
+  BabaPlay.Application.Commands.Tenants.CreateTenantCommand                               100%
+  BabaPlay.Application.Commands.Tenants.CreateTenantCommandHandler                        100%
+  BabaPlay.Application.Common.RbacCatalog                                                   0%
+  BabaPlay.Application.Common.Result                                                      100%
+  BabaPlay.Application.Common.Result<T>                                                   100%
+  BabaPlay.Application.DTOs.AuthResponse                                                  100%
+  BabaPlay.Application.DTOs.CheckinResponse                                               100%
+  BabaPlay.Application.DTOs.GameDayResponse                                               100%
+  BabaPlay.Application.DTOs.PingStatusDto                                                 100%
+  BabaPlay.Application.DTOs.PlayerPositionsResponse                                       100%
+  BabaPlay.Application.DTOs.PlayerResponse                                                100%
+  BabaPlay.Application.DTOs.PositionResponse                                              100%
+  BabaPlay.Application.DTOs.RoleResponse                                                  100%
+  BabaPlay.Application.DTOs.StoredRefreshTokenDto                                         100%
+  BabaPlay.Application.DTOs.TenantGeolocationSettingsDto                                  100%
+  BabaPlay.Application.DTOs.TenantInfoDto                                                85.7%
+  BabaPlay.Application.DTOs.TenantResponse                                                100%
+  BabaPlay.Application.DTOs.UserAuthDto                                                   100%
+  BabaPlay.Application.Queries.Checkins.GetCheckinsByGameDayQuery                         100%
+  BabaPlay.Application.Queries.Checkins.GetCheckinsByGameDayQueryHandler                  100%
+  BabaPlay.Application.Queries.Checkins.GetCheckinsByPlayerQuery                          100%
+  BabaPlay.Application.Queries.Checkins.GetCheckinsByPlayerQueryHandler                   100%
+  BabaPlay.Application.Queries.GameDays.GetGameDayQuery                                   100%
+  BabaPlay.Application.Queries.GameDays.GetGameDayQueryHandler                            100%
+  BabaPlay.Application.Queries.GameDays.GetGameDaysQuery                                  100%
+  BabaPlay.Application.Queries.GameDays.GetGameDaysQueryHandler                           100%
+  BabaPlay.Application.Queries.Ping.PingQueryHandler                                      100%
+  BabaPlay.Application.Queries.Players.GetPlayerQuery                                     100%
+  BabaPlay.Application.Queries.Players.GetPlayerQueryHandler                              100%
+  BabaPlay.Application.Queries.Players.GetPlayersQuery                                    100%
+  BabaPlay.Application.Queries.Players.GetPlayersQueryHandler                             100%
+  BabaPlay.Application.Queries.Positions.GetPositionQuery                                 100%
+  BabaPlay.Application.Queries.Positions.GetPositionQueryHandler                          100%
+  BabaPlay.Application.Queries.Positions.GetPositionsQueryHandler                         100%
+  BabaPlay.Application.Queries.Roles.GetRolesQuery                                        100%
+  BabaPlay.Application.Queries.Roles.GetRolesQueryHandler                                 100%
+  BabaPlay.Application.Queries.Tenants.GetTenantStatusQuery                               100%
+  BabaPlay.Application.Queries.Tenants.GetTenantStatusQueryHandler                        100%
+  BabaPlay.Application.ServiceRegistration                                                100%
 
-BabaPlay.Domain                                                                        89.6%
-  BabaPlay.Domain.Entities.EntityBase                                                   100%
-  BabaPlay.Domain.Entities.Permission                                                  84.2%
-  BabaPlay.Domain.Entities.Player                                                       100%
-  BabaPlay.Domain.Entities.Role                                                        80.8%
-  BabaPlay.Domain.Entities.RolePermission                                               100%
-  BabaPlay.Domain.Entities.UserRole                                                     100%
-  BabaPlay.Domain.Exceptions.DomainException                                            100%
-  BabaPlay.Domain.Exceptions.NotFoundException                                           50%
-  BabaPlay.Domain.Exceptions.ValidationException                                       83.3%
+BabaPlay.Domain                                                                          92.2%
+  BabaPlay.Domain.Entities.Checkin                                                       91.8%
+  BabaPlay.Domain.Entities.EntityBase                                                     100%
+  BabaPlay.Domain.Entities.GameDay                                                       94.2%
+  BabaPlay.Domain.Entities.Permission                                                    84.2%
+  BabaPlay.Domain.Entities.Player                                                        97.9%
+  BabaPlay.Domain.Entities.PlayerPosition                                                 100%
+  BabaPlay.Domain.Entities.Position                                                        95%
+  BabaPlay.Domain.Entities.Role                                                          80.8%
+  BabaPlay.Domain.Entities.RolePermission                                                 100%
+  BabaPlay.Domain.Entities.UserRole                                                       100%
+  BabaPlay.Domain.Exceptions.DomainException                                              100%
+  BabaPlay.Domain.Exceptions.NotFoundException                                             50%
+  BabaPlay.Domain.Exceptions.ValidationException                                         83.3%
+  BabaPlay.Domain.ValueObjects.GeoCoordinate                                             93.7%
 
-BabaPlay.Infrastructure                                                                14.7%
-  BabaPlay.Infrastructure.Authorization.PermissionAuthorizationHandler                 85.7%
-  BabaPlay.Infrastructure.Authorization.PermissionRequirement                           100%
-  BabaPlay.Infrastructure.Authorization.TenantMemberAuthorizationHandler               85.7%
-  BabaPlay.Infrastructure.Entities.ApplicationUser                                      100%
-  BabaPlay.Infrastructure.Entities.Plan                                                   0%
-  BabaPlay.Infrastructure.Entities.RefreshToken                                          75%
-  BabaPlay.Infrastructure.Entities.Subscription                                           0%
-  BabaPlay.Infrastructure.Entities.Tenant                                               100%
-  BabaPlay.Infrastructure.Entities.UserTenant                                          66.6%
-  BabaPlay.Infrastructure.Persistence.MasterDbContext                                  95.1%
-  BabaPlay.Infrastructure.Persistence.Migrations.AddTenantProvisioningStatus              0%
-  BabaPlay.Infrastructure.Persistence.Migrations.InitialMaster                            0%
-  BabaPlay.Infrastructure.Persistence.Migrations.MasterDbContextModelSnapshot             0%
-  BabaPlay.Infrastructure.Persistence.Migrations.Tenant.AddPlayers                        0%
-  BabaPlay.Infrastructure.Persistence.Migrations.Tenant.AddRbac                           0%
-  BabaPlay.Infrastructure.Persistence.Migrations.Tenant.TenantDbContextModelSnapshot      0%
-  BabaPlay.Infrastructure.Persistence.TenantDbContext                                   100%
-  BabaPlay.Infrastructure.Persistence.TenantDbContextDesignTimeFactory                    0%
-  BabaPlay.Infrastructure.Persistence.TenantDbContextFactory                            6.6%
-  BabaPlay.Infrastructure.Repositories.PermissionRepository                            33.3%
-  BabaPlay.Infrastructure.Repositories.PlayerRepository                                 100%
-  BabaPlay.Infrastructure.Repositories.RefreshTokenRepository                           100%
-  BabaPlay.Infrastructure.Repositories.RoleRepository                                  41.3%
-  BabaPlay.Infrastructure.Repositories.TenantRepository                                  80%
-  BabaPlay.Infrastructure.Repositories.UserRepository                                   100%
-  BabaPlay.Infrastructure.Repositories.UserRoleRepository                              66.6%
-  BabaPlay.Infrastructure.Repositories.UserTenantRepository                             100%
-  BabaPlay.Infrastructure.ServiceRegistration                                           100%
-  BabaPlay.Infrastructure.Services.JwtTokenService                                     96.4%
-  BabaPlay.Infrastructure.Services.RequestTenantContext                                87.5%
-  BabaPlay.Infrastructure.Services.TenantProvisioningQueue                               75%
-  BabaPlay.Infrastructure.Settings.JwtSettings                                          100%
-  BabaPlay.Infrastructure.Workers.TenantProvisioningWorker                             18.9%
+BabaPlay.Infrastructure                                                                  13.2%
+  BabaPlay.Infrastructure.Authorization.PermissionAuthorizationHandler                   85.7%
+  BabaPlay.Infrastructure.Authorization.PermissionRequirement                             100%
+  BabaPlay.Infrastructure.Authorization.TenantMemberAuthorizationHandler                 85.7%
+  BabaPlay.Infrastructure.Entities.ApplicationUser                                        100%
+  BabaPlay.Infrastructure.Entities.Plan                                                     0%
+  BabaPlay.Infrastructure.Entities.RefreshToken                                            75%
+  BabaPlay.Infrastructure.Entities.Subscription                                             0%
+  BabaPlay.Infrastructure.Entities.Tenant                                                 100%
+  BabaPlay.Infrastructure.Entities.UserTenant                                            66.6%
+  BabaPlay.Infrastructure.Hubs.CheckinHub                                                66.6%
+  BabaPlay.Infrastructure.Persistence.MasterDbContext                                    95.4%
+  BabaPlay.Infrastructure.Persistence.Migrations.AddTenantGeolocationSettings               0%
+  BabaPlay.Infrastructure.Persistence.Migrations.AddTenantProvisioningStatus                0%
+  BabaPlay.Infrastructure.Persistence.Migrations.InitialMaster                              0%
+  BabaPlay.Infrastructure.Persistence.Migrations.MasterDbContextModelSnapshot               0%
+  BabaPlay.Infrastructure.Persistence.Migrations.Tenant.AddCheckins                         0%
+  BabaPlay.Infrastructure.Persistence.Migrations.Tenant.AddGameDays                         0%
+  BabaPlay.Infrastructure.Persistence.Migrations.Tenant.AddPlayers                          0%
+  BabaPlay.Infrastructure.Persistence.Migrations.Tenant.AddPositionsAndPlayerPositions      0%
+  BabaPlay.Infrastructure.Persistence.Migrations.Tenant.AddRbac                             0%
+  BabaPlay.Infrastructure.Persistence.Migrations.Tenant.TenantDbContextModelSnapshot        0%
+  BabaPlay.Infrastructure.Persistence.TenantDbContext                                     100%
+  BabaPlay.Infrastructure.Persistence.TenantDbContextDesignTimeFactory                      0%
+  BabaPlay.Infrastructure.Persistence.TenantDbContextFactory                              6.6%
+  BabaPlay.Infrastructure.Repositories.CheckinRepository                                  100%
+  BabaPlay.Infrastructure.Repositories.GameDayRepository                                 96.2%
+  BabaPlay.Infrastructure.Repositories.PermissionRepository                              33.3%
+  BabaPlay.Infrastructure.Repositories.PlayerRepository                                  92.5%
+  BabaPlay.Infrastructure.Repositories.PositionRepository                                97.2%
+  BabaPlay.Infrastructure.Repositories.RefreshTokenRepository                             100%
+  BabaPlay.Infrastructure.Repositories.RoleRepository                                    41.3%
+  BabaPlay.Infrastructure.Repositories.TenantGeolocationSettingsRepository               95.6%
+  BabaPlay.Infrastructure.Repositories.TenantRepository                                    80%
+  BabaPlay.Infrastructure.Repositories.UserRepository                                     100%
+  BabaPlay.Infrastructure.Repositories.UserRoleRepository                                66.6%
+  BabaPlay.Infrastructure.Repositories.UserTenantRepository                               100%
+  BabaPlay.Infrastructure.ServiceRegistration                                             100%
+  BabaPlay.Infrastructure.Services.JwtTokenService                                       96.4%
+  BabaPlay.Infrastructure.Services.RequestTenantContext                                  87.5%
+  BabaPlay.Infrastructure.Services.SignalRCheckinRealtimeNotifier                         100%
+  BabaPlay.Infrastructure.Services.TenantProvisioningQueue                                 75%
+  BabaPlay.Infrastructure.Settings.JwtSettings                                            100%
+  BabaPlay.Infrastructure.Workers.TenantProvisioningWorker                               18.9%
