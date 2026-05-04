@@ -199,11 +199,27 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
         await using var db = await factory.CreateAsync(TenantAId);
         await db.Database.EnsureCreatedAsync();
 
-        var permission = await db.Permissions.FirstOrDefaultAsync(p => p.NormalizedCode == RbacCatalog.Permissions.RbacRolesRead.ToUpperInvariant());
-        if (permission is null)
+        var roleReadPermission = await db.Permissions.FirstOrDefaultAsync(p => p.NormalizedCode == RbacCatalog.Permissions.RbacRolesRead.ToUpperInvariant());
+        if (roleReadPermission is null)
         {
-            permission = Permission.Create(RbacCatalog.Permissions.RbacRolesRead, "Read tenant roles");
-            db.Permissions.Add(permission);
+            roleReadPermission = Permission.Create(RbacCatalog.Permissions.RbacRolesRead, "Read tenant roles");
+            db.Permissions.Add(roleReadPermission);
+            await db.SaveChangesAsync();
+        }
+
+        var rankingReadPermission = await db.Permissions.FirstOrDefaultAsync(p => p.NormalizedCode == RbacCatalog.Permissions.RankingRead.ToUpperInvariant());
+        if (rankingReadPermission is null)
+        {
+            rankingReadPermission = Permission.Create(RbacCatalog.Permissions.RankingRead, "Read ranking");
+            db.Permissions.Add(rankingReadPermission);
+            await db.SaveChangesAsync();
+        }
+
+        var rankingWritePermission = await db.Permissions.FirstOrDefaultAsync(p => p.NormalizedCode == RbacCatalog.Permissions.RankingWrite.ToUpperInvariant());
+        if (rankingWritePermission is null)
+        {
+            rankingWritePermission = Permission.Create(RbacCatalog.Permissions.RankingWrite, "Write ranking");
+            db.Permissions.Add(rankingWritePermission);
             await db.SaveChangesAsync();
         }
 
@@ -218,7 +234,9 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
             await db.SaveChangesAsync();
         }
 
-        adminRole.AddPermission(permission.Id);
+        adminRole.AddPermission(roleReadPermission.Id);
+        adminRole.AddPermission(rankingReadPermission.Id);
+        adminRole.AddPermission(rankingWritePermission.Id);
 
         var viewerRole = await db.Roles
             .Include(r => r.Permissions)

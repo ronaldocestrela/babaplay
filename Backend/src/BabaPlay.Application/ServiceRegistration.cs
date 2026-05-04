@@ -125,6 +125,7 @@ public static class ServiceRegistration
         services.AddScoped<IQueryHandler<GetTopScorersQuery, Result<IReadOnlyList<TopScorerEntryResponse>>>, GetTopScorersQueryHandler>();
         services.AddScoped<IQueryHandler<GetAttendanceRankingQuery, Result<IReadOnlyList<AttendanceEntryResponse>>>, GetAttendanceRankingQueryHandler>();
         services.AddScoped<ICommandHandler<ApplyScoreDeltaCommand, Result>, ApplyScoreDeltaCommandHandler>();
+        services.AddScoped<ICommandHandler<RebuildTenantRankingCommand, Result<RebuildRankingResponse>>, RebuildTenantRankingCommandHandler>();
 
         return services;
     }

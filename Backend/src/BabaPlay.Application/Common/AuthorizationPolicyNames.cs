@@ -16,4 +16,6 @@ public static class AuthorizationPolicyNames
     public const string MatchEventsWrite = "MatchEventsWrite";
     public const string MatchEventTypesRead = "MatchEventTypesRead";
     public const string MatchEventTypesWrite = "MatchEventTypesWrite";
+    public const string RankingRead = "RankingRead";
+    public const string RankingWrite = "RankingWrite";
 }

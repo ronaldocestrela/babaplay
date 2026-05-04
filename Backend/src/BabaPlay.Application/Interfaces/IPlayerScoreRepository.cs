@@ -13,6 +13,8 @@ public interface IPlayerScoreRepository
 
     Task<IReadOnlyList<PlayerScore>> GetAttendanceRankingAsync(RankingPeriod? period, int skip, int take, CancellationToken ct = default);
 
+    Task<IReadOnlyList<PlayerScore>> GetAllActiveForRebuildAsync(RankingPeriod? period, CancellationToken ct = default);
+
     Task<bool> HasProcessedSourceEventAsync(Guid sourceEventId, CancellationToken ct = default);
 
     Task AddProcessedSourceEventAsync(PlayerScoreSourceEvent sourceEvent, CancellationToken ct = default);

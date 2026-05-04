@@ -54,6 +54,34 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 	- testes da Slice 3: 5 passando
 	- regressão focada Slices 1+2+3: 25 passando
 
+### Added — Fase 12: Score e Ranking (slice 4)
+
+- Application:
+	- `RebuildTenantRankingCommand` / `RebuildTenantRankingCommandHandler`
+	- DTO `RebuildRankingResponse`
+	- validação de período (`INVALID_PERIOD`) e falha operacional (`RANKING_REBUILD_FAILED`)
+- API:
+	- novo `RankingController` com endpoints:
+		- `GET /api/v1/ranking`
+		- `GET /api/v1/ranking/top-scorers`
+		- `GET /api/v1/ranking/attendance`
+		- `POST /api/v1/ranking/rebuild`
+- RBAC/Autorização:
+	- policies adicionadas: `RankingRead`, `RankingWrite`
+	- permissões adicionadas: `ranking.read`, `ranking.write`
+	- `RbacCatalog` atualizado com matriz padrão para ranking
+- Infrastructure:
+	- `IPlayerScoreRepository` expandido com `GetAllActiveForRebuildAsync`
+	- `PlayerScoreRepository` atualizado para rebuild administrativo
+	- `PlayerScoreSourceEvent` mapeado no `TenantDbContext`
+	- migration tenant `AddPlayerScoreSourceEvents`
+- Testes TDD adicionados:
+	- Unit: `RebuildTenantRankingCommandHandlerTests`
+	- Integration: `RankingIntegrationTests` (sucesso, sem permissão e tenant inválido)
+- Validação executada:
+	- testes da Slice 4: 9 passando
+	- regressão focada (Fase 12 + RBAC): 24 passando
+
 ### Added — Fase 11: Súmula (backend MVP concluído)
 
 - Domain:

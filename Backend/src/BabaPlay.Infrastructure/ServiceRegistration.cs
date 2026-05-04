@@ -139,6 +139,18 @@ public static class ServiceRegistration
                 policy.Requirements.Add(new TenantMemberRequirement());
                 policy.Requirements.Add(new PermissionRequirement(RbacCatalog.Permissions.MatchEventTypesWrite));
             });
+
+            options.AddPolicy(AuthorizationPolicyNames.RankingRead, policy =>
+            {
+                policy.Requirements.Add(new TenantMemberRequirement());
+                policy.Requirements.Add(new PermissionRequirement(RbacCatalog.Permissions.RankingRead));
+            });
+
+            options.AddPolicy(AuthorizationPolicyNames.RankingWrite, policy =>
+            {
+                policy.Requirements.Add(new TenantMemberRequirement());
+                policy.Requirements.Add(new PermissionRequirement(RbacCatalog.Permissions.RankingWrite));
+            });
         });
 
         services.AddScoped<IAuthorizationHandler, TenantMemberAuthorizationHandler>();

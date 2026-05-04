@@ -71,6 +71,16 @@ public sealed class PlayerScoreRepository : IPlayerScoreRepository
         return await query.ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<PlayerScore>> GetAllActiveForRebuildAsync(RankingPeriod? period, CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+
+        var query = ApplyPeriodFilter(db.PlayerScores.AsNoTracking().Where(ps => ps.IsActive), period)
+            .OrderBy(ps => ps.PlayerId);
+
+        return await query.ToListAsync(ct);
+    }
+
     public async Task<bool> HasProcessedSourceEventAsync(Guid sourceEventId, CancellationToken ct = default)
     {
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);

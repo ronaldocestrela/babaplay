@@ -50,6 +50,9 @@ public sealed class ApplyScoreDeltaCommandHandler : ICommandHandler<ApplyScoreDe
             score = PlayerScore.Create(_tenantContext.TenantId, cmd.PlayerId);
         }
 
+        if (score is null)
+            return Result.Fail("PLAYER_SCORE_NOT_FOUND", "Player score was not found.");
+
         try
         {
             score.ApplyDelta(delta);
