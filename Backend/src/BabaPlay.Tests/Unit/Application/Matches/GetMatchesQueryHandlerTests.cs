@@ -34,4 +34,35 @@ public class GetMatchesQueryHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(1);
     }
+
+    [Fact]
+    public async Task Handle_FilteredByStatus_ShouldCallRepositoryWithStatus()
+    {
+        var matches = new List<DomainMatch>
+        {
+            DomainMatch.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null),
+        };
+
+        _matchRepository
+            .Setup(x => x.GetAllActiveAsync(BabaPlay.Domain.Enums.MatchStatus.Scheduled, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(matches);
+
+        var result = await _handler.HandleAsync(new GetMatchesQuery(BabaPlay.Domain.Enums.MatchStatus.Scheduled));
+
+        result.IsSuccess.Should().BeTrue();
+        _matchRepository.Verify(x => x.GetAllActiveAsync(BabaPlay.Domain.Enums.MatchStatus.Scheduled, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_EmptyList_ShouldReturnEmpty()
+    {
+        _matchRepository
+            .Setup(x => x.GetAllActiveAsync(null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<DomainMatch>());
+
+        var result = await _handler.HandleAsync(new GetMatchesQuery(null));
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeEmpty();
+    }
 }

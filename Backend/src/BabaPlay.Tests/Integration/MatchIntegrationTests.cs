@@ -98,6 +98,55 @@ public sealed class MatchIntegrationTests : IClassFixture<PlayerWebApplicationFa
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
+    [Fact]
+    public async Task Post_GameDayNotFound_ShouldReturn404()
+    {
+        var homeTeam = await CreateTeamAsync("Team Missing GD 1");
+        var awayTeam = await CreateTeamAsync("Team Missing GD 2");
+
+        var response = await _client.PostAsJsonAsync("/api/v1/match", new
+        {
+            gameDayId = Guid.NewGuid(),
+            homeTeamId = homeTeam.Id,
+            awayTeamId = awayTeam.Id,
+            description = (string?)null,
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        problem.GetProperty("title").GetString().Should().Be("GAMEDAY_NOT_FOUND");
+    }
+
+    [Fact]
+    public async Task Post_TeamNotFound_ShouldReturn404()
+    {
+        var gameDay = await CreateGameDayAsync("Rodada Missing Team");
+
+        var response = await _client.PostAsJsonAsync("/api/v1/match", new
+        {
+            gameDayId = gameDay.Id,
+            homeTeamId = Guid.NewGuid(),
+            awayTeamId = Guid.NewGuid(),
+            description = (string?)null,
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        problem.GetProperty("title").GetString().Should().Be("TEAM_NOT_FOUND");
+    }
+
+    [Fact]
+    public async Task PutStatus_InvalidTransition_ShouldReturn422()
+    {
+        var created = await CreateMatchAsync("Rodada Match Invalid", "Team I", "Team J");
+
+        var response = await _client.PutAsJsonAsync($"/api/v1/match/{created.Id}/status", new { status = MatchStatus.Completed });
+
+        response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        problem.GetProperty("title").GetString().Should().Be("INVALID_STATUS_TRANSITION");
+    }
+
     private async Task<GameDayResponse> CreateGameDayAsync(string name)
     {
         var response = await _client.PostAsJsonAsync("/api/v1/gameday", new

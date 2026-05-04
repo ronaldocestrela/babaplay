@@ -28,4 +28,18 @@ public class DeleteMatchCommandHandlerTests
         result.IsSuccess.Should().BeFalse();
         result.ErrorCode.Should().Be("MATCH_NOT_FOUND");
     }
+
+    [Fact]
+    public async Task Handle_ExistingMatch_ShouldDeactivateAndReturnOk()
+    {
+        var match = DomainMatch.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null);
+        _matchRepository.Setup(x => x.GetByIdAsync(match.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        var result = await _handler.HandleAsync(new DeleteMatchCommand(match.Id));
+
+        result.IsSuccess.Should().BeTrue();
+        match.IsActive.Should().BeFalse();
+        _matchRepository.Verify(x => x.UpdateAsync(match, It.IsAny<CancellationToken>()), Times.Once);
+    }
 }

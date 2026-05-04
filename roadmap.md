@@ -424,9 +424,9 @@ Construir um sistema SaaS escalável, com:
 
 ---
 
-## 🏆 Fase 9 — Partidas 🚧 EM IMPLEMENTAÇÃO
+## 🏆 Fase 9 — Partidas ✅ CONCLUÍDA
 
-### Entregas concluídas (parcial)
+### Entregas
 
 - Domain:
   - `Match` entity (`Create`, `Update`, `ChangeStatus`, `Deactivate`) com `TenantId`, `GameDayId`, `HomeTeamId`, `AwayTeamId`, `Description`, `Status`, `IsActive`
@@ -447,6 +447,7 @@ Construir um sistema SaaS escalável, com:
   - `TenantDbContext` com `DbSet<Match>`
   - Índices de consulta por `(TenantId, Status)` e `(TenantId, GameDayId)`
   - Índice único para evitar duplicidade de confronto por game day
+  - Migration tenant: `AddMatches`
 - API:
   - `MatchController` com endpoints:
     - `POST /api/v1/match`
@@ -462,13 +463,14 @@ Construir um sistema SaaS escalável, com:
 - `GameDay` deve existir (`GAMEDAY_NOT_FOUND`)
 - Times devem existir/estar ativos (`TEAM_NOT_FOUND`)
 - Duplicidade no mesmo game day é bloqueada (`MATCH_ALREADY_EXISTS`) incluindo ordem invertida dos times
+- Partida não pode ser criada/atualizada em game day passado (`GAMEDAY_PAST`)
 - Fluxo de status permitido:
   - `Pending` → `Scheduled`/`Cancelled`
   - `Scheduled` → `InProgress`/`Cancelled`
   - `InProgress` → `Completed`
   - `Completed` e `Cancelled` são finais
 
-### Testes (parcial)
+### Testes
 
 - Unit Domain:
   - `MatchTests`
@@ -484,7 +486,8 @@ Construir um sistema SaaS escalável, com:
 
 ### Status atual da implementação da Fase 9
 
-- Recorte de regressão executado com filtro de Match: **20 testes, 100% passando**
+- Recorte de regressão executado com filtro de Match: **32 testes, 100% passando**
+- Regressão backend completa após fechamento da fase: **274 testes, 100% passando**
 
 ---
 

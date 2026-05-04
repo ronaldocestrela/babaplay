@@ -70,6 +70,7 @@ public sealed class MatchRepository : IMatchRepository
         await db.SaveChangesAsync(ct);
     }
 
+    // No-op because AddAsync/UpdateAsync create isolated contexts and persist immediately.
     public Task SaveChangesAsync(CancellationToken ct = default)
         => Task.CompletedTask;
 }

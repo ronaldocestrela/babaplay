@@ -28,4 +28,18 @@ public class GetMatchQueryHandlerTests
         result.IsSuccess.Should().BeFalse();
         result.ErrorCode.Should().Be("MATCH_NOT_FOUND");
     }
+
+    [Fact]
+    public async Task Handle_ExistingMatch_ShouldReturnResponse()
+    {
+        var match = DomainMatch.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "Clássico");
+        _matchRepository.Setup(x => x.GetByIdAsync(match.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+
+        var result = await _handler.HandleAsync(new GetMatchQuery(match.Id));
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.Id.Should().Be(match.Id);
+    }
 }

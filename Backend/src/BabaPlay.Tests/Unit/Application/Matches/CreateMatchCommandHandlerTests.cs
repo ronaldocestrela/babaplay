@@ -77,4 +77,27 @@ public class CreateMatchCommandHandlerTests
         _matchRepository.Verify(x => x.AddAsync(It.IsAny<DomainMatch>(), It.IsAny<CancellationToken>()), Times.Once);
         _matchRepository.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task Handle_PastGameDay_ShouldReturnGameDayPast()
+    {
+        var gameDayId = Guid.NewGuid();
+        var homeTeamId = Guid.NewGuid();
+        var awayTeamId = Guid.NewGuid();
+
+        var pastGameDay = GameDay.Create(Guid.NewGuid(), "Rodada passada", DateTime.UtcNow.AddHours(2), null, null, 22);
+        pastGameDay.Update("Rodada passada", DateTime.UtcNow.AddHours(3), null, null, 22);
+
+        typeof(GameDay).GetProperty(nameof(GameDay.ScheduledAt))!
+            .SetValue(pastGameDay, DateTime.UtcNow.AddHours(-1));
+
+        _gameDayRepository
+            .Setup(x => x.GetByIdAsync(gameDayId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(pastGameDay);
+
+        var result = await _handler.HandleAsync(new CreateMatchCommand(gameDayId, homeTeamId, awayTeamId, null));
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorCode.Should().Be("GAMEDAY_PAST");
+    }
 }
