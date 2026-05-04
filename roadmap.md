@@ -493,12 +493,44 @@ Construir um sistema SaaS escalável, com:
 
 ## 📊 Fase 10 — Eventos
 
+### Status
+
+- 🚧 Em andamento (backend iniciado)
+
 ### Entregas
 
 - MatchEvents:
   - Gol
   - Amarelo
   - Vermelho
+
+### Entregas iniciadas (slice 1)
+
+- Domain:
+  - `MatchEvent` entity (`Create`, `Update`, `Deactivate`) com validações de IDs e minuto (0-130)
+  - `MatchEventType` entity configurável por tenant com `Code`, `Name`, `Points`, `IsSystemDefault`, `IsActive`
+- Application (CQRS + contratos):
+  - `IMatchEventRepository`, `IMatchEventTypeRepository`, `IMatchEventRealtimeNotifier`
+  - DTOs `MatchEventResponse` e `MatchEventTypeResponse`
+  - Commands/Handlers (iniciados):
+    - MatchEventType: `Create`, `Update`, `Delete`
+    - MatchEvent: `Create`, `Update`, `Delete`
+  - Queries/Handlers (iniciados):
+    - MatchEvent: `GetById`, `GetByMatch`, `GetByPlayer`
+    - MatchEventType: `GetById`, `GetAll`
+- Infrastructure:
+  - `MatchEventRepository` e `MatchEventTypeRepository`
+  - `TenantDbContext` com `DbSet<MatchEvent>` e `DbSet<MatchEventType>` + índices/mapeamentos
+  - SignalR: `MatchHub` + `SignalRMatchEventRealtimeNotifier`
+- API:
+  - `MatchEventController` (CRUD + listagens por partida/jogador)
+  - `MatchEventTypeController` (CRUD do catálogo de tipos com pontuação)
+  - `Program.cs` com `MapHub<MatchHub>("/hubs/match")`
+- Testes TDD (RED→GREEN do slice):
+  - `MatchEventTests`
+  - `MatchEventTypeTests`
+  - `CreateMatchEventCommandHandlerTests`
+  - `CreateMatchEventTypeCommandHandlerTests`
 
 ---
 

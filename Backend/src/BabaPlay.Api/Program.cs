@@ -91,6 +91,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<CheckinHub>("/hubs/checkin");
+app.MapHub<MatchHub>("/hubs/match");
 
 app.Run();
 

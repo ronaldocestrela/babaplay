@@ -2,6 +2,7 @@ using BabaPlay.Application.Commands.Auth;
 using BabaPlay.Application.Commands.Checkins;
 using BabaPlay.Application.Commands.GameDays;
 using BabaPlay.Application.Commands.Matches;
+using BabaPlay.Application.Commands.MatchEvents;
 using BabaPlay.Application.Commands.Ping;
 using BabaPlay.Application.Commands.Players;
 using BabaPlay.Application.Commands.Positions;
@@ -15,6 +16,7 @@ using BabaPlay.Application.Queries.Ping;
 using BabaPlay.Application.Queries.Checkins;
 using BabaPlay.Application.Queries.GameDays;
 using BabaPlay.Application.Queries.Matches;
+using BabaPlay.Application.Queries.MatchEvents;
 using BabaPlay.Application.Queries.Players;
 using BabaPlay.Application.Queries.Positions;
 using BabaPlay.Application.Queries.Roles;
@@ -55,6 +57,19 @@ public static class ServiceRegistration
         services.AddScoped<ICommandHandler<UpdateMatchCommand, Result<MatchResponse>>, UpdateMatchCommandHandler>();
         services.AddScoped<ICommandHandler<ChangeMatchStatusCommand, Result<MatchResponse>>, ChangeMatchStatusCommandHandler>();
         services.AddScoped<ICommandHandler<DeleteMatchCommand, Result>, DeleteMatchCommandHandler>();
+
+        // MatchEvents — Fase 10
+        services.AddScoped<ICommandHandler<CreateMatchEventTypeCommand, Result<MatchEventTypeResponse>>, CreateMatchEventTypeCommandHandler>();
+        services.AddScoped<ICommandHandler<UpdateMatchEventTypeCommand, Result<MatchEventTypeResponse>>, UpdateMatchEventTypeCommandHandler>();
+        services.AddScoped<ICommandHandler<DeleteMatchEventTypeCommand, Result>, DeleteMatchEventTypeCommandHandler>();
+        services.AddScoped<IQueryHandler<GetMatchEventTypeQuery, Result<MatchEventTypeResponse>>, GetMatchEventTypeQueryHandler>();
+        services.AddScoped<IQueryHandler<GetMatchEventTypesQuery, Result<IReadOnlyList<MatchEventTypeResponse>>>, GetMatchEventTypesQueryHandler>();
+        services.AddScoped<ICommandHandler<CreateMatchEventCommand, Result<MatchEventResponse>>, CreateMatchEventCommandHandler>();
+        services.AddScoped<ICommandHandler<UpdateMatchEventCommand, Result<MatchEventResponse>>, UpdateMatchEventCommandHandler>();
+        services.AddScoped<ICommandHandler<DeleteMatchEventCommand, Result>, DeleteMatchEventCommandHandler>();
+        services.AddScoped<IQueryHandler<GetMatchEventQuery, Result<MatchEventResponse>>, GetMatchEventQueryHandler>();
+        services.AddScoped<IQueryHandler<GetMatchEventsByMatchQuery, Result<IReadOnlyList<MatchEventResponse>>>, GetMatchEventsByMatchQueryHandler>();
+        services.AddScoped<IQueryHandler<GetMatchEventsByPlayerQuery, Result<IReadOnlyList<MatchEventResponse>>>, GetMatchEventsByPlayerQueryHandler>();
 
         // Players — Fase 3
         services.AddScoped<ICommandHandler<CreatePlayerCommand, Result<PlayerResponse>>, CreatePlayerCommandHandler>();

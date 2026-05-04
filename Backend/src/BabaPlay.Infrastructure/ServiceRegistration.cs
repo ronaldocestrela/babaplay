@@ -123,11 +123,14 @@ public static class ServiceRegistration
         services.AddScoped<IPlayerRepository, PlayerRepository>();
         services.AddScoped<ITeamRepository, TeamRepository>();
         services.AddScoped<IMatchRepository, MatchRepository>();
+        services.AddScoped<IMatchEventRepository, MatchEventRepository>();
+        services.AddScoped<IMatchEventTypeRepository, MatchEventTypeRepository>();
         services.AddScoped<IPositionRepository, PositionRepository>();
         services.AddScoped<IGameDayRepository, GameDayRepository>();
         services.AddScoped<ICheckinRepository, CheckinRepository>();
         services.AddScoped<ITenantGeolocationSettingsRepository, TenantGeolocationSettingsRepository>();
         services.AddScoped<ICheckinRealtimeNotifier, SignalRCheckinRealtimeNotifier>();
+        services.AddScoped<IMatchEventRealtimeNotifier, SignalRMatchEventRealtimeNotifier>();
 
         // --- RBAC repositories (Fase 4) ---
         services.AddScoped<IRoleRepository, RoleRepository>();

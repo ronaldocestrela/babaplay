@@ -8,6 +8,31 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Fase 10: MatchEvents (backend em andamento)
+
+- Domain:
+	- `MatchEvent` entity com `Create`, `Update`, `Deactivate` e validação de minuto (0-130)
+	- `MatchEventType` entity configurável por tenant com pontuação (`Points`) e flag `IsSystemDefault`
+- Application:
+	- contratos `IMatchEventRepository`, `IMatchEventTypeRepository`, `IMatchEventRealtimeNotifier`
+	- DTOs `MatchEventResponse` e `MatchEventTypeResponse`
+	- MatchEventType CQRS: `Create`, `Update`, `Delete`, `GetById`, `GetAll`
+	- MatchEvent CQRS: `Create`, `Update`, `Delete`, `GetById`, `GetByMatch`, `GetByPlayer`
+- Infrastructure:
+	- `MatchEventRepository` e `MatchEventTypeRepository`
+	- `TenantDbContext` com `DbSet<MatchEvent>` e `DbSet<MatchEventType>`
+	- mapeamentos e índices para consulta por partida, jogador e código normalizado por tenant
+	- SignalR com `MatchHub` e `SignalRMatchEventRealtimeNotifier`
+- API:
+	- `MatchEventController` com CRUD e listagens por partida/jogador
+	- `MatchEventTypeController` com CRUD de catálogo configurável por tenant
+	- `Program.cs` com `MapHub<MatchHub>("/hubs/match")`
+- Testes TDD adicionados:
+	- Unit Domain: `MatchEventTests`, `MatchEventTypeTests`
+	- Unit Application: `CreateMatchEventCommandHandlerTests`, `CreateMatchEventTypeCommandHandlerTests`
+- Execução de validação:
+	- filtro `FullyQualifiedName~MatchEvent`: 13 testes passando
+
 ### Added — Fase 8: Times (backend concluído)
 
 - Domain:

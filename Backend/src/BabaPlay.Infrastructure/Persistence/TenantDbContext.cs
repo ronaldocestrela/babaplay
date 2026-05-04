@@ -14,6 +14,8 @@ public sealed class TenantDbContext : DbContext
     public DbSet<Player> Players => Set<Player>();
     public DbSet<GameDay> GameDays => Set<GameDay>();
     public DbSet<Match> Matches => Set<Match>();
+    public DbSet<MatchEvent> MatchEvents => Set<MatchEvent>();
+    public DbSet<MatchEventType> MatchEventTypes => Set<MatchEventType>();
     public DbSet<Checkin> Checkins => Set<Checkin>();
     public DbSet<Position> Positions => Set<Position>();
     public DbSet<PlayerPosition> PlayerPositions => Set<PlayerPosition>();
@@ -62,6 +64,54 @@ public sealed class TenantDbContext : DbContext
             e.HasIndex(m => new { m.TenantId, m.GameDayId, m.HomeTeamId, m.AwayTeamId }).IsUnique();
             e.HasIndex(m => new { m.TenantId, m.Status });
             e.HasIndex(m => new { m.TenantId, m.GameDayId });
+        });
+
+        builder.Entity<MatchEventType>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.TenantId).IsRequired();
+            e.Property(x => x.Code).IsRequired().HasMaxLength(50);
+            e.Property(x => x.NormalizedCode).IsRequired().HasMaxLength(50);
+            e.Property(x => x.Name).IsRequired().HasMaxLength(100);
+            e.Property(x => x.Points).IsRequired();
+            e.Property(x => x.IsSystemDefault).IsRequired();
+            e.Property(x => x.IsActive).IsRequired();
+            e.HasIndex(x => new { x.TenantId, x.NormalizedCode }).IsUnique();
+        });
+
+        builder.Entity<MatchEvent>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.TenantId).IsRequired();
+            e.Property(x => x.MatchId).IsRequired();
+            e.Property(x => x.TeamId).IsRequired();
+            e.Property(x => x.PlayerId).IsRequired();
+            e.Property(x => x.MatchEventTypeId).IsRequired();
+            e.Property(x => x.Minute).IsRequired();
+            e.Property(x => x.Notes).HasMaxLength(500);
+            e.Property(x => x.IsActive).IsRequired();
+            e.HasIndex(x => new { x.TenantId, x.MatchId, x.Minute });
+            e.HasIndex(x => new { x.TenantId, x.PlayerId, x.IsActive });
+
+            e.HasOne<Match>()
+                .WithMany()
+                .HasForeignKey(x => x.MatchId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne<Team>()
+                .WithMany()
+                .HasForeignKey(x => x.TeamId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne<Player>()
+                .WithMany()
+                .HasForeignKey(x => x.PlayerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne<MatchEventType>()
+                .WithMany()
+                .HasForeignKey(x => x.MatchEventTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<Checkin>(e =>
