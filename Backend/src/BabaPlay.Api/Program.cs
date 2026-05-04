@@ -2,6 +2,7 @@ using BabaPlay.Api.Filters;
 using BabaPlay.Api.Middlewares;
 using BabaPlay.Application;
 using BabaPlay.Infrastructure;
+using BabaPlay.Infrastructure.Hubs;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +30,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
@@ -88,6 +90,7 @@ app.UseTenantResolution();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<CheckinHub>("/hubs/checkin");
 
 app.Run();
 

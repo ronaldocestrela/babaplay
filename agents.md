@@ -404,6 +404,47 @@ Código sem:
 
 ---
 
+### Fase 6 — GameDays ✅
+
+#### Domínio
+- `GameDay` entity (sealed, extends `EntityBase`): `TenantId`, `Name`, `NormalizedName`, `ScheduledAt`, `Location`, `Description`, `MaxPlayers`, `Status`, `IsActive`
+- `GameDayStatus` enum: `Pending`, `Confirmed`, `Cancelled`, `Completed`
+- Regras na entidade:
+	- `ScheduledAt` no futuro
+	- `MaxPlayers` > 0
+	- transições de status válidas
+	- `Deactivate()` idempotente
+
+#### Application
+- `IGameDayRepository`: `GetByIdAsync`, `GetAllActiveAsync`, `ExistsByNormalizedNameAndScheduledAtAsync`, `AddAsync`, `UpdateAsync`, `SaveChangesAsync`
+- DTO: `GameDayResponse`
+- Handlers CQRS:
+	- Commands: `CreateGameDay`, `UpdateGameDay`, `ChangeGameDayStatus`, `DeleteGameDay`
+	- Queries: `GetGameDay`, `GetGameDays`
+
+#### Infrastructure
+- `GameDayRepository` com contexto por operação via `TenantDbContextFactory` + `ITenantContext`
+- `TenantDbContext`: adicionado `DbSet<GameDay>`
+- Índices: único `(TenantId, NormalizedName, ScheduledAt)` + consulta `(TenantId, ScheduledAt)`
+- Migration tenant: `AddGameDays`
+
+#### Endpoints
+| Método | Rota | Sucesso | Erros |
+|---|---|---|---|
+| POST | `/api/v1/gameday` | 201 `GameDayResponse` | 409 GAMEDAY_ALREADY_EXISTS · 422 INVALID_NAME/INVALID_SCHEDULED_AT/INVALID_MAX_PLAYERS |
+| GET | `/api/v1/gameday` | 200 `IReadOnlyList<GameDayResponse>` | — |
+| GET | `/api/v1/gameday/{id}` | 200 `GameDayResponse` | 404 GAMEDAY_NOT_FOUND |
+| PUT | `/api/v1/gameday/{id}` | 200 `GameDayResponse` | 404 GAMEDAY_NOT_FOUND · 409 GAMEDAY_ALREADY_EXISTS · 422 INVALID_* |
+| PUT | `/api/v1/gameday/{id}/status` | 200 `GameDayResponse` | 404 GAMEDAY_NOT_FOUND · 422 INVALID_STATUS_TRANSITION |
+| DELETE | `/api/v1/gameday/{id}` | 204 | 404 GAMEDAY_NOT_FOUND |
+
+#### Testes — 182 total (100% passando)
+- Unit Domain: `GameDayTests`
+- Unit Application: 6 suítes de Commands/Queries de GameDays
+- Integration: `GameDayIntegrationTests`
+
+---
+
 ### Fase 16 — Frontend (React): 1. Auth ✅
 
 #### Arquitetura de autenticação

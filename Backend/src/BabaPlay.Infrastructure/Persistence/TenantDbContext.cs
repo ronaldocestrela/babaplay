@@ -12,6 +12,8 @@ public sealed class TenantDbContext : DbContext
     public TenantDbContext(DbContextOptions<TenantDbContext> options) : base(options) { }
 
     public DbSet<Player> Players => Set<Player>();
+    public DbSet<GameDay> GameDays => Set<GameDay>();
+    public DbSet<Checkin> Checkins => Set<Checkin>();
     public DbSet<Position> Positions => Set<Position>();
     public DbSet<PlayerPosition> PlayerPositions => Set<PlayerPosition>();
     public DbSet<Role> Roles => Set<Role>();
@@ -28,6 +30,35 @@ public sealed class TenantDbContext : DbContext
             e.Property(p => p.Nickname).HasMaxLength(50);
             e.Property(p => p.Phone).HasMaxLength(20);
             e.HasIndex(p => p.UserId).IsUnique();
+        });
+
+        builder.Entity<GameDay>(e =>
+        {
+            e.HasKey(g => g.Id);
+            e.Property(g => g.TenantId).IsRequired();
+            e.Property(g => g.Name).IsRequired().HasMaxLength(120);
+            e.Property(g => g.NormalizedName).IsRequired().HasMaxLength(120);
+            e.Property(g => g.Location).HasMaxLength(200);
+            e.Property(g => g.Description).HasMaxLength(500);
+            e.Property(g => g.MaxPlayers).IsRequired();
+            e.Property(g => g.Status).IsRequired();
+            e.HasIndex(g => new { g.TenantId, g.NormalizedName, g.ScheduledAt }).IsUnique();
+            e.HasIndex(g => new { g.TenantId, g.ScheduledAt });
+        });
+
+        builder.Entity<Checkin>(e =>
+        {
+            e.HasKey(c => c.Id);
+            e.Property(c => c.TenantId).IsRequired();
+            e.Property(c => c.PlayerId).IsRequired();
+            e.Property(c => c.GameDayId).IsRequired();
+            e.Property(c => c.CheckedInAtUtc).IsRequired();
+            e.Property(c => c.Latitude).IsRequired();
+            e.Property(c => c.Longitude).IsRequired();
+            e.Property(c => c.DistanceFromAssociationMeters).IsRequired();
+            e.Property(c => c.IsActive).IsRequired();
+            e.HasIndex(c => new { c.TenantId, c.GameDayId, c.CheckedInAtUtc });
+            e.HasIndex(c => new { c.TenantId, c.PlayerId, c.GameDayId, c.IsActive }).IsUnique();
         });
 
         builder.Entity<Position>(e =>

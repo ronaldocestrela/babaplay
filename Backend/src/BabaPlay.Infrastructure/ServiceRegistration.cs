@@ -122,6 +122,10 @@ public static class ServiceRegistration
         // --- Tenant-scoped repositories (Fase 3) ---
         services.AddScoped<IPlayerRepository, PlayerRepository>();
         services.AddScoped<IPositionRepository, PositionRepository>();
+        services.AddScoped<IGameDayRepository, GameDayRepository>();
+        services.AddScoped<ICheckinRepository, CheckinRepository>();
+        services.AddScoped<ITenantGeolocationSettingsRepository, TenantGeolocationSettingsRepository>();
+        services.AddScoped<ICheckinRealtimeNotifier, SignalRCheckinRealtimeNotifier>();
 
         // --- RBAC repositories (Fase 4) ---
         services.AddScoped<IRoleRepository, RoleRepository>();

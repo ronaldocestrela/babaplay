@@ -241,11 +241,67 @@ Construir um sistema SaaS escalável, com:
 
 ---
 
-## 📅 Fase 6 — Dias de Jogo
+## 📅 Fase 6 — Dias de Jogo ✅ CONCLUÍDA
 
 ### Entregas
 
-- GameDays
+- Domain:
+  - `GameDay` entity (`Create`, `Update`, `ChangeStatus`, `Deactivate`) com `TenantId`, `Name`/`NormalizedName`, `ScheduledAt`, `Location`, `Description`, `MaxPlayers`, `Status`, `IsActive`
+  - `GameDayStatus` enum: `Pending`, `Confirmed`, `Cancelled`, `Completed`
+- Application (CQRS + contratos):
+  - Interface `IGameDayRepository`
+  - DTO `GameDayResponse`
+  - Commands/Handlers:
+    - `CreateGameDayCommand`
+    - `UpdateGameDayCommand`
+    - `ChangeGameDayStatusCommand`
+    - `DeleteGameDayCommand`
+  - Queries/Handlers:
+    - `GetGameDayQuery`
+    - `GetGameDaysQuery` (com filtro opcional por status)
+- Infrastructure (tenant DB):
+  - `TenantDbContext` com `DbSet<GameDay>`
+  - Índice único por tenant: `(TenantId, NormalizedName, ScheduledAt)`
+  - Índice de consulta: `(TenantId, ScheduledAt)`
+  - `GameDayRepository`
+  - Migration tenant: `AddGameDays`
+- API:
+  - `GameDayController` com endpoints:
+    - `POST /api/v1/gameday`
+    - `GET /api/v1/gameday`
+    - `GET /api/v1/gameday/{id}`
+    - `PUT /api/v1/gameday/{id}`
+    - `PUT /api/v1/gameday/{id}/status`
+    - `DELETE /api/v1/gameday/{id}`
+
+### Regras de negócio
+
+- `ScheduledAt` deve estar no futuro
+- `MaxPlayers` deve ser maior que zero
+- Soft delete obrigatório (`IsActive = false`)
+- Fluxo de status permitido:
+  - `Pending` → `Confirmed`/`Cancelled`
+  - `Confirmed` → `Completed`/`Cancelled`
+  - `Cancelled` e `Completed` são estados finais
+- Duplicidade bloqueada por tenant para mesmo nome normalizado + data/hora (`409 GAMEDAY_ALREADY_EXISTS`)
+
+### Testes
+
+- Unit Domain (novos):
+  - `GameDayTests`
+- Unit Application (novos):
+  - `CreateGameDayCommandHandlerTests`
+  - `GetGameDayQueryHandlerTests`
+  - `GetGameDaysQueryHandlerTests`
+  - `UpdateGameDayCommandHandlerTests`
+  - `ChangeGameDayStatusCommandHandlerTests`
+  - `DeleteGameDayCommandHandlerTests`
+- Integration (novos):
+  - `GameDayIntegrationTests` (CRUD + status + validações)
+
+### Status atual
+
+- Suíte backend executada após o fechamento da Fase 6: **182 testes, 100% passando**
 
 ---
 
