@@ -14,6 +14,7 @@ public sealed class TenantDbContext : DbContext
     public DbSet<Player> Players => Set<Player>();
     public DbSet<GameDay> GameDays => Set<GameDay>();
     public DbSet<Match> Matches => Set<Match>();
+    public DbSet<MatchSummary> MatchSummaries => Set<MatchSummary>();
     public DbSet<MatchEvent> MatchEvents => Set<MatchEvent>();
     public DbSet<MatchEventType> MatchEventTypes => Set<MatchEventType>();
     public DbSet<Checkin> Checkins => Set<Checkin>();
@@ -64,6 +65,25 @@ public sealed class TenantDbContext : DbContext
             e.HasIndex(m => new { m.TenantId, m.GameDayId, m.HomeTeamId, m.AwayTeamId }).IsUnique();
             e.HasIndex(m => new { m.TenantId, m.Status });
             e.HasIndex(m => new { m.TenantId, m.GameDayId });
+        });
+
+        builder.Entity<MatchSummary>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.TenantId).IsRequired();
+            e.Property(x => x.MatchId).IsRequired();
+            e.Property(x => x.StoragePath).IsRequired().HasMaxLength(400);
+            e.Property(x => x.FileName).IsRequired().HasMaxLength(150);
+            e.Property(x => x.ContentType).IsRequired().HasMaxLength(100);
+            e.Property(x => x.SizeBytes).IsRequired();
+            e.Property(x => x.GeneratedAtUtc).IsRequired();
+            e.Property(x => x.IsActive).IsRequired();
+            e.HasIndex(x => new { x.TenantId, x.MatchId }).IsUnique();
+
+            e.HasOne<Match>()
+                .WithMany()
+                .HasForeignKey(x => x.MatchId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<MatchEventType>(e =>

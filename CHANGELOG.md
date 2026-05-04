@@ -8,6 +8,56 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Fase 11: Súmula (backend em andamento)
+
+- Domain:
+	- `MatchSummary` entity com `Create` e `Deactivate`
+	- validações de `TenantId`, `MatchId`, `StoragePath`, `FileName`, `ContentType`, `SizeBytes`
+- Application:
+	- contratos `IMatchSummaryRepository`, `IMatchSummaryPdfGenerator`, `IMatchSummaryStorageService`
+	- DTOs `MatchSummaryResponse` e `MatchSummaryFileResponse`
+	- CQRS: `GenerateMatchSummaryCommand`, `GetMatchSummaryByMatchQuery`, `GetMatchSummaryFileQuery`
+- Regras de negócio aplicadas:
+	- geração apenas para partida `Completed` (`MATCH_NOT_COMPLETED`)
+	- bloqueio de duplicidade por partida (`MATCH_SUMMARY_ALREADY_EXISTS`)
+	- validações de inexistência de partida/arquivo (`MATCH_NOT_FOUND`, `MATCH_SUMMARY_FILE_NOT_FOUND`)
+- Infrastructure:
+	- `MatchSummaryRepository`
+	- `LocalMatchSummaryStorageService` (filesystem local MVP)
+	- `MinimalPdfMatchSummaryGenerator` (PDF mínimo válido sem dependência externa)
+	- `TenantDbContext` com `DbSet<MatchSummary>` e índice único `(TenantId, MatchId)`
+- API:
+	- novo `MatchSummaryController`
+	- `POST /api/v1/match-summary`
+	- `GET /api/v1/match-summary/match/{matchId}`
+	- `GET /api/v1/match-summary/{summaryId}/file`
+- Testes TDD adicionados:
+	- Unit Domain: `MatchSummaryTests`
+	- Unit Application: `GenerateMatchSummaryCommandHandlerTests`, `GetMatchSummaryByMatchQueryHandlerTests`
+	- Integration: `MatchSummaryIntegrationTests`
+- Execução de validação:
+	- filtro `FullyQualifiedName~MatchSummary`: 15 testes passando
+	- regressão backend completa: 330 testes passando
+
+### Changed — Fase 11: Súmula (complementação do slice)
+
+- Banco (tenant):
+	- migration `AddMatchSummaries` adicionada em `Persistence/Migrations/Tenant`
+	- `TenantDbContextModelSnapshot` atualizado para incluir `MatchSummaries`
+- Testes:
+	- novo `GetMatchSummaryFileQueryHandlerTests`
+	- novos testes de infraestrutura para `LocalMatchSummaryStorageService` e `MinimalPdfMatchSummaryGenerator`
+	- `MatchSummaryIntegrationTests` expandido com cenários negativos (match inexistente, match não concluída, summary/arquivo inexistentes)
+- Hardening:
+	- `LocalMatchSummaryStorageService` com root configurável via `MatchSummaryStorage:RootPath`
+	- validação de path traversal na leitura de arquivo
+	- isolamento de storage em integração com cleanup automático no `PlayerWebApplicationFactory`
+- Configuração:
+	- `appsettings.json` e `appsettings.Development.json` com seção `MatchSummaryStorage`
+- Validação atualizada:
+	- filtro `FullyQualifiedName~MatchSummary`: 27 testes passando
+	- regressão backend completa: 342 testes passando
+
 ### Changed — Fase 9: Partidas (hardening RBAC + TDD)
 
 - Segurança/RBAC:

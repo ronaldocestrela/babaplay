@@ -566,10 +566,80 @@ Construir um sistema SaaS escalável, com:
 
 ## 📄 Fase 11 — Súmula
 
+### Status
+
+- 🚧 Em andamento (backend iniciado)
+
 ### Entregas
 
 - Geração de PDF
 - Armazenamento
+
+### Entregas iniciadas (slice 1)
+
+- Domain:
+  - `MatchSummary` entity (`Create`, `Deactivate`) com `TenantId`, `MatchId`, `StoragePath`, `FileName`, `ContentType`, `SizeBytes`, `GeneratedAtUtc`, `IsActive`
+- Application (CQRS + contratos):
+  - Interface `IMatchSummaryRepository`
+  - Interfaces de serviço `IMatchSummaryPdfGenerator` e `IMatchSummaryStorageService`
+  - DTOs: `MatchSummaryResponse` e `MatchSummaryFileResponse`
+  - Command/Handler: `GenerateMatchSummary`
+  - Queries/Handlers: `GetMatchSummaryByMatch` e `GetMatchSummaryFile`
+- Infrastructure:
+  - `MatchSummaryRepository`
+  - `LocalMatchSummaryStorageService` (filesystem local)
+  - `MinimalPdfMatchSummaryGenerator` (PDF mínimo válido para MVP)
+  - `TenantDbContext` com `DbSet<MatchSummary>` e índice único `(TenantId, MatchId)`
+- API:
+  - `MatchSummaryController`
+  - `POST /api/v1/match-summary`
+  - `GET /api/v1/match-summary/match/{matchId}`
+  - `GET /api/v1/match-summary/{summaryId}/file`
+
+### Regras já aplicadas
+
+- Geração permitida apenas para partida concluída (`MATCH_NOT_COMPLETED`)
+- Duplicidade bloqueada por partida (`MATCH_SUMMARY_ALREADY_EXISTS`)
+- Partida inexistente retorna `MATCH_NOT_FOUND`
+- Download retorna 404 quando metadata/arquivo não existir (`MATCH_SUMMARY_NOT_FOUND` / `MATCH_SUMMARY_FILE_NOT_FOUND`)
+
+### Testes (slice 1)
+
+- Unit Domain:
+  - `MatchSummaryTests`
+- Unit Application:
+  - `GenerateMatchSummaryCommandHandlerTests`
+  - `GetMatchSummaryByMatchQueryHandlerTests`
+- Integration:
+  - `MatchSummaryIntegrationTests` (geração, consulta, duplicidade, download)
+
+### Status atual dos testes
+
+- Filtro `FullyQualifiedName~MatchSummary`: **15 testes, 100% passando**
+- Regressão backend completa: **330 testes, 100% passando**
+
+### Entregas iniciadas (slice 2)
+
+- Banco (tenant):
+  - Migration `AddMatchSummaries` criada em `Persistence/Migrations/Tenant/`
+  - `TenantDbContextModelSnapshot` atualizado com `MatchSummaries`
+- Testes TDD adicionais:
+  - Unit Application: `GetMatchSummaryFileQueryHandlerTests`
+  - Unit Infrastructure: `LocalMatchSummaryStorageServiceTests`, `MinimalPdfMatchSummaryGeneratorTests`
+  - Integration: cenários negativos adicionados em `MatchSummaryIntegrationTests`
+    - `POST /match-summary` com `matchId` inexistente
+    - `POST /match-summary` com partida não concluída
+    - `GET /match-summary/match/{matchId}` inexistente
+    - `GET /match-summary/{summaryId}/file` inexistente
+- Hardening operacional:
+  - storage local configurável por `MatchSummaryStorage:RootPath`
+  - proteção contra path traversal no read do storage local
+  - isolamento/cleanup de storage em integração via `PlayerWebApplicationFactory`
+
+### Status de testes após slice 2
+
+- Filtro `FullyQualifiedName~MatchSummary`: **27 testes, 100% passando**
+- Regressão backend completa: **342 testes, 100% passando**
 
 ---
 

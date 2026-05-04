@@ -31,6 +31,9 @@ public static class ServiceRegistration
         var jwtSettings = jwtSection.Get<JwtSettings>()
             ?? throw new InvalidOperationException($"'{JwtSettings.SectionName}' configuration section is missing.");
 
+        var matchSummaryStorageSection = configuration.GetSection(MatchSummaryStorageSettings.SectionName);
+        services.Configure<MatchSummaryStorageSettings>(matchSummaryStorageSection);
+
         // --- Master Database ---
         services.AddDbContext<MasterDbContext>(options =>
             options.UseSqlServer(
@@ -159,6 +162,7 @@ public static class ServiceRegistration
         services.AddScoped<IPlayerRepository, PlayerRepository>();
         services.AddScoped<ITeamRepository, TeamRepository>();
         services.AddScoped<IMatchRepository, MatchRepository>();
+        services.AddScoped<IMatchSummaryRepository, MatchSummaryRepository>();
         services.AddScoped<IMatchEventRepository, MatchEventRepository>();
         services.AddScoped<IMatchEventTypeRepository, MatchEventTypeRepository>();
         services.AddScoped<IPositionRepository, PositionRepository>();
@@ -167,6 +171,8 @@ public static class ServiceRegistration
         services.AddScoped<ITenantGeolocationSettingsRepository, TenantGeolocationSettingsRepository>();
         services.AddScoped<ICheckinRealtimeNotifier, SignalRCheckinRealtimeNotifier>();
         services.AddScoped<IMatchEventRealtimeNotifier, SignalRMatchEventRealtimeNotifier>();
+        services.AddScoped<IMatchSummaryPdfGenerator, MinimalPdfMatchSummaryGenerator>();
+        services.AddScoped<IMatchSummaryStorageService, LocalMatchSummaryStorageService>();
 
         // --- RBAC repositories (Fase 4) ---
         services.AddScoped<IRoleRepository, RoleRepository>();

@@ -2,6 +2,7 @@ using BabaPlay.Application.Commands.Auth;
 using BabaPlay.Application.Commands.Checkins;
 using BabaPlay.Application.Commands.GameDays;
 using BabaPlay.Application.Commands.Matches;
+using BabaPlay.Application.Commands.MatchSummaries;
 using BabaPlay.Application.Commands.MatchEvents;
 using BabaPlay.Application.Commands.Ping;
 using BabaPlay.Application.Commands.Players;
@@ -16,6 +17,7 @@ using BabaPlay.Application.Queries.Ping;
 using BabaPlay.Application.Queries.Checkins;
 using BabaPlay.Application.Queries.GameDays;
 using BabaPlay.Application.Queries.Matches;
+using BabaPlay.Application.Queries.MatchSummaries;
 using BabaPlay.Application.Queries.MatchEvents;
 using BabaPlay.Application.Queries.Players;
 using BabaPlay.Application.Queries.Positions;
@@ -57,6 +59,11 @@ public static class ServiceRegistration
         services.AddScoped<ICommandHandler<UpdateMatchCommand, Result<MatchResponse>>, UpdateMatchCommandHandler>();
         services.AddScoped<ICommandHandler<ChangeMatchStatusCommand, Result<MatchResponse>>, ChangeMatchStatusCommandHandler>();
         services.AddScoped<ICommandHandler<DeleteMatchCommand, Result>, DeleteMatchCommandHandler>();
+
+        // Match summaries — Fase 11
+        services.AddScoped<ICommandHandler<GenerateMatchSummaryCommand, Result<MatchSummaryResponse>>, GenerateMatchSummaryCommandHandler>();
+        services.AddScoped<IQueryHandler<GetMatchSummaryByMatchQuery, Result<MatchSummaryResponse>>, GetMatchSummaryByMatchQueryHandler>();
+        services.AddScoped<IQueryHandler<GetMatchSummaryFileQuery, Result<MatchSummaryFileResponse>>, GetMatchSummaryFileQueryHandler>();
 
         // MatchEvents — Fase 10
         services.AddScoped<ICommandHandler<CreateMatchEventTypeCommand, Result<MatchEventTypeResponse>>, CreateMatchEventTypeCommandHandler>();

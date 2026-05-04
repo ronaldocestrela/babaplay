@@ -54,6 +54,7 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
 
     private readonly SqliteConnection _masterConnection = new("Data Source=:memory:");
     private readonly SqliteConnection _tenantConnection = new("Data Source=:memory:");
+    private readonly string _storageRoot = Path.Combine(Path.GetTempPath(), $"babaplay-match-summary-tests-{Guid.NewGuid():N}");
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -67,6 +68,7 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
                 ["Jwt:AccessTokenExpiresInMinutes"] = "60",
                 ["Jwt:RefreshTokenExpiresInDays"] = "30",
                 ["ConnectionStrings:MasterDb"] = "Data Source=:memory:",
+                ["MatchSummaryStorage:RootPath"] = _storageRoot,
             });
         });
 
@@ -135,6 +137,9 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
         {
             _masterConnection.Dispose();
             _tenantConnection.Dispose();
+
+            if (Directory.Exists(_storageRoot))
+                Directory.Delete(_storageRoot, recursive: true);
         }
     }
 
