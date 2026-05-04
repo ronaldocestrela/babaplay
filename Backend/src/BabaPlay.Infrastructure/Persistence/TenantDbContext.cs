@@ -16,6 +16,8 @@ public sealed class TenantDbContext : DbContext
     public DbSet<Checkin> Checkins => Set<Checkin>();
     public DbSet<Position> Positions => Set<Position>();
     public DbSet<PlayerPosition> PlayerPositions => Set<PlayerPosition>();
+    public DbSet<Team> Teams => Set<Team>();
+    public DbSet<TeamPlayer> TeamPlayers => Set<TeamPlayer>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
@@ -84,6 +86,31 @@ public sealed class TenantDbContext : DbContext
             e.HasOne<Position>()
                 .WithMany()
                 .HasForeignKey(pp => pp.PositionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Team>(e =>
+        {
+            e.HasKey(t => t.Id);
+            e.Property(t => t.TenantId).IsRequired();
+            e.Property(t => t.Name).IsRequired().HasMaxLength(120);
+            e.Property(t => t.NormalizedName).IsRequired().HasMaxLength(120);
+            e.Property(t => t.MaxPlayers).IsRequired();
+            e.HasIndex(t => new { t.TenantId, t.NormalizedName }).IsUnique();
+        });
+
+        builder.Entity<TeamPlayer>(e =>
+        {
+            e.HasKey(tp => new { tp.TeamId, tp.PlayerId });
+
+            e.HasOne<Team>()
+                .WithMany(t => t.Players)
+                .HasForeignKey(tp => tp.TeamId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne<Player>()
+                .WithMany()
+                .HasForeignKey(tp => tp.PlayerId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

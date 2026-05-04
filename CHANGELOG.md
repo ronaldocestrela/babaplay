@@ -8,6 +8,40 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Fase 8: Times (backend concluído)
+
+- Domain:
+	- `Team` entity com `Create`, `Update`, `Deactivate` e sincronização de elenco via `SetPlayers(...)`
+	- `TeamPlayer` para vínculo N:N entre `Team` e `Player`
+- Application:
+	- `ITeamRepository`
+	- DTOs `TeamResponse` e `TeamPlayersResponse`
+	- `CreateTeamCommand` / `CreateTeamCommandHandler`
+	- `UpdateTeamCommand` / `UpdateTeamCommandHandler`
+	- `DeleteTeamCommand` / `DeleteTeamCommandHandler`
+	- `GetTeamQuery` / `GetTeamQueryHandler`
+	- `GetTeamsQuery` / `GetTeamsQueryHandler`
+	- `UpdateTeamPlayersCommand` / `UpdateTeamPlayersCommandHandler`
+- Regras de negócio aplicadas:
+	- limite de jogadores por time (`TEAM_PLAYERS_LIMIT_EXCEEDED`)
+	- bloqueio de `playerIds` duplicados (`TEAM_DUPLICATE_PLAYERS`)
+	- bloqueio de `playerIds` com `Guid.Empty` (`TEAM_INVALID_PLAYER_ID`)
+	- bloqueio de jogadores inexistentes/inativos (`TEAM_PLAYER_NOT_FOUND`)
+	- goleiro obrigatório no elenco ativo (`TEAM_GOALKEEPER_REQUIRED`)
+- Infrastructure:
+	- `TeamRepository`
+	- `TenantDbContext` com `DbSet<Team>` e `DbSet<TeamPlayer>`
+	- índice único `(TenantId, NormalizedName)` em `Teams`
+	- migration tenant `AddTeamsAndTeamPlayers`
+- API:
+	- novo `TeamController` com CRUD completo em `/api/v1/team`
+	- endpoint `PUT /api/v1/team/{id}/players` para sincronização completa do elenco
+- Testes novos:
+	- Unit Domain: `TeamTests`, `TeamPlayerTests`
+	- Unit Application: suítes de commands/queries de Team e `UpdateTeamPlayersCommandHandlerTests`
+	- Integration: `TeamIntegrationTests`
+- Regressão executada: 243 testes backend, 100% passando
+
 ### Added — Fase 7: Check-in (backend concluído)
 
 - Domain:

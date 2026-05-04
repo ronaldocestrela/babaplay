@@ -17,6 +17,9 @@ public interface IPlayerRepository
     /// <summary>Returns true when a player with the given UserId already exists.</summary>
     Task<bool> ExistsByUserIdAsync(Guid userId, CancellationToken ct = default);
 
+    /// <summary>Returns players by ids in the current tenant.</summary>
+    Task<IReadOnlyList<Player>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct = default);
+
     /// <summary>Tracks a new player for insertion on the next SaveChangesAsync call.</summary>
     Task AddAsync(Player player, CancellationToken ct = default);
 

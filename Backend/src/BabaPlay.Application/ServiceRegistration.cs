@@ -5,6 +5,7 @@ using BabaPlay.Application.Commands.Ping;
 using BabaPlay.Application.Commands.Players;
 using BabaPlay.Application.Commands.Positions;
 using BabaPlay.Application.Commands.Roles;
+using BabaPlay.Application.Commands.Teams;
 using BabaPlay.Application.Commands.Tenants;
 using BabaPlay.Application.Common;
 using BabaPlay.Application.DTOs;
@@ -15,6 +16,7 @@ using BabaPlay.Application.Queries.GameDays;
 using BabaPlay.Application.Queries.Players;
 using BabaPlay.Application.Queries.Positions;
 using BabaPlay.Application.Queries.Roles;
+using BabaPlay.Application.Queries.Teams;
 using BabaPlay.Application.Queries.Tenants;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -70,6 +72,14 @@ public static class ServiceRegistration
         services.AddScoped<ICommandHandler<CancelCheckinCommand, Result>, CancelCheckinCommandHandler>();
         services.AddScoped<IQueryHandler<GetCheckinsByGameDayQuery, Result<IReadOnlyList<CheckinResponse>>>, GetCheckinsByGameDayQueryHandler>();
         services.AddScoped<IQueryHandler<GetCheckinsByPlayerQuery, Result<IReadOnlyList<CheckinResponse>>>, GetCheckinsByPlayerQueryHandler>();
+
+        // Teams — Fase 8
+        services.AddScoped<ICommandHandler<CreateTeamCommand, Result<TeamResponse>>, CreateTeamCommandHandler>();
+        services.AddScoped<IQueryHandler<GetTeamQuery, Result<TeamResponse>>, GetTeamQueryHandler>();
+        services.AddScoped<IQueryHandler<GetTeamsQuery, Result<IReadOnlyList<TeamResponse>>>, GetTeamsQueryHandler>();
+        services.AddScoped<ICommandHandler<UpdateTeamCommand, Result<TeamResponse>>, UpdateTeamCommandHandler>();
+        services.AddScoped<ICommandHandler<UpdateTeamPlayersCommand, Result<TeamPlayersResponse>>, UpdateTeamPlayersCommandHandler>();
+        services.AddScoped<ICommandHandler<DeleteTeamCommand, Result>, DeleteTeamCommandHandler>();
 
         return services;
     }

@@ -37,6 +37,12 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
         Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-000000000007"), // Player positions limit
         Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-000000000008"), // Positions integration usage conflict
         Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-000000000009"), // Player positions duplicate validation
+        Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-000000000010"), // Team integration player 1
+        Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-000000000011"), // Team integration player 2
+        Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-000000000012"), // Team integration player 3
+        Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-000000000013"), // Team integration player 4
+        Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-000000000014"), // Team integration player 5
+        Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-000000000015"), // Team integration player 6
     ];
 
     public const string TestUserEmail = "player-test@babaplay.com";

@@ -50,6 +50,20 @@ public sealed class PlayerRepository : IPlayerRepository
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<Player>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct = default)
+    {
+        if (ids.Count == 0)
+            return [];
+
+        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        return await db.Players
+            .Include(p => p.Positions)
+            .AsNoTracking()
+            .Where(p => ids.Contains(p.Id))
+            .ToListAsync(ct);
+    }
+
+    /// <inheritdoc />
     public async Task AddAsync(Player player, CancellationToken ct = default)
     {
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);

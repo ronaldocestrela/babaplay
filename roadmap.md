@@ -361,17 +361,66 @@ Construir um sistema SaaS escalável, com:
 
 ---
 
-## 🧩 Fase 8 — Times
+## 🧩 Fase 8 — Times ✅ CONCLUÍDA (backend)
 
 ### Entregas
 
-- Teams
-- TeamPlayers
+- Domain:
+  - `Team` entity (`Create`, `Update`, `Deactivate`) com `TenantId`, `Name`/`NormalizedName`, `MaxPlayers`, `IsActive`
+  - `TeamPlayer` (vínculo N:N Team↔Player)
+  - `Team.SetPlayers(...)` para sincronização completa do elenco
+- Application (CQRS + contratos):
+  - Interface `ITeamRepository`
+  - DTOs `TeamResponse` e `TeamPlayersResponse`
+  - Commands/Handlers:
+    - `CreateTeamCommand`
+    - `UpdateTeamCommand`
+    - `DeleteTeamCommand`
+    - `UpdateTeamPlayersCommand`
+  - Queries/Handlers:
+    - `GetTeamQuery`
+    - `GetTeamsQuery`
+- Infrastructure (tenant DB):
+  - `TeamRepository`
+  - `TenantDbContext` com `DbSet<Team>` e `DbSet<TeamPlayer>`
+  - Mapeamento EF da tabela de vínculo com PK composta `(TeamId, PlayerId)`
+  - Índice único por tenant: `(TenantId, NormalizedName)`
+  - Migration tenant: `AddTeamsAndTeamPlayers`
+- API:
+  - `TeamController` com endpoints:
+    - `POST /api/v1/team`
+    - `GET /api/v1/team`
+    - `GET /api/v1/team/{id}`
+    - `PUT /api/v1/team/{id}`
+    - `PUT /api/v1/team/{id}/players`
+    - `DELETE /api/v1/team/{id}`
 
 ### Regras
 
-- Limite de jogadores
-- Goleiro obrigatório
+- Limite de jogadores por time (`TEAM_PLAYERS_LIMIT_EXCEEDED`)
+- IDs duplicados no elenco bloqueados (`TEAM_DUPLICATE_PLAYERS`)
+- IDs vazios no elenco bloqueados (`TEAM_INVALID_PLAYER_ID`)
+- Jogadores inexistentes/inativos bloqueados (`TEAM_PLAYER_NOT_FOUND`)
+- Goleiro obrigatório no elenco ativo (`TEAM_GOALKEEPER_REQUIRED`)
+
+### Testes
+
+- Unit Domain (novos):
+  - `TeamTests`
+  - `TeamPlayerTests`
+- Unit Application (novos):
+  - `CreateTeamCommandHandlerTests`
+  - `GetTeamQueryHandlerTests`
+  - `GetTeamsQueryHandlerTests`
+  - `UpdateTeamCommandHandlerTests`
+  - `DeleteTeamCommandHandlerTests`
+  - `UpdateTeamPlayersCommandHandlerTests`
+- Integration (novos):
+  - `TeamIntegrationTests` (CRUD + validação de limite + goleiro obrigatório)
+
+### Status atual
+
+- Suíte backend executada após o fechamento da Fase 8: **243 testes, 100% passando**
 
 ---
 
