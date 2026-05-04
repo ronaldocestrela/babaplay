@@ -445,6 +445,51 @@ Código sem:
 
 ---
 
+### Fase 7 — Check-ins 🚧
+
+#### Domínio
+- `Checkin` entity (sealed, extends `EntityBase`): `TenantId`, `PlayerId`, `GameDayId`, `CheckedInAtUtc`, `Latitude`, `Longitude`, `DistanceFromAssociationMeters`, `IsActive`, `CancelledAtUtc`
+- `GeoCoordinate` value object para validação de coordenadas e cálculo de distância em metros
+
+#### Application
+- Command implementado: `CreateCheckin`
+- Interfaces: `ICheckinRepository`, `ITenantGeolocationSettingsRepository`, `ICheckinRealtimeNotifier`
+- DTOs: `CheckinResponse`, `TenantGeolocationSettingsDto`
+
+#### Infrastructure
+- `CheckinRepository` com contexto por operação via `TenantDbContextFactory` + `ITenantContext`
+- `TenantGeolocationSettingsRepository` para leitura de geolocalização da associação no master DB
+- `TenantDbContext`: adicionado `DbSet<Checkin>` com índices de consulta e unicidade para duplicidade ativa
+- SignalR: `CheckinHub` + `SignalRCheckinRealtimeNotifier`
+
+#### API
+- Endpoint implementado:
+	- `POST /api/v1/checkin`
+
+#### Regras aplicadas
+- Check-in apenas no dia do jogo (`CHECKIN_DAY_INVALID`)
+- Jogador precisa existir e estar ativo (`PLAYER_NOT_FOUND` / `PLAYER_INACTIVE`)
+- Distância deve estar dentro do raio da associação (`CHECKIN_OUTSIDE_ALLOWED_RADIUS`)
+- Duplicidade bloqueada por jogador + game day (`CHECKIN_ALREADY_EXISTS`)
+
+#### Realtime (MVP parcial)
+- Evento de check-in criado
+- Evento de contagem atualizada
+- Evento de tentativa negada com motivo
+
+#### Testes
+- Unit Domain: `CheckinTests`
+- Unit Application: `CreateCheckinCommandHandlerTests`
+- Suíte backend atual: 192 testes (100% passando)
+
+#### Pendências da Fase 7
+- `Undo/Cancel` de check-in
+- Queries de listagem por game day e por jogador
+- Testes de integração HTTP e SignalR da feature
+- Migrations finais da fase
+
+---
+
 ### Fase 16 — Frontend (React): 1. Auth ✅
 
 #### Arquitetura de autenticação

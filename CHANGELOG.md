@@ -8,6 +8,38 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Fase 7: Check-in (parcial backend)
+
+- Domain:
+	- `Checkin` entity com suporte a criação e cancelamento lógico (`Deactivate`)
+	- `GeoCoordinate` value object para validação de latitude/longitude e cálculo de distância em metros
+- Application:
+	- `CreateCheckinCommand` / `CreateCheckinCommandHandler`
+	- contratos `ICheckinRepository`, `ITenantGeolocationSettingsRepository`, `ICheckinRealtimeNotifier`
+	- DTOs `CheckinResponse` e `TenantGeolocationSettingsDto`
+- Regras de negócio aplicadas:
+	- check-in somente no dia do `GameDay` (`CHECKIN_DAY_INVALID`)
+	- jogador ativo obrigatório (`PLAYER_INACTIVE`)
+	- validação de raio por geolocalização da associação (`CHECKIN_OUTSIDE_ALLOWED_RADIUS`)
+	- duplicidade bloqueada por jogador + game day (`CHECKIN_ALREADY_EXISTS`)
+- Infrastructure:
+	- `CheckinRepository` (tenant DB)
+	- `TenantGeolocationSettingsRepository` (master DB)
+	- `Tenant` com campos de geolocalização (`AssociationLatitude`, `AssociationLongitude`, `CheckinRadiusMeters`)
+	- `TenantDbContext` com `DbSet<Checkin>` e índices para consulta/duplicidade ativa
+	- SignalR com `CheckinHub` e `SignalRCheckinRealtimeNotifier`
+- API:
+	- novo endpoint `POST /api/v1/checkin`
+	- `Program.cs` com `AddSignalR()` + `MapHub<CheckinHub>("/hubs/checkin")`
+- Testes:
+	- Unit Domain: `CheckinTests`
+	- Unit Application: `CreateCheckinCommandHandlerTests`
+	- Regressão executada: 192 testes backend, 100% passando
+
+### Changed
+
+- Documentação de roadmap e estado de implementação atualizados para refletir a Fase 7 em andamento e pendências de fechamento.
+
 ### Added — Fase 5: Positions
 
 - `Position` entity (Domain): `Create()`, `Update()`, `Deactivate()` com `TenantId`, `Code`, `NormalizedCode`, `Name`, `Description`, `IsActive`

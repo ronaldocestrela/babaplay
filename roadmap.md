@@ -305,19 +305,52 @@ Construir um sistema SaaS escalável, com:
 
 ---
 
-## 📍 Fase 7 — Check-in
+## 📍 Fase 7 — Check-in 🚧 EM ANDAMENTO
 
 ### Entregas
 
-- Check-in com geolocalização
-- Validação de raio
-- SignalR
+- Domain:
+  - `Checkin` entity (`Create`, `Deactivate`) com `TenantId`, `PlayerId`, `GameDayId`, `CheckedInAtUtc`, `Latitude`, `Longitude`, `DistanceFromAssociationMeters`, `IsActive`, `CancelledAtUtc`
+  - Value Object `GeoCoordinate` com validação de latitude/longitude e cálculo de distância (Haversine)
+- Application (CQRS + contratos):
+  - `CreateCheckinCommand` + `CreateCheckinCommandHandler`
+  - Interfaces: `ICheckinRepository`, `ITenantGeolocationSettingsRepository`, `ICheckinRealtimeNotifier`
+  - DTOs: `CheckinResponse`, `TenantGeolocationSettingsDto`
+- Infrastructure:
+  - `CheckinRepository` (tenant DB)
+  - `TenantGeolocationSettingsRepository` (master DB)
+  - `CheckinHub` + `SignalRCheckinRealtimeNotifier`
+  - `Tenant` (master) com `AssociationLatitude`, `AssociationLongitude`, `CheckinRadiusMeters`
+  - `TenantDbContext` com `DbSet<Checkin>` e índices para consulta/duplicidade
+- API:
+  - `CheckinController`
+  - `POST /api/v1/checkin`
+  - `Program.cs` com `AddSignalR()` e `MapHub<CheckinHub>("/hubs/checkin")`
+
+### Regras de negócio já aplicadas
+
+- Check-in permitido apenas no dia do `GameDay`
+- Jogador deve existir e estar ativo (`PLAYER_INACTIVE`)
+- Validação de raio pela geolocalização da associação (`CHECKIN_OUTSIDE_ALLOWED_RADIUS`)
+- Duplicidade bloqueada por jogador + game day (`CHECKIN_ALREADY_EXISTS`)
+- Emissão de evento realtime para criação, contagem e tentativas negadas
 
 ### Testes
 
-- Dentro do raio
-- Fora do raio
-- Duplicidade
+- Unit Domain:
+  - `CheckinTests`
+- Unit Application:
+  - `CreateCheckinCommandHandlerTests`
+- Regressão backend:
+  - suíte completa executada com **192 testes, 100% passando**
+
+### Pendências para fechamento da Fase 7
+
+- `Undo/Cancel` de check-in (command + endpoint + realtime)
+- Queries de leitura (`GET` por game day e por jogador)
+- Testes de integração HTTP e SignalR específicos de check-in
+- Migrations dedicadas da fase (master + tenant)
+- Atualização final de documentação Swagger da fase
 
 ---
 
