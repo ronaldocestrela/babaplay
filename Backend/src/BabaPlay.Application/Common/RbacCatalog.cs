@@ -23,6 +23,10 @@ public static class RbacCatalog
         public const string PlayersRead = "players.read";
         public const string PlayersWrite = "players.write";
         public const string TenantRead = "tenant.read";
+        public const string MatchEventsRead = "matchevents.read";
+        public const string MatchEventsWrite = "matchevents.write";
+        public const string MatchEventTypesRead = "matcheventtypes.read";
+        public const string MatchEventTypesWrite = "matcheventtypes.write";
     }
 
     public static readonly IReadOnlyDictionary<string, IReadOnlyList<string>> DefaultRolePermissions =
@@ -37,6 +41,10 @@ public static class RbacCatalog
                 Permissions.PlayersRead,
                 Permissions.PlayersWrite,
                 Permissions.TenantRead,
+                Permissions.MatchEventsRead,
+                Permissions.MatchEventsWrite,
+                Permissions.MatchEventTypesRead,
+                Permissions.MatchEventTypesWrite,
             ],
             [Roles.Manager] =
             [
@@ -44,16 +52,21 @@ public static class RbacCatalog
                 Permissions.PlayersRead,
                 Permissions.PlayersWrite,
                 Permissions.TenantRead,
+                Permissions.MatchEventsRead,
+                Permissions.MatchEventsWrite,
+                Permissions.MatchEventTypesRead,
             ],
             [Roles.Member] =
             [
                 Permissions.PlayersRead,
                 Permissions.TenantRead,
+                Permissions.MatchEventsRead,
             ],
             [Roles.Viewer] =
             [
                 Permissions.PlayersRead,
                 Permissions.TenantRead,
+                Permissions.MatchEventsRead,
             ],
         };
 

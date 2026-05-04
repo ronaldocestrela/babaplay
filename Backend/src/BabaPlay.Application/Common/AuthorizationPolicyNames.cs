@@ -10,4 +10,8 @@ public static class AuthorizationPolicyNames
     public const string RbacRolesWrite = "RbacRolesWrite";
     public const string RbacRolesAssign = "RbacRolesAssign";
     public const string RbacPermissionsWrite = "RbacPermissionsWrite";
+    public const string MatchEventsRead = "MatchEventsRead";
+    public const string MatchEventsWrite = "MatchEventsWrite";
+    public const string MatchEventTypesRead = "MatchEventTypesRead";
+    public const string MatchEventTypesWrite = "MatchEventTypesWrite";
 }

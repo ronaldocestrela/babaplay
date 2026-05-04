@@ -11,7 +11,7 @@ namespace BabaPlay.Api.Controllers;
 /// <summary>Manages tenant-configurable match event types.</summary>
 [ApiController]
 [Route("api/v1/[controller]")]
-[Authorize]
+[Authorize(Policy = AuthorizationPolicyNames.TenantMember)]
 public sealed class MatchEventTypeController : ControllerBase
 {
     private readonly ICommandHandler<CreateMatchEventTypeCommand, Result<MatchEventTypeResponse>> _createHandler;
@@ -35,6 +35,7 @@ public sealed class MatchEventTypeController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthorizationPolicyNames.MatchEventTypesWrite)]
     [ProducesResponseType(typeof(MatchEventTypeResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
@@ -62,6 +63,7 @@ public sealed class MatchEventTypeController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = AuthorizationPolicyNames.MatchEventTypesRead)]
     [ProducesResponseType(typeof(IReadOnlyList<MatchEventTypeResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
@@ -70,6 +72,7 @@ public sealed class MatchEventTypeController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicyNames.MatchEventTypesRead)]
     [ProducesResponseType(typeof(MatchEventTypeResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
@@ -88,6 +91,7 @@ public sealed class MatchEventTypeController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicyNames.MatchEventTypesWrite)]
     [ProducesResponseType(typeof(MatchEventTypeResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
@@ -119,6 +123,7 @@ public sealed class MatchEventTypeController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicyNames.MatchEventTypesWrite)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)

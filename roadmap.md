@@ -532,6 +532,28 @@ Construir um sistema SaaS escalável, com:
   - `CreateMatchEventCommandHandlerTests`
   - `CreateMatchEventTypeCommandHandlerTests`
 
+### Entregas iniciadas (slice 2)
+
+- Banco (tenant):
+  - Migration `AddMatchEventsAndTypes` criada em `Persistence/Migrations/Tenant/`
+  - `TenantDbContextModelSnapshot` atualizado com `MatchEvents` e `MatchEventTypes`
+- Segurança (RBAC/policies):
+  - Novas permissões no catálogo: `matchevents.read`, `matchevents.write`, `matcheventtypes.read`, `matcheventtypes.write`
+  - Novas policies: `MatchEventsRead`, `MatchEventsWrite`, `MatchEventTypesRead`, `MatchEventTypesWrite`
+  - `MatchEventController` e `MatchEventTypeController` com autorização por policy (read/write)
+- Provisioning tenant:
+  - Seed idempotente de tipos padrão: `goal` (+2), `yellow_card` (-1), `red_card` (-3)
+- Consistência de regra:
+  - Reuso de código de tipo desativado bloqueado em validação de unicidade
+- Testes TDD adicionais (unit):
+  - MatchEvent handlers: `Update`, `Delete`, `GetById`, `GetByMatch`, `GetByPlayer`
+  - MatchEventType handlers: `Update`, `Delete`, `GetById`, `GetAll`
+
+### Status de testes após slices 1 e 2
+
+- Filtro MatchEvents: **25 testes, 100% passando**
+- Regressão backend completa: **307 testes, 100% passando**
+
 ---
 
 ## 📄 Fase 11 — Súmula

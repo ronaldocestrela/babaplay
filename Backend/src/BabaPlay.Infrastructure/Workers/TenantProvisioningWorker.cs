@@ -86,6 +86,7 @@ public sealed class TenantProvisioningWorker : BackgroundService
             await using var tenantCtx = new TenantDbContext(tenantOptions);
             await tenantCtx.Database.MigrateAsync(ct);
             await SeedDefaultRbacAsync(tenantCtx, tenantId, ct);
+            await SeedDefaultMatchEventTypesAsync(tenantCtx, tenantId, ct);
 
             await tenantRepo.UpdateProvisioningAsync(tenantId, ProvisioningStatus.Ready, tenantConnectionString, ct);
             _logger.LogInformation("Tenant {TenantId} provisioned successfully (db: {DbName}).", tenantId, dbName);
@@ -168,6 +169,37 @@ public sealed class TenantProvisioningWorker : BackgroundService
                 var permission = permissionByNormalized[permissionCode.Trim().ToUpperInvariant()];
                 role.AddPermission(permission.Id);
             }
+        }
+
+        await tenantCtx.SaveChangesAsync(ct);
+    }
+
+    private static async Task SeedDefaultMatchEventTypesAsync(TenantDbContext tenantCtx, Guid tenantId, CancellationToken ct)
+    {
+        var existingCodes = await tenantCtx.MatchEventTypes
+            .Select(x => x.NormalizedCode)
+            .ToListAsync(ct);
+
+        var existing = new HashSet<string>(existingCodes, StringComparer.OrdinalIgnoreCase);
+        var defaults = new (string Code, string Name, int Points)[]
+        {
+            ("goal", "Goal", 2),
+            ("yellow_card", "Yellow Card", -1),
+            ("red_card", "Red Card", -3),
+        };
+
+        foreach (var item in defaults)
+        {
+            var normalized = item.Code.Trim().ToUpperInvariant();
+            if (existing.Contains(normalized))
+                continue;
+
+            tenantCtx.MatchEventTypes.Add(MatchEventType.Create(
+                tenantId,
+                item.Code,
+                item.Name,
+                item.Points,
+                isSystemDefault: true));
         }
 
         await tenantCtx.SaveChangesAsync(ct);

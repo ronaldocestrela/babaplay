@@ -23,15 +23,22 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 	- `TenantDbContext` com `DbSet<MatchEvent>` e `DbSet<MatchEventType>`
 	- mapeamentos e índices para consulta por partida, jogador e código normalizado por tenant
 	- SignalR com `MatchHub` e `SignalRMatchEventRealtimeNotifier`
+	- migration tenant `AddMatchEventsAndTypes`
+	- seed idempotente de tipos padrão no provisioning (`goal`, `yellow_card`, `red_card`)
 - API:
 	- `MatchEventController` com CRUD e listagens por partida/jogador
 	- `MatchEventTypeController` com CRUD de catálogo configurável por tenant
 	- `Program.cs` com `MapHub<MatchHub>("/hubs/match")`
+	- autorização por policy aplicada para leitura/escrita de MatchEvents e MatchEventTypes
+	- novas policies/padrões RBAC adicionados para fase 10
 - Testes TDD adicionados:
 	- Unit Domain: `MatchEventTests`, `MatchEventTypeTests`
-	- Unit Application: `CreateMatchEventCommandHandlerTests`, `CreateMatchEventTypeCommandHandlerTests`
+	- Unit Application:
+		- MatchEvent: `CreateMatchEventCommandHandlerTests`, `UpdateMatchEventCommandHandlerTests`, `DeleteMatchEventCommandHandlerTests`, `GetMatchEventQueryHandlerTests`, `GetMatchEventsByMatchQueryHandlerTests`, `GetMatchEventsByPlayerQueryHandlerTests`
+		- MatchEventType: `CreateMatchEventTypeCommandHandlerTests`, `UpdateMatchEventTypeCommandHandlerTests`, `DeleteMatchEventTypeCommandHandlerTests`, `GetMatchEventTypeQueryHandlerTests`, `GetMatchEventTypesQueryHandlerTests`
 - Execução de validação:
-	- filtro `FullyQualifiedName~MatchEvent`: 13 testes passando
+	- filtro `FullyQualifiedName~MatchEvents`: 25 testes passando
+	- regressão backend completa: 307 testes passando
 
 ### Added — Fase 8: Times (backend concluído)
 

@@ -19,7 +19,7 @@ public sealed class MatchEventTypeRepository : IMatchEventTypeRepository
     public async Task<MatchEventType?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
-        return await db.MatchEventTypes.FirstOrDefaultAsync(x => x.Id == id && x.IsActive, ct);
+        return await db.MatchEventTypes.FirstOrDefaultAsync(x => x.Id == id, ct);
     }
 
     public async Task<IReadOnlyList<MatchEventType>> GetAllActiveAsync(CancellationToken ct = default)
@@ -38,7 +38,7 @@ public sealed class MatchEventTypeRepository : IMatchEventTypeRepository
 
         var query = db.MatchEventTypes
             .AsNoTracking()
-            .Where(x => x.NormalizedCode == normalizedCode && x.IsActive);
+            .Where(x => x.NormalizedCode == normalizedCode);
 
         if (excludeId.HasValue)
             query = query.Where(x => x.Id != excludeId.Value);

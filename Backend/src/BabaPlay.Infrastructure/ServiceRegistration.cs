@@ -100,6 +100,30 @@ public static class ServiceRegistration
                 policy.Requirements.Add(new TenantMemberRequirement());
                 policy.Requirements.Add(new PermissionRequirement(RbacCatalog.Permissions.RbacPermissionsWrite));
             });
+
+            options.AddPolicy(AuthorizationPolicyNames.MatchEventsRead, policy =>
+            {
+                policy.Requirements.Add(new TenantMemberRequirement());
+                policy.Requirements.Add(new PermissionRequirement(RbacCatalog.Permissions.MatchEventsRead));
+            });
+
+            options.AddPolicy(AuthorizationPolicyNames.MatchEventsWrite, policy =>
+            {
+                policy.Requirements.Add(new TenantMemberRequirement());
+                policy.Requirements.Add(new PermissionRequirement(RbacCatalog.Permissions.MatchEventsWrite));
+            });
+
+            options.AddPolicy(AuthorizationPolicyNames.MatchEventTypesRead, policy =>
+            {
+                policy.Requirements.Add(new TenantMemberRequirement());
+                policy.Requirements.Add(new PermissionRequirement(RbacCatalog.Permissions.MatchEventTypesRead));
+            });
+
+            options.AddPolicy(AuthorizationPolicyNames.MatchEventTypesWrite, policy =>
+            {
+                policy.Requirements.Add(new TenantMemberRequirement());
+                policy.Requirements.Add(new PermissionRequirement(RbacCatalog.Permissions.MatchEventTypesWrite));
+            });
         });
 
         services.AddScoped<IAuthorizationHandler, TenantMemberAuthorizationHandler>();
