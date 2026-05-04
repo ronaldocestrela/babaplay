@@ -8,6 +8,7 @@ using BabaPlay.Application.Commands.Ping;
 using BabaPlay.Application.Commands.Players;
 using BabaPlay.Application.Commands.Positions;
 using BabaPlay.Application.Commands.Roles;
+using BabaPlay.Application.Commands.Scores;
 using BabaPlay.Application.Commands.Teams;
 using BabaPlay.Application.Commands.Tenants;
 using BabaPlay.Application.Common;
@@ -23,6 +24,7 @@ using BabaPlay.Application.Queries.MatchEvents;
 using BabaPlay.Application.Queries.Players;
 using BabaPlay.Application.Queries.Positions;
 using BabaPlay.Application.Queries.Roles;
+using BabaPlay.Application.Queries.Scores;
 using BabaPlay.Application.Queries.Teams;
 using BabaPlay.Application.Queries.Tenants;
 using Microsoft.Extensions.DependencyInjection;
@@ -117,6 +119,12 @@ public static class ServiceRegistration
         services.AddScoped<ICommandHandler<UpdateTeamCommand, Result<TeamResponse>>, UpdateTeamCommandHandler>();
         services.AddScoped<ICommandHandler<UpdateTeamPlayersCommand, Result<TeamPlayersResponse>>, UpdateTeamPlayersCommandHandler>();
         services.AddScoped<ICommandHandler<DeleteTeamCommand, Result>, DeleteTeamCommandHandler>();
+
+        // Scores/Ranking — Fase 12 (Slice 2)
+        services.AddScoped<IQueryHandler<GetRankingQuery, Result<IReadOnlyList<RankingEntryResponse>>>, GetRankingQueryHandler>();
+        services.AddScoped<IQueryHandler<GetTopScorersQuery, Result<IReadOnlyList<TopScorerEntryResponse>>>, GetTopScorersQueryHandler>();
+        services.AddScoped<IQueryHandler<GetAttendanceRankingQuery, Result<IReadOnlyList<AttendanceEntryResponse>>>, GetAttendanceRankingQueryHandler>();
+        services.AddScoped<ICommandHandler<ApplyScoreDeltaCommand, Result>, ApplyScoreDeltaCommandHandler>();
 
         return services;
     }

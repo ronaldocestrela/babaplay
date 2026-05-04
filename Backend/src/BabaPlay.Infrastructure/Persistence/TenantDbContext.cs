@@ -26,6 +26,8 @@ public sealed class TenantDbContext : DbContext
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
+    public DbSet<PlayerScore> PlayerScores => Set<PlayerScore>();
+    public DbSet<PlayerScoreSourceEvent> PlayerScoreSourceEvents => Set<PlayerScoreSourceEvent>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -241,6 +243,48 @@ public sealed class TenantDbContext : DbContext
             e.HasOne<Role>()
                 .WithMany()
                 .HasForeignKey(ur => ur.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<PlayerScore>(e =>
+        {
+            e.HasKey(ps => ps.Id);
+            e.Property(ps => ps.TenantId).IsRequired();
+            e.Property(ps => ps.PlayerId).IsRequired();
+            e.Property(ps => ps.AttendanceCount).IsRequired();
+            e.Property(ps => ps.Wins).IsRequired();
+            e.Property(ps => ps.Draws).IsRequired();
+            e.Property(ps => ps.Goals).IsRequired();
+            e.Property(ps => ps.YellowCards).IsRequired();
+            e.Property(ps => ps.RedCards).IsRequired();
+            e.Property(ps => ps.ScoreTotal).IsRequired();
+            e.Property(ps => ps.IsActive).IsRequired();
+
+            e.HasIndex(ps => new { ps.TenantId, ps.PlayerId }).IsUnique();
+            e.HasIndex(ps => new { ps.TenantId, ps.ScoreTotal });
+            e.HasIndex(ps => new { ps.TenantId, ps.Goals });
+            e.HasIndex(ps => new { ps.TenantId, ps.AttendanceCount });
+
+            e.HasOne<Player>()
+                .WithMany()
+                .HasForeignKey(ps => ps.PlayerId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<PlayerScoreSourceEvent>(e =>
+        {
+            e.HasKey(se => se.Id);
+            e.Property(se => se.TenantId).IsRequired();
+            e.Property(se => se.SourceEventId).IsRequired();
+            e.Property(se => se.PlayerId).IsRequired();
+            e.Property(se => se.AppliedAtUtc).IsRequired();
+
+            e.HasIndex(se => new { se.TenantId, se.SourceEventId }).IsUnique();
+            e.HasIndex(se => new { se.TenantId, se.PlayerId });
+
+            e.HasOne<Player>()
+                .WithMany()
+                .HasForeignKey(se => se.PlayerId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

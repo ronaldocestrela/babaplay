@@ -778,6 +778,58 @@ Construir um sistema SaaS escalável, com:
   - Green: endpoint de rebuild e wiring completo
   - Refactor: hardening de erros e observabilidade
 
+### Entregas concluídas (implementação atual)
+
+- Slice 1 — Domínio + cálculo puro ✅
+  - Domain:
+    - `PlayerScore` entity com `Create`, `ApplyDelta`, `ReplaceBreakdown`, `Deactivate`
+    - value objects `ScoreBreakdown` e `RankingPeriod`
+  - Application:
+    - `IScoreComputationService` + `ScoreComputationService`
+  - Testes TDD:
+    - `PlayerScoreTests`, `ScoreBreakdownTests`, `RankingPeriodTests`, `ScoreComputationServiceTests`
+  - Status: 13 testes passando (filtro das suítes da slice)
+
+- Slice 2 — Persistência + CQRS de leitura ✅
+  - Application (Queries):
+    - `GetRankingQuery` / `GetRankingQueryHandler`
+    - `GetTopScorersQuery` / `GetTopScorersQueryHandler`
+    - `GetAttendanceRankingQuery` / `GetAttendanceRankingQueryHandler`
+    - DTOs: `RankingEntryResponse`, `TopScorerEntryResponse`, `AttendanceEntryResponse`
+    - contrato: `IPlayerScoreRepository`
+  - Infrastructure:
+    - `PlayerScoreRepository`
+    - `TenantDbContext` com `DbSet<PlayerScore>` + mapeamento e índices de ranking
+    - Migration tenant: `AddPlayerScores`
+  - Regras aplicadas na leitura:
+    - validação de período (`INVALID_PERIOD`)
+    - paginação (`Page`, `PageSize`) com rank calculado por offset
+    - ordenações específicas por tipo de ranking
+  - Testes TDD:
+    - `GetRankingQueryHandlerTests`
+    - `GetTopScorersQueryHandlerTests`
+    - `GetAttendanceRankingQueryHandlerTests`
+  - Status: 7 testes da slice passando; regressão combinada slices 1+2 com 20 testes passando
+
+- Slice 3 — Atualização incremental ✅
+  - Application (Command):
+    - `ApplyScoreDeltaCommand` / `ApplyScoreDeltaCommandHandler`
+  - Regras aplicadas:
+    - idempotência por `SourceEventId` com bloqueio de duplicidade (`DUPLICATE_SCORE_EVENT`)
+    - criação automática de `PlayerScore` para primeiro delta positivo
+    - delta negativo sem score prévio retorna `PLAYER_SCORE_NOT_FOUND`
+    - delta inválido que leva contador abaixo de zero retorna `INVALID_SCORE_DELTA`
+  - Infrastructure:
+    - `PlayerScoreSourceEvent` para trilha de eventos processados
+    - `PlayerScoreRepository` expandido com:
+      - `HasProcessedSourceEventAsync`
+      - `AddProcessedSourceEventAsync`
+    - `TenantDbContext` com `DbSet<PlayerScoreSourceEvent>` + índice único `(TenantId, SourceEventId)`
+    - Migration tenant: `AddPlayerScoreSourceEvents`
+  - Testes TDD:
+    - `ApplyScoreDeltaCommandHandlerTests`
+  - Status: 5 testes da slice passando; regressão combinada slices 1+2+3 com 25 testes passando
+
 ### Cenários obrigatórios de teste
 
 - Unit Domain:

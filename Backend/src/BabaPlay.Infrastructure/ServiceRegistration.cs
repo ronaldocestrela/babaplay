@@ -168,6 +168,7 @@ public static class ServiceRegistration
         services.AddScoped<IPositionRepository, PositionRepository>();
         services.AddScoped<IGameDayRepository, GameDayRepository>();
         services.AddScoped<ICheckinRepository, CheckinRepository>();
+        services.AddScoped<IPlayerScoreRepository, PlayerScoreRepository>();
         services.AddScoped<ITenantGeolocationSettingsRepository, TenantGeolocationSettingsRepository>();
         services.AddScoped<ICheckinRealtimeNotifier, SignalRCheckinRealtimeNotifier>();
         services.AddScoped<IMatchEventRealtimeNotifier, SignalRMatchEventRealtimeNotifier>();

@@ -8,6 +8,52 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Fase 12: Score e Ranking (slices 1 e 2)
+
+- Slice 1 — Domínio + cálculo:
+	- `PlayerScore` entity com contadores, score total e operações `ApplyDelta`/`ReplaceBreakdown`
+	- value objects `ScoreBreakdown` (fórmula oficial) e `RankingPeriod` (validação de UTC e intervalo)
+	- `IScoreComputationService` + `ScoreComputationService`
+	- testes TDD: `PlayerScoreTests`, `ScoreBreakdownTests`, `RankingPeriodTests`, `ScoreComputationServiceTests`
+- Slice 2 — Persistência + CQRS leitura:
+	- contrato `IPlayerScoreRepository`
+	- queries/handlers:
+		- `GetRankingQuery` / `GetRankingQueryHandler`
+		- `GetTopScorersQuery` / `GetTopScorersQueryHandler`
+		- `GetAttendanceRankingQuery` / `GetAttendanceRankingQueryHandler`
+	- DTOs: `RankingEntryResponse`, `TopScorerEntryResponse`, `AttendanceEntryResponse`
+	- `PlayerScoreRepository` com ordenações específicas (ranking, artilharia, presença), filtro de período e paginação
+	- `TenantDbContext` atualizado com `DbSet<PlayerScore>` + índices de consulta
+	- migration tenant `AddPlayerScores`
+- Regras/validações adicionadas:
+	- `INVALID_PERIOD` para combinação inválida de `FromUtc`/`ToUtc`
+	- rank calculado por offset de página
+- Validação executada:
+	- testes da Slice 2: 7 passando
+	- regressão focada Slices 1+2: 20 passando
+
+### Added — Fase 12: Score e Ranking (slice 3)
+
+- Application:
+	- `ApplyScoreDeltaCommand` / `ApplyScoreDeltaCommandHandler`
+- Regras de atualização incremental:
+	- deduplicação por `SourceEventId` (`DUPLICATE_SCORE_EVENT`)
+	- criação automática de `PlayerScore` para primeiro evento positivo
+	- retorno `PLAYER_SCORE_NOT_FOUND` para delta negativo sem score prévio
+	- retorno `INVALID_SCORE_DELTA` para deltas que invalidam contadores
+- Domain:
+	- nova entidade `PlayerScoreSourceEvent` para registrar origem processada
+- Infrastructure:
+	- `IPlayerScoreRepository` expandido com `HasProcessedSourceEventAsync` e `AddProcessedSourceEventAsync`
+	- `PlayerScoreRepository` com suporte à trilha de eventos processados
+	- `TenantDbContext` com `DbSet<PlayerScoreSourceEvent>` e índice único `(TenantId, SourceEventId)`
+	- migration tenant `AddPlayerScoreSourceEvents`
+- Testes TDD adicionados:
+	- `ApplyScoreDeltaCommandHandlerTests`
+- Validação executada:
+	- testes da Slice 3: 5 passando
+	- regressão focada Slices 1+2+3: 25 passando
+
 ### Added — Fase 11: Súmula (backend MVP concluído)
 
 - Domain:

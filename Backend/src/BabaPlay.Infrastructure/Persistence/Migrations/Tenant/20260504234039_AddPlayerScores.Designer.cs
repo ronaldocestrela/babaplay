@@ -4,6 +4,7 @@ using BabaPlay.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
 {
     [DbContext(typeof(TenantDbContext))]
-    partial class TenantDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260504234039_AddPlayerScores")]
+    partial class AddPlayerScores
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -477,42 +480,6 @@ namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
                     b.ToTable("PlayerScores");
                 });
 
-            modelBuilder.Entity("BabaPlay.Domain.Entities.PlayerScoreSourceEvent", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("AppliedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("PlayerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("SourceEventId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PlayerId");
-
-                    b.HasIndex("TenantId", "PlayerId");
-
-                    b.HasIndex("TenantId", "SourceEventId")
-                        .IsUnique();
-
-                    b.ToTable("PlayerScoreSourceEvents");
-                });
-
             modelBuilder.Entity("BabaPlay.Domain.Entities.Position", b =>
                 {
                     b.Property<Guid>("Id")
@@ -741,15 +708,6 @@ namespace BabaPlay.Infrastructure.Persistence.Migrations.Tenant
                 });
 
             modelBuilder.Entity("BabaPlay.Domain.Entities.PlayerScore", b =>
-                {
-                    b.HasOne("BabaPlay.Domain.Entities.Player", null)
-                        .WithMany()
-                        .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("BabaPlay.Domain.Entities.PlayerScoreSourceEvent", b =>
                 {
                     b.HasOne("BabaPlay.Domain.Entities.Player", null)
                         .WithMany()
