@@ -8,7 +8,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
-### Added — Fase 11: Súmula (backend em andamento)
+### Added — Fase 11: Súmula (backend MVP concluído)
 
 - Domain:
 	- `MatchSummary` entity com `Create` e `Deactivate`
@@ -57,6 +57,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 - Validação atualizada:
 	- filtro `FullyQualifiedName~MatchSummary`: 27 testes passando
 	- regressão backend completa: 342 testes passando
+
+### Changed — Fase 11: fechamento oficial
+
+- Status da fase atualizado para concluída no roadmap com escopo explícito de backend MVP.
+- Delimitação de escopo futuro adicionada (template PDF avançado, versionamento/auditoria e UI Web/Mobile) como incrementos não bloqueantes.
 
 ### Changed — Fase 9: Partidas (hardening RBAC + TDD)
 

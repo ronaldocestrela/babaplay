@@ -542,6 +542,47 @@ Código sem:
 
 ---
 
+### Fase 11 — Súmula ✅
+
+#### Domínio
+- `MatchSummary` entity (sealed, extends `EntityBase`): `TenantId`, `MatchId`, `StoragePath`, `FileName`, `ContentType`, `SizeBytes`, `GeneratedAtUtc`, `IsActive`
+- Regras: validações de campos obrigatórios e `SizeBytes > 0`; `Deactivate()` idempotente
+
+#### Application
+- Interfaces: `IMatchSummaryRepository`, `IMatchSummaryPdfGenerator`, `IMatchSummaryStorageService`
+- DTOs: `MatchSummaryResponse`, `MatchSummaryFileResponse`
+- CQRS:
+	- Command: `GenerateMatchSummary`
+	- Queries: `GetMatchSummaryByMatch`, `GetMatchSummaryFile`
+
+#### Infrastructure
+- `MatchSummaryRepository` com contexto por operação via `TenantDbContextFactory` + `ITenantContext`
+- `LocalMatchSummaryStorageService` (filesystem local) com root configurável e proteção contra path traversal no read
+- `MinimalPdfMatchSummaryGenerator` (PDF mínimo válido para MVP)
+- `TenantDbContext`: `DbSet<MatchSummary>`, índice único `(TenantId, MatchId)`
+- Migration tenant: `AddMatchSummaries`
+
+#### API
+- `MatchSummaryController` com endpoints:
+	- `POST /api/v1/match-summary`
+	- `GET /api/v1/match-summary/match/{matchId}`
+	- `GET /api/v1/match-summary/{summaryId}/file`
+
+#### Regras aplicadas
+- Geração permitida apenas para partida concluída (`MATCH_NOT_COMPLETED`)
+- Duplicidade bloqueada por partida (`MATCH_SUMMARY_ALREADY_EXISTS`)
+- Not found padronizado para partida/súmula/arquivo (`MATCH_NOT_FOUND`, `MATCH_SUMMARY_NOT_FOUND`, `MATCH_SUMMARY_FILE_NOT_FOUND`)
+
+#### Testes
+- Unit Domain: `MatchSummaryTests`
+- Unit Application: `GenerateMatchSummaryCommandHandlerTests`, `GetMatchSummaryByMatchQueryHandlerTests`, `GetMatchSummaryFileQueryHandlerTests`
+- Unit Infrastructure: `LocalMatchSummaryStorageServiceTests`, `MinimalPdfMatchSummaryGeneratorTests`
+- Integration: `MatchSummaryIntegrationTests`
+- Execução filtrada por MatchSummary: 27 testes (100% passando)
+- Regressão backend após fechamento da fase: 342 testes (100% passando)
+
+---
+
 ### Fase 16 — Frontend (React): 1. Auth ✅
 
 #### Arquitetura de autenticação

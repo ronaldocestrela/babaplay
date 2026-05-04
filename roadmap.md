@@ -503,7 +503,7 @@ Construir um sistema SaaS escalável, com:
 
 ### Status
 
-- 🚧 Em andamento (backend iniciado)
+- ✅ Concluída (backend MVP)
 
 ### Entregas
 
@@ -568,7 +568,7 @@ Construir um sistema SaaS escalável, com:
 
 ### Status
 
-- 🚧 Em andamento (backend iniciado)
+- ✅ Concluída (backend MVP)
 
 ### Entregas
 
@@ -640,6 +640,14 @@ Construir um sistema SaaS escalável, com:
 
 - Filtro `FullyQualifiedName~MatchSummary`: **27 testes, 100% passando**
 - Regressão backend completa: **342 testes, 100% passando**
+
+### Fechamento oficial da fase
+
+- Escopo concluído nesta fase: backend MVP de súmula (geração, armazenamento local, consulta de metadata, download de arquivo, migração tenant, hardening e testes).
+- Itens futuros não bloqueantes para esta fase:
+  - melhoria visual/estrutural do PDF (template oficial)
+  - versionamento e trilha de auditoria
+  - interfaces Web/Mobile para operação da súmula
 
 ---
 
