@@ -10,6 +10,7 @@ using BabaPlay.Application.Common;
 using BabaPlay.Application.DTOs;
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Application.Queries.Ping;
+using BabaPlay.Application.Queries.Checkins;
 using BabaPlay.Application.Queries.GameDays;
 using BabaPlay.Application.Queries.Players;
 using BabaPlay.Application.Queries.Positions;
@@ -66,6 +67,9 @@ public static class ServiceRegistration
 
         // Check-ins — Fase 7
         services.AddScoped<ICommandHandler<CreateCheckinCommand, Result<CheckinResponse>>, CreateCheckinCommandHandler>();
+        services.AddScoped<ICommandHandler<CancelCheckinCommand, Result>, CancelCheckinCommandHandler>();
+        services.AddScoped<IQueryHandler<GetCheckinsByGameDayQuery, Result<IReadOnlyList<CheckinResponse>>>, GetCheckinsByGameDayQueryHandler>();
+        services.AddScoped<IQueryHandler<GetCheckinsByPlayerQuery, Result<IReadOnlyList<CheckinResponse>>>, GetCheckinsByPlayerQueryHandler>();
 
         return services;
     }

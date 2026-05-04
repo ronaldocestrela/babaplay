@@ -445,14 +445,15 @@ Código sem:
 
 ---
 
-### Fase 7 — Check-ins 🚧
+### Fase 7 — Check-ins ✅
 
 #### Domínio
 - `Checkin` entity (sealed, extends `EntityBase`): `TenantId`, `PlayerId`, `GameDayId`, `CheckedInAtUtc`, `Latitude`, `Longitude`, `DistanceFromAssociationMeters`, `IsActive`, `CancelledAtUtc`
 - `GeoCoordinate` value object para validação de coordenadas e cálculo de distância em metros
 
 #### Application
-- Command implementado: `CreateCheckin`
+- Commands implementados: `CreateCheckin`, `CancelCheckin`
+- Queries implementadas: `GetCheckinsByGameDay`, `GetCheckinsByPlayer`
 - Interfaces: `ICheckinRepository`, `ITenantGeolocationSettingsRepository`, `ICheckinRealtimeNotifier`
 - DTOs: `CheckinResponse`, `TenantGeolocationSettingsDto`
 
@@ -463,8 +464,11 @@ Código sem:
 - SignalR: `CheckinHub` + `SignalRCheckinRealtimeNotifier`
 
 #### API
-- Endpoint implementado:
+- Endpoints implementados:
 	- `POST /api/v1/checkin`
+	- `GET /api/v1/checkin/gameday/{gameDayId}`
+	- `GET /api/v1/checkin/player/{playerId}`
+	- `DELETE /api/v1/checkin/{id}`
 
 #### Regras aplicadas
 - Check-in apenas no dia do jogo (`CHECKIN_DAY_INVALID`)
@@ -472,21 +476,21 @@ Código sem:
 - Distância deve estar dentro do raio da associação (`CHECKIN_OUTSIDE_ALLOWED_RADIUS`)
 - Duplicidade bloqueada por jogador + game day (`CHECKIN_ALREADY_EXISTS`)
 
-#### Realtime (MVP parcial)
+#### Realtime
 - Evento de check-in criado
 - Evento de contagem atualizada
 - Evento de tentativa negada com motivo
+- Evento de undo/cancelamento
 
 #### Testes
 - Unit Domain: `CheckinTests`
-- Unit Application: `CreateCheckinCommandHandlerTests`
-- Suíte backend atual: 192 testes (100% passando)
+- Unit Application: `CreateCheckinCommandHandlerTests`, `CancelCheckinCommandHandlerTests`, `GetCheckinsByGameDayQueryHandlerTests`, `GetCheckinsByPlayerQueryHandlerTests`
+- Integration: `CheckinIntegrationTests`, `CheckinHubIntegrationTests`
+- Suíte backend atual: 206 testes (100% passando)
 
-#### Pendências da Fase 7
-- `Undo/Cancel` de check-in
-- Queries de listagem por game day e por jogador
-- Testes de integração HTTP e SignalR da feature
-- Migrations finais da fase
+#### Migrations
+- Tenant: `AddCheckins`
+- Master: `AddTenantGeolocationSettings`
 
 ---
 

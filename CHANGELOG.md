@@ -8,13 +8,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
-### Added — Fase 7: Check-in (parcial backend)
+### Added — Fase 7: Check-in (backend concluído)
 
 - Domain:
 	- `Checkin` entity com suporte a criação e cancelamento lógico (`Deactivate`)
 	- `GeoCoordinate` value object para validação de latitude/longitude e cálculo de distância em metros
 - Application:
 	- `CreateCheckinCommand` / `CreateCheckinCommandHandler`
+	- `CancelCheckinCommand` / `CancelCheckinCommandHandler`
+	- `GetCheckinsByGameDayQuery` / `GetCheckinsByGameDayQueryHandler`
+	- `GetCheckinsByPlayerQuery` / `GetCheckinsByPlayerQueryHandler`
 	- contratos `ICheckinRepository`, `ITenantGeolocationSettingsRepository`, `ICheckinRealtimeNotifier`
 	- DTOs `CheckinResponse` e `TenantGeolocationSettingsDto`
 - Regras de negócio aplicadas:
@@ -29,16 +32,25 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 	- `TenantDbContext` com `DbSet<Checkin>` e índices para consulta/duplicidade ativa
 	- SignalR com `CheckinHub` e `SignalRCheckinRealtimeNotifier`
 - API:
-	- novo endpoint `POST /api/v1/checkin`
+	- endpoint `POST /api/v1/checkin`
+	- endpoint `GET /api/v1/checkin/gameday/{gameDayId}`
+	- endpoint `GET /api/v1/checkin/player/{playerId}`
+	- endpoint `DELETE /api/v1/checkin/{id}`
 	- `Program.cs` com `AddSignalR()` + `MapHub<CheckinHub>("/hubs/checkin")`
+- Realtime:
+	- eventos de criação, contagem, tentativa negada e undo de check-in
+- Migrations:
+	- tenant: `AddCheckins`
+	- master: `AddTenantGeolocationSettings`
 - Testes:
 	- Unit Domain: `CheckinTests`
-	- Unit Application: `CreateCheckinCommandHandlerTests`
-	- Regressão executada: 192 testes backend, 100% passando
+	- Unit Application: `CreateCheckinCommandHandlerTests`, `CancelCheckinCommandHandlerTests`, `GetCheckinsByGameDayQueryHandlerTests`, `GetCheckinsByPlayerQueryHandlerTests`
+	- Integration: `CheckinIntegrationTests` e `CheckinHubIntegrationTests`
+	- Regressão executada: 206 testes backend, 100% passando
 
 ### Changed
 
-- Documentação de roadmap e estado de implementação atualizados para refletir a Fase 7 em andamento e pendências de fechamento.
+- Documentação de roadmap e estado de implementação atualizados para refletir a Fase 7 backend concluída.
 
 ### Added — Fase 5: Positions
 

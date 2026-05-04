@@ -151,19 +151,43 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
             }
         }
 
-        if (!db.Tenants.Any(t => t.Slug == TestTenantSlug))
+        var tenant = await db.Tenants.FirstOrDefaultAsync(t => t.Slug == TestTenantSlug);
+        if (tenant is null)
         {
-            db.Tenants.Add(new Tenant
+            tenant = new Tenant
             {
                 Id = Guid.NewGuid(),
                 Name = "Test Tenant Player",
                 Slug = TestTenantSlug,
+                AssociationLatitude = -23.5505,
+                AssociationLongitude = -46.6333,
+                CheckinRadiusMeters = 300,
                 IsActive = true,
                 ProvisioningStatus = ProvisioningStatus.Ready,
                 ConnectionString = "placeholder-overridden-by-test-factory",
-            });
+            };
+
+            db.Tenants.Add(tenant);
             await db.SaveChangesAsync();
         }
+
+        foreach (var testUserId in TestUserIds)
+        {
+            var userId = testUserId.ToString();
+            var existsMembership = await db.UserTenants.AnyAsync(ut => ut.UserId == userId && ut.TenantId == tenant.Id);
+
+            if (!existsMembership)
+            {
+                db.UserTenants.Add(new UserTenant
+                {
+                    UserId = userId,
+                    TenantId = tenant.Id,
+                    IsOwner = false,
+                });
+            }
+        }
+
+        await db.SaveChangesAsync();
     }
 
     private static async Task SeedTenantAsync(TenantDbContextFactory factory)

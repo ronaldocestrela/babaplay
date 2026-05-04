@@ -16,6 +16,32 @@ public sealed class CheckinRepository : ICheckinRepository
         _tenantContext = tenantContext;
     }
 
+    public async Task<Checkin?> GetByIdAsync(Guid checkinId, CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        return await db.Checkins.FirstOrDefaultAsync(c => c.Id == checkinId, ct);
+    }
+
+    public async Task<IReadOnlyList<Checkin>> GetActiveByGameDayAsync(Guid gameDayId, CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        return await db.Checkins
+            .AsNoTracking()
+            .Where(c => c.IsActive && c.GameDayId == gameDayId)
+            .OrderByDescending(c => c.CheckedInAtUtc)
+            .ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<Checkin>> GetActiveByPlayerAsync(Guid playerId, CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        return await db.Checkins
+            .AsNoTracking()
+            .Where(c => c.IsActive && c.PlayerId == playerId)
+            .OrderByDescending(c => c.CheckedInAtUtc)
+            .ToListAsync(ct);
+    }
+
     public async Task<bool> ExistsActiveByPlayerAndGameDayAsync(Guid playerId, Guid gameDayId, CancellationToken ct = default)
     {
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
@@ -34,6 +60,13 @@ public sealed class CheckinRepository : ICheckinRepository
     {
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
         db.Checkins.Add(checkin);
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task UpdateAsync(Checkin checkin, CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        db.Checkins.Update(checkin);
         await db.SaveChangesAsync(ct);
     }
 
