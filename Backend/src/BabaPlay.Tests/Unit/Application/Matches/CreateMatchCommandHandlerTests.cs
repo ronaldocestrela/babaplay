@@ -26,6 +26,33 @@ public class CreateMatchCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_EmptyGameDayId_ShouldReturnInvalidGameDayId()
+    {
+        var result = await _handler.HandleAsync(new CreateMatchCommand(Guid.Empty, Guid.NewGuid(), Guid.NewGuid(), null));
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorCode.Should().Be("INVALID_GAMEDAY_ID");
+    }
+
+    [Fact]
+    public async Task Handle_EmptyHomeTeamId_ShouldReturnInvalidHomeTeamId()
+    {
+        var result = await _handler.HandleAsync(new CreateMatchCommand(Guid.NewGuid(), Guid.Empty, Guid.NewGuid(), null));
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorCode.Should().Be("INVALID_HOME_TEAM_ID");
+    }
+
+    [Fact]
+    public async Task Handle_EmptyAwayTeamId_ShouldReturnInvalidAwayTeamId()
+    {
+        var result = await _handler.HandleAsync(new CreateMatchCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.Empty, null));
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorCode.Should().Be("INVALID_AWAY_TEAM_ID");
+    }
+
+    [Fact]
     public async Task Handle_SameTeams_ShouldReturnValidationError()
     {
         var teamId = Guid.NewGuid();

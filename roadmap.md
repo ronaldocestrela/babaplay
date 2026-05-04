@@ -456,6 +456,10 @@ Construir um sistema SaaS escalável, com:
     - `PUT /api/v1/match/{id}`
     - `PUT /api/v1/match/{id}/status`
     - `DELETE /api/v1/match/{id}`
+  - Hardening RBAC:
+    - `MatchController` protegido com `TenantMember` + policies por endpoint (`MatchesRead`/`MatchesWrite`)
+    - catálogo de permissões atualizado com `matches.read` e `matches.write`
+    - matriz padrão de roles atualizada para incluir permissões de Match
 
 ### Regras já implementadas
 
@@ -483,11 +487,15 @@ Construir um sistema SaaS escalável, com:
   - `GetMatchesQueryHandlerTests`
 - Integration:
   - `MatchIntegrationTests`
+  - cenário adicional: `POST /api/v1/match` com times iguais retorna `422 TEAMS_MUST_BE_DIFFERENT`
+- Incremento TDD adicional:
+  - validações de `Guid.Empty` para `GameDayId`, `HomeTeamId`, `AwayTeamId` nos handlers de create/update
+  - validação de times iguais no update
 
 ### Status atual da implementação da Fase 9
 
-- Recorte de regressão executado com filtro de Match: **32 testes, 100% passando**
-- Regressão backend completa após fechamento da fase: **274 testes, 100% passando**
+- Recorte de regressão executado com filtro de Match (após hardening): **73 testes, 100% passando**
+- Regressão backend completa mais recente: **315 testes, 100% passando**
 
 ---
 

@@ -8,6 +8,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Changed — Fase 9: Partidas (hardening RBAC + TDD)
+
+- Segurança/RBAC:
+	- novas permissões em `RbacCatalog`: `matches.read`, `matches.write`
+	- novas policies: `MatchesRead` e `MatchesWrite`
+	- `MatchController` atualizado para exigir `TenantMember` e policies por endpoint (read/write)
+- Testes:
+	- adicionados cenários unitários para `CreateMatchCommandHandler` e `UpdateMatchCommandHandler` cobrindo IDs vazios (`GameDayId`, `HomeTeamId`, `AwayTeamId`)
+	- adicionado cenário unitário para times iguais no update (`TEAMS_MUST_BE_DIFFERENT`)
+	- adicionado cenário de integração em `MatchIntegrationTests` para `POST /api/v1/match` com times iguais retornando `422`
+	- `PlayerWebApplicationFactory` atualizado para seed RBAC padrão no tenant de testes e atribuição de role aos usuários de integração
+- Validação:
+	- regressão filtrada de Match: 73 testes passando
+	- regressão completa backend com cobertura: 315 testes passando
+
 ### Added — Fase 10: MatchEvents (backend em andamento)
 
 - Domain:

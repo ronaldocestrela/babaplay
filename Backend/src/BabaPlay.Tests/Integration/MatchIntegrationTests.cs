@@ -22,6 +22,8 @@ public sealed class MatchIntegrationTests : IClassFixture<PlayerWebApplicationFa
     {
         _client = factory.CreateClient();
         _client.DefaultRequestHeaders.Add("X-Tenant-Slug", PlayerWebApplicationFactory.TestTenantSlug);
+        _client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, PlayerWebApplicationFactory.TestUserIds[0].ToString());
+        _client.DefaultRequestHeaders.Add(TestAuthHandler.UserEmailHeader, "player-test-1@babaplay.com");
     }
 
     [Fact]
@@ -71,6 +73,25 @@ public sealed class MatchIntegrationTests : IClassFixture<PlayerWebApplicationFa
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
         var problem = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
         problem.GetProperty("title").GetString().Should().Be("MATCH_ALREADY_EXISTS");
+    }
+
+    [Fact]
+    public async Task Post_SameTeams_ShouldReturn422()
+    {
+        var gameDay = await CreateGameDayAsync("Rodada Match Same Team");
+        var team = await CreateTeamAsync("Team Same");
+
+        var response = await _client.PostAsJsonAsync("/api/v1/match", new
+        {
+            gameDayId = gameDay.Id,
+            homeTeamId = team.Id,
+            awayTeamId = team.Id,
+            description = (string?)null,
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        problem.GetProperty("title").GetString().Should().Be("TEAMS_MUST_BE_DIFFERENT");
     }
 
     [Fact]

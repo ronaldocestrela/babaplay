@@ -23,6 +23,8 @@ public static class RbacCatalog
         public const string PlayersRead = "players.read";
         public const string PlayersWrite = "players.write";
         public const string TenantRead = "tenant.read";
+        public const string MatchesRead = "matches.read";
+        public const string MatchesWrite = "matches.write";
         public const string MatchEventsRead = "matchevents.read";
         public const string MatchEventsWrite = "matchevents.write";
         public const string MatchEventTypesRead = "matcheventtypes.read";
@@ -41,6 +43,8 @@ public static class RbacCatalog
                 Permissions.PlayersRead,
                 Permissions.PlayersWrite,
                 Permissions.TenantRead,
+                Permissions.MatchesRead,
+                Permissions.MatchesWrite,
                 Permissions.MatchEventsRead,
                 Permissions.MatchEventsWrite,
                 Permissions.MatchEventTypesRead,
@@ -52,6 +56,8 @@ public static class RbacCatalog
                 Permissions.PlayersRead,
                 Permissions.PlayersWrite,
                 Permissions.TenantRead,
+                Permissions.MatchesRead,
+                Permissions.MatchesWrite,
                 Permissions.MatchEventsRead,
                 Permissions.MatchEventsWrite,
                 Permissions.MatchEventTypesRead,
@@ -60,12 +66,14 @@ public static class RbacCatalog
             [
                 Permissions.PlayersRead,
                 Permissions.TenantRead,
+                Permissions.MatchesRead,
                 Permissions.MatchEventsRead,
             ],
             [Roles.Viewer] =
             [
                 Permissions.PlayersRead,
                 Permissions.TenantRead,
+                Permissions.MatchesRead,
                 Permissions.MatchEventsRead,
             ],
         };

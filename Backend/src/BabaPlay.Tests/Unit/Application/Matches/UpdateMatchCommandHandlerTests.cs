@@ -20,6 +20,63 @@ public class UpdateMatchCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_EmptyGameDayId_ShouldReturnInvalidGameDayId()
+    {
+        var match = DomainMatch.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null);
+        var cmd = new UpdateMatchCommand(match.Id, Guid.Empty, Guid.NewGuid(), Guid.NewGuid(), null);
+
+        _matchRepository.Setup(x => x.GetByIdAsync(match.Id, It.IsAny<CancellationToken>())).ReturnsAsync(match);
+
+        var result = await _handler.HandleAsync(cmd);
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorCode.Should().Be("INVALID_GAMEDAY_ID");
+    }
+
+    [Fact]
+    public async Task Handle_EmptyHomeTeamId_ShouldReturnInvalidHomeTeamId()
+    {
+        var match = DomainMatch.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null);
+        var cmd = new UpdateMatchCommand(match.Id, Guid.NewGuid(), Guid.Empty, Guid.NewGuid(), null);
+
+        _matchRepository.Setup(x => x.GetByIdAsync(match.Id, It.IsAny<CancellationToken>())).ReturnsAsync(match);
+
+        var result = await _handler.HandleAsync(cmd);
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorCode.Should().Be("INVALID_HOME_TEAM_ID");
+    }
+
+    [Fact]
+    public async Task Handle_EmptyAwayTeamId_ShouldReturnInvalidAwayTeamId()
+    {
+        var match = DomainMatch.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null);
+        var cmd = new UpdateMatchCommand(match.Id, Guid.NewGuid(), Guid.NewGuid(), Guid.Empty, null);
+
+        _matchRepository.Setup(x => x.GetByIdAsync(match.Id, It.IsAny<CancellationToken>())).ReturnsAsync(match);
+
+        var result = await _handler.HandleAsync(cmd);
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorCode.Should().Be("INVALID_AWAY_TEAM_ID");
+    }
+
+    [Fact]
+    public async Task Handle_SameTeams_ShouldReturnTeamsMustBeDifferent()
+    {
+        var match = DomainMatch.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null);
+        var teamId = Guid.NewGuid();
+        var cmd = new UpdateMatchCommand(match.Id, Guid.NewGuid(), teamId, teamId, null);
+
+        _matchRepository.Setup(x => x.GetByIdAsync(match.Id, It.IsAny<CancellationToken>())).ReturnsAsync(match);
+
+        var result = await _handler.HandleAsync(cmd);
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorCode.Should().Be("TEAMS_MUST_BE_DIFFERENT");
+    }
+
+    [Fact]
     public async Task Handle_NotFound_ShouldReturnMatchNotFound()
     {
         _matchRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))

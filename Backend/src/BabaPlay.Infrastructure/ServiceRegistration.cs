@@ -101,6 +101,18 @@ public static class ServiceRegistration
                 policy.Requirements.Add(new PermissionRequirement(RbacCatalog.Permissions.RbacPermissionsWrite));
             });
 
+            options.AddPolicy(AuthorizationPolicyNames.MatchesRead, policy =>
+            {
+                policy.Requirements.Add(new TenantMemberRequirement());
+                policy.Requirements.Add(new PermissionRequirement(RbacCatalog.Permissions.MatchesRead));
+            });
+
+            options.AddPolicy(AuthorizationPolicyNames.MatchesWrite, policy =>
+            {
+                policy.Requirements.Add(new TenantMemberRequirement());
+                policy.Requirements.Add(new PermissionRequirement(RbacCatalog.Permissions.MatchesWrite));
+            });
+
             options.AddPolicy(AuthorizationPolicyNames.MatchEventsRead, policy =>
             {
                 policy.Requirements.Add(new TenantMemberRequirement());

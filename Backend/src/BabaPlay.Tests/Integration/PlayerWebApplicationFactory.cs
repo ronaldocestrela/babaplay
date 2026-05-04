@@ -1,4 +1,6 @@
 using BabaPlay.Application.Interfaces;
+using BabaPlay.Application.Common;
+using BabaPlay.Domain.Entities;
 using BabaPlay.Domain.Enums;
 using BabaPlay.Infrastructure.Entities;
 using BabaPlay.Infrastructure.Persistence;
@@ -48,6 +50,7 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
     public const string TestUserEmail = "player-test@babaplay.com";
     public const string TestUserPassword = "PlayerTest@123456";
     public const string TestTenantSlug = "test-tenant-player";
+    public static readonly Guid TestTenantId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-000000000001");
 
     private readonly SqliteConnection _masterConnection = new("Data Source=:memory:");
     private readonly SqliteConnection _tenantConnection = new("Data Source=:memory:");
@@ -162,7 +165,7 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
         {
             tenant = new Tenant
             {
-                Id = Guid.NewGuid(),
+                Id = TestTenantId,
                 Name = "Test Tenant Player",
                 Slug = TestTenantSlug,
                 AssociationLatitude = -23.5505,
@@ -201,9 +204,64 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
         // Resolve tenantId from master DB is not straightforward here, so we
         // create a context directly using the factory's shared SQLite connection.
         // The TestTenantDbContextFactory ignores tenantId.
-        var db = await factory.CreateAsync(Guid.Empty);
+        await using var db = await factory.CreateAsync(Guid.Empty);
         await db.Database.EnsureCreatedAsync();
-        await db.DisposeAsync();
+
+        var permissionByNormalized = await db.Permissions
+            .ToDictionaryAsync(p => p.NormalizedCode, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var permissionCode in RbacCatalog.AllPermissions)
+        {
+            var normalizedCode = permissionCode.Trim().ToUpperInvariant();
+            if (permissionByNormalized.ContainsKey(normalizedCode))
+                continue;
+
+            var permission = Permission.Create(permissionCode, $"Test permission: {permissionCode}");
+            db.Permissions.Add(permission);
+            permissionByNormalized[normalizedCode] = permission;
+        }
+
+        await db.SaveChangesAsync();
+
+        var roleByNormalized = await db.Roles
+            .Include(r => r.Permissions)
+            .ToDictionaryAsync(r => r.NormalizedName, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var roleName in RbacCatalog.DefaultRolePermissions.Keys)
+        {
+            var normalizedName = roleName.Trim().ToUpperInvariant();
+            if (roleByNormalized.ContainsKey(normalizedName))
+                continue;
+
+            var role = Role.Create(TestTenantId, roleName, "Seeded test role");
+            db.Roles.Add(role);
+            roleByNormalized[normalizedName] = role;
+        }
+
+        await db.SaveChangesAsync();
+
+        foreach (var roleEntry in RbacCatalog.DefaultRolePermissions)
+        {
+            var role = roleByNormalized[roleEntry.Key.Trim().ToUpperInvariant()];
+
+            foreach (var permissionCode in roleEntry.Value)
+            {
+                var permission = permissionByNormalized[permissionCode.Trim().ToUpperInvariant()];
+                role.AddPermission(permission.Id);
+            }
+        }
+
+        await db.SaveChangesAsync();
+
+        var adminRole = roleByNormalized[RbacCatalog.Roles.Admin.ToUpperInvariant()];
+        foreach (var testUserId in TestUserIds)
+        {
+            var userId = testUserId.ToString();
+            if (!await db.UserRoles.AnyAsync(ur => ur.UserId == userId && ur.RoleId == adminRole.Id))
+                db.UserRoles.Add(UserRole.Create(userId, adminRole.Id));
+        }
+
+        await db.SaveChangesAsync();
     }
 
     // ---- Inner classes ----
