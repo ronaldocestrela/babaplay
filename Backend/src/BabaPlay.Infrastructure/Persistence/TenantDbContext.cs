@@ -13,6 +13,7 @@ public sealed class TenantDbContext : DbContext
 
     public DbSet<Player> Players => Set<Player>();
     public DbSet<GameDay> GameDays => Set<GameDay>();
+    public DbSet<Match> Matches => Set<Match>();
     public DbSet<Checkin> Checkins => Set<Checkin>();
     public DbSet<Position> Positions => Set<Position>();
     public DbSet<PlayerPosition> PlayerPositions => Set<PlayerPosition>();
@@ -46,6 +47,21 @@ public sealed class TenantDbContext : DbContext
             e.Property(g => g.Status).IsRequired();
             e.HasIndex(g => new { g.TenantId, g.NormalizedName, g.ScheduledAt }).IsUnique();
             e.HasIndex(g => new { g.TenantId, g.ScheduledAt });
+        });
+
+        builder.Entity<Match>(e =>
+        {
+            e.HasKey(m => m.Id);
+            e.Property(m => m.TenantId).IsRequired();
+            e.Property(m => m.GameDayId).IsRequired();
+            e.Property(m => m.HomeTeamId).IsRequired();
+            e.Property(m => m.AwayTeamId).IsRequired();
+            e.Property(m => m.Description).HasMaxLength(500);
+            e.Property(m => m.Status).IsRequired();
+            e.Property(m => m.IsActive).IsRequired();
+            e.HasIndex(m => new { m.TenantId, m.GameDayId, m.HomeTeamId, m.AwayTeamId }).IsUnique();
+            e.HasIndex(m => new { m.TenantId, m.Status });
+            e.HasIndex(m => new { m.TenantId, m.GameDayId });
         });
 
         builder.Entity<Checkin>(e =>

@@ -122,6 +122,7 @@ public static class ServiceRegistration
         // --- Tenant-scoped repositories (Fase 3) ---
         services.AddScoped<IPlayerRepository, PlayerRepository>();
         services.AddScoped<ITeamRepository, TeamRepository>();
+        services.AddScoped<IMatchRepository, MatchRepository>();
         services.AddScoped<IPositionRepository, PositionRepository>();
         services.AddScoped<IGameDayRepository, GameDayRepository>();
         services.AddScoped<ICheckinRepository, CheckinRepository>();

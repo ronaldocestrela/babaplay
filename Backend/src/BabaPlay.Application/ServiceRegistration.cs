@@ -1,6 +1,7 @@
 using BabaPlay.Application.Commands.Auth;
 using BabaPlay.Application.Commands.Checkins;
 using BabaPlay.Application.Commands.GameDays;
+using BabaPlay.Application.Commands.Matches;
 using BabaPlay.Application.Commands.Ping;
 using BabaPlay.Application.Commands.Players;
 using BabaPlay.Application.Commands.Positions;
@@ -13,6 +14,7 @@ using BabaPlay.Application.Interfaces;
 using BabaPlay.Application.Queries.Ping;
 using BabaPlay.Application.Queries.Checkins;
 using BabaPlay.Application.Queries.GameDays;
+using BabaPlay.Application.Queries.Matches;
 using BabaPlay.Application.Queries.Players;
 using BabaPlay.Application.Queries.Positions;
 using BabaPlay.Application.Queries.Roles;
@@ -45,6 +47,14 @@ public static class ServiceRegistration
         services.AddScoped<ICommandHandler<UpdateGameDayCommand, Result<GameDayResponse>>, UpdateGameDayCommandHandler>();
         services.AddScoped<ICommandHandler<ChangeGameDayStatusCommand, Result<GameDayResponse>>, ChangeGameDayStatusCommandHandler>();
         services.AddScoped<ICommandHandler<DeleteGameDayCommand, Result>, DeleteGameDayCommandHandler>();
+
+        // Matches — Fase 9
+        services.AddScoped<ICommandHandler<CreateMatchCommand, Result<MatchResponse>>, CreateMatchCommandHandler>();
+        services.AddScoped<IQueryHandler<GetMatchQuery, Result<MatchResponse>>, GetMatchQueryHandler>();
+        services.AddScoped<IQueryHandler<GetMatchesQuery, Result<IReadOnlyList<MatchResponse>>>, GetMatchesQueryHandler>();
+        services.AddScoped<ICommandHandler<UpdateMatchCommand, Result<MatchResponse>>, UpdateMatchCommandHandler>();
+        services.AddScoped<ICommandHandler<ChangeMatchStatusCommand, Result<MatchResponse>>, ChangeMatchStatusCommandHandler>();
+        services.AddScoped<ICommandHandler<DeleteMatchCommand, Result>, DeleteMatchCommandHandler>();
 
         // Players — Fase 3
         services.AddScoped<ICommandHandler<CreatePlayerCommand, Result<PlayerResponse>>, CreatePlayerCommandHandler>();

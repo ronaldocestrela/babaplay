@@ -494,6 +494,51 @@ Código sem:
 
 ---
 
+### Fase 9 — Partidas 🚧 (em implementação)
+
+#### Domínio
+- `Match` entity (sealed, extends `EntityBase`): `TenantId`, `GameDayId`, `HomeTeamId`, `AwayTeamId`, `Description`, `Status`, `IsActive`
+- `MatchStatus` enum: `Pending`, `Scheduled`, `InProgress`, `Completed`, `Cancelled`
+- Regras na entidade:
+	- dois times obrigatórios e distintos
+	- transições de status válidas
+	- `Deactivate()` idempotente
+
+#### Application
+- `IMatchRepository`: `GetByIdAsync`, `GetAllActiveAsync`, `ExistsByGameDayAndTeamsAsync`, `AddAsync`, `UpdateAsync`, `SaveChangesAsync`
+- DTO: `MatchResponse`
+- Handlers CQRS:
+	- Commands: `CreateMatch`, `UpdateMatch`, `ChangeMatchStatus`, `DeleteMatch`
+	- Queries: `GetMatch`, `GetMatches`
+
+#### Infrastructure
+- `MatchRepository` com contexto por operação via `TenantDbContextFactory` + `ITenantContext`
+- `TenantDbContext`: adicionado `DbSet<Match>`
+- Índices: único `(TenantId, GameDayId, HomeTeamId, AwayTeamId)` + consulta `(TenantId, Status)` e `(TenantId, GameDayId)`
+
+#### API
+- `MatchController` com endpoints:
+	- `POST /api/v1/match`
+	- `GET /api/v1/match`
+	- `GET /api/v1/match/{id}`
+	- `PUT /api/v1/match/{id}`
+	- `PUT /api/v1/match/{id}/status`
+	- `DELETE /api/v1/match/{id}`
+
+#### Regras aplicadas
+- Duplicidade bloqueada por `GameDayId + Teams` (inclui ordem invertida)
+- `GameDay` inexistente retorna `GAMEDAY_NOT_FOUND`
+- Time inexistente/inativo retorna `TEAM_NOT_FOUND`
+- Status inválido retorna `INVALID_STATUS_TRANSITION`
+
+#### Testes (parcial)
+- Unit Domain: `MatchTests`
+- Unit Application: suítes de Commands/Queries de Match
+- Integration: `MatchIntegrationTests`
+- Execução filtrada por Match: 20 testes (100% passando)
+
+---
+
 ### Fase 16 — Frontend (React): 1. Auth ✅
 
 #### Arquitetura de autenticação

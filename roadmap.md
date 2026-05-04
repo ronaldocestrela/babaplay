@@ -424,12 +424,67 @@ Construir um sistema SaaS escalável, com:
 
 ---
 
-## 🏆 Fase 9 — Partidas
+## 🏆 Fase 9 — Partidas 🚧 EM IMPLEMENTAÇÃO
 
-### Entregas
+### Entregas concluídas (parcial)
 
-- Matches
-- Status
+- Domain:
+  - `Match` entity (`Create`, `Update`, `ChangeStatus`, `Deactivate`) com `TenantId`, `GameDayId`, `HomeTeamId`, `AwayTeamId`, `Description`, `Status`, `IsActive`
+  - `MatchStatus` enum: `Pending`, `Scheduled`, `InProgress`, `Completed`, `Cancelled`
+- Application (CQRS + contratos):
+  - Interface `IMatchRepository`
+  - DTO `MatchResponse`
+  - Commands/Handlers:
+    - `CreateMatchCommand`
+    - `UpdateMatchCommand`
+    - `ChangeMatchStatusCommand`
+    - `DeleteMatchCommand`
+  - Queries/Handlers:
+    - `GetMatchQuery`
+    - `GetMatchesQuery`
+- Infrastructure (tenant DB):
+  - `MatchRepository`
+  - `TenantDbContext` com `DbSet<Match>`
+  - Índices de consulta por `(TenantId, Status)` e `(TenantId, GameDayId)`
+  - Índice único para evitar duplicidade de confronto por game day
+- API:
+  - `MatchController` com endpoints:
+    - `POST /api/v1/match`
+    - `GET /api/v1/match`
+    - `GET /api/v1/match/{id}`
+    - `PUT /api/v1/match/{id}`
+    - `PUT /api/v1/match/{id}/status`
+    - `DELETE /api/v1/match/{id}`
+
+### Regras já implementadas
+
+- Partida exige dois times válidos e distintos (`TEAMS_MUST_BE_DIFFERENT`)
+- `GameDay` deve existir (`GAMEDAY_NOT_FOUND`)
+- Times devem existir/estar ativos (`TEAM_NOT_FOUND`)
+- Duplicidade no mesmo game day é bloqueada (`MATCH_ALREADY_EXISTS`) incluindo ordem invertida dos times
+- Fluxo de status permitido:
+  - `Pending` → `Scheduled`/`Cancelled`
+  - `Scheduled` → `InProgress`/`Cancelled`
+  - `InProgress` → `Completed`
+  - `Completed` e `Cancelled` são finais
+
+### Testes (parcial)
+
+- Unit Domain:
+  - `MatchTests`
+- Unit Application:
+  - `CreateMatchCommandHandlerTests`
+  - `UpdateMatchCommandHandlerTests`
+  - `ChangeMatchStatusCommandHandlerTests`
+  - `DeleteMatchCommandHandlerTests`
+  - `GetMatchQueryHandlerTests`
+  - `GetMatchesQueryHandlerTests`
+- Integration:
+  - `MatchIntegrationTests`
+
+### Status atual da implementação da Fase 9
+
+- Recorte de regressão executado com filtro de Match: **20 testes, 100% passando**
 
 ---
 
