@@ -13,6 +13,7 @@ using BabaPlay.Application.Commands.Tenants;
 using BabaPlay.Application.Common;
 using BabaPlay.Application.DTOs;
 using BabaPlay.Application.Interfaces;
+using BabaPlay.Application.Services;
 using BabaPlay.Application.Queries.Ping;
 using BabaPlay.Application.Queries.Checkins;
 using BabaPlay.Application.Queries.GameDays;
@@ -32,6 +33,8 @@ public static class ServiceRegistration
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
+        services.AddScoped<IScoreComputationService, ScoreComputationService>();
+
         // Ping
         services.AddScoped<ICommandHandler<PingCommand, Result<string>>, PingCommandHandler>();
         services.AddScoped<IQueryHandler<PingQuery, Result<PingStatusDto>>, PingQueryHandler>();
