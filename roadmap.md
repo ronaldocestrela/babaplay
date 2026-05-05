@@ -1319,7 +1319,72 @@ Construir um sistema SaaS escalável, com:
 #### Fechamento da 16.4
 - fluxo de check-in web concluído com seleção guiada, geolocalização, feedback operacional e mapa real
 - cobertura de testes e validações de lint concluídas sem regressão
-### 5. Times — pendente
+### 5. Times — ✅ concluída
+
+#### Entregas concluídas (slice 1 — contratos + data layer)
+- Nova feature base criada em `web/src/features/teams/`:
+  - `types/index.ts`
+  - `schemas/teamFormSchema.ts`
+  - `services/teamService.ts`
+  - `hooks/index.ts`
+  - `store/teamStore.ts`
+- `API_ROUTES` expandido para operações de Teams:
+  - `GET/POST /api/v1/team`
+  - `GET/PUT/DELETE /api/v1/team/{id}`
+  - `PUT /api/v1/team/{id}/players`
+- `ERROR_CODES` expandido com códigos de negócio da feature Teams:
+  - `TEAM_NOT_FOUND`, `TEAM_ALREADY_EXISTS`
+  - `INVALID_MAX_PLAYERS`
+  - `TEAM_INVALID_PLAYER_ID`, `TEAM_DUPLICATE_PLAYERS`
+  - `TEAM_PLAYERS_LIMIT_EXCEEDED`, `TEAM_PLAYER_NOT_FOUND`, `TEAM_GOALKEEPER_REQUIRED`
+
+#### Entregas concluídas (slice 2 — UI componentizada)
+- Componentização da feature Teams implementada:
+  - `components/TeamForm.tsx`
+  - `components/TeamList.tsx`
+  - `components/TeamRosterEditor.tsx`
+- Nova página `TeamsPage` com:
+  - listagem e filtro por nome
+  - modal de create/edit de time
+  - modal de gestão de elenco por time
+  - feedback de erros por `ProblemDetails.title`
+  - validação local de limite e duplicidade antes de enviar atualização de elenco
+
+#### Entregas concluídas (slice 3 — integração app + navegação)
+- Roteamento:
+  - rota protegida adicionada: `/teams`
+- Header autenticado:
+  - nova ação de navegação rápida para `Times`
+
+#### Entregas concluídas (slice 4 — MSW e hardening)
+- MSW (`web/src/test/handlers.ts`) expandido com cobertura completa de Teams:
+  - `GET /api/v1/team`
+  - `GET /api/v1/team/{id}`
+  - `POST /api/v1/team`
+  - `PUT /api/v1/team/{id}`
+  - `PUT /api/v1/team/{id}/players`
+  - `DELETE /api/v1/team/{id}`
+- Cenários de erro mapeados nos handlers para todos os códigos de domínio de Team.
+
+#### Testes (frontend)
+- Novas suítes TDD da fase 16.5:
+  - `features/teams/services/__tests__/teamService.test.ts`
+  - `features/teams/hooks/__tests__/teamHooks.test.ts`
+  - `features/teams/schemas/__tests__/teamFormSchema.test.ts`
+  - `features/teams/store/__tests__/teamStore.test.ts`
+  - `features/teams/components/__tests__/TeamForm.test.tsx`
+  - `features/teams/components/__tests__/TeamList.test.tsx`
+  - `features/teams/components/__tests__/TeamRosterEditor.test.tsx`
+  - `pages/__tests__/TeamsPage.test.tsx`
+  - atualização de `core/components/__tests__/AuthHeader.test.tsx`
+
+#### Status atual da suíte web
+- `npm run test:run`: **185 testes, 100% passando**
+- `npm run lint`: **passando**
+
+#### Fechamento da 16.5
+- fluxo web de Times concluído com CRUD + gestão de elenco, arquitetura componentizada, navegação integrada e cobertura de testes sem regressão.
+
 ### 6. Partidas — pendente
 ### 7. Ranking — pendente
 ### 8. Financeiro — pendente

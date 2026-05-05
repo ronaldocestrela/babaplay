@@ -111,6 +111,29 @@ const mockCheckins = [
   },
 ]
 
+const mockTeams = [
+  {
+    id: 'team-1',
+    tenantId: 'tenant-123',
+    name: 'Time Azul',
+    maxPlayers: 8,
+    isActive: true,
+    createdAt: '2026-05-01T10:00:00.000Z',
+    playerIds: ['player-1'],
+  },
+  {
+    id: 'team-2',
+    tenantId: 'tenant-123',
+    name: 'Time Laranja',
+    maxPlayers: 10,
+    isActive: true,
+    createdAt: '2026-05-02T10:00:00.000Z',
+    playerIds: [],
+  },
+]
+
+const goalkeeperPlayerIds = new Set(['player-1'])
+
 export const handlers = [
   // POST /api/v1/auth/login
   http.post(`${BASE_URL}/api/v1/auth/login`, async ({ request }) => {
@@ -409,12 +432,215 @@ export const handlers = [
   http.get(`${BASE_URL}/api/v1/position`, () => HttpResponse.json(mockPositions)),
 
   // GET /api/v1/team
-  http.get(`${BASE_URL}/api/v1/team`, () =>
-    HttpResponse.json([
-      { id: 'team-1', isActive: true },
-      { id: 'team-2', isActive: true },
-    ]),
-  ),
+  http.get(`${BASE_URL}/api/v1/team`, () => HttpResponse.json(mockTeams)),
+
+  // GET /api/v1/team/:id
+  http.get(`${BASE_URL}/api/v1/team/:id`, ({ params }) => {
+    const team = mockTeams.find((item) => item.id === params.id)
+
+    if (!team) {
+      return HttpResponse.json(
+        { title: 'TEAM_NOT_FOUND', detail: 'Team not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    return HttpResponse.json(team)
+  }),
+
+  // POST /api/v1/team
+  http.post(`${BASE_URL}/api/v1/team`, async ({ request }) => {
+    const body = (await request.json()) as {
+      name: string
+      maxPlayers: number
+    }
+
+    if (!body.name || body.name.trim().length === 0) {
+      return HttpResponse.json(
+        { title: 'INVALID_NAME', detail: 'Name is required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (!Number.isInteger(body.maxPlayers) || body.maxPlayers <= 0) {
+      return HttpResponse.json(
+        {
+          title: 'INVALID_MAX_PLAYERS',
+          detail: 'Max players must be greater than zero',
+          status: 422,
+        },
+        { status: 422 },
+      )
+    }
+
+    const duplicated = mockTeams.some(
+      (item) => item.name.toLowerCase() === body.name.trim().toLowerCase(),
+    )
+
+    if (duplicated) {
+      return HttpResponse.json(
+        { title: 'TEAM_ALREADY_EXISTS', detail: 'Team already exists', status: 409 },
+        { status: 409 },
+      )
+    }
+
+    return HttpResponse.json(
+      {
+        id: 'team-new',
+        tenantId: 'tenant-123',
+        name: body.name.trim(),
+        maxPlayers: body.maxPlayers,
+        isActive: true,
+        createdAt: '2026-05-05T10:00:00.000Z',
+        playerIds: [],
+      },
+      { status: 201 },
+    )
+  }),
+
+  // PUT /api/v1/team/:id
+  http.put(`${BASE_URL}/api/v1/team/:id`, async ({ params, request }) => {
+    const team = mockTeams.find((item) => item.id === params.id)
+
+    if (!team) {
+      return HttpResponse.json(
+        { title: 'TEAM_NOT_FOUND', detail: 'Team not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    const body = (await request.json()) as {
+      name: string
+      maxPlayers: number
+    }
+
+    if (!body.name || body.name.trim().length === 0) {
+      return HttpResponse.json(
+        { title: 'INVALID_NAME', detail: 'Name is required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (!Number.isInteger(body.maxPlayers) || body.maxPlayers <= 0) {
+      return HttpResponse.json(
+        {
+          title: 'INVALID_MAX_PLAYERS',
+          detail: 'Max players must be greater than zero',
+          status: 422,
+        },
+        { status: 422 },
+      )
+    }
+
+    const duplicated = mockTeams.some(
+      (item) =>
+        item.id !== params.id && item.name.toLowerCase() === body.name.trim().toLowerCase(),
+    )
+
+    if (duplicated) {
+      return HttpResponse.json(
+        { title: 'TEAM_ALREADY_EXISTS', detail: 'Team already exists', status: 409 },
+        { status: 409 },
+      )
+    }
+
+    return HttpResponse.json({
+      ...team,
+      name: body.name.trim(),
+      maxPlayers: body.maxPlayers,
+    })
+  }),
+
+  // PUT /api/v1/team/:id/players
+  http.put(`${BASE_URL}/api/v1/team/:id/players`, async ({ params, request }) => {
+    const team = mockTeams.find((item) => item.id === params.id)
+
+    if (!team) {
+      return HttpResponse.json(
+        { title: 'TEAM_NOT_FOUND', detail: 'Team not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    const body = (await request.json()) as { playerIds: string[] }
+
+    if (!Array.isArray(body.playerIds)) {
+      return HttpResponse.json(
+        { title: 'TEAM_INVALID_PLAYER_ID', detail: 'PlayerIds invalid', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    const hasInvalidId = body.playerIds.some((playerId) => !playerId || playerId.trim().length === 0)
+    if (hasInvalidId) {
+      return HttpResponse.json(
+        { title: 'TEAM_INVALID_PLAYER_ID', detail: 'PlayerIds invalid', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (new Set(body.playerIds).size !== body.playerIds.length) {
+      return HttpResponse.json(
+        { title: 'TEAM_DUPLICATE_PLAYERS', detail: 'Duplicate players', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (body.playerIds.length > team.maxPlayers) {
+      return HttpResponse.json(
+        {
+          title: 'TEAM_PLAYERS_LIMIT_EXCEEDED',
+          detail: 'Team players limit exceeded',
+          status: 422,
+        },
+        { status: 422 },
+      )
+    }
+
+    const hasUnknownOrInactivePlayer = body.playerIds.some((playerId) => {
+      const player = mockPlayers.find((item) => item.id === playerId)
+      return !player || !player.isActive
+    })
+
+    if (hasUnknownOrInactivePlayer) {
+      return HttpResponse.json(
+        { title: 'TEAM_PLAYER_NOT_FOUND', detail: 'Player not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    const hasGoalkeeper = body.playerIds.some((playerId) => goalkeeperPlayerIds.has(playerId))
+    if (body.playerIds.length > 0 && !hasGoalkeeper) {
+      return HttpResponse.json(
+        {
+          title: 'TEAM_GOALKEEPER_REQUIRED',
+          detail: 'At least one goalkeeper is required',
+          status: 422,
+        },
+        { status: 422 },
+      )
+    }
+
+    return HttpResponse.json({
+      teamId: params.id,
+      playerIds: body.playerIds,
+      updatedAt: '2026-05-05T10:10:00.000Z',
+    })
+  }),
+
+  // DELETE /api/v1/team/:id
+  http.delete(`${BASE_URL}/api/v1/team/:id`, ({ params }) => {
+    const team = mockTeams.find((item) => item.id === params.id)
+
+    if (!team) {
+      return HttpResponse.json(
+        { title: 'TEAM_NOT_FOUND', detail: 'Team not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    return new HttpResponse(null, { status: 204 })
+  }),
 
   // GET /api/v1/gameday
   http.get(`${BASE_URL}/api/v1/gameday`, () =>

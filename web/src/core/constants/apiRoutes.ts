@@ -16,6 +16,8 @@ export const API_ROUTES = {
   },
   TEAM: {
     LIST: '/api/v1/team',
+    BY_ID: (id: string) => `/api/v1/team/${id}`,
+    PLAYERS: (id: string) => `/api/v1/team/${id}/players`,
   },
   GAMEDAY: {
     LIST: '/api/v1/gameday',

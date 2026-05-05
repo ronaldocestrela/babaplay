@@ -8,6 +8,44 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Fase 16.5: Frontend Times (CRUD + elenco)
+
+- Frontend (Teams base):
+	- nova feature `web/src/features/teams/` com:
+		- `types/index.ts`
+		- `schemas/teamFormSchema.ts`
+		- `services/teamService.ts`
+		- `hooks/index.ts`
+		- `store/teamStore.ts`
+		- `components/TeamForm.tsx`, `components/TeamList.tsx`, `components/TeamRosterEditor.tsx`
+	- `API_ROUTES` expandido para operações completas de Teams:
+		- `GET/POST /api/v1/team`
+		- `GET/PUT/DELETE /api/v1/team/{id}`
+		- `PUT /api/v1/team/{id}/players`
+	- `ERROR_CODES` expandido com códigos de negócio da feature Teams
+	- MSW (`src/test/handlers.ts`) ampliado com cenários de sucesso/erro para todos os endpoints de Teams
+- Frontend (Teams UI):
+	- nova `TeamsPage` com:
+		- listagem + filtro
+		- modal de create/edit de time
+		- modal de gestão de elenco
+		- tratamento de erro por `ProblemDetails.title`
+	- rota protegida adicionada: `/teams`
+	- header autenticado com navegação para `Times`
+- Testes TDD adicionados/atualizados:
+	- `src/features/teams/services/__tests__/teamService.test.ts`
+	- `src/features/teams/hooks/__tests__/teamHooks.test.ts`
+	- `src/features/teams/schemas/__tests__/teamFormSchema.test.ts`
+	- `src/features/teams/store/__tests__/teamStore.test.ts`
+	- `src/features/teams/components/__tests__/TeamForm.test.tsx`
+	- `src/features/teams/components/__tests__/TeamList.test.tsx`
+	- `src/features/teams/components/__tests__/TeamRosterEditor.test.tsx`
+	- `src/pages/__tests__/TeamsPage.test.tsx`
+	- `src/core/components/__tests__/AuthHeader.test.tsx`
+- Validação executada:
+	- suíte web completa: 185 testes passando
+	- lint frontend: passando
+
 ### Added — Fase 16.4: Frontend Check-in (slices iniciais)
 
 - Frontend (Check-in base):
