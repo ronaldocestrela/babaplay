@@ -3,6 +3,8 @@ using BabaPlay.Application.Common;
 using BabaPlay.Application.DTOs;
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Application.Queries.Tenants;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -43,8 +45,17 @@ public sealed class TenantController : ControllerBase
         [FromBody] CreateTenantRequest request,
         CancellationToken ct)
     {
+        var requestedByUserId = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+            ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+
         var result = await _createHandler.HandleAsync(
-            new CreateTenantCommand(request.Name, request.Slug), ct);
+            new CreateTenantCommand(
+                request.Name,
+                request.Slug,
+                request.AdminEmail,
+                request.AdminPassword,
+                requestedByUserId),
+            ct);
 
         if (!result.IsSuccess)
         {
@@ -81,4 +92,8 @@ public sealed class TenantController : ControllerBase
 }
 
 /// <summary>Request body for tenant creation.</summary>
-public sealed record CreateTenantRequest(string Name, string Slug);
+public sealed record CreateTenantRequest(
+    string Name,
+    string Slug,
+    string? AdminEmail = null,
+    string? AdminPassword = null);

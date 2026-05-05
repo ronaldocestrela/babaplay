@@ -45,6 +45,8 @@ describe('RegisterAssociationPage', () => {
     expect(screen.getByRole('heading', { name: /registrar nova associação/i })).toBeInTheDocument()
     expect(screen.getByLabelText(/nome da associação/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^slug$/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/email do admin inicial/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/senha do admin inicial/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /criar associação/i })).toBeInTheDocument()
   })
 
@@ -53,11 +55,19 @@ describe('RegisterAssociationPage', () => {
 
     await userEvent.type(screen.getByLabelText(/nome da associação/i), 'Associação Atlética')
     await userEvent.type(screen.getByLabelText(/^slug$/i), 'associacao-atletica')
+    await userEvent.type(screen.getByLabelText(/email do admin inicial/i), 'admin@atletica.com')
+    await userEvent.type(screen.getByLabelText(/senha do admin inicial/i), 'Admin1234')
+    await userEvent.type(screen.getByLabelText(/confirmar senha do admin/i), 'Admin1234')
     await userEvent.click(screen.getByRole('button', { name: /criar associação/i }))
 
     await waitFor(() => {
       expect(createAssociation).toHaveBeenCalledWith(
-        { name: 'Associação Atlética', slug: 'associacao-atletica' },
+        {
+          name: 'Associação Atlética',
+          slug: 'associacao-atletica',
+          adminEmail: 'admin@atletica.com',
+          adminPassword: 'Admin1234',
+        },
         expect.any(Object),
       )
       expect(mockNavigate).toHaveBeenCalledWith({
@@ -72,10 +82,28 @@ describe('RegisterAssociationPage', () => {
 
     await userEvent.type(screen.getByLabelText(/nome da associação/i), 'Associação')
     await userEvent.type(screen.getByLabelText(/^slug$/i), 'Slug Inválido')
+    await userEvent.type(screen.getByLabelText(/email do admin inicial/i), 'admin@associacao.com')
+    await userEvent.type(screen.getByLabelText(/senha do admin inicial/i), 'Admin1234')
+    await userEvent.type(screen.getByLabelText(/confirmar senha do admin/i), 'Admin1234')
     await userEvent.click(screen.getByRole('button', { name: /criar associação/i }))
 
     await waitFor(() => {
       expect(screen.getByText(/slug deve conter apenas letras minúsculas, números e hífens/i)).toBeInTheDocument()
+    })
+  })
+
+  it('deve validar confirmação de senha do admin', async () => {
+    render(<RegisterAssociationPage />)
+
+    await userEvent.type(screen.getByLabelText(/nome da associação/i), 'Associação')
+    await userEvent.type(screen.getByLabelText(/^slug$/i), 'associacao-valida')
+    await userEvent.type(screen.getByLabelText(/email do admin inicial/i), 'admin@associacao.com')
+    await userEvent.type(screen.getByLabelText(/senha do admin inicial/i), 'Admin1234')
+    await userEvent.type(screen.getByLabelText(/confirmar senha do admin/i), 'Admin12345')
+    await userEvent.click(screen.getByRole('button', { name: /criar associação/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/as senhas do admin devem ser iguais/i)).toBeInTheDocument()
     })
   })
 })

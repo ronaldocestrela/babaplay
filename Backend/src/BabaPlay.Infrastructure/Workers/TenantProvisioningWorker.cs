@@ -86,6 +86,7 @@ public sealed class TenantProvisioningWorker : BackgroundService
             await using var tenantCtx = new TenantDbContext(tenantOptions);
             await tenantCtx.Database.MigrateAsync(ct);
             await SeedDefaultRbacAsync(tenantCtx, tenantId, ct);
+            await SeedOwnerAdminAssignmentsAsync(masterDb, tenantCtx, tenantId, ct);
             await SeedDefaultMatchEventTypesAsync(tenantCtx, tenantId, ct);
 
             await tenantRepo.UpdateProvisioningAsync(tenantId, ProvisioningStatus.Ready, tenantConnectionString, ct);
@@ -203,5 +204,51 @@ public sealed class TenantProvisioningWorker : BackgroundService
         }
 
         await tenantCtx.SaveChangesAsync(ct);
+    }
+
+    private static async Task SeedOwnerAdminAssignmentsAsync(
+        MasterDbContext masterDb,
+        TenantDbContext tenantCtx,
+        Guid tenantId,
+        CancellationToken ct)
+    {
+        var adminRoleNormalized = RbacCatalog.Roles.Admin.Trim().ToUpperInvariant();
+        var adminRoleId = await tenantCtx.Roles
+            .Where(r => r.NormalizedName == adminRoleNormalized)
+            .Select(r => r.Id)
+            .FirstOrDefaultAsync(ct);
+
+        if (adminRoleId == Guid.Empty)
+            return;
+
+        var ownerUserIds = await masterDb.UserTenants
+            .AsNoTracking()
+            .Where(ut => ut.TenantId == tenantId && ut.IsOwner)
+            .Select(ut => ut.UserId)
+            .ToListAsync(ct);
+
+        if (ownerUserIds.Count == 0)
+            return;
+
+        var existingAssignments = await tenantCtx.UserRoles
+            .AsNoTracking()
+            .Where(ur => ur.RoleId == adminRoleId)
+            .Select(ur => ur.UserId)
+            .ToListAsync(ct);
+
+        var existingSet = existingAssignments.ToHashSet(StringComparer.Ordinal);
+        var hasChanges = false;
+
+        foreach (var ownerUserId in ownerUserIds)
+        {
+            if (existingSet.Contains(ownerUserId))
+                continue;
+
+            tenantCtx.UserRoles.Add(UserRole.Create(ownerUserId, adminRoleId));
+            hasChanges = true;
+        }
+
+        if (hasChanges)
+            await tenantCtx.SaveChangesAsync(ct);
     }
 }

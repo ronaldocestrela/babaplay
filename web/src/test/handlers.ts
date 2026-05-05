@@ -271,7 +271,12 @@ export const handlers = [
 
   // POST /api/v1/tenant
   http.post(`${BASE_URL}/api/v1/tenant`, async ({ request }) => {
-    const body = (await request.json()) as { name: string; slug: string }
+    const body = (await request.json()) as {
+      name: string
+      slug: string
+      adminEmail?: string
+      adminPassword?: string
+    }
 
     if (!body.name) {
       return HttpResponse.json(
@@ -283,6 +288,17 @@ export const handlers = [
     if (!body.slug) {
       return HttpResponse.json(
         { title: 'TENANT_SLUG_REQUIRED', detail: 'Slug is required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (!body.adminEmail || !body.adminPassword) {
+      return HttpResponse.json(
+        {
+          title: 'TENANT_ADMIN_CREDENTIALS_REQUIRED',
+          detail: 'Admin credentials are required',
+          status: 422,
+        },
         { status: 422 },
       )
     }

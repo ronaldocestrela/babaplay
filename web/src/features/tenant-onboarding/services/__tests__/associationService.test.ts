@@ -6,6 +6,8 @@ describe('associationService', () => {
     const result = await associationService.createAssociation({
       name: 'Clube Verde',
       slug: 'clube-verde',
+      adminEmail: 'admin@clubeverde.com',
+      adminPassword: 'Admin1234',
     })
 
     expect(result.id).toBe('tenant-123')
@@ -19,6 +21,8 @@ describe('associationService', () => {
       associationService.createAssociation({
         name: 'Clube Duplicado',
         slug: 'taken-slug',
+        adminEmail: 'admin@duplicado.com',
+        adminPassword: 'Admin1234',
       }),
     ).rejects.toMatchObject({ response: { status: 409 } })
   })

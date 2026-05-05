@@ -13,6 +13,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   [ERROR_CODES.TENANT_NAME_REQUIRED]: 'Nome da associação é obrigatório.',
   [ERROR_CODES.TENANT_SLUG_REQUIRED]: 'Slug é obrigatório.',
   [ERROR_CODES.TENANT_SLUG_TAKEN]: 'Este slug já está em uso.',
+  TENANT_ADMIN_CREDENTIALS_REQUIRED: 'Informe as credenciais iniciais do admin da associação.',
+  TENANT_ADMIN_USER_CREATE_FAILED: 'Não foi possível criar o usuário admin inicial.',
+  TENANT_ADMIN_INVALID_PASSWORD: 'Credenciais do admin inválidas para o email informado.',
 }
 
 export function RegisterAssociationPage() {
@@ -29,13 +32,22 @@ export function RegisterAssociationPage() {
     defaultValues: {
       name: '',
       slug: '',
+      adminEmail: '',
+      adminPassword: '',
+      confirmAdminPassword: '',
     },
   })
 
   const onSubmit = (data: AssociationFormValues) => {
     setApiError(null)
+    const payload = {
+      name: data.name,
+      slug: data.slug,
+      adminEmail: data.adminEmail,
+      adminPassword: data.adminPassword,
+    }
 
-    createAssociation(data, {
+    createAssociation(payload, {
       onSuccess: (response) => {
         void navigate({
           to: '/register-association/status/$tenantId',
@@ -76,6 +88,53 @@ export function RegisterAssociationPage() {
               disabled={isPending}
             />
             {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
+          </div>
+
+          <div>
+            <label htmlFor="association-admin-email" className="mb-1 block text-sm font-medium text-gray-700">
+              Email do admin inicial
+            </label>
+            <input
+              id="association-admin-email"
+              type="email"
+              {...register('adminEmail')}
+              placeholder="Ex.: admin@associacao.com"
+              className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-indigo-500"
+              disabled={isPending}
+            />
+            {errors.adminEmail && <p className="mt-1 text-xs text-red-600">{errors.adminEmail.message}</p>}
+          </div>
+
+          <div>
+            <label htmlFor="association-admin-password" className="mb-1 block text-sm font-medium text-gray-700">
+              Senha do admin inicial
+            </label>
+            <input
+              id="association-admin-password"
+              type="password"
+              {...register('adminPassword')}
+              placeholder="Mínimo 8 caracteres"
+              className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-indigo-500"
+              disabled={isPending}
+            />
+            {errors.adminPassword && <p className="mt-1 text-xs text-red-600">{errors.adminPassword.message}</p>}
+          </div>
+
+          <div>
+            <label htmlFor="association-admin-password-confirm" className="mb-1 block text-sm font-medium text-gray-700">
+              Confirmar senha do admin
+            </label>
+            <input
+              id="association-admin-password-confirm"
+              type="password"
+              {...register('confirmAdminPassword')}
+              placeholder="Repita a senha"
+              className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-indigo-500"
+              disabled={isPending}
+            />
+            {errors.confirmAdminPassword && (
+              <p className="mt-1 text-xs text-red-600">{errors.confirmAdminPassword.message}</p>
+            )}
           </div>
 
           <div>

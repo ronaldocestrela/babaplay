@@ -43,4 +43,6 @@ export interface TenantResponse {
 export interface CreateTenantRequest {
   name: string
   slug: string
+  adminEmail: string
+  adminPassword: string
 }

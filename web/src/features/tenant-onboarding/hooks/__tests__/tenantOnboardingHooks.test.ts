@@ -11,6 +11,8 @@ describe('tenant onboarding hooks', () => {
       result.current.createAssociation({
         name: 'Associação Hook',
         slug: 'associacao-hook',
+        adminEmail: 'admin@hook.com',
+        adminPassword: 'Admin1234',
       })
     })
 
@@ -25,6 +27,8 @@ describe('tenant onboarding hooks', () => {
       result.current.createAssociation({
         name: 'Associação Duplicada',
         slug: 'taken-slug',
+        adminEmail: 'admin@duplicada.com',
+        adminPassword: 'Admin1234',
       })
     })
 
