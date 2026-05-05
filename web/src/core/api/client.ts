@@ -12,12 +12,16 @@ export const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+function resolveTenantContext() {
+  return getTenantFromUrl() ?? useAuthStore.getState().currentTenant
+}
+
 // ── Request: injeta Bearer token se disponível ──────────────────────────────
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = useAuthStore.getState().accessToken
   if (token) config.headers.Authorization = `Bearer ${token}`
 
-  const tenant = getTenantFromUrl()
+  const tenant = resolveTenantContext()
   if (tenant) {
     config.headers[TENANT_HEADER_NAME] = tenant.slug
     useAuthStore.getState().setCurrentTenant(tenant)
@@ -65,7 +69,7 @@ apiClient.interceptors.response.use(
     }
 
     try {
-      const tenant = getTenantFromUrl()
+      const tenant = resolveTenantContext()
       const { data } = await axios.post<{
         accessToken: string
         refreshToken: string

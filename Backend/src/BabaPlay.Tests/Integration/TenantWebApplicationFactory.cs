@@ -27,6 +27,8 @@ public sealed class TenantWebApplicationFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseEnvironment("Testing");
+
         builder.ConfigureAppConfiguration((_, config) =>
         {
             config.AddInMemoryCollection(new Dictionary<string, string?>
@@ -92,13 +94,14 @@ public sealed class TenantWebApplicationFactory : WebApplicationFactory<Program>
 
     private static async Task SeedAsync(MasterDbContext db, UserManager<ApplicationUser> userManager)
     {
-        if (await userManager.FindByEmailAsync(TestUserEmail) is not null)
+        if (await userManager.FindByIdAsync(TestAuthHandler.TestUserId) is not null)
             return;
 
         var user = new ApplicationUser
         {
-            UserName = TestUserEmail,
-            Email = TestUserEmail,
+            Id = TestAuthHandler.TestUserId,
+            UserName = TestAuthHandler.TestUserEmail,
+            Email = TestAuthHandler.TestUserEmail,
             EmailConfirmed = true,
             IsActive = true,
         };

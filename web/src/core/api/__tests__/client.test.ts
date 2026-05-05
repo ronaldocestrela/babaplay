@@ -57,6 +57,21 @@ describe('apiClient', () => {
       await apiClient.get('/api/v1/ping')
       expect(capturedTenantHeader).toBe('falcons')
     })
+
+    it('deve injetar X-Tenant-Slug a partir do tenant persistido no store quando URL não possui tenant', async () => {
+      useAuthStore.getState().setCurrentTenant({ slug: 'lions', source: 'query' })
+      let capturedTenantHeader: string | null = null
+
+      server.use(
+        http.get(`${BASE_URL}/api/v1/ping`, ({ request }) => {
+          capturedTenantHeader = request.headers.get('X-Tenant-Slug')
+          return HttpResponse.json({ ok: true })
+        }),
+      )
+
+      await apiClient.get('/api/v1/ping')
+      expect(capturedTenantHeader).toBe('lions')
+    })
   })
 
   describe('response interceptor — renovação de token', () => {
@@ -142,6 +157,45 @@ describe('apiClient', () => {
       expect(result.data).toEqual({ data: 'secret' })
       expect(requestCount).toBe(2)
       expect(refreshTenantHeader).toBe('wolves')
+    })
+
+    it('deve enviar X-Tenant-Slug no refresh token usando tenant persistido no store quando URL não possui tenant', async () => {
+      useAuthStore.getState().setCurrentTenant({ slug: 'hawks', source: 'query' })
+      useAuthStore.getState().setTokens({
+        ...mockAuthResponse,
+        accessToken: 'expired-access-token',
+      })
+
+      let requestCount = 0
+      let refreshTenantHeader: string | null = null
+
+      server.use(
+        http.get(`${BASE_URL}/api/v1/protected`, ({ request }) => {
+          requestCount++
+          const auth = request.headers.get('Authorization')
+          if (auth === 'Bearer expired-access-token') {
+            return HttpResponse.json(
+              { title: 'UNAUTHORIZED', status: 401 },
+              { status: 401 },
+            )
+          }
+          return HttpResponse.json({ data: 'secret' })
+        }),
+        http.post(`${BASE_URL}/api/v1/auth/refresh-token`, ({ request }) => {
+          refreshTenantHeader = request.headers.get('X-Tenant-Slug')
+          return HttpResponse.json({
+            ...mockAuthResponse,
+            accessToken: 'new-access-token',
+            refreshToken: 'new-refresh-token',
+          })
+        }),
+      )
+
+      const result = await apiClient.get('/api/v1/protected')
+
+      expect(result.data).toEqual({ data: 'secret' })
+      expect(requestCount).toBe(2)
+      expect(refreshTenantHeader).toBe('hawks')
     })
   })
 })

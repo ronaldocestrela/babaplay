@@ -18,8 +18,6 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
     public TenantIntegrationTests(TenantWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
-        // TestAuthHandler always authenticates — any non-empty token value suffices
-        _client.DefaultRequestHeaders.Authorization = new("Bearer", "test-token");
     }
 
     // ── POST /api/v1/tenant ────────────────────────────────────────────────
@@ -31,7 +29,13 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
         var slug = $"club-{Guid.NewGuid():N}"[..20];
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/tenant", new { Name = "Test Club", Slug = slug });
+        var response = await _client.PostAsJsonAsync("/api/v1/tenant", new
+        {
+            Name = "Test Club",
+            Slug = slug,
+            AdminEmail = "owner@testclub.com",
+            AdminPassword = "TestOwner@123456",
+        });
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -49,10 +53,22 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
     {
         // Arrange
         var slug = $"dup-{Guid.NewGuid():N}"[..20];
-        await _client.PostAsJsonAsync("/api/v1/tenant", new { Name = "Club A", Slug = slug });
+        await _client.PostAsJsonAsync("/api/v1/tenant", new
+        {
+            Name = "Club A",
+            Slug = slug,
+            AdminEmail = "owner-a@testclub.com",
+            AdminPassword = "TestOwner@123456",
+        });
 
         // Act — second request with same slug
-        var response = await _client.PostAsJsonAsync("/api/v1/tenant", new { Name = "Club B", Slug = slug });
+        var response = await _client.PostAsJsonAsync("/api/v1/tenant", new
+        {
+            Name = "Club B",
+            Slug = slug,
+            AdminEmail = "owner-b@testclub.com",
+            AdminPassword = "TestOwner@123456",
+        });
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
@@ -81,7 +97,13 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
     {
         // Arrange — create a tenant first
         var slug = $"status-{Guid.NewGuid():N}"[..20];
-        var createResp = await _client.PostAsJsonAsync("/api/v1/tenant", new { Name = "Status Club", Slug = slug });
+        var createResp = await _client.PostAsJsonAsync("/api/v1/tenant", new
+        {
+            Name = "Status Club",
+            Slug = slug,
+            AdminEmail = "owner-status@testclub.com",
+            AdminPassword = "TestOwner@123456",
+        });
         var created = await createResp.Content.ReadFromJsonAsync<TenantResponse>();
 
         // Act
@@ -112,7 +134,13 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
     {
         // Arrange — create a tenant so its slug exists in the DB
         var slug = $"mw-{Guid.NewGuid():N}"[..20];
-        var createResp = await _client.PostAsJsonAsync("/api/v1/tenant", new { Name = "MW Club", Slug = slug });
+        var createResp = await _client.PostAsJsonAsync("/api/v1/tenant", new
+        {
+            Name = "MW Club",
+            Slug = slug,
+            AdminEmail = "owner-mw@testclub.com",
+            AdminPassword = "TestOwner@123456",
+        });
         var created = await createResp.Content.ReadFromJsonAsync<TenantResponse>();
 
         // Act — include X-Tenant-Slug on the status request

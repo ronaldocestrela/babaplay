@@ -24,7 +24,9 @@ const rootRoute = createRootRoute({
   // interceptors always have access to the current tenant context.
   beforeLoad: () => {
     const tenant = getTenantFromUrl()
-    useAuthStore.getState().setCurrentTenant(tenant)
+    if (tenant) {
+      useAuthStore.getState().setCurrentTenant(tenant)
+    }
   },
   component: () => <Outlet />,
 })
