@@ -28,6 +28,9 @@ public sealed class TenantDbContext : DbContext
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<PlayerScore> PlayerScores => Set<PlayerScore>();
     public DbSet<PlayerScoreSourceEvent> PlayerScoreSourceEvents => Set<PlayerScoreSourceEvent>();
+    public DbSet<CashTransaction> CashTransactions => Set<CashTransaction>();
+    public DbSet<PlayerMonthlyFee> PlayerMonthlyFees => Set<PlayerMonthlyFee>();
+    public DbSet<MonthlyFeePayment> MonthlyFeePayments => Set<MonthlyFeePayment>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -285,6 +288,73 @@ public sealed class TenantDbContext : DbContext
             e.HasOne<Player>()
                 .WithMany()
                 .HasForeignKey(se => se.PlayerId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<CashTransaction>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.TenantId).IsRequired();
+            e.Property(x => x.PlayerId).IsRequired(false);
+            e.Property(x => x.Type).IsRequired();
+            e.Property(x => x.Amount).HasColumnType("decimal(18,2)").IsRequired();
+            e.Property(x => x.OccurredOnUtc).IsRequired();
+            e.Property(x => x.Description).IsRequired().HasMaxLength(300);
+            e.Property(x => x.IsActive).IsRequired();
+
+            e.HasIndex(x => new { x.TenantId, x.OccurredOnUtc });
+            e.HasIndex(x => new { x.TenantId, x.Type, x.OccurredOnUtc });
+            e.HasIndex(x => new { x.TenantId, x.PlayerId, x.OccurredOnUtc });
+
+            e.HasOne<Player>()
+                .WithMany()
+                .HasForeignKey(x => x.PlayerId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<PlayerMonthlyFee>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.TenantId).IsRequired();
+            e.Property(x => x.PlayerId).IsRequired();
+            e.Property(x => x.Year).IsRequired();
+            e.Property(x => x.Month).IsRequired();
+            e.Property(x => x.Amount).HasColumnType("decimal(18,2)").IsRequired();
+            e.Property(x => x.PaidAmount).HasColumnType("decimal(18,2)").IsRequired();
+            e.Property(x => x.DueDateUtc).IsRequired();
+            e.Property(x => x.PaidAtUtc).IsRequired(false);
+            e.Property(x => x.Status).IsRequired();
+            e.Property(x => x.Description).HasMaxLength(300);
+            e.Property(x => x.IsActive).IsRequired();
+
+            e.HasIndex(x => new { x.TenantId, x.PlayerId, x.Year, x.Month }).IsUnique();
+            e.HasIndex(x => new { x.TenantId, x.Status, x.DueDateUtc });
+            e.HasIndex(x => new { x.TenantId, x.Year, x.Month });
+
+            e.HasOne<Player>()
+                .WithMany()
+                .HasForeignKey(x => x.PlayerId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<MonthlyFeePayment>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.TenantId).IsRequired();
+            e.Property(x => x.MonthlyFeeId).IsRequired();
+            e.Property(x => x.Amount).HasColumnType("decimal(18,2)").IsRequired();
+            e.Property(x => x.PaidAtUtc).IsRequired();
+            e.Property(x => x.Notes).HasMaxLength(300);
+            e.Property(x => x.IsReversed).IsRequired();
+            e.Property(x => x.ReversedAtUtc).IsRequired(false);
+            e.Property(x => x.IsActive).IsRequired();
+
+            e.HasIndex(x => new { x.TenantId, x.MonthlyFeeId, x.PaidAtUtc });
+            e.HasIndex(x => new { x.TenantId, x.IsReversed, x.PaidAtUtc });
+
+            e.HasOne<PlayerMonthlyFee>()
+                .WithMany()
+                .HasForeignKey(x => x.MonthlyFeeId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

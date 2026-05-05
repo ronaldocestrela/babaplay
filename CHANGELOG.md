@@ -8,6 +8,74 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Fase 14: Financeiro (slice 1 e write inicial)
+
+- Domain:
+	- `CashTransaction` entity com `Create` e `Deactivate`
+	- `PlayerMonthlyFee` entity com `Create`, `ApplyPayment`, `MarkOverdue`, `Cancel`, `Deactivate`
+	- `MonthlyFeePayment` entity com `Create`, `Reverse`, `Deactivate`
+	- enums `CashTransactionType` e `MonthlyFeeStatus`
+	- value object `BillingCompetence`
+- Application:
+	- contratos `ICashTransactionRepository`, `IPlayerMonthlyFeeRepository`, `IMonthlyFeePaymentRepository`
+	- DTOs `CashTransactionResponse`, `PlayerMonthlyFeeResponse`, `MonthlyFeePaymentResponse`
+	- CQRS (write):
+		- `CreateCashTransactionCommand` / `CreateCashTransactionCommandHandler`
+		- `CreatePlayerMonthlyFeeCommand` / `CreatePlayerMonthlyFeeCommandHandler`
+		- `RegisterMonthlyFeePaymentCommand` / `RegisterMonthlyFeePaymentCommandHandler`
+- Regras aplicadas:
+	- validação de valor > 0 para transações e pagamentos
+	- validação UTC para datas operacionais
+	- cálculo de `SignedAmount` para caixa (despesa negativa)
+	- pagamento parcial/total de mensalidade com transição para `Paid` no total
+	- mensalidade paga não pode ser cancelada
+	- estorno idempotente em `MonthlyFeePayment`
+- Testes TDD adicionados:
+	- Unit Domain: `CashTransactionTests`, `PlayerMonthlyFeeTests`, `MonthlyFeePaymentTests`, `BillingCompetenceTests`
+	- Unit Application: `CreateCashTransactionCommandHandlerTests`, `CreatePlayerMonthlyFeeCommandHandlerTests`, `RegisterMonthlyFeePaymentCommandHandlerTests`
+- Validação executada:
+	- filtro `FullyQualifiedName~CashTransactionTests|FullyQualifiedName~PlayerMonthlyFeeTests|FullyQualifiedName~MonthlyFeePaymentTests|FullyQualifiedName~BillingCompetenceTests|FullyQualifiedName~CreateCashTransactionCommandHandlerTests|FullyQualifiedName~CreatePlayerMonthlyFeeCommandHandlerTests|FullyQualifiedName~RegisterMonthlyFeePaymentCommandHandlerTests`: 24 testes passando
+
+### Added — Fase 14: Financeiro (slice 2 de infraestrutura)
+
+- Infrastructure:
+	- `TenantDbContext` atualizado com `DbSet<CashTransaction>`, `DbSet<PlayerMonthlyFee>`, `DbSet<MonthlyFeePayment>`
+	- mapeamentos EF e índices financeiros por tenant para caixa, mensalidades e pagamentos
+	- repositórios adicionados:
+		- `CashTransactionRepository`
+		- `PlayerMonthlyFeeRepository`
+		- `MonthlyFeePaymentRepository`
+	- `ServiceRegistration` atualizado para registrar contratos financeiros da camada Application
+- Banco (tenant):
+	- migration `AddFinancialCore` criada em `Persistence/Migrations/Tenant/`
+	- `TenantDbContextModelSnapshot` atualizado
+- Validação executada:
+	- filtro `FullyQualifiedName~CreateCashTransactionCommandHandlerTests|FullyQualifiedName~CreatePlayerMonthlyFeeCommandHandlerTests|FullyQualifiedName~RegisterMonthlyFeePaymentCommandHandlerTests`: 6 testes passando
+
+### Added — Fase 13: Notificações (slice 1 inicial)
+
+- Domain:
+	- `NotificationType` enum
+	- `UserDeviceToken` entity com `Create`, `RotateToken`, `Deactivate`
+	- `UserNotificationPreferences` entity com `CreateDefault`, `Update`, `Deactivate`
+	- `Notification` entity com `Create`, `MarkAsRead`, `Deactivate`
+- Application:
+	- DTOs `DeviceTokenResponse` e `UserNotificationPreferencesResponse`
+	- contratos `IUserDeviceTokenRepository` e `IUserNotificationPreferencesRepository`
+	- CQRS:
+		- `RegisterDeviceTokenCommand` / `RegisterDeviceTokenCommandHandler`
+		- `UpdateNotificationPreferencesCommand` / `UpdateNotificationPreferencesCommandHandler`
+- Regras aplicadas:
+	- validação de `UserId`, `DeviceId`, `Token`, `Platform` no registro de token
+	- rotação de token quando o device já existe
+	- criação padrão de preferências com atualização no mesmo comando
+	- idempotência de desativação e marcação de leitura no domínio
+- Testes TDD adicionados:
+	- Unit Domain: `UserDeviceTokenTests`, `UserNotificationPreferencesTests`, `NotificationTests`
+	- Unit Application: `RegisterDeviceTokenCommandHandlerTests`, `UpdateNotificationPreferencesCommandHandlerTests`
+- Validação executada:
+	- filtro `FullyQualifiedName~RegisterDeviceTokenCommandHandlerTests|FullyQualifiedName~UpdateNotificationPreferencesCommandHandlerTests|FullyQualifiedName~UserDeviceTokenTests|FullyQualifiedName~UserNotificationPreferencesTests|FullyQualifiedName~NotificationTests`: 18 testes passando
+
 ### Added — Fase 12: Score e Ranking (slices 1 e 2)
 
 - Slice 1 — Domínio + cálculo:

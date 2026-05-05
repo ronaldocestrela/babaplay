@@ -871,19 +871,148 @@ Construir um sistema SaaS escalável, com:
 
 ## 🔔 Fase 13 — Notificações
 
-### Entregas
+### Status
 
-- Firebase
+- 🚧 Em andamento (backend)
+
+### Objetivo da fase
+
+- Implementar notificações push por tenant com Firebase (FCM)
+- Garantir rastreabilidade (inbox/auditoria) e envio assíncrono
+- Manter TDD + CQRS + RBAC em todos os fluxos
+
+### Escopo aprovado
+
+- Backend only nesta fase
+- Push real via Firebase nesta fase
+- Preferências por tipo de notificação já incluídas
+- Eventos obrigatórios: Check-in, Match, MatchEvent e GameDay
+
+### Entregas iniciadas (slice 1)
+
+- Domain:
+  - `NotificationType` enum
+  - `UserDeviceToken` entity (`Create`, `RotateToken`, `Deactivate`)
+  - `UserNotificationPreferences` entity (`CreateDefault`, `Update`, `Deactivate`)
+  - `Notification` entity (`Create`, `MarkAsRead`, `Deactivate`)
+- Application (CQRS + contratos):
+  - DTOs: `DeviceTokenResponse`, `UserNotificationPreferencesResponse`
+  - Interfaces: `IUserDeviceTokenRepository`, `IUserNotificationPreferencesRepository`
+  - Commands/Handlers:
+    - `RegisterDeviceTokenCommand` + `RegisterDeviceTokenCommandHandler`
+    - `UpdateNotificationPreferencesCommand` + `UpdateNotificationPreferencesCommandHandler`
+
+### Regras já aplicadas
+
+- Registro de token exige `UserId`, `DeviceId`, `Token` e `Platform`
+- Registro em device existente faz rotação de token
+- Preferências são criadas com default habilitado e atualizadas por comando dedicado
+- Operações de desativação são idempotentes nas entidades de domínio
+
+### Testes (slice 1)
+
+- Unit Domain:
+  - `UserDeviceTokenTests`
+  - `UserNotificationPreferencesTests`
+  - `NotificationTests`
+- Unit Application:
+  - `RegisterDeviceTokenCommandHandlerTests`
+  - `UpdateNotificationPreferencesCommandHandlerTests`
+
+### Status atual dos testes
+
+- Filtro `FullyQualifiedName~RegisterDeviceTokenCommandHandlerTests|FullyQualifiedName~UpdateNotificationPreferencesCommandHandlerTests|FullyQualifiedName~UserDeviceTokenTests|FullyQualifiedName~UserNotificationPreferencesTests|FullyQualifiedName~NotificationTests`: **18 testes, 100% passando**
+
+### Próximos slices
+
+- Slice 2: persistência (Master/Tenant) + migrations + endpoints API (token/preferências/inbox)
+- Slice 3: queue + worker + provider Firebase + retry/auditoria
+- Slice 4: integração de disparo para Check-in, Match, MatchEvent e GameDay
+- Slice 5: policies RBAC (`notifications.read`/`notifications.write`) + Swagger + changelog
+
+### Entregas finais previstas
+
+- Firebase (FCM)
 - Push por evento
+- Preferências por tipo
+- Inbox de notificações por tenant
 
 ---
 
 ## 💰 Fase 14 — Financeiro
 
+### Status
+
+- 🚧 Em andamento (backend)
+
 ### Entregas
 
 - Entradas e saídas
 - Mensalidades
+
+### Entregas iniciadas (slice 1)
+
+- Domain:
+  - `CashTransaction` entity (`Create`, `Deactivate`) com `TenantId`, `PlayerId?`, `Type`, `Amount`, `OccurredOnUtc`, `Description`, `IsActive`
+  - `PlayerMonthlyFee` entity (`Create`, `ApplyPayment`, `MarkOverdue`, `Cancel`, `Deactivate`) com `TenantId`, `PlayerId`, `Year`, `Month`, `Amount`, `DueDateUtc`, `PaidAmount`, `Status`
+  - `MonthlyFeePayment` entity (`Create`, `Reverse`, `Deactivate`) com `TenantId`, `MonthlyFeeId`, `Amount`, `PaidAtUtc`, `IsReversed`
+  - enums: `CashTransactionType` (`Income`, `Expense`) e `MonthlyFeeStatus` (`Open`, `Paid`, `Overdue`, `Cancelled`)
+  - value object: `BillingCompetence` (`Create`, `FromDateUtc`, `Display`)
+- Application (CQRS + contratos — write inicial):
+  - interfaces: `ICashTransactionRepository`, `IPlayerMonthlyFeeRepository`, `IMonthlyFeePaymentRepository`
+  - DTOs: `CashTransactionResponse`, `PlayerMonthlyFeeResponse`, `MonthlyFeePaymentResponse`
+  - Commands/Handlers:
+    - `CreateCashTransactionCommand` / `CreateCashTransactionCommandHandler`
+    - `CreatePlayerMonthlyFeeCommand` / `CreatePlayerMonthlyFeeCommandHandler`
+    - `RegisterMonthlyFeePaymentCommand` / `RegisterMonthlyFeePaymentCommandHandler`
+
+### Entregas iniciadas (slice 2)
+
+- Infrastructure (tenant DB):
+  - `TenantDbContext` atualizado com:
+    - `DbSet<CashTransaction>`
+    - `DbSet<PlayerMonthlyFee>`
+    - `DbSet<MonthlyFeePayment>`
+  - mapeamentos EF adicionados para entidades financeiras com FKs e constraints por tenant
+  - índices de consulta/consistência:
+    - `CashTransactions`: `(TenantId, OccurredOnUtc)`, `(TenantId, Type, OccurredOnUtc)`, `(TenantId, PlayerId, OccurredOnUtc)`
+    - `PlayerMonthlyFees`: único `(TenantId, PlayerId, Year, Month)`, `(TenantId, Status, DueDateUtc)`, `(TenantId, Year, Month)`
+    - `MonthlyFeePayments`: `(TenantId, MonthlyFeeId, PaidAtUtc)`, `(TenantId, IsReversed, PaidAtUtc)`
+  - repositórios concretos criados:
+    - `CashTransactionRepository`
+    - `PlayerMonthlyFeeRepository`
+    - `MonthlyFeePaymentRepository`
+  - DI atualizado em `ServiceRegistration` para os novos repositórios
+- Migration tenant:
+  - `AddFinancialCore` criada em `Persistence/Migrations/Tenant/`
+  - `TenantDbContextModelSnapshot` atualizado
+
+### Regras já aplicadas
+
+- valor deve ser maior que zero para transações e pagamentos
+- datas operacionais de domínio validadas em UTC
+- `SignedAmount` em transação de caixa (despesa negativa)
+- mensalidade por jogador suporta pagamento parcial e total
+- pagamento total altera status para `Paid` e define `PaidAtUtc`
+- mensalidade vencida muda para `Overdue` apenas quando ainda está `Open`
+- mensalidade paga não pode ser cancelada
+- estorno de pagamento é idempotente
+
+### Testes (slices iniciais)
+
+- Unit Domain:
+  - `CashTransactionTests`
+  - `PlayerMonthlyFeeTests`
+  - `MonthlyFeePaymentTests`
+  - `BillingCompetenceTests`
+- Unit Application:
+  - `CreateCashTransactionCommandHandlerTests`
+  - `CreatePlayerMonthlyFeeCommandHandlerTests`
+  - `RegisterMonthlyFeePaymentCommandHandlerTests`
+
+### Status atual dos testes
+
+- filtro `FullyQualifiedName~CashTransactionTests|FullyQualifiedName~PlayerMonthlyFeeTests|FullyQualifiedName~MonthlyFeePaymentTests|FullyQualifiedName~BillingCompetenceTests|FullyQualifiedName~CreateCashTransactionCommandHandlerTests|FullyQualifiedName~CreatePlayerMonthlyFeeCommandHandlerTests|FullyQualifiedName~RegisterMonthlyFeePaymentCommandHandlerTests`: **24 testes, 100% passando**
 
 ### Relatórios
 
