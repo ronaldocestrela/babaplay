@@ -19,6 +19,69 @@ export const mockUserProfile: UserProfile = {
   createdAt: '2024-01-01T00:00:00Z',
 }
 
+const mockPlayers = [
+  {
+    id: 'player-1',
+    userId: 'user-1',
+    name: 'Joao Silva',
+    nickname: 'JS10',
+    phone: '11999990001',
+    dateOfBirth: '1995-10-01',
+    isActive: true,
+    createdAt: '2026-01-10T10:00:00.000Z',
+  },
+  {
+    id: 'player-2',
+    userId: 'user-2',
+    name: 'Carlos Lima',
+    nickname: null,
+    phone: null,
+    dateOfBirth: null,
+    isActive: true,
+    createdAt: '2026-01-11T10:00:00.000Z',
+  },
+  {
+    id: 'player-3',
+    userId: 'user-3',
+    name: 'Pedro Gomes',
+    nickname: null,
+    phone: null,
+    dateOfBirth: null,
+    isActive: false,
+    createdAt: '2026-01-12T10:00:00.000Z',
+  },
+]
+
+const mockPositions = [
+  {
+    id: 'position-1',
+    tenantId: 'tenant-123',
+    code: 'GK',
+    name: 'Goleiro',
+    description: 'Defende o gol',
+    isActive: true,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'position-2',
+    tenantId: 'tenant-123',
+    code: 'CB',
+    name: 'Zagueiro',
+    description: 'Defende a area',
+    isActive: true,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'position-3',
+    tenantId: 'tenant-123',
+    code: 'FW',
+    name: 'Atacante',
+    description: 'Finaliza jogadas',
+    isActive: true,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  },
+]
+
 export const handlers = [
   // POST /api/v1/auth/login
   http.post(`${BASE_URL}/api/v1/auth/login`, async ({ request }) => {
@@ -159,13 +222,162 @@ export const handlers = [
   }),
 
   // GET /api/v1/player
-  http.get(`${BASE_URL}/api/v1/player`, () =>
-    HttpResponse.json([
-      { id: 'player-1', isActive: true },
-      { id: 'player-2', isActive: true },
-      { id: 'player-3', isActive: false },
-    ]),
-  ),
+  http.get(`${BASE_URL}/api/v1/player`, () => HttpResponse.json(mockPlayers)),
+
+  // GET /api/v1/player/:id
+  http.get(`${BASE_URL}/api/v1/player/:id`, ({ params }) => {
+    const player = mockPlayers.find((item) => item.id === params.id)
+
+    if (!player) {
+      return HttpResponse.json(
+        { title: 'PLAYER_NOT_FOUND', detail: 'Player not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    return HttpResponse.json(player)
+  }),
+
+  // POST /api/v1/player
+  http.post(`${BASE_URL}/api/v1/player`, async ({ request }) => {
+    const body = (await request.json()) as {
+      userId: string
+      name: string
+      nickname?: string | null
+      phone?: string | null
+      dateOfBirth?: string | null
+    }
+
+    if (!body.name || body.name.trim().length === 0) {
+      return HttpResponse.json(
+        { title: 'INVALID_NAME', detail: 'Name is required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (body.name === 'duplicate-player') {
+      return HttpResponse.json(
+        {
+          title: 'PLAYER_ALREADY_EXISTS',
+          detail: 'Player already exists for this user',
+          status: 409,
+        },
+        { status: 409 },
+      )
+    }
+
+    return HttpResponse.json(
+      {
+        id: 'player-new',
+        userId: body.userId,
+        name: body.name,
+        nickname: body.nickname ?? null,
+        phone: body.phone ?? null,
+        dateOfBirth: body.dateOfBirth ?? null,
+        isActive: true,
+        createdAt: '2026-05-04T13:00:00.000Z',
+      },
+      { status: 201 },
+    )
+  }),
+
+  // PUT /api/v1/player/:id
+  http.put(`${BASE_URL}/api/v1/player/:id`, async ({ params, request }) => {
+    if (params.id === 'player-missing') {
+      return HttpResponse.json(
+        { title: 'PLAYER_NOT_FOUND', detail: 'Player not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    const body = (await request.json()) as {
+      name: string
+      nickname?: string | null
+      phone?: string | null
+      dateOfBirth?: string | null
+    }
+
+    return HttpResponse.json({
+      id: params.id,
+      userId: 'user-1',
+      name: body.name,
+      nickname: body.nickname ?? null,
+      phone: body.phone ?? null,
+      dateOfBirth: body.dateOfBirth ?? null,
+      isActive: true,
+      createdAt: '2026-01-10T10:00:00.000Z',
+    })
+  }),
+
+  // DELETE /api/v1/player/:id
+  http.delete(`${BASE_URL}/api/v1/player/:id`, ({ params }) => {
+    if (params.id === 'player-missing') {
+      return HttpResponse.json(
+        { title: 'PLAYER_NOT_FOUND', detail: 'Player not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    return new HttpResponse(null, { status: 204 })
+  }),
+
+  // PUT /api/v1/player/:id/positions
+  http.put(`${BASE_URL}/api/v1/player/:id/positions`, async ({ params, request }) => {
+    const body = (await request.json()) as { positionIds: string[] }
+
+    if (!Array.isArray(body.positionIds) || body.positionIds.length === 0) {
+      return HttpResponse.json(
+        { title: 'INVALID_POSITION_ID', detail: 'Position ids are required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (body.positionIds.length > 3) {
+      return HttpResponse.json(
+        {
+          title: 'POSITIONS_LIMIT_EXCEEDED',
+          detail: 'A player can have at most 3 positions',
+          status: 422,
+        },
+        { status: 422 },
+      )
+    }
+
+    if (new Set(body.positionIds).size !== body.positionIds.length) {
+      return HttpResponse.json(
+        {
+          title: 'DUPLICATE_POSITIONS',
+          detail: 'Duplicated position ids are not allowed',
+          status: 422,
+        },
+        { status: 422 },
+      )
+    }
+
+    const hasUnknownPosition = body.positionIds.some((positionId) =>
+      positionId.startsWith('position-missing'),
+    )
+
+    if (hasUnknownPosition) {
+      return HttpResponse.json(
+        {
+          title: 'POSITION_NOT_FOUND',
+          detail: 'Position was not found',
+          status: 404,
+        },
+        { status: 404 },
+      )
+    }
+
+    return HttpResponse.json({
+      playerId: params.id,
+      positionIds: body.positionIds,
+      updatedAt: '2026-05-04T13:00:00.000Z',
+    })
+  }),
+
+  // GET /api/v1/position
+  http.get(`${BASE_URL}/api/v1/position`, () => HttpResponse.json(mockPositions)),
 
   // GET /api/v1/team
   http.get(`${BASE_URL}/api/v1/team`, () =>

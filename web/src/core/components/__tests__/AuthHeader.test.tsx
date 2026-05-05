@@ -40,6 +40,21 @@ describe('AuthHeader', () => {
     expect(screen.getByRole('button', { name: /sair/i })).toBeInTheDocument()
   })
 
+  it('deve exibir ações de navegação do header', () => {
+    renderHeader()
+
+    expect(screen.getByRole('button', { name: /dashboard/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /jogadores/i })).toBeInTheDocument()
+  })
+
+  it('deve navegar para /players ao clicar em jogadores', async () => {
+    renderHeader()
+
+    await userEvent.click(screen.getByRole('button', { name: /jogadores/i }))
+
+    expect(mockNavigate).toHaveBeenCalledWith({ to: '/players' })
+  })
+
   it('deve limpar sessão e navegar para /login ao clicar em sair', async () => {
     useAuthStore.getState().setTokens(mockAuthResponse)
     useAuthStore.getState().setCurrentUser(mockUserProfile)

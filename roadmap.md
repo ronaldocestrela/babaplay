@@ -1155,7 +1155,69 @@ Construir um sistema SaaS escalável, com:
 - `npm run test:run`: **78 testes, 100% passando**
 - `npm run lint`: **passando**
 
-### 3. Players — pendente
+### 3. Players — 🚧 em andamento
+
+#### Entregas concluídas (slice 1 — contratos + data layer)
+- Nova feature base criada em `web/src/features/players/`:
+  - `types/index.ts`
+  - `services/playerService.ts`
+  - `hooks/index.ts`
+- `API_ROUTES` expandido para operações de Players/Positions no frontend:
+  - `GET/POST /api/v1/player`
+  - `GET/PUT/DELETE /api/v1/player/{id}`
+  - `PUT /api/v1/player/{id}/positions`
+  - `GET /api/v1/position`
+- `ERROR_CODES` expandido com códigos de negócio usados pela feature Players
+- MSW (`web/src/test/handlers.ts`) expandido com cenários de CRUD e atualização de posições
+
+#### Entregas concluídas (slice 2 — estado de UI + formulário + página)
+- Schemas (Zod) adicionados:
+  - `playerFormSchema` com validações de nome, data e limite de posições
+- Store de UI (Zustand) adicionada:
+  - busca, jogador selecionado e controle de modal (`create/edit`)
+- Nova página `PlayersPage` implementada com:
+  - listagem com filtro por nome/apelido
+  - CRUD (criar, editar, excluir)
+  - atualização de posições (até 3) integrada ao fluxo de salvar
+  - modal único para create/edit
+  - tratamento de loading/erro e degradação por permissão (`FORBIDDEN`)
+- Roteamento:
+  - rota protegida adicionada: `/players`
+
+#### Testes (frontend)
+- Novas suítes TDD da fase 16.3:
+  - `playerService.test.ts`
+  - `playersHooks.test.ts`
+  - `playerFormSchema.test.ts`
+  - `playerStore.test.ts`
+  - `PlayersPage.test.tsx`
+- Cobertura funcional validada para:
+  - services e hooks de CRUD
+  - validações de formulário
+  - estado de modal/busca
+  - estados de loading, forbidden e ações principais da página
+
+#### Status atual da suíte web
+- `npm run test:run`: **107 testes, 100% passando**
+- `npm run lint`: **passando**
+
+#### Próximos slices da 16.3
+- ✅ refinamento de UX do modal (mensagens e estados pending por ação)
+- ✅ integração de acesso à rota Players pelo header/menu principal
+- ✅ hardening de fluxo de erro para códigos de posição (`POSITION_NOT_FOUND`, duplicidade, limite)
+
+#### Entregas concluídas (slice 3 — navegação + hardening UX/erros)
+- Header autenticado com acesso rápido para:
+  - `Dashboard`
+  - `Jogadores`
+- `PlayersPage` refinada com:
+  - estados pending para salvar/excluir
+  - bloqueio de ações conflitantes durante mutações
+  - mensagens explícitas para erros avançados de posições
+- Cobertura de testes ampliada para:
+  - navegação do header para `/players`
+  - estados pending no modal
+  - exibição de erros avançados de posições (`POSITION_NOT_FOUND`, `DUPLICATE_POSITIONS`, `POSITIONS_LIMIT_EXCEEDED`)
 ### 4. Check-in — pendente
 ### 5. Times — pendente
 ### 6. Partidas — pendente

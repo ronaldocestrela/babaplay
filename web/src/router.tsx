@@ -9,6 +9,7 @@ import { useAuthStore } from '@/features/auth/store/authStore'
 import { getTenantFromUrl } from '@/features/auth/services/tenantService'
 import { LoginPage } from '@/pages/LoginPage'
 import { DashboardPage } from '@/pages/DashboardPage'
+import { PlayersPage } from '@/pages/PlayersPage'
 import { PublicLayout } from '@/layouts/PublicLayout'
 import { ProtectedLayout } from '@/layouts/ProtectedLayout'
 
@@ -59,10 +60,16 @@ const dashboardRoute = createRoute({
   component: DashboardPage,
 })
 
+const playersRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/players',
+  component: PlayersPage,
+})
+
 // ── Router ────────────────────────────────────────────────────────────────────
 const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([loginRoute]),
-  protectedRoute.addChildren([dashboardRoute]),
+  protectedRoute.addChildren([dashboardRoute, playersRoute]),
 ])
 
 export const router = createRouter({ routeTree })

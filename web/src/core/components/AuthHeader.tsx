@@ -1,14 +1,37 @@
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useLogout } from '@/features/auth/hooks/useLogout'
+import { useNavigate } from '@tanstack/react-router'
 
 export function AuthHeader() {
   const currentUser = useAuthStore((s) => s.currentUser)
   const { logout, isPending } = useLogout()
+  const navigate = useNavigate()
 
   return (
     <header className="bg-white border-b border-gray-200 px-4 py-3">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <span className="text-lg font-bold text-indigo-600">BabaPlay</span>
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+        <div className="flex items-center gap-6">
+          <span className="text-lg font-bold text-indigo-600">BabaPlay</span>
+
+          <nav className="hidden md:flex items-center gap-2" aria-label="Navegação principal">
+            <button
+              type="button"
+              onClick={() => navigate({ to: '/' })}
+              className="px-3 py-1.5 rounded-lg text-sm text-gray-700 hover:bg-gray-100"
+              disabled={isPending}
+            >
+              Dashboard
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate({ to: '/players' })}
+              className="px-3 py-1.5 rounded-lg text-sm text-gray-700 hover:bg-gray-100"
+              disabled={isPending}
+            >
+              Jogadores
+            </button>
+          </nav>
+        </div>
 
         <div className="flex items-center gap-3">
           {currentUser && (

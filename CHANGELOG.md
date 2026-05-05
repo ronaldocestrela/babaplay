@@ -8,6 +8,64 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Fase 16.3: Frontend Players (slices 1 e 2)
+
+- Frontend (Players base):
+	- nova feature `web/src/features/players/` com:
+		- `types/index.ts`
+		- `services/playerService.ts`
+		- `hooks/index.ts`
+		- `schemas/playerFormSchema.ts`
+		- `store/playerStore.ts`
+	- `API_ROUTES` expandido para operações de Players e Positions:
+		- `GET/POST /api/v1/player`
+		- `GET/PUT/DELETE /api/v1/player/{id}`
+		- `PUT /api/v1/player/{id}/positions`
+		- `GET /api/v1/position`
+	- `ERROR_CODES` expandido com códigos da feature Players/Positions
+	- MSW (`src/test/handlers.ts`) expandido com cenários de listagem, detalhe, create, update, delete e update positions
+- Frontend (Players UI):
+	- nova `PlayersPage` com:
+		- listagem com filtro por nome/apelido
+		- modal único para criar/editar
+		- ações de excluir
+		- atualização de posições no fluxo de salvar
+		- fallback para `FORBIDDEN`
+	- rota protegida adicionada: `/players`
+- Testes TDD adicionados:
+	- `src/features/players/services/__tests__/playerService.test.ts`
+	- `src/features/players/hooks/__tests__/playersHooks.test.ts`
+	- `src/features/players/schemas/__tests__/playerFormSchema.test.ts`
+	- `src/features/players/store/__tests__/playerStore.test.ts`
+	- `src/pages/__tests__/PlayersPage.test.tsx`
+- Validação executada:
+	- testes focados da fase 16.3: 27 testes passando
+	- suíte web completa: 107 testes passando
+	- lint frontend: passando
+
+### Changed — Fase 16.3: Frontend Players (slice 3 hardening)
+
+- Header autenticado:
+	- adicionado acesso rápido para `Dashboard` e `Jogadores`
+	- navegação para `/players` integrada no header principal
+- PlayersPage:
+	- estados pending para ações de salvar/excluir
+	- botões de ação desabilitados durante mutações para evitar concorrência de comandos
+	- mapeamento de mensagens para erros avançados de posições:
+		- `POSITION_NOT_FOUND`
+		- `DUPLICATE_POSITIONS`
+		- `POSITIONS_LIMIT_EXCEEDED`
+- MSW:
+	- endpoint `PUT /api/v1/player/{id}/positions` ampliado com cenários de erro avançados
+- Testes TDD adicionados/atualizados:
+	- `src/core/components/__tests__/AuthHeader.test.tsx`
+	- `src/features/players/hooks/__tests__/playersHooks.test.ts`
+	- `src/pages/__tests__/PlayersPage.test.tsx`
+- Validação executada:
+	- testes focados (header + hooks + players page): 25 testes passando
+	- suíte web completa: 116 testes passando
+	- lint frontend: passando
+
 ### Added — Fase 16: Frontend Dashboard (slice 1 e 2)
 
 - Frontend (Dashboard MVP):
