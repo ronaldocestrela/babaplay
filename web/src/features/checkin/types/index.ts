@@ -20,6 +20,18 @@ export interface CreateCheckinRequest {
   longitude: number
 }
 
+export interface CheckinPlayerOption {
+  id: string
+  name: string
+  isActive: boolean
+}
+
+export interface CheckinGameDayOption {
+  id: string
+  scheduledAt: string
+  status: string
+}
+
 export interface CancelCheckinRequest {
   id: string
   gameDayId?: string

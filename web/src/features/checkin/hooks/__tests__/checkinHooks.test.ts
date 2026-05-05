@@ -3,12 +3,32 @@ import { describe, expect, it } from 'vitest'
 import { createWrapper } from '@/test/utils'
 import {
   useCancelCheckin,
+  useCheckinGameDays,
+  useCheckinPlayers,
   useCheckinsByGameDay,
   useCheckinsByPlayer,
   useCreateCheckin,
 } from '../index'
 
 describe('checkin hooks', () => {
+  it('deve listar jogadores para seleção', async () => {
+    const { result } = renderHook(() => useCheckinPlayers(), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data?.length).toBeGreaterThan(0)
+  })
+
+  it('deve listar dias de jogo para seleção', async () => {
+    const { result } = renderHook(() => useCheckinGameDays(), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data?.length).toBeGreaterThan(0)
+  })
+
   it('deve listar check-ins por game day', async () => {
     const { result } = renderHook(() => useCheckinsByGameDay('gameday-1'), {
       wrapper: createWrapper(),

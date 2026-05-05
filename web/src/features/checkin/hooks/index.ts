@@ -4,10 +4,30 @@ import { checkinService } from '../services/checkinService'
 import type { CancelCheckinRequest, CreateCheckinRequest } from '../types'
 
 export const CHECKINS_QUERY_KEY = ['checkins'] as const
+export const CHECKIN_PLAYERS_QUERY_KEY = [...CHECKINS_QUERY_KEY, 'players'] as const
+export const CHECKIN_GAMEDAYS_QUERY_KEY = [...CHECKINS_QUERY_KEY, 'gamedays'] as const
 export const CHECKINS_BY_GAMEDAY_QUERY_KEY = (gameDayId: string) =>
   [...CHECKINS_QUERY_KEY, 'gameday', gameDayId] as const
 export const CHECKINS_BY_PLAYER_QUERY_KEY = (playerId: string) =>
   [...CHECKINS_QUERY_KEY, 'player', playerId] as const
+
+export function useCheckinPlayers() {
+  return useQuery({
+    queryKey: CHECKIN_PLAYERS_QUERY_KEY,
+    queryFn: checkinService.getPlayersForCheckin,
+    staleTime: 2 * 60 * 1000,
+    retry: false,
+  })
+}
+
+export function useCheckinGameDays() {
+  return useQuery({
+    queryKey: CHECKIN_GAMEDAYS_QUERY_KEY,
+    queryFn: checkinService.getGameDaysForCheckin,
+    staleTime: 2 * 60 * 1000,
+    retry: false,
+  })
+}
 
 export function useCheckinsByGameDay(gameDayId?: string) {
   return useQuery({

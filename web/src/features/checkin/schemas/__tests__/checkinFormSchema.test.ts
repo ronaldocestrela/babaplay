@@ -18,7 +18,7 @@ describe('checkinFormSchema', () => {
   it('deve falhar com playerId inválido', () => {
     expect(() =>
       checkinFormSchema.parse({
-        playerId: 'xpto',
+        playerId: '   ',
         gameDayId: '425cb75f-cf2f-44ec-8682-a94ea8018f5b',
         latitude: -23.5505,
         longitude: -46.6333,
@@ -29,7 +29,7 @@ describe('checkinFormSchema', () => {
   it('deve falhar com latitude inválida', () => {
     expect(() =>
       checkinFormSchema.parse({
-        playerId: '2b6c6402-bb43-4945-bf4f-7df5b91b0a9e',
+        playerId: 'player-1',
         gameDayId: '425cb75f-cf2f-44ec-8682-a94ea8018f5b',
         latitude: -91,
         longitude: -46.6333,
@@ -40,7 +40,7 @@ describe('checkinFormSchema', () => {
   it('deve falhar com longitude inválida', () => {
     expect(() =>
       checkinFormSchema.parse({
-        playerId: '2b6c6402-bb43-4945-bf4f-7df5b91b0a9e',
+        playerId: 'player-1',
         gameDayId: '425cb75f-cf2f-44ec-8682-a94ea8018f5b',
         latitude: -23.5505,
         longitude: 181,

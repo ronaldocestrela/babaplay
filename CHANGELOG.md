@@ -60,6 +60,58 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 	- suíte web completa: 143 testes passando
 	- lint frontend: passando
 
+### Changed — Fase 16.4: Frontend Check-in (slice 4 seleção guiada)
+
+- Formulário de Check-in evoluído para seleção guiada (sem entrada manual de UUID):
+	- seleção de jogador
+	- seleção de dia de jogo
+- Data layer da feature ampliado:
+	- `checkinService.getPlayersForCheckin()`
+	- `checkinService.getGameDaysForCheckin()`
+	- hooks `useCheckinPlayers()` e `useCheckinGameDays()`
+- Validação do schema ajustada para fluxo guiado com IDs obrigatórios não vazios.
+- Testes TDD atualizados/expandidos:
+	- `src/features/checkin/services/__tests__/checkinService.test.ts`
+	- `src/features/checkin/hooks/__tests__/checkinHooks.test.ts`
+	- `src/features/checkin/schemas/__tests__/checkinFormSchema.test.ts`
+	- `src/features/checkin/components/__tests__/CheckinForm.test.tsx`
+	- `src/pages/__tests__/CheckinsPage.test.tsx`
+- Validação executada:
+	- testes focados de checkin: 30 testes passando
+	- suíte web completa: 147 testes passando
+	- lint frontend: passando
+
+### Changed — Fase 16.4: Frontend Check-in (slice 5 hardening de UX)
+
+- Feedback operacional adicionado no fluxo de check-in:
+	- mensagem de sucesso ao registrar check-in
+	- mensagem de sucesso ao cancelar check-in
+	- mensagens de erro de ação resolvidas por código de domínio
+- Pending state de cancelamento refinado por item na listagem:
+	- apenas o item em progresso entra em estado `Cancelando...`
+	- bloqueio granular de ação por item
+- Testes TDD atualizados/expandidos:
+	- `src/features/checkin/components/__tests__/CheckinList.test.tsx`
+	- `src/pages/__tests__/CheckinsPage.test.tsx`
+- Validação executada:
+	- testes focados de checkin: 32 testes passando
+	- suíte web completa: 149 testes passando
+	- lint frontend: passando
+
+### Changed — Fase 16.4: Frontend Check-in (slice 6 mapa real)
+
+- Integração de provider real de mapa no componente de check-in:
+	- `react-leaflet` + `leaflet`
+	- `TileLayer` com OpenStreetMap
+	- `CircleMarker` na posição atual capturada (latitude/longitude)
+	- fallback visual quando coordenadas não estão disponíveis ou são inválidas
+- Testes TDD adicionados/expandidos:
+	- `src/features/checkin/components/__tests__/CheckinMap.test.tsx`
+- Validação executada:
+	- testes focados de checkin: 34 testes passando
+	- suíte web completa: 151 testes passando
+	- lint frontend: passando
+
 ### Added — Fase 16.3: Frontend Players (slices 1 e 2)
 
 - Frontend (Players base):

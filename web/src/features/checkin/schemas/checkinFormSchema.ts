@@ -1,8 +1,8 @@
 import { z } from 'zod'
 
 export const checkinFormSchema = z.object({
-  playerId: z.string().uuid('Jogador inválido'),
-  gameDayId: z.string().uuid('Dia de jogo inválido'),
+  playerId: z.string().trim().min(1, 'Jogador inválido'),
+  gameDayId: z.string().trim().min(1, 'Dia de jogo inválido'),
   checkedInAtUtc: z.string().datetime('Data/hora do check-in inválida').optional(),
   latitude: z
     .number({ message: 'Latitude é obrigatória' })

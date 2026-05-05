@@ -2,6 +2,20 @@ import { describe, expect, it } from 'vitest'
 import { checkinService } from '../checkinService'
 
 describe('checkinService', () => {
+  it('deve listar jogadores para seleção guiada', async () => {
+    const players = await checkinService.getPlayersForCheckin()
+
+    expect(players.length).toBeGreaterThan(0)
+    expect(players[0]?.name).toBeTypeOf('string')
+  })
+
+  it('deve listar dias de jogo para seleção guiada', async () => {
+    const gameDays = await checkinService.getGameDaysForCheckin()
+
+    expect(gameDays.length).toBeGreaterThan(0)
+    expect(gameDays[0]?.scheduledAt).toBeTypeOf('string')
+  })
+
   it('deve listar check-ins por game day', async () => {
     const checkins = await checkinService.getCheckinsByGameDay('gameday-1')
 

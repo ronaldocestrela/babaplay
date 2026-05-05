@@ -1,8 +1,19 @@
 import { apiClient } from '@/core/api/client'
 import { API_ROUTES } from '@/core/constants/apiRoutes'
-import type { Checkin, CreateCheckinRequest } from '../types'
+import type {
+  Checkin,
+  CheckinGameDayOption,
+  CheckinPlayerOption,
+  CreateCheckinRequest,
+} from '../types'
 
 export const checkinService = {
+  getPlayersForCheckin: (): Promise<CheckinPlayerOption[]> =>
+    apiClient.get<CheckinPlayerOption[]>(API_ROUTES.PLAYER.LIST).then((res) => res.data),
+
+  getGameDaysForCheckin: (): Promise<CheckinGameDayOption[]> =>
+    apiClient.get<CheckinGameDayOption[]>(API_ROUTES.GAMEDAY.LIST).then((res) => res.data),
+
   getCheckinsByGameDay: (gameDayId: string): Promise<Checkin[]> =>
     apiClient
       .get<Checkin[]>(API_ROUTES.CHECKIN.BY_GAMEDAY(gameDayId))

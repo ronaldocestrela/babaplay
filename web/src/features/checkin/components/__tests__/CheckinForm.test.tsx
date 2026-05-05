@@ -13,6 +13,15 @@ describe('CheckinForm', () => {
       <CheckinForm
         playerId=""
         gameDayId=""
+        playerOptions={[
+          { id: 'player-1', name: 'Joao Silva', isActive: true },
+          { id: 'player-2', name: 'Carlos Lima', isActive: true },
+        ]}
+        gameDayOptions={[
+          { id: 'gameday-1', scheduledAt: '2026-05-05T10:00:00.000Z', status: 'Confirmed' },
+        ]}
+        isPlayersLoading={false}
+        isGameDaysLoading={false}
         latitude=""
         longitude=""
         isSubmitting={false}
@@ -39,6 +48,10 @@ describe('CheckinForm', () => {
       <CheckinForm
         playerId=""
         gameDayId=""
+        playerOptions={[]}
+        gameDayOptions={[]}
+        isPlayersLoading={false}
+        isGameDaysLoading={false}
         latitude=""
         longitude=""
         isSubmitting={false}

@@ -5,6 +5,7 @@ interface CheckinListProps {
   filter: 'active' | 'all'
   isLoading: boolean
   isCancelling: boolean
+  cancellingCheckinId: string | null
   loadingMessage: string
   onFilterChange: (filter: 'active' | 'all') => void
   onViewByGameDay: () => void
@@ -16,6 +17,7 @@ export function CheckinList({
   filter,
   isLoading,
   isCancelling,
+  cancellingCheckinId,
   loadingMessage,
   onFilterChange,
   onViewByGameDay,
@@ -73,10 +75,10 @@ export function CheckinList({
               <button
                 type="button"
                 onClick={() => onCancel(checkin.id, checkin.playerId, checkin.gameDayId)}
-                disabled={!checkin.isActive || isCancelling}
+                disabled={!checkin.isActive || (isCancelling && cancellingCheckinId === checkin.id)}
                 className="h-9 px-3 rounded-lg border border-red-300 text-red-700 disabled:opacity-60"
               >
-                Cancelar
+                {isCancelling && cancellingCheckinId === checkin.id ? 'Cancelando...' : 'Cancelar'}
               </button>
             </li>
           ))}

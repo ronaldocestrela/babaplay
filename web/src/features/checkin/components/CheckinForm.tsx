@@ -1,8 +1,13 @@
 import { type FormEvent } from 'react'
+import type { CheckinGameDayOption, CheckinPlayerOption } from '../types'
 
 interface CheckinFormProps {
   playerId: string
   gameDayId: string
+  playerOptions: CheckinPlayerOption[]
+  gameDayOptions: CheckinGameDayOption[]
+  isPlayersLoading: boolean
+  isGameDaysLoading: boolean
   latitude: string
   longitude: string
   isSubmitting: boolean
@@ -19,6 +24,10 @@ interface CheckinFormProps {
 export function CheckinForm({
   playerId,
   gameDayId,
+  playerOptions,
+  gameDayOptions,
+  isPlayersLoading,
+  isGameDaysLoading,
   latitude,
   longitude,
   isSubmitting,
@@ -38,30 +47,42 @@ export function CheckinForm({
       <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={onSubmit} noValidate>
         <div className="space-y-1">
           <label htmlFor="checkin-player-id" className="text-sm text-on-surface">
-            PlayerId
+            Jogador
           </label>
-          <input
+          <select
             id="checkin-player-id"
-            type="text"
             value={playerId}
             onChange={(event) => onPlayerIdChange(event.target.value)}
             className="w-full h-10 px-3 rounded-lg border border-outline-variant bg-surface"
-            placeholder="UUID do jogador"
-          />
+            disabled={isPlayersLoading || isSubmitting}
+          >
+            <option value="">{isPlayersLoading ? 'Carregando jogadores...' : 'Selecione um jogador'}</option>
+            {playerOptions.map((player) => (
+              <option key={player.id} value={player.id}>
+                {player.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="space-y-1">
           <label htmlFor="checkin-gameday-id" className="text-sm text-on-surface">
-            GameDayId
+            Dia de jogo
           </label>
-          <input
+          <select
             id="checkin-gameday-id"
-            type="text"
             value={gameDayId}
             onChange={(event) => onGameDayIdChange(event.target.value)}
             className="w-full h-10 px-3 rounded-lg border border-outline-variant bg-surface"
-            placeholder="UUID do dia de jogo"
-          />
+            disabled={isGameDaysLoading || isSubmitting}
+          >
+            <option value="">{isGameDaysLoading ? 'Carregando dias de jogo...' : 'Selecione um dia de jogo'}</option>
+            {gameDayOptions.map((gameDay) => (
+              <option key={gameDay.id} value={gameDay.id}>
+                {new Date(gameDay.scheduledAt).toLocaleDateString('pt-BR')} - {gameDay.status}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="space-y-1">

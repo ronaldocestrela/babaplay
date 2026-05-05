@@ -1218,7 +1218,7 @@ Construir um sistema SaaS escalável, com:
   - navegação do header para `/players`
   - estados pending no modal
   - exibição de erros avançados de posições (`POSITION_NOT_FOUND`, `DUPLICATE_POSITIONS`, `POSITIONS_LIMIT_EXCEEDED`)
-### 4. Check-in — 🚧 em andamento
+### 4. Check-in — ✅ concluída
 
 #### Entregas iniciadas (slice 1 — contratos + data layer)
 - Nova feature base criada em `web/src/features/checkin/`:
@@ -1277,14 +1277,48 @@ Construir um sistema SaaS escalável, com:
   - melhor reutilização e evolução incremental do mapa/form/lista
   - manutenção do comportamento de criação/cancelamento/filtro sem regressão
 
+#### Entregas concluídas (slice 4 — seleção guiada de jogador e game day)
+- `CheckinForm` evoluído de entrada manual de IDs para seleção guiada:
+  - select de jogador com dados carregados por query
+  - select de dia de jogo com dados carregados por query
+- Data layer da feature ampliado para suportar o formulário guiado:
+  - `checkinService.getPlayersForCheckin()`
+  - `checkinService.getGameDaysForCheckin()`
+  - hooks `useCheckinPlayers()` e `useCheckinGameDays()`
+- Validação do formulário ajustada para fluxo guiado (IDs não vazios), mantendo validações numéricas de geolocalização.
+- Cobertura de testes ampliada em serviços/hooks/página e formulário.
+
+#### Entregas concluídas (slice 5 — hardening de UX e feedback de ação)
+- Fluxo de Check-in refinado com feedback explícito por ação:
+  - sucesso ao registrar check-in
+  - sucesso ao cancelar check-in
+  - mensagens de erro de ação resolvidas por código de domínio
+- Pending state de cancelamento tornado granular por item na listagem:
+  - botão do item em progresso exibe `Cancelando...`
+  - bloqueio de ação aplicado apenas ao item em operação
+- Ajustes de testes para cobrir:
+  - feedback de sucesso em create/cancel
+  - estado de cancelamento granular no componente de lista
+
+#### Entregas concluídas (slice 6 — mapa real com marcador)
+- `CheckinMap` evoluído de placeholder para provider real de mapa com:
+  - renderização via `react-leaflet`
+  - `TileLayer` OpenStreetMap
+  - marcador (`CircleMarker`) na posição atual de check-in
+  - fallback visual quando coordenadas são inválidas/ausentes
+- Dependências adicionadas no frontend:
+  - `react-leaflet`
+  - `leaflet`
+- Testes adicionados:
+  - `CheckinMap.test.tsx` (mapa com coordenadas válidas + fallback sem coordenadas)
+
 #### Status atual da suíte web
-- `npm run test:run`: **143 testes, 100% passando**
+- `npm run test:run`: **151 testes, 100% passando**
 - `npm run lint`: **passando**
 
-#### Próximos slices da 16.4
-- integrar provider de mapa com marcador/posição em tempo real
-- substituir campos de IDs por seleção guiada (jogador/game day)
-- hardening de UX para estados pending e feedback de sucesso por ação
+#### Fechamento da 16.4
+- fluxo de check-in web concluído com seleção guiada, geolocalização, feedback operacional e mapa real
+- cobertura de testes e validações de lint concluídas sem regressão
 ### 5. Times — pendente
 ### 6. Partidas — pendente
 ### 7. Ranking — pendente

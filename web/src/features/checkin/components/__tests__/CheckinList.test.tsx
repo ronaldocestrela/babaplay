@@ -29,6 +29,7 @@ describe('CheckinList', () => {
         filter="active"
         isLoading={false}
         isCancelling={false}
+        cancellingCheckinId={null}
         loadingMessage="Carregando..."
         onFilterChange={vi.fn()}
         onViewByGameDay={vi.fn()}
@@ -50,6 +51,7 @@ describe('CheckinList', () => {
         filter="active"
         isLoading={false}
         isCancelling={false}
+        cancellingCheckinId={null}
         loadingMessage="Carregando..."
         onFilterChange={vi.fn()}
         onViewByGameDay={vi.fn()}
@@ -58,5 +60,23 @@ describe('CheckinList', () => {
     )
 
     expect(screen.getByText(/nenhum check-in encontrado/i)).toBeInTheDocument()
+  })
+
+  it('deve exibir estado de cancelamento apenas para item em progresso', () => {
+    render(
+      <CheckinList
+        list={mockList}
+        filter="active"
+        isLoading={false}
+        isCancelling={true}
+        cancellingCheckinId="checkin-1"
+        loadingMessage="Carregando..."
+        onFilterChange={vi.fn()}
+        onViewByGameDay={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: /cancelando/i })).toBeDisabled()
   })
 })

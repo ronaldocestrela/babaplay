@@ -1,10 +1,13 @@
 import { type FormEvent, useMemo, useState } from 'react'
 import { ERROR_CODES } from '@/core/constants/errorCodes'
+import { getErrorCode } from '@/core/utils/getErrorCode'
 import { CheckinForm } from '@/features/checkin/components/CheckinForm'
 import { CheckinList } from '@/features/checkin/components/CheckinList'
 import { CheckinMap } from '@/features/checkin/components/CheckinMap'
 import {
   useCancelCheckin,
+  useCheckinGameDays,
+  useCheckinPlayers,
   useCheckinsByGameDay,
   useCheckinsByPlayer,
   useCreateCheckin,
@@ -20,6 +23,14 @@ const ERROR_MESSAGES: Record<string, string> = {
   [ERROR_CODES.PLAYER_INACTIVE]: 'Jogador inativo para realizar check-in.',
   [ERROR_CODES.GAMEDAY_NOT_FOUND]: 'Dia de jogo não encontrado.',
   [ERROR_CODES.FORBIDDEN]: 'Check-ins indisponível para o seu perfil de acesso.',
+}
+
+function resolveErrorMessage(errorCode: string | null): string {
+  if (!errorCode) {
+    return 'Não foi possível concluir a ação.'
+  }
+
+  return ERROR_MESSAGES[errorCode] ?? 'Não foi possível concluir a ação.'
 }
 
 export function CheckinsPage() {
@@ -38,9 +49,16 @@ export function CheckinsPage() {
   const [latitude, setLatitude] = useState('')
   const [longitude, setLongitude] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
+  const [actionFeedback, setActionFeedback] = useState<{
+    type: 'success' | 'error'
+    message: string
+  } | null>(null)
+  const [cancellingCheckinId, setCancellingCheckinId] = useState<string | null>(null)
 
   const byGameDay = useCheckinsByGameDay(selectedGameDayId ?? undefined)
   const byPlayer = useCheckinsByPlayer(selectedPlayerId ?? undefined)
+  const playersQuery = useCheckinPlayers()
+  const gameDaysQuery = useCheckinGameDays()
   const create = useCreateCheckin()
   const cancel = useCancelCheckin()
 
@@ -77,6 +95,7 @@ export function CheckinsPage() {
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setFormError(null)
+    setActionFeedback(null)
 
     const parsed = checkinFormSchema.safeParse({
       playerId,
@@ -97,12 +116,46 @@ export function CheckinsPage() {
     create.createCheckin(parsed.data, {
       onSuccess: () => {
         setCheckedInAtUtc(new Date().toISOString())
+        setActionFeedback({
+          type: 'success',
+          message: 'Check-in registrado com sucesso.',
+        })
+      },
+      onError: (error) => {
+        const errorCode = getErrorCode(error)
+        setActionFeedback({
+          type: 'error',
+          message: resolveErrorMessage(errorCode),
+        })
       },
     })
   }
 
   const handleCancel = (id: string, checkinPlayerId: string, checkinGameDayId: string) => {
-    cancel.cancelCheckin({ id, playerId: checkinPlayerId, gameDayId: checkinGameDayId })
+    setActionFeedback(null)
+    setCancellingCheckinId(id)
+
+    cancel.cancelCheckin(
+      { id, playerId: checkinPlayerId, gameDayId: checkinGameDayId },
+      {
+        onSuccess: () => {
+          setActionFeedback({
+            type: 'success',
+            message: 'Check-in cancelado com sucesso.',
+          })
+        },
+        onError: (error) => {
+          const errorCode = getErrorCode(error)
+          setActionFeedback({
+            type: 'error',
+            message: resolveErrorMessage(errorCode),
+          })
+        },
+        onSettled: () => {
+          setCancellingCheckinId(null)
+        },
+      },
+    )
   }
 
   const loadingMessage = selectedPlayerId
@@ -118,9 +171,26 @@ export function CheckinsPage() {
         </p>
       </header>
 
+      {actionFeedback ? (
+        <div
+          className={
+            actionFeedback.type === 'success'
+              ? 'rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-800'
+              : 'rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800'
+          }
+          role="status"
+        >
+          {actionFeedback.message}
+        </div>
+      ) : null}
+
       <CheckinForm
         playerId={playerId}
         gameDayId={gameDayId}
+        playerOptions={(playersQuery.data ?? []).filter((player) => player.isActive)}
+        gameDayOptions={gameDaysQuery.data ?? []}
+        isPlayersLoading={playersQuery.isLoading}
+        isGameDaysLoading={gameDaysQuery.isLoading}
         latitude={latitude}
         longitude={longitude}
         isSubmitting={create.isPending || cancel.isPending}
@@ -139,6 +209,7 @@ export function CheckinsPage() {
         filter={filter}
         isLoading={activeQuery.isLoading}
         isCancelling={cancel.isPending}
+        cancellingCheckinId={cancellingCheckinId}
         loadingMessage={loadingMessage}
         onFilterChange={setFilter}
         onViewByGameDay={() => setSelectedPlayerId(null)}

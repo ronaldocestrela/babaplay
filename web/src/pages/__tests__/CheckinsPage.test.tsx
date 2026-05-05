@@ -5,6 +5,8 @@ import { CheckinsPage } from '../CheckinsPage'
 import { useCheckinStore } from '@/features/checkin/store/checkinStore'
 
 vi.mock('@/features/checkin/hooks', () => ({
+  useCheckinPlayers: vi.fn(),
+  useCheckinGameDays: vi.fn(),
   useCheckinsByGameDay: vi.fn(),
   useCheckinsByPlayer: vi.fn(),
   useCreateCheckin: vi.fn(),
@@ -13,6 +15,8 @@ vi.mock('@/features/checkin/hooks', () => ({
 
 import {
   useCancelCheckin,
+  useCheckinGameDays,
+  useCheckinPlayers,
   useCheckinsByGameDay,
   useCheckinsByPlayer,
   useCreateCheckin,
@@ -24,8 +28,38 @@ const cancelCheckin = vi.fn()
 describe('CheckinsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    createCheckin.mockReset()
+    cancelCheckin.mockReset()
+
+    createCheckin.mockImplementation((_, options) => {
+      options?.onSuccess?.()
+    })
+
+    cancelCheckin.mockImplementation((_, options) => {
+      options?.onSuccess?.()
+      options?.onSettled?.()
+    })
 
     useCheckinStore.getState().reset()
+
+    vi.mocked(useCheckinPlayers).mockReturnValue({
+      data: [
+        { id: 'player-1', name: 'Joao Silva', isActive: true },
+        { id: 'player-2', name: 'Carlos Lima', isActive: true },
+      ],
+      isLoading: false,
+      error: null,
+      isError: false,
+    } as ReturnType<typeof useCheckinPlayers>)
+
+    vi.mocked(useCheckinGameDays).mockReturnValue({
+      data: [
+        { id: 'gameday-1', scheduledAt: '2026-05-05T10:00:00.000Z', status: 'Confirmed' },
+      ],
+      isLoading: false,
+      error: null,
+      isError: false,
+    } as ReturnType<typeof useCheckinGameDays>)
 
     vi.mocked(useCheckinsByGameDay).mockReturnValue({
       data: [
@@ -99,19 +133,23 @@ describe('CheckinsPage', () => {
   it('deve submeter criação de check-in com dados válidos', async () => {
     render(<CheckinsPage />)
 
-    await userEvent.type(
-      screen.getByLabelText(/playerid/i),
-      '2b6c6402-bb43-4945-bf4f-7df5b91b0a9e',
-    )
-    await userEvent.type(
-      screen.getByLabelText(/gamedayid/i),
-      '425cb75f-cf2f-44ec-8682-a94ea8018f5b',
-    )
+    await userEvent.selectOptions(screen.getByLabelText(/jogador/i), 'player-2')
+    await userEvent.selectOptions(screen.getByLabelText(/dia de jogo/i), 'gameday-1')
     await userEvent.type(screen.getByLabelText(/latitude/i), '-23.5505')
     await userEvent.type(screen.getByLabelText(/longitude/i), '-46.6333')
 
     await userEvent.click(screen.getByRole('button', { name: /registrar check-in/i }))
 
     expect(createCheckin).toHaveBeenCalledTimes(1)
+    expect(screen.getByText(/check-in registrado com sucesso/i)).toBeInTheDocument()
+  })
+
+  it('deve exibir feedback de sucesso ao cancelar check-in', async () => {
+    render(<CheckinsPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /cancelar/i }))
+
+    expect(cancelCheckin).toHaveBeenCalledTimes(1)
+    expect(screen.getByText(/check-in cancelado com sucesso/i)).toBeInTheDocument()
   })
 })
