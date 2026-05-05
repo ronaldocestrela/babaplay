@@ -8,6 +8,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Fase 14: Financeiro (slice 4 hardening)
+
+- Application hardening:
+	- `ReverseMonthlyFeePaymentCommandHandler` com validação explícita de tenant (`TENANT_NOT_RESOLVED`)
+	- `GetMonthlySummaryQueryHandler` com validação de ano (`1..9999`) para evitar exceções de data inválida
+- Testes unitários adicionados:
+	- `ReverseMonthlyFeePaymentCommandHandlerTests`
+	- `GetCashFlowQueryHandlerTests`
+	- `GetDelinquencyQueryHandlerTests`
+	- `GetMonthlySummaryQueryHandlerTests`
+	- `GetPlayerStatementQueryHandlerTests`
+- Validação executada:
+	- filtro `FullyQualifiedName~Unit.Application.Financial|FullyQualifiedName~FinancialIntegrationTests|FullyQualifiedName~RbacIntegrationTests`: 28 testes passando
+	- suíte completa backend: 451 testes passando
+
 ### Added — Fase 14: Financeiro (slice 3 API + RBAC + leituras)
 
 - Application:

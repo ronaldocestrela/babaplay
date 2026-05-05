@@ -1018,6 +1018,18 @@ Construir um sistema SaaS escalável, com:
     - `Admin`: read/write/approve
     - `Manager`: read/write
 
+### Entregas concluídas (slice 4 — hardening)
+
+- Reforço de validações:
+  - `ReverseMonthlyFeePaymentCommandHandler` agora retorna `TENANT_NOT_RESOLVED` quando o tenant não está no contexto.
+  - `GetMonthlySummaryQueryHandler` valida ano (`1..9999`) para evitar exceção de construção de data.
+- Cobertura de testes de hardening (Application):
+  - `ReverseMonthlyFeePaymentCommandHandlerTests`
+  - `GetCashFlowQueryHandlerTests`
+  - `GetDelinquencyQueryHandlerTests`
+  - `GetMonthlySummaryQueryHandlerTests`
+  - `GetPlayerStatementQueryHandlerTests`
+
 ### Regras já aplicadas
 
 - valor deve ser maior que zero para transações e pagamentos
@@ -1043,8 +1055,8 @@ Construir um sistema SaaS escalável, com:
 
 ### Status atual dos testes
 
-- filtro `FullyQualifiedName~FinancialIntegrationTests|FullyQualifiedName~RbacIntegrationTests|FullyQualifiedName~Financial`: **15 testes, 100% passando**
-- suíte backend completa: **438 testes, 100% passando**
+- filtro `FullyQualifiedName~Unit.Application.Financial|FullyQualifiedName~FinancialIntegrationTests|FullyQualifiedName~RbacIntegrationTests`: **28 testes, 100% passando**
+- suíte backend completa: **451 testes, 100% passando**
 
 ### Relatórios
 

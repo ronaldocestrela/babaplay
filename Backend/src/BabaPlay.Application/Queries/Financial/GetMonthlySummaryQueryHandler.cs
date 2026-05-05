@@ -20,6 +20,9 @@ public sealed class GetMonthlySummaryQueryHandler : IQueryHandler<GetMonthlySumm
 
     public async Task<Result<MonthlySummaryResponse>> HandleAsync(GetMonthlySummaryQuery query, CancellationToken ct = default)
     {
+        if (query.Year < 1 || query.Year > 9999)
+            return Result<MonthlySummaryResponse>.Fail("INVALID_COMPETENCE", "Year must be between 1 and 9999.");
+
         if (query.Month < 1 || query.Month > 12)
             return Result<MonthlySummaryResponse>.Fail("INVALID_COMPETENCE", "Month must be between 1 and 12.");
 

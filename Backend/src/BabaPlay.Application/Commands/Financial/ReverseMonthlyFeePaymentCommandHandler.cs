@@ -30,6 +30,9 @@ public sealed class ReverseMonthlyFeePaymentCommandHandler
         if (cmd.ReversedAtUtc.Kind != DateTimeKind.Utc)
             return Result<MonthlyFeePaymentResponse>.Fail("FINANCIAL_INVALID_REVERSED_AT", "ReversedAtUtc must be UTC.");
 
+        if (_tenantContext.TenantId == Guid.Empty)
+            return Result<MonthlyFeePaymentResponse>.Fail("TENANT_NOT_RESOLVED", "Tenant context is required.");
+
         var payment = await _paymentRepository.GetByIdAsync(cmd.PaymentId, ct);
         if (payment is null || payment.TenantId != _tenantContext.TenantId)
             return Result<MonthlyFeePaymentResponse>.Fail("MONTHLY_FEE_PAYMENT_NOT_FOUND", "Monthly fee payment was not found.");
