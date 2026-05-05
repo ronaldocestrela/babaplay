@@ -82,6 +82,35 @@ const mockPositions = [
   },
 ]
 
+const mockCheckins = [
+  {
+    id: 'checkin-1',
+    tenantId: 'tenant-123',
+    playerId: 'player-1',
+    gameDayId: 'gameday-1',
+    checkedInAtUtc: '2026-05-04T13:10:00.000Z',
+    latitude: -23.5505,
+    longitude: -46.6333,
+    distanceFromAssociationMeters: 42.5,
+    isActive: true,
+    createdAt: '2026-05-04T13:10:00.000Z',
+    cancelledAtUtc: null,
+  },
+  {
+    id: 'checkin-2',
+    tenantId: 'tenant-123',
+    playerId: 'player-2',
+    gameDayId: 'gameday-1',
+    checkedInAtUtc: '2026-05-04T13:12:00.000Z',
+    latitude: -23.5512,
+    longitude: -46.6328,
+    distanceFromAssociationMeters: 50.2,
+    isActive: true,
+    createdAt: '2026-05-04T13:12:00.000Z',
+    cancelledAtUtc: null,
+  },
+]
+
 export const handlers = [
   // POST /api/v1/auth/login
   http.post(`${BASE_URL}/api/v1/auth/login`, async ({ request }) => {
@@ -407,14 +436,97 @@ export const handlers = [
   http.get(`${BASE_URL}/api/v1/checkin/gameday/:gameDayId`, ({ params }) => {
     const { gameDayId } = params
 
-    if (gameDayId === 'gameday-1') {
-      return HttpResponse.json([
-        { id: 'checkin-1', isActive: true },
-        { id: 'checkin-2', isActive: true },
-      ])
+    return HttpResponse.json(mockCheckins.filter((item) => item.gameDayId === gameDayId))
+  }),
+
+  // GET /api/v1/checkin/player/:playerId
+  http.get(`${BASE_URL}/api/v1/checkin/player/:playerId`, ({ params }) => {
+    const { playerId } = params
+
+    return HttpResponse.json(mockCheckins.filter((item) => item.playerId === playerId))
+  }),
+
+  // POST /api/v1/checkin
+  http.post(`${BASE_URL}/api/v1/checkin`, async ({ request }) => {
+    const body = (await request.json()) as {
+      playerId: string
+      gameDayId: string
+      checkedInAtUtc: string
+      latitude: number
+      longitude: number
     }
 
-    return HttpResponse.json([])
+    if (body.playerId === 'player-missing') {
+      return HttpResponse.json(
+        { title: 'PLAYER_NOT_FOUND', detail: 'Player not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    if (body.playerId === 'player-3') {
+      return HttpResponse.json(
+        { title: 'PLAYER_INACTIVE', detail: 'Player is inactive', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (body.gameDayId === 'gameday-missing') {
+      return HttpResponse.json(
+        { title: 'GAMEDAY_NOT_FOUND', detail: 'Game day not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    if (body.playerId === 'player-1' && body.gameDayId === 'gameday-1') {
+      return HttpResponse.json(
+        {
+          title: 'CHECKIN_ALREADY_EXISTS',
+          detail: 'A check-in already exists for this player and game day',
+          status: 409,
+        },
+        { status: 409 },
+      )
+    }
+
+    if (Math.abs(body.latitude) > 80 || Math.abs(body.longitude) > 170) {
+      return HttpResponse.json(
+        {
+          title: 'CHECKIN_OUTSIDE_ALLOWED_RADIUS',
+          detail: 'Player is outside association radius',
+          status: 422,
+        },
+        { status: 422 },
+      )
+    }
+
+    return HttpResponse.json(
+      {
+        id: 'checkin-new',
+        tenantId: 'tenant-123',
+        playerId: body.playerId,
+        gameDayId: body.gameDayId,
+        checkedInAtUtc: body.checkedInAtUtc,
+        latitude: body.latitude,
+        longitude: body.longitude,
+        distanceFromAssociationMeters: 35.7,
+        isActive: true,
+        createdAt: body.checkedInAtUtc,
+        cancelledAtUtc: null,
+      },
+      { status: 201 },
+    )
+  }),
+
+  // DELETE /api/v1/checkin/:id
+  http.delete(`${BASE_URL}/api/v1/checkin/:id`, ({ params }) => {
+    if (params.id === 'checkin-missing') {
+      return HttpResponse.json(
+        { title: 'CHECKIN_NOT_FOUND', detail: 'Checkin not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    return new HttpResponse(null, { status: 204 })
   }),
 
   // GET /api/v1/ranking

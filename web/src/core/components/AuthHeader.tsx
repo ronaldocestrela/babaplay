@@ -30,6 +30,14 @@ export function AuthHeader() {
             >
               Jogadores
             </button>
+            <button
+              type="button"
+              onClick={() => navigate({ to: '/checkins' })}
+              className="px-3 py-1.5 rounded-lg text-sm text-gray-700 hover:bg-gray-100"
+              disabled={isPending}
+            >
+              Check-ins
+            </button>
           </nav>
         </div>
 

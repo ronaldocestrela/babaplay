@@ -1218,7 +1218,58 @@ Construir um sistema SaaS escalável, com:
   - navegação do header para `/players`
   - estados pending no modal
   - exibição de erros avançados de posições (`POSITION_NOT_FOUND`, `DUPLICATE_POSITIONS`, `POSITIONS_LIMIT_EXCEEDED`)
-### 4. Check-in — pendente
+### 4. Check-in — 🚧 em andamento
+
+#### Entregas iniciadas (slice 1 — contratos + data layer)
+- Nova feature base criada em `web/src/features/checkin/`:
+  - `types/index.ts`
+  - `services/checkinService.ts`
+  - `hooks/index.ts`
+  - `schemas/checkinFormSchema.ts`
+  - `store/checkinStore.ts`
+- `API_ROUTES` expandido para operações de Check-in no frontend:
+  - `POST /api/v1/checkin`
+  - `GET /api/v1/checkin/gameday/{gameDayId}`
+  - `GET /api/v1/checkin/player/{playerId}`
+  - `DELETE /api/v1/checkin/{id}`
+- `ERROR_CODES` expandido com códigos de negócio da feature:
+  - `CHECKIN_ALREADY_EXISTS`
+  - `CHECKIN_OUTSIDE_ALLOWED_RADIUS`
+  - `CHECKIN_NOT_FOUND`
+  - `PLAYER_INACTIVE`
+  - `GAMEDAY_NOT_FOUND`
+- MSW (`web/src/test/handlers.ts`) ampliado com cenários de sucesso/erro para create/list/cancel de check-in
+
+#### Entregas iniciadas (slice 2 — página + navegação)
+- Nova página `CheckinsPage` implementada com:
+  - formulário de criação de check-in
+  - captura de geolocalização automática via navegador
+  - fallback manual para latitude/longitude
+  - listagem de check-ins e ação de cancelamento
+  - tratamento de erro por `ProblemDetails.title` com mensagens de negócio
+  - bloco inicial de visualização geográfica (base para evolução do mapa no próximo slice)
+- Roteamento:
+  - rota protegida adicionada: `/checkins`
+- Header autenticado:
+  - nova ação de navegação rápida para `Check-ins`
+
+#### Testes (frontend)
+- Novas suítes TDD da fase 16.4:
+  - `checkinService.test.ts`
+  - `checkinHooks.test.ts`
+  - `checkinFormSchema.test.ts`
+  - `checkinStore.test.ts`
+  - `CheckinsPage.test.tsx`
+  - `AuthHeader.test.tsx` (cobertura da navegação `/checkins`)
+
+#### Status atual da suíte web
+- `npm run test:run`: **139 testes, 100% passando**
+- `npm run lint`: **passando**
+
+#### Próximos slices da 16.4
+- integrar provider de mapa com marcador/posição em tempo real
+- substituir campos de IDs por seleção guiada (jogador/game day)
+- hardening de UX para estados pending e feedback de sucesso por ação
 ### 5. Times — pendente
 ### 6. Partidas — pendente
 ### 7. Ranking — pendente

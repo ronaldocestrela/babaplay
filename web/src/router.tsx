@@ -10,6 +10,7 @@ import { getTenantFromUrl } from '@/features/auth/services/tenantService'
 import { LoginPage } from '@/pages/LoginPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { PlayersPage } from '@/pages/PlayersPage'
+import { CheckinsPage } from '@/pages/CheckinsPage'
 import { PublicLayout } from '@/layouts/PublicLayout'
 import { ProtectedLayout } from '@/layouts/ProtectedLayout'
 
@@ -66,10 +67,16 @@ const playersRoute = createRoute({
   component: PlayersPage,
 })
 
+const checkinsRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/checkins',
+  component: CheckinsPage,
+})
+
 // ── Router ────────────────────────────────────────────────────────────────────
 const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([loginRoute]),
-  protectedRoute.addChildren([dashboardRoute, playersRoute]),
+  protectedRoute.addChildren([dashboardRoute, playersRoute, checkinsRoute]),
 ])
 
 export const router = createRouter({ routeTree })

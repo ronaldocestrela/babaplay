@@ -8,6 +8,43 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Fase 16.4: Frontend Check-in (slices iniciais)
+
+- Frontend (Check-in base):
+	- nova feature `web/src/features/checkin/` com:
+		- `types/index.ts`
+		- `services/checkinService.ts`
+		- `hooks/index.ts`
+		- `schemas/checkinFormSchema.ts`
+		- `store/checkinStore.ts`
+	- `API_ROUTES` expandido para operações completas de Check-in:
+		- `POST /api/v1/checkin`
+		- `GET /api/v1/checkin/gameday/{gameDayId}`
+		- `GET /api/v1/checkin/player/{playerId}`
+		- `DELETE /api/v1/checkin/{id}`
+	- `ERROR_CODES` expandido com códigos de negócio de check-in
+	- MSW (`src/test/handlers.ts`) ampliado com cenários de sucesso e erro para create/list/cancel
+- Frontend (Check-in UI inicial):
+	- nova `CheckinsPage` com:
+		- formulário de criação
+		- captura de geolocalização automática via navegador com fallback manual
+		- listagem de check-ins e cancelamento
+		- tratamento de erro por código (`ProblemDetails.title`)
+		- visualização geográfica inicial (base para evolução do mapa)
+	- rota protegida adicionada: `/checkins`
+	- header autenticado com navegação para `Check-ins`
+- Testes TDD adicionados/atualizados:
+	- `src/features/checkin/services/__tests__/checkinService.test.ts`
+	- `src/features/checkin/hooks/__tests__/checkinHooks.test.ts`
+	- `src/features/checkin/schemas/__tests__/checkinFormSchema.test.ts`
+	- `src/features/checkin/store/__tests__/checkinStore.test.ts`
+	- `src/pages/__tests__/CheckinsPage.test.tsx`
+	- `src/core/components/__tests__/AuthHeader.test.tsx`
+- Validação executada:
+	- testes focados (checkin + navegação): 29 testes passando
+	- suíte web completa: 139 testes passando
+	- lint frontend: passando
+
 ### Added — Fase 16.3: Frontend Players (slices 1 e 2)
 
 - Frontend (Players base):
