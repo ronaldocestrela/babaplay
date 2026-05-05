@@ -130,6 +130,58 @@ const mockTeams = [
     createdAt: '2026-05-02T10:00:00.000Z',
     playerIds: [],
   },
+  {
+    id: 'team-3',
+    tenantId: 'tenant-123',
+    name: 'Time Verde',
+    maxPlayers: 9,
+    isActive: true,
+    createdAt: '2026-05-03T10:00:00.000Z',
+    playerIds: [],
+  },
+]
+
+const mockGameDays = [
+  {
+    id: 'gameday-1',
+    scheduledAt: '2026-05-10T13:00:00.000Z',
+    status: 'Confirmed',
+  },
+  {
+    id: 'gameday-2',
+    scheduledAt: '2026-05-12T13:00:00.000Z',
+    status: 'Pending',
+  },
+  {
+    id: 'gameday-past',
+    scheduledAt: '2025-05-01T13:00:00.000Z',
+    status: 'Completed',
+  },
+]
+
+const mockMatches = [
+  {
+    id: 'match-1',
+    tenantId: 'tenant-123',
+    gameDayId: 'gameday-1',
+    homeTeamId: 'team-1',
+    awayTeamId: 'team-2',
+    description: 'Semifinal',
+    status: 'InProgress',
+    isActive: true,
+    createdAt: '2026-05-04T10:00:00.000Z',
+  },
+  {
+    id: 'match-2',
+    tenantId: 'tenant-123',
+    gameDayId: 'gameday-2',
+    homeTeamId: 'team-2',
+    awayTeamId: 'team-1',
+    description: null,
+    status: 'Scheduled',
+    isActive: true,
+    createdAt: '2026-05-04T10:05:00.000Z',
+  },
 ]
 
 const goalkeeperPlayerIds = new Set(['player-1'])
@@ -643,20 +695,205 @@ export const handlers = [
   }),
 
   // GET /api/v1/gameday
-  http.get(`${BASE_URL}/api/v1/gameday`, () =>
-    HttpResponse.json([
-      { id: 'gameday-1', scheduledAt: '2026-05-04T13:00:00.000Z', status: 'Confirmed' },
-      { id: 'gameday-2', scheduledAt: '2026-05-10T13:00:00.000Z', status: 'Pending' },
-    ]),
-  ),
+  http.get(`${BASE_URL}/api/v1/gameday`, () => HttpResponse.json(mockGameDays)),
 
   // GET /api/v1/match
-  http.get(`${BASE_URL}/api/v1/match`, () =>
-    HttpResponse.json([
-      { id: 'match-1', status: 'InProgress' },
-      { id: 'match-2', status: 'Scheduled' },
-    ]),
-  ),
+  http.get(`${BASE_URL}/api/v1/match`, ({ request }) => {
+    const url = new URL(request.url)
+    const status = url.searchParams.get('status')
+
+    if (!status) {
+      return HttpResponse.json(mockMatches)
+    }
+
+    return HttpResponse.json(mockMatches.filter((item) => item.status === status))
+  }),
+
+  // GET /api/v1/match/:id
+  http.get(`${BASE_URL}/api/v1/match/:id`, ({ params }) => {
+    const match = mockMatches.find((item) => item.id === params.id)
+
+    if (!match) {
+      return HttpResponse.json(
+        { title: 'MATCH_NOT_FOUND', detail: 'Match not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    return HttpResponse.json(match)
+  }),
+
+  // POST /api/v1/match
+  http.post(`${BASE_URL}/api/v1/match`, async ({ request }) => {
+    const body = (await request.json()) as {
+      gameDayId: string
+      homeTeamId: string
+      awayTeamId: string
+      description?: string | null
+    }
+
+    if (body.homeTeamId === body.awayTeamId) {
+      return HttpResponse.json(
+        {
+          title: 'TEAMS_MUST_BE_DIFFERENT',
+          detail: 'Home and away teams must be different',
+          status: 422,
+        },
+        { status: 422 },
+      )
+    }
+
+    const gameDay = mockGameDays.find((item) => item.id === body.gameDayId)
+    if (!gameDay) {
+      return HttpResponse.json(
+        { title: 'GAMEDAY_NOT_FOUND', detail: 'Game day not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    if (body.gameDayId === 'gameday-past') {
+      return HttpResponse.json(
+        { title: 'GAMEDAY_PAST', detail: 'Cannot create match for past game day', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    const hasHome = mockTeams.some((item) => item.id === body.homeTeamId)
+    const hasAway = mockTeams.some((item) => item.id === body.awayTeamId)
+    if (!hasHome || !hasAway) {
+      return HttpResponse.json(
+        { title: 'TEAM_NOT_FOUND', detail: 'Team not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    const alreadyExists = mockMatches.some(
+      (item) =>
+        item.gameDayId === body.gameDayId &&
+        ((item.homeTeamId === body.homeTeamId && item.awayTeamId === body.awayTeamId) ||
+          (item.homeTeamId === body.awayTeamId && item.awayTeamId === body.homeTeamId)),
+    )
+
+    if (alreadyExists) {
+      return HttpResponse.json(
+        { title: 'MATCH_ALREADY_EXISTS', detail: 'Match already exists', status: 409 },
+        { status: 409 },
+      )
+    }
+
+    return HttpResponse.json(
+      {
+        id: 'match-new',
+        tenantId: 'tenant-123',
+        gameDayId: body.gameDayId,
+        homeTeamId: body.homeTeamId,
+        awayTeamId: body.awayTeamId,
+        description: body.description ?? null,
+        status: 'Pending',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+      },
+      { status: 201 },
+    )
+  }),
+
+  // PUT /api/v1/match/:id
+  http.put(`${BASE_URL}/api/v1/match/:id`, async ({ params, request }) => {
+    const match = mockMatches.find((item) => item.id === params.id)
+
+    if (!match) {
+      return HttpResponse.json(
+        { title: 'MATCH_NOT_FOUND', detail: 'Match not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    const body = (await request.json()) as {
+      gameDayId: string
+      homeTeamId: string
+      awayTeamId: string
+      description?: string | null
+    }
+
+    if (body.homeTeamId === body.awayTeamId) {
+      return HttpResponse.json(
+        {
+          title: 'TEAMS_MUST_BE_DIFFERENT',
+          detail: 'Home and away teams must be different',
+          status: 422,
+        },
+        { status: 422 },
+      )
+    }
+
+    if (body.gameDayId === 'gameday-past') {
+      return HttpResponse.json(
+        { title: 'GAMEDAY_PAST', detail: 'Cannot update match for past game day', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    return HttpResponse.json({
+      ...match,
+      gameDayId: body.gameDayId,
+      homeTeamId: body.homeTeamId,
+      awayTeamId: body.awayTeamId,
+      description: body.description ?? null,
+    })
+  }),
+
+  // PUT /api/v1/match/:id/status
+  http.put(`${BASE_URL}/api/v1/match/:id/status`, async ({ params, request }) => {
+    const match = mockMatches.find((item) => item.id === params.id)
+
+    if (!match) {
+      return HttpResponse.json(
+        { title: 'MATCH_NOT_FOUND', detail: 'Match not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    const body = (await request.json()) as { status: string }
+
+    const allowedTransitions: Record<string, string[]> = {
+      Pending: ['Scheduled', 'Cancelled'],
+      Scheduled: ['InProgress', 'Cancelled'],
+      InProgress: ['Completed'],
+      Completed: [],
+      Cancelled: [],
+    }
+
+    const canTransition = allowedTransitions[match.status]?.includes(body.status)
+    if (!canTransition && body.status !== match.status) {
+      return HttpResponse.json(
+        {
+          title: 'INVALID_STATUS_TRANSITION',
+          detail: 'Invalid match status transition',
+          status: 422,
+        },
+        { status: 422 },
+      )
+    }
+
+    return HttpResponse.json({
+      ...match,
+      status: body.status,
+    })
+  }),
+
+  // DELETE /api/v1/match/:id
+  http.delete(`${BASE_URL}/api/v1/match/:id`, ({ params }) => {
+    const match = mockMatches.find((item) => item.id === params.id)
+
+    if (!match) {
+      return HttpResponse.json(
+        { title: 'MATCH_NOT_FOUND', detail: 'Match not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    return new HttpResponse(null, { status: 204 })
+  }),
 
   // GET /api/v1/checkin/gameday/:gameDayId
   http.get(`${BASE_URL}/api/v1/checkin/gameday/:gameDayId`, ({ params }) => {

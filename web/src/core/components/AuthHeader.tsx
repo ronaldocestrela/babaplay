@@ -46,6 +46,14 @@ export function AuthHeader() {
             >
               Times
             </button>
+            <button
+              type="button"
+              onClick={() => navigate({ to: '/matches' })}
+              className="px-3 py-1.5 rounded-lg text-sm text-gray-700 hover:bg-gray-100"
+              disabled={isPending}
+            >
+              Partidas
+            </button>
           </nav>
         </div>
 

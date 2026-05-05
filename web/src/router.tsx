@@ -12,6 +12,7 @@ import { DashboardPage } from '@/pages/DashboardPage'
 import { PlayersPage } from '@/pages/PlayersPage'
 import { CheckinsPage } from '@/pages/CheckinsPage'
 import { TeamsPage } from '@/pages/TeamsPage'
+import { MatchesPage } from '@/pages/MatchesPage'
 import { PublicLayout } from '@/layouts/PublicLayout'
 import { ProtectedLayout } from '@/layouts/ProtectedLayout'
 
@@ -80,10 +81,22 @@ const teamsRoute = createRoute({
   component: TeamsPage,
 })
 
+const matchesRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/matches',
+  component: MatchesPage,
+})
+
 // ── Router ────────────────────────────────────────────────────────────────────
 const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([loginRoute]),
-  protectedRoute.addChildren([dashboardRoute, playersRoute, checkinsRoute, teamsRoute]),
+  protectedRoute.addChildren([
+    dashboardRoute,
+    playersRoute,
+    checkinsRoute,
+    teamsRoute,
+    matchesRoute,
+  ]),
 ])
 
 export const router = createRouter({ routeTree })

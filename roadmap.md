@@ -1385,7 +1385,74 @@ Construir um sistema SaaS escalável, com:
 #### Fechamento da 16.5
 - fluxo web de Times concluído com CRUD + gestão de elenco, arquitetura componentizada, navegação integrada e cobertura de testes sem regressão.
 
-### 6. Partidas — pendente
+### 6. Partidas — ✅ concluída
+
+#### Entregas concluídas (slice 1 — contratos + data layer)
+- Nova feature base criada em `web/src/features/matches/`:
+  - `types/index.ts`
+  - `schemas/matchFormSchema.ts`
+  - `services/matchService.ts`
+  - `hooks/index.ts`
+  - `store/matchStore.ts`
+- `API_ROUTES` expandido para operações completas de Partidas:
+  - `GET/POST /api/v1/match`
+  - `GET/PUT/DELETE /api/v1/match/{id}`
+  - `PUT /api/v1/match/{id}/status`
+- `ERROR_CODES` expandido com códigos de negócio da feature Match:
+  - `MATCH_NOT_FOUND`, `MATCH_ALREADY_EXISTS`
+  - `TEAMS_MUST_BE_DIFFERENT`, `GAMEDAY_PAST`
+  - `INVALID_STATUS_TRANSITION`
+
+#### Entregas concluídas (slice 2 — UI componentizada)
+- Componentização da feature Matches implementada:
+  - `components/MatchForm.tsx`
+  - `components/MatchList.tsx`
+- Nova página `MatchesPage` com:
+  - listagem com filtro por confronto/status
+  - modal de create/edit de partida
+  - alteração de status por linha
+  - feedback de erro por `ProblemDetails.title`
+  - estados pending para salvar/excluir/alterar status
+
+#### Entregas concluídas (slice 3 — integração app + navegação)
+- Roteamento:
+  - rota protegida adicionada: `/matches`
+- Header autenticado:
+  - nova ação de navegação rápida para `Partidas`
+
+#### Entregas concluídas (slice 4 — MSW e hardening)
+- MSW (`web/src/test/handlers.ts`) expandido com cobertura completa de Match:
+  - `GET /api/v1/match`
+  - `GET /api/v1/match/{id}`
+  - `POST /api/v1/match`
+  - `PUT /api/v1/match/{id}`
+  - `PUT /api/v1/match/{id}/status`
+  - `DELETE /api/v1/match/{id}`
+- Cenários de erro mapeados nos handlers para regras de domínio:
+  - times iguais
+  - game day no passado
+  - duplicidade por confronto
+  - transição de status inválida
+  - not found
+
+#### Testes (frontend)
+- Novas suítes TDD da fase 16.6:
+  - `features/matches/services/__tests__/matchService.test.ts`
+  - `features/matches/hooks/__tests__/matchHooks.test.ts`
+  - `features/matches/schemas/__tests__/matchFormSchema.test.ts`
+  - `features/matches/store/__tests__/matchStore.test.ts`
+  - `features/matches/components/__tests__/MatchForm.test.tsx`
+  - `features/matches/components/__tests__/MatchList.test.tsx`
+  - `pages/__tests__/MatchesPage.test.tsx`
+  - atualização de `core/components/__tests__/AuthHeader.test.tsx`
+
+#### Status atual da suíte web
+- `npm run test:run`: **219 testes, 100% passando**
+- `npm run lint`: **passando**
+
+#### Fechamento da 16.6
+- fluxo web de Partidas concluído com CRUD + mudança de status, arquitetura por feature, navegação integrada e cobertura de testes sem regressão.
+
 ### 7. Ranking — pendente
 ### 8. Financeiro — pendente
 

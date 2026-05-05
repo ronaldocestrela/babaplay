@@ -47,6 +47,7 @@ describe('AuthHeader', () => {
     expect(screen.getByRole('button', { name: /jogadores/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /check-ins/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /times/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /partidas/i })).toBeInTheDocument()
   })
 
   it('deve navegar para /players ao clicar em jogadores', async () => {
@@ -71,6 +72,14 @@ describe('AuthHeader', () => {
     await userEvent.click(screen.getByRole('button', { name: /times/i }))
 
     expect(mockNavigate).toHaveBeenCalledWith({ to: '/teams' })
+  })
+
+  it('deve navegar para /matches ao clicar em partidas', async () => {
+    renderHeader()
+
+    await userEvent.click(screen.getByRole('button', { name: /partidas/i }))
+
+    expect(mockNavigate).toHaveBeenCalledWith({ to: '/matches' })
   })
 
   it('deve limpar sessão e navegar para /login ao clicar em sair', async () => {

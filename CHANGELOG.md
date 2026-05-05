@@ -8,6 +8,44 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Fase 16.6: Frontend Partidas (CRUD + status)
+
+- Frontend (Matches base):
+	- nova feature `web/src/features/matches/` com:
+		- `types/index.ts`
+		- `schemas/matchFormSchema.ts`
+		- `services/matchService.ts`
+		- `hooks/index.ts`
+		- `store/matchStore.ts`
+		- `components/MatchForm.tsx`, `components/MatchList.tsx`
+	- `API_ROUTES` expandido para operações completas de Match:
+		- `GET/POST /api/v1/match`
+		- `GET/PUT/DELETE /api/v1/match/{id}`
+		- `PUT /api/v1/match/{id}/status`
+	- `ERROR_CODES` expandido com códigos da feature Match
+	- MSW (`src/test/handlers.ts`) ampliado com cenários de sucesso/erro para todos os endpoints de Match
+- Frontend (Matches UI):
+	- nova `MatchesPage` com:
+		- listagem + filtro por confronto/status
+		- modal de create/edit
+		- mudança de status por linha
+		- tratamento de erro por `ProblemDetails.title`
+	- rota protegida adicionada: `/matches`
+	- header autenticado com navegação para `Partidas`
+- Testes TDD adicionados/atualizados:
+	- `src/features/matches/services/__tests__/matchService.test.ts`
+	- `src/features/matches/hooks/__tests__/matchHooks.test.ts`
+	- `src/features/matches/schemas/__tests__/matchFormSchema.test.ts`
+	- `src/features/matches/store/__tests__/matchStore.test.ts`
+	- `src/features/matches/components/__tests__/MatchForm.test.tsx`
+	- `src/features/matches/components/__tests__/MatchList.test.tsx`
+	- `src/pages/__tests__/MatchesPage.test.tsx`
+	- `src/core/components/__tests__/AuthHeader.test.tsx`
+- Validação executada:
+	- testes focados (matches + página + header): 42 testes passando
+	- suíte web completa: 219 testes passando
+	- lint frontend: passando
+
 ### Added — Fase 16.5: Frontend Times (CRUD + elenco)
 
 - Frontend (Teams base):

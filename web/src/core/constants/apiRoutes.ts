@@ -24,6 +24,8 @@ export const API_ROUTES = {
   },
   MATCH: {
     LIST: '/api/v1/match',
+    BY_ID: (id: string) => `/api/v1/match/${id}`,
+    STATUS: (id: string) => `/api/v1/match/${id}/status`,
   },
   CHECKIN: {
     LIST: '/api/v1/checkin',
