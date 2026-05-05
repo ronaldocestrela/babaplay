@@ -1259,11 +1259,26 @@ Construir um sistema SaaS escalável, com:
   - `checkinHooks.test.ts`
   - `checkinFormSchema.test.ts`
   - `checkinStore.test.ts`
+  - `CheckinForm.test.tsx`
+  - `CheckinList.test.tsx`
   - `CheckinsPage.test.tsx`
   - `AuthHeader.test.tsx` (cobertura da navegação `/checkins`)
 
+#### Entregas concluídas (slice 3 — componentização da página)
+- `CheckinsPage` refatorada para arquitetura por componentes, preservando o fluxo funcional:
+  - `features/checkin/components/CheckinForm.tsx`
+  - `features/checkin/components/CheckinList.tsx`
+  - `features/checkin/components/CheckinMap.tsx`
+- Cobertura unitária adicionada para os novos componentes:
+  - `CheckinForm.test.tsx`
+  - `CheckinList.test.tsx`
+- Resultado do slice:
+  - menor acoplamento da página
+  - melhor reutilização e evolução incremental do mapa/form/lista
+  - manutenção do comportamento de criação/cancelamento/filtro sem regressão
+
 #### Status atual da suíte web
-- `npm run test:run`: **139 testes, 100% passando**
+- `npm run test:run`: **143 testes, 100% passando**
 - `npm run lint`: **passando**
 
 #### Próximos slices da 16.4

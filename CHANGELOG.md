@@ -45,6 +45,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 	- suíte web completa: 139 testes passando
 	- lint frontend: passando
 
+### Changed — Fase 16.4: Frontend Check-in (slice 3 componentização)
+
+- Refatoração da página de Check-ins para componentes dedicados:
+	- `src/features/checkin/components/CheckinForm.tsx`
+	- `src/features/checkin/components/CheckinList.tsx`
+	- `src/features/checkin/components/CheckinMap.tsx`
+- Página `CheckinsPage` simplificada para orquestração de estado e mutações, mantendo fluxo funcional existente.
+- Testes TDD adicionados para os novos componentes:
+	- `src/features/checkin/components/__tests__/CheckinForm.test.tsx`
+	- `src/features/checkin/components/__tests__/CheckinList.test.tsx`
+- Validação executada:
+	- testes focados (checkin + página): 26 testes passando
+	- suíte web completa: 143 testes passando
+	- lint frontend: passando
+
 ### Added — Fase 16.3: Frontend Players (slices 1 e 2)
 
 - Frontend (Players base):
