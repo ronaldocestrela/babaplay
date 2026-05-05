@@ -13,6 +13,14 @@ const ERROR_MESSAGES: Record<string, string> = {
   [ERROR_CODES.TENANT_NAME_REQUIRED]: 'Nome da associação é obrigatório.',
   [ERROR_CODES.TENANT_SLUG_REQUIRED]: 'Slug é obrigatório.',
   [ERROR_CODES.TENANT_SLUG_TAKEN]: 'Este slug já está em uso.',
+  [ERROR_CODES.TENANT_LOGO_REQUIRED]: 'Logo da associação é obrigatório.',
+  [ERROR_CODES.TENANT_LOGO_INVALID_TYPE]: 'Logo deve ser PNG, JPG ou WEBP.',
+  [ERROR_CODES.TENANT_LOGO_INVALID_SIZE]: 'Logo deve ter até 2MB.',
+  [ERROR_CODES.TENANT_STREET_REQUIRED]: 'Rua é obrigatória.',
+  [ERROR_CODES.TENANT_NUMBER_REQUIRED]: 'Número é obrigatório.',
+  [ERROR_CODES.TENANT_CITY_REQUIRED]: 'Cidade é obrigatória.',
+  [ERROR_CODES.TENANT_STATE_REQUIRED]: 'Estado é obrigatório.',
+  [ERROR_CODES.TENANT_ZIPCODE_REQUIRED]: 'CEP é obrigatório.',
   TENANT_ADMIN_CREDENTIALS_REQUIRED: 'Informe as credenciais iniciais do admin da associação.',
   TENANT_ADMIN_USER_CREATE_FAILED: 'Não foi possível criar o usuário admin inicial.',
   TENANT_ADMIN_INVALID_PASSWORD: 'Credenciais do admin inválidas para o email informado.',
@@ -32,6 +40,12 @@ export function RegisterAssociationPage() {
     defaultValues: {
       name: '',
       slug: '',
+      street: '',
+      number: '',
+      neighborhood: '',
+      city: '',
+      state: '',
+      zipCode: '',
       adminEmail: '',
       adminPassword: '',
       confirmAdminPassword: '',
@@ -43,6 +57,13 @@ export function RegisterAssociationPage() {
     const payload = {
       name: data.name,
       slug: data.slug,
+      logo: data.logo,
+      street: data.street,
+      number: data.number,
+      neighborhood: data.neighborhood,
+      city: data.city,
+      state: data.state,
+      zipCode: data.zipCode,
       adminEmail: data.adminEmail,
       adminPassword: data.adminPassword,
     }
@@ -88,6 +109,115 @@ export function RegisterAssociationPage() {
               disabled={isPending}
             />
             {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
+          </div>
+
+          <div>
+            <label htmlFor="association-logo" className="mb-1 block text-sm font-medium text-gray-700">
+              Logo da associação
+            </label>
+            <input
+              id="association-logo"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              {...register('logo')}
+              className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100"
+              disabled={isPending}
+            />
+            {errors.logo && <p className="mt-1 text-xs text-red-600">{errors.logo.message as string}</p>}
+          </div>
+
+          <div>
+            <label htmlFor="association-street" className="mb-1 block text-sm font-medium text-gray-700">
+              Rua
+            </label>
+            <input
+              id="association-street"
+              type="text"
+              {...register('street')}
+              placeholder="Ex.: Rua das Palmeiras"
+              className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-indigo-500"
+              disabled={isPending}
+            />
+            {errors.street && <p className="mt-1 text-xs text-red-600">{errors.street.message}</p>}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="association-number" className="mb-1 block text-sm font-medium text-gray-700">
+                Número
+              </label>
+              <input
+                id="association-number"
+                type="text"
+                {...register('number')}
+                placeholder="123"
+                className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-indigo-500"
+                disabled={isPending}
+              />
+              {errors.number && <p className="mt-1 text-xs text-red-600">{errors.number.message}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="association-neighborhood" className="mb-1 block text-sm font-medium text-gray-700">
+                Bairro
+              </label>
+              <input
+                id="association-neighborhood"
+                type="text"
+                {...register('neighborhood')}
+                placeholder="Centro"
+                className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-indigo-500"
+                disabled={isPending}
+              />
+              {errors.neighborhood && <p className="mt-1 text-xs text-red-600">{errors.neighborhood.message}</p>}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2">
+              <label htmlFor="association-city" className="mb-1 block text-sm font-medium text-gray-700">
+                Cidade
+              </label>
+              <input
+                id="association-city"
+                type="text"
+                {...register('city')}
+                placeholder="São Paulo"
+                className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-indigo-500"
+                disabled={isPending}
+              />
+              {errors.city && <p className="mt-1 text-xs text-red-600">{errors.city.message}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="association-state" className="mb-1 block text-sm font-medium text-gray-700">
+                Estado
+              </label>
+              <input
+                id="association-state"
+                type="text"
+                {...register('state')}
+                placeholder="SP"
+                className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-indigo-500"
+                disabled={isPending}
+              />
+              {errors.state && <p className="mt-1 text-xs text-red-600">{errors.state.message}</p>}
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="association-zip-code" className="mb-1 block text-sm font-medium text-gray-700">
+              CEP
+            </label>
+            <input
+              id="association-zip-code"
+              type="text"
+              {...register('zipCode')}
+              placeholder="01000-000"
+              className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-indigo-500"
+              disabled={isPending}
+            />
+            {errors.zipCode && <p className="mt-1 text-xs text-red-600">{errors.zipCode.message}</p>}
           </div>
 
           <div>

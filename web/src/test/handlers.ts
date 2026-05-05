@@ -303,11 +303,60 @@ export const handlers = [
 
   // POST /api/v1/tenant
   http.post(`${BASE_URL}/api/v1/tenant`, async ({ request }) => {
-    const body = (await request.json()) as {
+    const requestClone = request.clone()
+
+    let body: {
       name: string
       slug: string
-      adminEmail?: string
-      adminPassword?: string
+      logo: File | null
+      street: string
+      number: string
+      neighborhood: string
+      city: string
+      state: string
+      zipCode: string
+      adminEmail: string
+      adminPassword: string
+    }
+
+    try {
+      const formData = await request.formData()
+      body = {
+        name: String(formData.get('Name') ?? ''),
+        slug: String(formData.get('Slug') ?? ''),
+        logo: formData.get('Logo') as File | null,
+        street: String(formData.get('Street') ?? ''),
+        number: String(formData.get('Number') ?? ''),
+        neighborhood: String(formData.get('Neighborhood') ?? ''),
+        city: String(formData.get('City') ?? ''),
+        state: String(formData.get('State') ?? ''),
+        zipCode: String(formData.get('ZipCode') ?? ''),
+        adminEmail: String(formData.get('AdminEmail') ?? ''),
+        adminPassword: String(formData.get('AdminPassword') ?? ''),
+      }
+    } catch {
+      const rawBody = await requestClone.text().catch(() => '')
+      const getHeaderValue = (name: string): string => request.headers.get(name) ?? ''
+      const getMultipartValue = (field: string): string => {
+        const escapedField = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const pattern = new RegExp(`name=\\"${escapedField}\\"\\r?\\n\\r?\\n([^\\r\\n]*)`, 'i')
+        const match = rawBody.match(pattern)
+        return match?.[1] ?? ''
+      }
+
+      body = {
+        name: getMultipartValue('Name') || getHeaderValue('X-Association-Name'),
+        slug: getMultipartValue('Slug') || getHeaderValue('X-Association-Slug'),
+        logo: new File(['mock'], 'logo.png', { type: 'image/png' }),
+        street: getMultipartValue('Street') || getHeaderValue('X-Association-Street'),
+        number: getMultipartValue('Number') || getHeaderValue('X-Association-Number'),
+        neighborhood: getMultipartValue('Neighborhood') || getHeaderValue('X-Association-Neighborhood'),
+        city: getMultipartValue('City') || getHeaderValue('X-Association-City'),
+        state: getMultipartValue('State') || getHeaderValue('X-Association-State'),
+        zipCode: getMultipartValue('ZipCode') || getHeaderValue('X-Association-ZipCode'),
+        adminEmail: getMultipartValue('AdminEmail') || getHeaderValue('X-Association-AdminEmail'),
+        adminPassword: getMultipartValue('AdminPassword') || getHeaderValue('X-Association-AdminPassword'),
+      }
     }
 
     if (!body.name) {
@@ -320,6 +369,48 @@ export const handlers = [
     if (!body.slug) {
       return HttpResponse.json(
         { title: 'TENANT_SLUG_REQUIRED', detail: 'Slug is required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (!body.logo) {
+      return HttpResponse.json(
+        { title: 'TENANT_LOGO_REQUIRED', detail: 'Logo is required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (!body.street) {
+      return HttpResponse.json(
+        { title: 'TENANT_STREET_REQUIRED', detail: 'Street is required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (!body.number) {
+      return HttpResponse.json(
+        { title: 'TENANT_NUMBER_REQUIRED', detail: 'Number is required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (!body.city) {
+      return HttpResponse.json(
+        { title: 'TENANT_CITY_REQUIRED', detail: 'City is required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (!body.state) {
+      return HttpResponse.json(
+        { title: 'TENANT_STATE_REQUIRED', detail: 'State is required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (!body.zipCode) {
+      return HttpResponse.json(
+        { title: 'TENANT_ZIPCODE_REQUIRED', detail: 'ZipCode is required', status: 422 },
         { status: 422 },
       )
     }
@@ -347,6 +438,13 @@ export const handlers = [
       name: body.name,
       slug: body.slug.toLowerCase(),
       provisioningStatus: 'Pending',
+      logoPath: 'tenant-logos/tenant-123/logo.png',
+      street: body.street,
+      number: body.number,
+      neighborhood: body.neighborhood || null,
+      city: body.city,
+      state: body.state,
+      zipCode: body.zipCode,
     }
 
     return HttpResponse.json(response, { status: 201 })
@@ -368,6 +466,96 @@ export const handlers = [
       name: 'Mock Tenant',
       slug: 'mock-tenant',
       provisioningStatus: 'Ready',
+      logoPath: 'tenant-logos/tenant-123/logo.png',
+      street: 'Rua das Palmeiras',
+      number: '123',
+      neighborhood: 'Centro',
+      city: 'Sao Paulo',
+      state: 'SP',
+      zipCode: '01000-000',
+    }
+
+    return HttpResponse.json(response)
+  }),
+
+  // GET /api/v1/tenant/settings
+  http.get(`${BASE_URL}/api/v1/tenant/settings`, () => {
+    const response: TenantResponse = {
+      id: 'tenant-123',
+      name: 'Mock Tenant',
+      slug: 'mock-tenant',
+      provisioningStatus: 'Ready',
+      logoPath: 'tenant-logos/tenant-123/logo.png',
+      street: 'Rua das Palmeiras',
+      number: '123',
+      neighborhood: 'Centro',
+      city: 'Sao Paulo',
+      state: 'SP',
+      zipCode: '01000-000',
+    }
+
+    return HttpResponse.json(response)
+  }),
+
+  // PUT /api/v1/tenant/settings
+  http.put(`${BASE_URL}/api/v1/tenant/settings`, async ({ request }) => {
+    const requestClone = request.clone()
+
+    let name = ''
+    let street = ''
+    let number = ''
+    let neighborhood = ''
+    let city = ''
+    let state = ''
+    let zipCode = ''
+
+    try {
+      const formData = await request.formData()
+      name = String(formData.get('Name') ?? '')
+      street = String(formData.get('Street') ?? '')
+      number = String(formData.get('Number') ?? '')
+      neighborhood = String(formData.get('Neighborhood') ?? '')
+      city = String(formData.get('City') ?? '')
+      state = String(formData.get('State') ?? '')
+      zipCode = String(formData.get('ZipCode') ?? '')
+    } catch {
+      const rawBody = await requestClone.text().catch(() => '')
+      const getHeaderValue = (headerName: string): string => request.headers.get(headerName) ?? ''
+      const getMultipartValue = (fieldName: string): string => {
+        const escapedField = fieldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const pattern = new RegExp(`name=\\"${escapedField}\\"\\r?\\n\\r?\\n([^\\r\\n]*)`, 'i')
+        const match = rawBody.match(pattern)
+        return match?.[1] ?? ''
+      }
+
+      name = getMultipartValue('Name') || getHeaderValue('X-Tenant-Name')
+      street = getMultipartValue('Street') || getHeaderValue('X-Tenant-Street')
+      number = getMultipartValue('Number') || getHeaderValue('X-Tenant-Number')
+      neighborhood = getMultipartValue('Neighborhood') || getHeaderValue('X-Tenant-Neighborhood')
+      city = getMultipartValue('City') || getHeaderValue('X-Tenant-City')
+      state = getMultipartValue('State') || getHeaderValue('X-Tenant-State')
+      zipCode = getMultipartValue('ZipCode') || getHeaderValue('X-Tenant-ZipCode')
+    }
+
+    if (!name) {
+      return HttpResponse.json(
+        { title: 'TENANT_NAME_REQUIRED', detail: 'Name is required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    const response: TenantResponse = {
+      id: 'tenant-123',
+      name,
+      slug: 'mock-tenant',
+      provisioningStatus: 'Ready',
+      logoPath: 'tenant-logos/tenant-123/new-logo.png',
+      street,
+      number,
+      neighborhood: neighborhood || null,
+      city,
+      state,
+      zipCode,
     }
 
     return HttpResponse.json(response)

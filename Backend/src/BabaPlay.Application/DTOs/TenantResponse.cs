@@ -5,4 +5,11 @@ public sealed record TenantResponse(
     Guid Id,
     string Name,
     string Slug,
-    string ProvisioningStatus);
+    string ProvisioningStatus,
+    string? LogoPath = null,
+    string? Street = null,
+    string? Number = null,
+    string? Neighborhood = null,
+    string? City = null,
+    string? State = null,
+    string? ZipCode = null);

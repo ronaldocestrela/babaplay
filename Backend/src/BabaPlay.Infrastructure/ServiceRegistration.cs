@@ -208,6 +208,7 @@ public static class ServiceRegistration
         services.AddScoped<IMatchEventRealtimeNotifier, SignalRMatchEventRealtimeNotifier>();
         services.AddScoped<IMatchSummaryPdfGenerator, MinimalPdfMatchSummaryGenerator>();
         services.AddScoped<IMatchSummaryStorageService, LocalMatchSummaryStorageService>();
+        services.AddScoped<ITenantLogoStorageService, LocalTenantLogoStorageService>();
 
         // --- RBAC repositories (Fase 4) ---
         services.AddScoped<IRoleRepository, RoleRepository>();

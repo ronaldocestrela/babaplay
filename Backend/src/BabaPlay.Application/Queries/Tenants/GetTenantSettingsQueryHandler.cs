@@ -5,20 +5,21 @@ using BabaPlay.Domain.Exceptions;
 
 namespace BabaPlay.Application.Queries.Tenants;
 
-/// <summary>Handles provisioning status queries for a single tenant.</summary>
-public sealed class GetTenantStatusQueryHandler
-    : IQueryHandler<GetTenantStatusQuery, Result<TenantResponse>>
+public sealed class GetTenantSettingsQueryHandler
+    : IQueryHandler<GetTenantSettingsQuery, Result<TenantResponse>>
 {
     private readonly ITenantRepository _tenantRepository;
 
-    public GetTenantStatusQueryHandler(ITenantRepository tenantRepository)
-        => _tenantRepository = tenantRepository;
-
-    /// <inheritdoc />
-    public async Task<Result<TenantResponse>> HandleAsync(
-        GetTenantStatusQuery query,
-        CancellationToken ct = default)
+    public GetTenantSettingsQueryHandler(ITenantRepository tenantRepository)
     {
+        _tenantRepository = tenantRepository;
+    }
+
+    public async Task<Result<TenantResponse>> HandleAsync(GetTenantSettingsQuery query, CancellationToken ct = default)
+    {
+        if (query.TenantId == Guid.Empty)
+            throw new NotFoundException("TENANT_NOT_RESOLVED", "Tenant context is required.");
+
         var tenant = await _tenantRepository.GetByIdAsync(query.TenantId, ct);
 
         if (tenant is null)

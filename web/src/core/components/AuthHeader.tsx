@@ -1,11 +1,14 @@
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useLogout } from '@/features/auth/hooks/useLogout'
 import { useNavigate } from '@tanstack/react-router'
+import { isTenantAdmin } from '@/features/auth/utils/tenantAccess'
 
 export function AuthHeader() {
   const currentUser = useAuthStore((s) => s.currentUser)
+  const currentTenant = useAuthStore((s) => s.currentTenant)
   const { logout, isPending } = useLogout()
   const navigate = useNavigate()
+  const canEditTenantSettings = isTenantAdmin(currentUser, currentTenant)
 
   return (
     <header className="bg-white border-b border-gray-200 px-4 py-3">
@@ -54,6 +57,16 @@ export function AuthHeader() {
             >
               Partidas
             </button>
+            {canEditTenantSettings && (
+              <button
+                type="button"
+                onClick={() => navigate({ to: '/tenant/settings' })}
+                className="px-3 py-1.5 rounded-lg text-sm text-gray-700 hover:bg-gray-100"
+                disabled={isPending}
+              >
+                Opções do Tenant
+              </button>
+            )}
           </nav>
         </div>
 

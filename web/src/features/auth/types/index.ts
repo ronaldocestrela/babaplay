@@ -49,6 +49,13 @@ export interface TenantResponse {
   name: string
   slug: string
   provisioningStatus: string
+  logoPath?: string | null
+  street?: string | null
+  number?: string | null
+  neighborhood?: string | null
+  city?: string | null
+  state?: string | null
+  zipCode?: string | null
 }
 
 /** Payload enviado para POST /api/v1/tenant. */

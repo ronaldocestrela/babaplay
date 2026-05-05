@@ -9,6 +9,7 @@ export const API_ROUTES = {
   TENANT: {
     CREATE: '/api/v1/tenant',
     STATUS: (id: string) => `/api/v1/tenant/${id}/status`,
+    SETTINGS: '/api/v1/tenant/settings',
   },
   PLAYER: {
     LIST: '/api/v1/player',

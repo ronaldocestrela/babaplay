@@ -50,6 +50,8 @@ public static class ServiceRegistration
         // Tenants — Fase 2
         services.AddScoped<ICommandHandler<CreateTenantCommand, Result<TenantResponse>>, CreateTenantCommandHandler>();
         services.AddScoped<IQueryHandler<GetTenantStatusQuery, Result<TenantResponse>>, GetTenantStatusQueryHandler>();
+        services.AddScoped<ICommandHandler<UpdateTenantSettingsCommand, Result<TenantResponse>>, UpdateTenantSettingsCommandHandler>();
+        services.AddScoped<IQueryHandler<GetTenantSettingsQuery, Result<TenantResponse>>, GetTenantSettingsQueryHandler>();
 
         // GameDays — Fase 6
         services.AddScoped<ICommandHandler<CreateGameDayCommand, Result<GameDayResponse>>, CreateGameDayCommandHandler>();

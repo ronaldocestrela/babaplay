@@ -39,13 +39,31 @@ public sealed class TenantRepository : ITenantRepository
         => await _context.Tenants.AnyAsync(t => t.Slug == slug, ct);
 
     /// <inheritdoc />
-    public async Task AddAsync(Guid id, string name, string slug, CancellationToken ct = default)
+    public async Task AddAsync(
+        Guid id,
+        string name,
+        string slug,
+        string logoPath,
+        string street,
+        string number,
+        string? neighborhood,
+        string city,
+        string state,
+        string zipCode,
+        CancellationToken ct = default)
     {
         _context.Tenants.Add(new Tenant
         {
             Id = id,
             Name = name,
             Slug = slug,
+            LogoPath = logoPath,
+            Street = street,
+            Number = number,
+            Neighborhood = neighborhood,
+            City = city,
+            State = state,
+            ZipCode = zipCode,
             ProvisioningStatus = ProvisioningStatus.Pending,
         });
         await _context.SaveChangesAsync(ct);
@@ -68,11 +86,48 @@ public sealed class TenantRepository : ITenantRepository
         await _context.SaveChangesAsync(ct);
     }
 
+    /// <inheritdoc />
+    public async Task<bool> UpdateAssociationSettingsAsync(
+        Guid id,
+        string name,
+        string? logoPath,
+        string street,
+        string number,
+        string? neighborhood,
+        string city,
+        string state,
+        string zipCode,
+        CancellationToken ct = default)
+    {
+        var entity = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == id, ct);
+        if (entity is null) return false;
+
+        entity.Name = name;
+        if (!string.IsNullOrWhiteSpace(logoPath))
+            entity.LogoPath = logoPath;
+        entity.Street = street;
+        entity.Number = number;
+        entity.Neighborhood = neighborhood;
+        entity.City = city;
+        entity.State = state;
+        entity.ZipCode = zipCode;
+
+        await _context.SaveChangesAsync(ct);
+        return true;
+    }
+
     private static TenantInfoDto Map(Tenant t) => new(
         t.Id,
         t.Name,
         t.Slug,
         t.IsActive,
         t.ConnectionString,
-        t.ProvisioningStatus.ToString());
+        t.ProvisioningStatus.ToString(),
+        t.LogoPath,
+        t.Street,
+        t.Number,
+        t.Neighborhood,
+        t.City,
+        t.State,
+        t.ZipCode);
 }

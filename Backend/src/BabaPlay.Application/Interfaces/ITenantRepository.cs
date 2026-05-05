@@ -18,12 +18,36 @@ public interface ITenantRepository
     Task<bool> ExistsAsync(string slug, CancellationToken ct = default);
 
     /// <summary>Persists a new tenant record with Pending provisioning status.</summary>
-    Task AddAsync(Guid id, string name, string slug, CancellationToken ct = default);
+    Task AddAsync(
+        Guid id,
+        string name,
+        string slug,
+        string logoPath,
+        string street,
+        string number,
+        string? neighborhood,
+        string city,
+        string state,
+        string zipCode,
+        CancellationToken ct = default);
 
     /// <summary>Updates provisioning status and (on success) the connection string.</summary>
     Task UpdateProvisioningAsync(
         Guid id,
         ProvisioningStatus status,
         string connectionString,
+        CancellationToken ct = default);
+
+    /// <summary>Updates tenant association metadata fields.</summary>
+    Task<bool> UpdateAssociationSettingsAsync(
+        Guid id,
+        string name,
+        string? logoPath,
+        string street,
+        string number,
+        string? neighborhood,
+        string city,
+        string state,
+        string zipCode,
         CancellationToken ct = default);
 }

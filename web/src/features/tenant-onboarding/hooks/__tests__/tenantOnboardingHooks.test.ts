@@ -4,6 +4,8 @@ import { createWrapper } from '@/test/utils'
 import { useAssociationStatus, useCreateAssociation } from '../index'
 
 describe('tenant onboarding hooks', () => {
+  const logo = new File(['logo'], 'logo.png', { type: 'image/png' })
+
   it('deve criar associação com useCreateAssociation', async () => {
     const { result } = renderHook(() => useCreateAssociation(), { wrapper: createWrapper() })
 
@@ -11,6 +13,13 @@ describe('tenant onboarding hooks', () => {
       result.current.createAssociation({
         name: 'Associação Hook',
         slug: 'associacao-hook',
+        logo,
+        street: 'Rua Hook',
+        number: '10',
+        neighborhood: 'Centro',
+        city: 'Sao Paulo',
+        state: 'SP',
+        zipCode: '01000-000',
         adminEmail: 'admin@hook.com',
         adminPassword: 'Admin1234',
       })
@@ -27,6 +36,13 @@ describe('tenant onboarding hooks', () => {
       result.current.createAssociation({
         name: 'Associação Duplicada',
         slug: 'taken-slug',
+        logo,
+        street: 'Rua Hook',
+        number: '10',
+        neighborhood: 'Centro',
+        city: 'Sao Paulo',
+        state: 'SP',
+        zipCode: '01000-000',
         adminEmail: 'admin@duplicada.com',
         adminPassword: 'Admin1234',
       })

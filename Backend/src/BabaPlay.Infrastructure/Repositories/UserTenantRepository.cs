@@ -17,6 +17,10 @@ public sealed class UserTenantRepository : IUserTenantRepository
         => await _context.UserTenants.AnyAsync(ut => ut.UserId == userId && ut.TenantId == tenantId, ct);
 
     /// <inheritdoc />
+    public async Task<bool> IsOwnerAsync(string userId, Guid tenantId, CancellationToken ct = default)
+        => await _context.UserTenants.AnyAsync(ut => ut.UserId == userId && ut.TenantId == tenantId && ut.IsOwner, ct);
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<AuthTenantMembershipDto>> GetMembershipsAsync(string userId, CancellationToken ct = default)
         => await _context.UserTenants
             .AsNoTracking()

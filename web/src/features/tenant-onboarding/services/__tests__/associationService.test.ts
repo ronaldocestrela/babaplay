@@ -2,10 +2,19 @@ import { describe, expect, it } from 'vitest'
 import { associationService } from '../associationService'
 
 describe('associationService', () => {
+  const logo = new File(['logo'], 'logo.png', { type: 'image/png' })
+
   it('deve criar associação com payload válido', async () => {
     const result = await associationService.createAssociation({
       name: 'Clube Verde',
       slug: 'clube-verde',
+      logo,
+      street: 'Rua Verde',
+      number: '123',
+      neighborhood: 'Centro',
+      city: 'Sao Paulo',
+      state: 'SP',
+      zipCode: '01000-000',
       adminEmail: 'admin@clubeverde.com',
       adminPassword: 'Admin1234',
     })
@@ -21,6 +30,13 @@ describe('associationService', () => {
       associationService.createAssociation({
         name: 'Clube Duplicado',
         slug: 'taken-slug',
+        logo,
+        street: 'Rua Azul',
+        number: '999',
+        neighborhood: 'Centro',
+        city: 'Sao Paulo',
+        state: 'SP',
+        zipCode: '01000-000',
         adminEmail: 'admin@duplicado.com',
         adminPassword: 'Admin1234',
       }),

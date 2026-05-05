@@ -17,6 +17,19 @@ vi.mock('@/features/tenant-onboarding/hooks', () => ({
 
 import { useCreateAssociation } from '@/features/tenant-onboarding/hooks'
 
+async function fillRequiredAssociationFields() {
+  const logoFile = new File(['fake-image'], 'logo.png', { type: 'image/png' })
+
+  await userEvent.type(screen.getByLabelText(/rua/i), 'Rua das Palmeiras')
+  await userEvent.type(screen.getByLabelText(/número/i), '123')
+  await userEvent.type(screen.getByLabelText(/cidade/i), 'Sao Paulo')
+  await userEvent.type(screen.getByLabelText(/estado/i), 'SP')
+  await userEvent.type(screen.getByLabelText(/cep/i), '01000-000')
+  await userEvent.upload(screen.getByLabelText(/logo da associação/i), logoFile)
+
+  return logoFile
+}
+
 describe('RegisterAssociationPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -53,6 +66,7 @@ describe('RegisterAssociationPage', () => {
   it('deve enviar payload válido e navegar para página de status', async () => {
     render(<RegisterAssociationPage />)
 
+    const logoFile = await fillRequiredAssociationFields()
     await userEvent.type(screen.getByLabelText(/nome da associação/i), 'Associação Atlética')
     await userEvent.type(screen.getByLabelText(/^slug$/i), 'associacao-atletica')
     await userEvent.type(screen.getByLabelText(/email do admin inicial/i), 'admin@atletica.com')
@@ -65,6 +79,13 @@ describe('RegisterAssociationPage', () => {
         {
           name: 'Associação Atlética',
           slug: 'associacao-atletica',
+          logo: logoFile,
+          street: 'Rua das Palmeiras',
+          number: '123',
+          neighborhood: '',
+          city: 'Sao Paulo',
+          state: 'SP',
+          zipCode: '01000-000',
           adminEmail: 'admin@atletica.com',
           adminPassword: 'Admin1234',
         },
@@ -80,6 +101,7 @@ describe('RegisterAssociationPage', () => {
   it('deve exibir erro de validação para slug inválido', async () => {
     render(<RegisterAssociationPage />)
 
+    await fillRequiredAssociationFields()
     await userEvent.type(screen.getByLabelText(/nome da associação/i), 'Associação')
     await userEvent.type(screen.getByLabelText(/^slug$/i), 'Slug Inválido')
     await userEvent.type(screen.getByLabelText(/email do admin inicial/i), 'admin@associacao.com')
@@ -95,6 +117,7 @@ describe('RegisterAssociationPage', () => {
   it('deve validar confirmação de senha do admin', async () => {
     render(<RegisterAssociationPage />)
 
+    await fillRequiredAssociationFields()
     await userEvent.type(screen.getByLabelText(/nome da associação/i), 'Associação')
     await userEvent.type(screen.getByLabelText(/^slug$/i), 'associacao-valida')
     await userEvent.type(screen.getByLabelText(/email do admin inicial/i), 'admin@associacao.com')

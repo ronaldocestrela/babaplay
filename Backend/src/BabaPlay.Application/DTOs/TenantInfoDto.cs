@@ -7,4 +7,11 @@ public sealed record TenantInfoDto(
     string Slug,
     bool IsActive,
     string ConnectionString,
-    string ProvisioningStatus);
+    string ProvisioningStatus,
+    string? LogoPath = null,
+    string? Street = null,
+    string? Number = null,
+    string? Neighborhood = null,
+    string? City = null,
+    string? State = null,
+    string? ZipCode = null);

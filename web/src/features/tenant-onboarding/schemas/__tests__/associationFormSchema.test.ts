@@ -2,10 +2,19 @@ import { describe, expect, it } from 'vitest'
 import { associationFormSchema } from '../associationFormSchema'
 
 describe('associationFormSchema', () => {
+  const validLogo = new File(['content'], 'logo.png', { type: 'image/png' })
+
   it('deve validar payload válido', () => {
     const parsed = associationFormSchema.parse({
       name: 'Associação do Bairro',
       slug: 'associacao-do-bairro',
+      logo: validLogo,
+      street: 'Rua das Flores',
+      number: '120',
+      neighborhood: 'Centro',
+      city: 'Sao Paulo',
+      state: 'SP',
+      zipCode: '01000-000',
       adminEmail: 'admin@bairro.com',
       adminPassword: 'Admin1234',
       confirmAdminPassword: 'Admin1234',
@@ -20,6 +29,13 @@ describe('associationFormSchema', () => {
       associationFormSchema.parse({
         name: '   ',
         slug: 'clube-valido',
+        logo: validLogo,
+        street: 'Rua das Flores',
+        number: '120',
+        neighborhood: 'Centro',
+        city: 'Sao Paulo',
+        state: 'SP',
+        zipCode: '01000-000',
         adminEmail: 'admin@clube.com',
         adminPassword: 'Admin1234',
         confirmAdminPassword: 'Admin1234',
@@ -32,6 +48,13 @@ describe('associationFormSchema', () => {
       associationFormSchema.parse({
         name: 'Clube A',
         slug: '   ',
+        logo: validLogo,
+        street: 'Rua das Flores',
+        number: '120',
+        neighborhood: 'Centro',
+        city: 'Sao Paulo',
+        state: 'SP',
+        zipCode: '01000-000',
         adminEmail: 'admin@clube.com',
         adminPassword: 'Admin1234',
         confirmAdminPassword: 'Admin1234',
@@ -44,6 +67,13 @@ describe('associationFormSchema', () => {
       associationFormSchema.parse({
         name: 'Clube A',
         slug: 'Slug Invalido',
+        logo: validLogo,
+        street: 'Rua das Flores',
+        number: '120',
+        neighborhood: 'Centro',
+        city: 'Sao Paulo',
+        state: 'SP',
+        zipCode: '01000-000',
         adminEmail: 'admin@clube.com',
         adminPassword: 'Admin1234',
         confirmAdminPassword: 'Admin1234',
@@ -56,10 +86,35 @@ describe('associationFormSchema', () => {
       associationFormSchema.parse({
         name: 'Clube A',
         slug: 'clube-a',
+        logo: validLogo,
+        street: 'Rua das Flores',
+        number: '120',
+        neighborhood: 'Centro',
+        city: 'Sao Paulo',
+        state: 'SP',
+        zipCode: '01000-000',
         adminEmail: 'admin@clube.com',
         adminPassword: 'Admin1234',
         confirmAdminPassword: 'Admin12345',
       }),
     ).toThrow('As senhas do admin devem ser iguais')
+  })
+
+  it('deve falhar sem logo', () => {
+    expect(() =>
+      associationFormSchema.parse({
+        name: 'Clube A',
+        slug: 'clube-a',
+        street: 'Rua das Flores',
+        number: '120',
+        neighborhood: 'Centro',
+        city: 'Sao Paulo',
+        state: 'SP',
+        zipCode: '01000-000',
+        adminEmail: 'admin@clube.com',
+        adminPassword: 'Admin1234',
+        confirmAdminPassword: 'Admin1234',
+      }),
+    ).toThrow('Logo da associação é obrigatório')
   })
 })

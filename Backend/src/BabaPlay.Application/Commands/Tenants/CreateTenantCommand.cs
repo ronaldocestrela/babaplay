@@ -10,5 +10,17 @@ public sealed record CreateTenantCommand(
 	string Slug,
 	string? AdminEmail,
 	string? AdminPassword,
-	string? RequestedByUserId)
+	string? RequestedByUserId,
+	TenantLogoUploadRequest? Logo,
+	string Street,
+	string Number,
+	string? Neighborhood,
+	string City,
+	string State,
+	string ZipCode)
 	: ICommand<Result<TenantResponse>>;
+
+public sealed record TenantLogoUploadRequest(
+	string FileName,
+	string ContentType,
+	byte[] Content);

@@ -13,6 +13,13 @@ public sealed class Tenant
 
     /// <summary>URL-safe unique identifier used for tenant resolution (e.g. subdomain).</summary>
     public string Slug { get; set; } = string.Empty;
+    public string? LogoPath { get; set; }
+    public string? Street { get; set; }
+    public string? Number { get; set; }
+    public string? Neighborhood { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
+    public string? ZipCode { get; set; }
     public string DatabaseName { get; set; } = string.Empty;
     public string ConnectionString { get; set; } = string.Empty;
     public double? AssociationLatitude { get; set; }

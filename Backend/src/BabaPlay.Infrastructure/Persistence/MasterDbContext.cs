@@ -39,6 +39,13 @@ public sealed class MasterDbContext : IdentityDbContext<ApplicationUser>
             e.HasKey(t => t.Id);
             e.HasIndex(t => t.Slug).IsUnique();
             e.Property(t => t.ConnectionString).HasMaxLength(2000);
+            e.Property(t => t.LogoPath).HasMaxLength(1024);
+            e.Property(t => t.Street).HasMaxLength(160);
+            e.Property(t => t.Number).HasMaxLength(30);
+            e.Property(t => t.Neighborhood).HasMaxLength(120);
+            e.Property(t => t.City).HasMaxLength(100);
+            e.Property(t => t.State).HasMaxLength(100);
+            e.Property(t => t.ZipCode).HasMaxLength(20);
             e.Property(t => t.AssociationLatitude);
             e.Property(t => t.AssociationLongitude);
             e.Property(t => t.CheckinRadiusMeters);
