@@ -136,4 +136,23 @@ public class PlayerMonthlyFeeTests
 
         act.Should().Throw<ValidationException>();
     }
+
+    [Fact]
+    public void RevertPayment_FromPaid_ShouldReturnToOpenOrOverdue()
+    {
+        var fee = PlayerMonthlyFee.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            2026,
+            5,
+            150m,
+            new DateTime(2026, 05, 20, 0, 0, 0, DateTimeKind.Utc),
+            "Mensalidade");
+
+        fee.ApplyPayment(150m, new DateTime(2026, 05, 10, 0, 0, 0, DateTimeKind.Utc));
+        fee.RevertPayment(50m, new DateTime(2026, 05, 11, 0, 0, 0, DateTimeKind.Utc));
+
+        fee.PaidAmount.Should().Be(100m);
+        fee.Status.Should().Be(MonthlyFeeStatus.Open);
+    }
 }

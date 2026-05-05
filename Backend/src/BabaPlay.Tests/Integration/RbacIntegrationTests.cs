@@ -54,4 +54,38 @@ public sealed class RbacIntegrationTests : IClassFixture<RbacWebApplicationFacto
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
+
+    [Fact]
+    public async Task GetMonthlySummary_AdminWithPermissionInTenantA_ShouldReturn200()
+    {
+        var now = DateTime.UtcNow;
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"/api/v1/financial/monthly-summary?year={now.Year}&month={now.Month}");
+        request.Headers.Authorization = new("Bearer", "test-token");
+        request.Headers.Add("X-Tenant-Slug", RbacWebApplicationFactory.TenantASlug);
+        request.Headers.Add(TestAuthHandler.UserIdHeader, RbacWebApplicationFactory.AdminUserId);
+
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task GetMonthlySummary_MemberWithoutPermissionInTenantA_ShouldReturn403()
+    {
+        var now = DateTime.UtcNow;
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"/api/v1/financial/monthly-summary?year={now.Year}&month={now.Month}");
+        request.Headers.Authorization = new("Bearer", "test-token");
+        request.Headers.Add("X-Tenant-Slug", RbacWebApplicationFactory.TenantASlug);
+        request.Headers.Add(TestAuthHandler.UserIdHeader, RbacWebApplicationFactory.MemberUserId);
+
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
 }

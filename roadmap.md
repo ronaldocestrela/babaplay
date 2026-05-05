@@ -987,6 +987,37 @@ Construir um sistema SaaS escalável, com:
   - `AddFinancialCore` criada em `Persistence/Migrations/Tenant/`
   - `TenantDbContextModelSnapshot` atualizado
 
+### Entregas concluídas (slice 3 — API + RBAC + leituras)
+
+- Application (CQRS):
+  - command/handler de estorno:
+    - `ReverseMonthlyFeePaymentCommand` / `ReverseMonthlyFeePaymentCommandHandler`
+  - queries/handlers de leitura:
+    - `GetCashFlowQuery` / `GetCashFlowQueryHandler`
+    - `GetDelinquencyQuery` / `GetDelinquencyQueryHandler`
+    - `GetMonthlySummaryQuery` / `GetMonthlySummaryQueryHandler`
+    - `GetPlayerStatementQuery` / `GetPlayerStatementQueryHandler`
+  - novos DTOs de relatório:
+    - `CashFlowResponse`, `DelinquencyResponse`, `MonthlySummaryResponse`, `PlayerStatementResponse`
+- API:
+  - `FinancialController` com endpoints:
+    - `POST /api/v1/financial/cash-transaction`
+    - `POST /api/v1/financial/monthly-fee`
+    - `POST /api/v1/financial/monthly-fee-payment`
+    - `POST /api/v1/financial/monthly-fee-payment/{paymentId}/reverse`
+    - `GET /api/v1/financial/cash-flow`
+    - `GET /api/v1/financial/delinquency`
+    - `GET /api/v1/financial/monthly-summary`
+    - `GET /api/v1/financial/player/{playerId}/statement`
+- RBAC:
+  - policies adicionadas:
+    - `FinancialRead`, `FinancialWrite`, `FinancialApprove`
+  - permissões adicionadas no catálogo:
+    - `financial.read`, `financial.write`, `financial.approve`
+  - matriz default:
+    - `Admin`: read/write/approve
+    - `Manager`: read/write
+
 ### Regras já aplicadas
 
 - valor deve ser maior que zero para transações e pagamentos
@@ -1012,12 +1043,15 @@ Construir um sistema SaaS escalável, com:
 
 ### Status atual dos testes
 
-- filtro `FullyQualifiedName~CashTransactionTests|FullyQualifiedName~PlayerMonthlyFeeTests|FullyQualifiedName~MonthlyFeePaymentTests|FullyQualifiedName~BillingCompetenceTests|FullyQualifiedName~CreateCashTransactionCommandHandlerTests|FullyQualifiedName~CreatePlayerMonthlyFeeCommandHandlerTests|FullyQualifiedName~RegisterMonthlyFeePaymentCommandHandlerTests`: **24 testes, 100% passando**
+- filtro `FullyQualifiedName~FinancialIntegrationTests|FullyQualifiedName~RbacIntegrationTests|FullyQualifiedName~Financial`: **15 testes, 100% passando**
+- suíte backend completa: **438 testes, 100% passando**
 
 ### Relatórios
 
 - Caixa
 - Inadimplência
+- Resumo mensal
+- Extrato por jogador
 
 ---
 

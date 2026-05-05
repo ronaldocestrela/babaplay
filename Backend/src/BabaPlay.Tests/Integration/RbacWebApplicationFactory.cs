@@ -223,6 +223,30 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
             await db.SaveChangesAsync();
         }
 
+        var financialReadPermission = await db.Permissions.FirstOrDefaultAsync(p => p.NormalizedCode == RbacCatalog.Permissions.FinancialRead.ToUpperInvariant());
+        if (financialReadPermission is null)
+        {
+            financialReadPermission = Permission.Create(RbacCatalog.Permissions.FinancialRead, "Read financial data");
+            db.Permissions.Add(financialReadPermission);
+            await db.SaveChangesAsync();
+        }
+
+        var financialWritePermission = await db.Permissions.FirstOrDefaultAsync(p => p.NormalizedCode == RbacCatalog.Permissions.FinancialWrite.ToUpperInvariant());
+        if (financialWritePermission is null)
+        {
+            financialWritePermission = Permission.Create(RbacCatalog.Permissions.FinancialWrite, "Write financial data");
+            db.Permissions.Add(financialWritePermission);
+            await db.SaveChangesAsync();
+        }
+
+        var financialApprovePermission = await db.Permissions.FirstOrDefaultAsync(p => p.NormalizedCode == RbacCatalog.Permissions.FinancialApprove.ToUpperInvariant());
+        if (financialApprovePermission is null)
+        {
+            financialApprovePermission = Permission.Create(RbacCatalog.Permissions.FinancialApprove, "Approve financial operations");
+            db.Permissions.Add(financialApprovePermission);
+            await db.SaveChangesAsync();
+        }
+
         var adminRole = await db.Roles
             .Include(r => r.Permissions)
             .FirstOrDefaultAsync(r => r.NormalizedName == RbacCatalog.Roles.Admin.ToUpperInvariant());
@@ -237,6 +261,9 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
         adminRole.AddPermission(roleReadPermission.Id);
         adminRole.AddPermission(rankingReadPermission.Id);
         adminRole.AddPermission(rankingWritePermission.Id);
+        adminRole.AddPermission(financialReadPermission.Id);
+        adminRole.AddPermission(financialWritePermission.Id);
+        adminRole.AddPermission(financialApprovePermission.Id);
 
         var viewerRole = await db.Roles
             .Include(r => r.Permissions)

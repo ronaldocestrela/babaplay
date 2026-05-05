@@ -8,6 +8,32 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Fase 14: Financeiro (slice 3 API + RBAC + leituras)
+
+- Application:
+	- command/handler de estorno: `ReverseMonthlyFeePaymentCommand` / `ReverseMonthlyFeePaymentCommandHandler`
+	- queries/handlers:
+		- `GetCashFlowQuery` / `GetCashFlowQueryHandler`
+		- `GetDelinquencyQuery` / `GetDelinquencyQueryHandler`
+		- `GetMonthlySummaryQuery` / `GetMonthlySummaryQueryHandler`
+		- `GetPlayerStatementQuery` / `GetPlayerStatementQueryHandler`
+	- DTOs de relatório e extrato financeiro adicionados
+- API:
+	- novo `FinancialController` com endpoints de write/read/approve para caixa, mensalidades, pagamentos, estorno e relatórios
+- RBAC:
+	- policies `FinancialRead`, `FinancialWrite`, `FinancialApprove`
+	- permissões `financial.read`, `financial.write`, `financial.approve` no `RbacCatalog`
+	- matriz default atualizada (`Admin`: read/write/approve, `Manager`: read/write)
+- Infrastructure:
+	- `MonthlyFeePaymentRepository` expandido com `GetByIdAsync` e `UpdateAsync`
+	- repositórios financeiros expandidos para consultas de período/competência/extrato
+- Testes adicionados/atualizados:
+	- `FinancialIntegrationTests`
+	- `RbacIntegrationTests` com cenários financeiros
+- Validação executada:
+	- filtro `FullyQualifiedName~FinancialIntegrationTests|FullyQualifiedName~RbacIntegrationTests|FullyQualifiedName~Financial`: 15 testes passando
+	- suíte completa backend: 438 testes passando
+
 ### Added — Fase 14: Financeiro (slice 1 e write inicial)
 
 - Domain:

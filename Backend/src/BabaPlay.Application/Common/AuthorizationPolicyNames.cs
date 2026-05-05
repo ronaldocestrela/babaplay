@@ -18,4 +18,7 @@ public static class AuthorizationPolicyNames
     public const string MatchEventTypesWrite = "MatchEventTypesWrite";
     public const string RankingRead = "RankingRead";
     public const string RankingWrite = "RankingWrite";
+    public const string FinancialRead = "FinancialRead";
+    public const string FinancialWrite = "FinancialWrite";
+    public const string FinancialApprove = "FinancialApprove";
 }

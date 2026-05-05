@@ -1,5 +1,6 @@
 using BabaPlay.Application.Commands.Auth;
 using BabaPlay.Application.Commands.Checkins;
+using BabaPlay.Application.Commands.Financial;
 using BabaPlay.Application.Commands.GameDays;
 using BabaPlay.Application.Commands.Matches;
 using BabaPlay.Application.Commands.MatchSummaries;
@@ -17,6 +18,7 @@ using BabaPlay.Application.Interfaces;
 using BabaPlay.Application.Services;
 using BabaPlay.Application.Queries.Ping;
 using BabaPlay.Application.Queries.Checkins;
+using BabaPlay.Application.Queries.Financial;
 using BabaPlay.Application.Queries.GameDays;
 using BabaPlay.Application.Queries.Matches;
 using BabaPlay.Application.Queries.MatchSummaries;
@@ -126,6 +128,16 @@ public static class ServiceRegistration
         services.AddScoped<IQueryHandler<GetAttendanceRankingQuery, Result<IReadOnlyList<AttendanceEntryResponse>>>, GetAttendanceRankingQueryHandler>();
         services.AddScoped<ICommandHandler<ApplyScoreDeltaCommand, Result>, ApplyScoreDeltaCommandHandler>();
         services.AddScoped<ICommandHandler<RebuildTenantRankingCommand, Result<RebuildRankingResponse>>, RebuildTenantRankingCommandHandler>();
+
+        // Financial — Fase 14
+        services.AddScoped<ICommandHandler<CreateCashTransactionCommand, Result<CashTransactionResponse>>, CreateCashTransactionCommandHandler>();
+        services.AddScoped<ICommandHandler<CreatePlayerMonthlyFeeCommand, Result<PlayerMonthlyFeeResponse>>, CreatePlayerMonthlyFeeCommandHandler>();
+        services.AddScoped<ICommandHandler<RegisterMonthlyFeePaymentCommand, Result<MonthlyFeePaymentResponse>>, RegisterMonthlyFeePaymentCommandHandler>();
+        services.AddScoped<ICommandHandler<ReverseMonthlyFeePaymentCommand, Result<MonthlyFeePaymentResponse>>, ReverseMonthlyFeePaymentCommandHandler>();
+        services.AddScoped<IQueryHandler<GetCashFlowQuery, Result<CashFlowResponse>>, GetCashFlowQueryHandler>();
+        services.AddScoped<IQueryHandler<GetDelinquencyQuery, Result<DelinquencyResponse>>, GetDelinquencyQueryHandler>();
+        services.AddScoped<IQueryHandler<GetMonthlySummaryQuery, Result<MonthlySummaryResponse>>, GetMonthlySummaryQueryHandler>();
+        services.AddScoped<IQueryHandler<GetPlayerStatementQuery, Result<PlayerStatementResponse>>, GetPlayerStatementQueryHandler>();
 
         return services;
     }

@@ -31,6 +31,9 @@ public static class RbacCatalog
         public const string MatchEventTypesWrite = "matcheventtypes.write";
         public const string RankingRead = "ranking.read";
         public const string RankingWrite = "ranking.write";
+        public const string FinancialRead = "financial.read";
+        public const string FinancialWrite = "financial.write";
+        public const string FinancialApprove = "financial.approve";
     }
 
     public static readonly IReadOnlyDictionary<string, IReadOnlyList<string>> DefaultRolePermissions =
@@ -53,6 +56,9 @@ public static class RbacCatalog
                 Permissions.MatchEventTypesWrite,
                 Permissions.RankingRead,
                 Permissions.RankingWrite,
+                Permissions.FinancialRead,
+                Permissions.FinancialWrite,
+                Permissions.FinancialApprove,
             ],
             [Roles.Manager] =
             [
@@ -67,6 +73,8 @@ public static class RbacCatalog
                 Permissions.MatchEventTypesRead,
                 Permissions.RankingRead,
                 Permissions.RankingWrite,
+                Permissions.FinancialRead,
+                Permissions.FinancialWrite,
             ],
             [Roles.Member] =
             [

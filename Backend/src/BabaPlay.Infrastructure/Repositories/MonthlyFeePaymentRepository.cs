@@ -1,6 +1,7 @@
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Domain.Entities;
 using BabaPlay.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace BabaPlay.Infrastructure.Repositories;
 
@@ -19,6 +20,19 @@ public sealed class MonthlyFeePaymentRepository : IMonthlyFeePaymentRepository
     {
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
         db.MonthlyFeePayments.Add(payment);
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task<MonthlyFeePayment?> GetByIdAsync(Guid id, CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        return await db.MonthlyFeePayments.FirstOrDefaultAsync(x => x.Id == id && x.IsActive, ct);
+    }
+
+    public async Task UpdateAsync(MonthlyFeePayment payment, CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        db.MonthlyFeePayments.Update(payment);
         await db.SaveChangesAsync(ct);
     }
 

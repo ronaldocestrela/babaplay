@@ -76,6 +76,39 @@ public sealed class PlayerMonthlyFee : EntityBase
         MarkUpdated();
     }
 
+    public void RevertPayment(decimal paymentAmount, DateTime referenceUtc)
+    {
+        if (!IsActive)
+            throw new ValidationException("MonthlyFee", "Monthly fee is inactive.");
+
+        if (paymentAmount <= 0)
+            throw new ValidationException("PaymentAmount", "PaymentAmount must be greater than zero.");
+
+        if (referenceUtc.Kind != DateTimeKind.Utc)
+            throw new ValidationException("ReferenceUtc", "ReferenceUtc must be UTC.");
+
+        if (paymentAmount > PaidAmount)
+            throw new ValidationException("PaymentAmount", "Reversal exceeds paid amount.");
+
+        PaidAmount -= paymentAmount;
+
+        if (PaidAmount == 0)
+            PaidAtUtc = null;
+
+        if (PaidAmount == Amount)
+        {
+            Status = MonthlyFeeStatus.Paid;
+        }
+        else
+        {
+            Status = DueDateUtc < referenceUtc
+                ? MonthlyFeeStatus.Overdue
+                : MonthlyFeeStatus.Open;
+        }
+
+        MarkUpdated();
+    }
+
     public void MarkOverdue(DateTime referenceUtc)
     {
         if (referenceUtc.Kind != DateTimeKind.Utc)

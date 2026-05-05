@@ -6,6 +6,16 @@ public interface IPlayerMonthlyFeeRepository
 {
     Task<PlayerMonthlyFee?> GetByIdAsync(Guid id, CancellationToken ct = default);
 
+    Task<IReadOnlyList<PlayerMonthlyFee>> GetOverdueAsync(DateTime referenceUtc, CancellationToken ct = default);
+
+    Task<IReadOnlyList<PlayerMonthlyFee>> GetByCompetenceAsync(int year, int month, CancellationToken ct = default);
+
+    Task<IReadOnlyList<PlayerMonthlyFee>> GetByPlayerAndPeriodAsync(
+        Guid playerId,
+        DateTime fromUtc,
+        DateTime toUtc,
+        CancellationToken ct = default);
+
     Task<bool> ExistsByPlayerAndCompetenceAsync(
         Guid tenantId,
         Guid playerId,
