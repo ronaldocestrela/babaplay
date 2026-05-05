@@ -1,2 +1,3 @@
 # VS Code secrets
 .vscode/mcp.json
+coverage/

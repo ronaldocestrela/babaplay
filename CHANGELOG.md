@@ -8,6 +8,34 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Fase 16: Frontend Dashboard (slice 1 e 2)
+
+- Frontend (Dashboard MVP):
+	- nova feature `web/src/features/dashboard/` com:
+		- `types/index.ts`
+		- `services/dashboardService.ts`
+		- `hooks/useDashboardData.ts`
+	- `DashboardPage` evoluída de placeholder para tela funcional com:
+		- KPIs operacionais
+		- widget de ranking (melhor score, top artilharia, top presença)
+		- widget financeiro (saldo, aberto, mensalidades pagas)
+		- tratamento de loading/erro e degradação por permissão em blocos (`FORBIDDEN`)
+	- `API_ROUTES` expandido para endpoints de leitura usados pelo dashboard
+	- MSW (`src/test/handlers.ts`) expandido com mocks de players/teams/gamedays/matches/checkins/ranking/financeiro
+- Frontend (Filtro de período):
+	- seleção entre `Mês atual` e `Personalizado`
+	- inputs `De` e `Até` com aplicação explícita do intervalo
+	- propagação de `fromUtc`/`toUtc` para ranking e financeiro
+	- cache key do React Query parametrizada por período
+- Testes TDD adicionados/atualizados:
+	- `src/features/dashboard/services/__tests__/dashboardService.test.ts`
+	- `src/features/dashboard/hooks/__tests__/useDashboardData.test.ts`
+	- `src/pages/__tests__/DashboardPage.test.tsx`
+- Validação executada:
+	- testes focados dashboard: 9 passando (slice 1) + 7 passando (slice 2)
+	- suíte web completa: 78 testes passando
+	- lint frontend: passando
+
 ### Added — Fase 14: Financeiro (slice 4 hardening)
 
 - Application hardening:

@@ -157,4 +157,105 @@ export const handlers = [
 
     return HttpResponse.json(response)
   }),
+
+  // GET /api/v1/player
+  http.get(`${BASE_URL}/api/v1/player`, () =>
+    HttpResponse.json([
+      { id: 'player-1', isActive: true },
+      { id: 'player-2', isActive: true },
+      { id: 'player-3', isActive: false },
+    ]),
+  ),
+
+  // GET /api/v1/team
+  http.get(`${BASE_URL}/api/v1/team`, () =>
+    HttpResponse.json([
+      { id: 'team-1', isActive: true },
+      { id: 'team-2', isActive: true },
+    ]),
+  ),
+
+  // GET /api/v1/gameday
+  http.get(`${BASE_URL}/api/v1/gameday`, () =>
+    HttpResponse.json([
+      { id: 'gameday-1', scheduledAt: '2026-05-04T13:00:00.000Z', status: 'Confirmed' },
+      { id: 'gameday-2', scheduledAt: '2026-05-10T13:00:00.000Z', status: 'Pending' },
+    ]),
+  ),
+
+  // GET /api/v1/match
+  http.get(`${BASE_URL}/api/v1/match`, () =>
+    HttpResponse.json([
+      { id: 'match-1', status: 'InProgress' },
+      { id: 'match-2', status: 'Scheduled' },
+    ]),
+  ),
+
+  // GET /api/v1/checkin/gameday/:gameDayId
+  http.get(`${BASE_URL}/api/v1/checkin/gameday/:gameDayId`, ({ params }) => {
+    const { gameDayId } = params
+
+    if (gameDayId === 'gameday-1') {
+      return HttpResponse.json([
+        { id: 'checkin-1', isActive: true },
+        { id: 'checkin-2', isActive: true },
+      ])
+    }
+
+    return HttpResponse.json([])
+  }),
+
+  // GET /api/v1/ranking
+  http.get(`${BASE_URL}/api/v1/ranking`, () =>
+    HttpResponse.json([
+      { rank: 1, playerId: 'player-1', scoreTotal: 15, attendanceCount: 4, goals: 3 },
+    ]),
+  ),
+
+  // GET /api/v1/ranking/top-scorers
+  http.get(`${BASE_URL}/api/v1/ranking/top-scorers`, () =>
+    HttpResponse.json([
+      { rank: 1, playerId: 'player-1', goals: 3, scoreTotal: 15 },
+    ]),
+  ),
+
+  // GET /api/v1/ranking/attendance
+  http.get(`${BASE_URL}/api/v1/ranking/attendance`, () =>
+    HttpResponse.json([
+      { rank: 1, playerId: 'player-2', attendanceCount: 5, scoreTotal: 12 },
+    ]),
+  ),
+
+  // GET /api/v1/financial/cash-flow
+  http.get(`${BASE_URL}/api/v1/financial/cash-flow`, () =>
+    HttpResponse.json({
+      fromUtc: '2026-05-01T00:00:00.000Z',
+      toUtc: '2026-05-31T23:59:59.999Z',
+      totalIncome: 2000,
+      totalExpense: 700,
+      balance: 1300,
+    }),
+  ),
+
+  // GET /api/v1/financial/delinquency
+  http.get(`${BASE_URL}/api/v1/financial/delinquency`, () =>
+    HttpResponse.json({
+      referenceUtc: '2026-05-04T10:00:00.000Z',
+      totalOpenAmount: 420,
+    }),
+  ),
+
+  // GET /api/v1/financial/monthly-summary
+  http.get(`${BASE_URL}/api/v1/financial/monthly-summary`, () =>
+    HttpResponse.json({
+      year: 2026,
+      month: 5,
+      monthlyFeesAmount: 1000,
+      monthlyFeesPaidAmount: 900,
+      monthlyFeesOpenAmount: 100,
+      cashIncome: 2000,
+      cashExpense: 700,
+      cashBalance: 1300,
+    }),
+  ),
 ]

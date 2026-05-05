@@ -1117,7 +1117,44 @@ Construir um sistema SaaS escalável, com:
 | AuthHeader | 4 |
 | ErrorBoundary | 4 |
 
-### 2. Dashboard — pendente
+### 2. Dashboard — 🚧 em andamento
+
+#### Entregas concluídas (slice 1 — MVP base)
+- Estrutura da feature criada em `web/src/features/dashboard/`:
+  - `types/index.ts`
+  - `services/dashboardService.ts`
+  - `hooks/useDashboardData.ts`
+- `API_ROUTES` expandido para leitura de módulos do dashboard:
+  - players, teams, gamedays, matches, checkins, ranking e financeiro
+- `DashboardPage` substituída (placeholder → MVP funcional) com:
+  - KPIs operacionais (jogadores ativos, times ativos, próximos game days, partidas ao vivo, check-ins do dia)
+  - bloco de Ranking (melhor score + top artilharia + top presença)
+  - bloco Financeiro (saldo em caixa, em aberto, mensalidades pagas)
+  - estados de loading/erro e degradação por permissão de bloco (`FORBIDDEN`)
+- MSW atualizado com handlers de leitura para os endpoints usados no dashboard
+
+#### Entregas concluídas (slice 2 — filtro de período)
+- Filtro de período implementado na UI da dashboard:
+  - `Mês atual`
+  - `Personalizado` com `De`/`Até` e ação `Aplicar período`
+- `useDashboardData` atualizado para aceitar período opcional (`fromUtc`, `toUtc`)
+- Query key do React Query parametrizada por período para cache consistente
+- Ranking e Financeiro passam a consumir o período selecionado
+
+#### Testes (frontend)
+- Novas suítes TDD da fase 16.2:
+  - `dashboardService.test.ts`
+  - `useDashboardData.test.ts`
+  - `DashboardPage.test.tsx`
+- Cobertura funcional validada para:
+  - sucesso de carregamento
+  - degradação parcial por permissão (`403`)
+  - propagação de período personalizado
+
+#### Status atual da suíte web
+- `npm run test:run`: **78 testes, 100% passando**
+- `npm run lint`: **passando**
+
 ### 3. Players — pendente
 ### 4. Check-in — pendente
 ### 5. Times — pendente
