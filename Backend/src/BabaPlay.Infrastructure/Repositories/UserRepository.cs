@@ -14,13 +14,13 @@ public sealed class UserRepository : IUserRepository
     public async Task<UserAuthDto?> FindByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         var user = await _userManager.FindByEmailAsync(email);
-        return user is null ? null : new UserAuthDto(user.Id, user.Email!, user.IsActive);
+        return user is null ? null : new UserAuthDto(user.Id, user.Email!, user.IsActive, user.CreatedAt);
     }
 
     public async Task<UserAuthDto?> FindByIdAsync(string id, CancellationToken cancellationToken = default)
     {
         var user = await _userManager.FindByIdAsync(id);
-        return user is null ? null : new UserAuthDto(user.Id, user.Email!, user.IsActive);
+        return user is null ? null : new UserAuthDto(user.Id, user.Email!, user.IsActive, user.CreatedAt);
     }
 
     public async Task<bool> CheckPasswordAsync(string userId, string password, CancellationToken cancellationToken = default)

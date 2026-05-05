@@ -9,6 +9,22 @@ export const mockAuthResponse: AuthResponse = {
   refreshToken: 'mock-refresh-token',
   expiresIn: 3600,
   tokenType: 'Bearer',
+  primaryTenant: {
+    id: 'tenant-123',
+    name: 'Mock Tenant',
+    slug: 'mock-tenant',
+    isOwner: true,
+    joinedAt: '2024-01-01T00:00:00Z',
+  },
+  tenants: [
+    {
+      id: 'tenant-123',
+      name: 'Mock Tenant',
+      slug: 'mock-tenant',
+      isOwner: true,
+      joinedAt: '2024-01-01T00:00:00Z',
+    },
+  ],
 }
 
 export const mockUserProfile: UserProfile = {
@@ -17,6 +33,22 @@ export const mockUserProfile: UserProfile = {
   roles: ['Player'],
   isActive: true,
   createdAt: '2024-01-01T00:00:00Z',
+  primaryTenant: {
+    id: 'tenant-123',
+    name: 'Mock Tenant',
+    slug: 'mock-tenant',
+    isOwner: true,
+    joinedAt: '2024-01-01T00:00:00Z',
+  },
+  tenants: [
+    {
+      id: 'tenant-123',
+      name: 'Mock Tenant',
+      slug: 'mock-tenant',
+      isOwner: true,
+      joinedAt: '2024-01-01T00:00:00Z',
+    },
+  ],
 }
 
 const mockPlayers = [

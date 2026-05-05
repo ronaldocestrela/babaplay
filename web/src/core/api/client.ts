@@ -13,7 +13,17 @@ export const apiClient = axios.create({
 })
 
 function resolveTenantContext() {
-  return getTenantFromUrl() ?? useAuthStore.getState().currentTenant
+  const state = useAuthStore.getState()
+  const urlTenant = getTenantFromUrl()
+  const memberships = state.currentUser?.tenants ?? []
+
+  if (urlTenant) {
+    if (memberships.length === 0 || memberships.some((tenant) => tenant.slug === urlTenant.slug)) {
+      return urlTenant
+    }
+  }
+
+  return state.currentTenant
 }
 
 // ── Request: injeta Bearer token se disponível ──────────────────────────────

@@ -2,6 +2,9 @@ using BabaPlay.Application.Commands.Auth;
 using BabaPlay.Application.Common;
 using BabaPlay.Application.DTOs;
 using BabaPlay.Application.Interfaces;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BabaPlay.Api.Controllers;
@@ -12,13 +15,19 @@ public sealed class AuthController : ControllerBase
 {
     private readonly ICommandHandler<LoginCommand, Result<AuthResponse>> _loginHandler;
     private readonly ICommandHandler<RefreshTokenCommand, Result<AuthResponse>> _refreshTokenHandler;
+    private readonly IUserRepository _userRepository;
+    private readonly IUserTenantRepository _userTenantRepository;
 
     public AuthController(
         ICommandHandler<LoginCommand, Result<AuthResponse>> loginHandler,
-        ICommandHandler<RefreshTokenCommand, Result<AuthResponse>> refreshTokenHandler)
+        ICommandHandler<RefreshTokenCommand, Result<AuthResponse>> refreshTokenHandler,
+        IUserRepository userRepository,
+        IUserTenantRepository userTenantRepository)
     {
         _loginHandler = loginHandler;
         _refreshTokenHandler = refreshTokenHandler;
+        _userRepository = userRepository;
+        _userTenantRepository = userTenantRepository;
     }
 
     /// <summary>
@@ -68,6 +77,52 @@ public sealed class AuthController : ControllerBase
             });
 
         return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Returns the current authenticated user profile and tenant memberships.
+    /// </summary>
+    [Authorize]
+    [HttpGet("me")]
+    [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Me(CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+            ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(ClaimTypes.Name);
+
+        var email = User.FindFirstValue(JwtRegisteredClaimNames.Email)
+            ?? User.FindFirstValue(ClaimTypes.Email);
+
+        UserAuthDto? user = null;
+        if (!string.IsNullOrWhiteSpace(userId))
+            user = await _userRepository.FindByIdAsync(userId, cancellationToken);
+
+        if (user is null && !string.IsNullOrWhiteSpace(email))
+            user = await _userRepository.FindByEmailAsync(email, cancellationToken);
+
+        if (user is null)
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "UNAUTHORIZED",
+                Detail = "Authenticated user could not be resolved from token claims.",
+            });
+        }
+
+        var roles = await _userRepository.GetRolesAsync(user.Id, cancellationToken);
+        var memberships = await _userTenantRepository.GetMembershipsAsync(user.Id, cancellationToken);
+
+        return Ok(new UserProfileResponse(
+            user.Id,
+            user.Email,
+            roles,
+            user.IsActive,
+            user.CreatedAt,
+            memberships.FirstOrDefault(),
+            memberships));
     }
 }
 

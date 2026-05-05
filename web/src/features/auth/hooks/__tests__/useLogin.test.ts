@@ -28,6 +28,9 @@ describe('useLogin', () => {
       expect(useAuthStore.getState().isAuthenticated).toBe(true)
       expect(mockNavigate).toHaveBeenCalledWith({ to: '/' })
     })
+
+    expect(useAuthStore.getState().currentTenant?.slug).toBe('mock-tenant')
+    expect(useAuthStore.getState().currentTenant?.source).toBe('profile')
   })
 
   it('deve retornar isError=true com credenciais inválidas', async () => {

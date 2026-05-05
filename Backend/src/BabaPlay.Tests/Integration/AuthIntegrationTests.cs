@@ -40,6 +40,10 @@ public class AuthIntegrationTests : IClassFixture<AuthWebApplicationFactory>
         body.RefreshToken.Should().NotBeNullOrWhiteSpace();
         body.ExpiresIn.Should().BeGreaterThan(0);
         body.TokenType.Should().Be("Bearer");
+        body.PrimaryTenant.Should().NotBeNull();
+        body.PrimaryTenant!.Slug.Should().Be(AuthWebApplicationFactory.TestTenantSlug);
+        body.Tenants.Should().NotBeNull();
+        body.Tenants!.Should().ContainSingle(t => t.Slug == AuthWebApplicationFactory.TestTenantSlug && t.IsOwner);
     }
 
     [Fact]
@@ -146,4 +150,5 @@ public class AuthIntegrationTests : IClassFixture<AuthWebApplicationFactory>
         // Assert — revoked token must be rejected
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
+
 }

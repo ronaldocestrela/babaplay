@@ -36,6 +36,7 @@ describe('useCurrentUser', () => {
     })
 
     expect(useAuthStore.getState().currentUser?.email).toBe(mockUserProfile.email)
+    expect(useAuthStore.getState().currentTenant?.slug).toBe('mock-tenant')
   })
 
   it('deve iniciar com isLoading=false quando não há token', () => {

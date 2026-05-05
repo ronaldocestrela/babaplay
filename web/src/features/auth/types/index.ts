@@ -10,6 +10,16 @@ export interface AuthResponse {
   refreshToken: string
   expiresIn: number
   tokenType: string
+  primaryTenant?: TenantMembership | null
+  tenants?: TenantMembership[]
+}
+
+export interface TenantMembership {
+  id: string
+  name: string
+  slug: string
+  isOwner: boolean
+  joinedAt: string
 }
 
 /** Perfil do usuário autenticado retornado por GET /api/v1/auth/me. */
@@ -19,6 +29,8 @@ export interface UserProfile {
   roles: string[]
   isActive: boolean
   createdAt: string
+  primaryTenant?: TenantMembership | null
+  tenants?: TenantMembership[]
 }
 
 /** Payload enviado para POST /api/v1/auth/logout. */
@@ -28,7 +40,7 @@ export interface LogoutRequest {
 
 export interface TenantContext {
   slug: string
-  source: 'subdomain' | 'query'
+  source: 'subdomain' | 'query' | 'profile'
 }
 
 /** Espelha TenantResponse do backend (TenantController). */

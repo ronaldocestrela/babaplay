@@ -21,6 +21,8 @@ public sealed class AuthWebApplicationFactory : WebApplicationFactory<Program>
     public const string TestUserPassword = "Integration@123456";
     public const string ValidRefreshToken = "valid-test-refresh-token-phase1-integration";
     public const string ExpiredRefreshToken = "expired-test-refresh-token-phase1-integration";
+    public static readonly Guid TestTenantId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-000000000001");
+    public const string TestTenantSlug = "integration-club";
 
     private readonly SqliteConnection _connection = new("Data Source=:memory:");
 
@@ -128,6 +130,34 @@ public sealed class AuthWebApplicationFactory : WebApplicationFactory<Program>
                 UserId = createdUser.Id,
                 ExpiresAt = DateTime.UtcNow.AddDays(-1),
                 CreatedAt = DateTime.UtcNow.AddDays(-31),
+            });
+        }
+
+        var tenant = await db.Tenants.FirstOrDefaultAsync(t => t.Id == TestTenantId);
+        if (tenant is null)
+        {
+            tenant = new Tenant
+            {
+                Id = TestTenantId,
+                Name = "Integration Club",
+                Slug = TestTenantSlug,
+                DatabaseName = "IntegrationClubDb",
+                ConnectionString = "Server=(local);Database=IntegrationClubDb;Trusted_Connection=True;",
+                IsActive = true,
+            };
+
+            db.Tenants.Add(tenant);
+        }
+
+        var hasMembership = await db.UserTenants.AnyAsync(ut => ut.UserId == createdUser.Id && ut.TenantId == TestTenantId);
+        if (!hasMembership)
+        {
+            db.UserTenants.Add(new UserTenant
+            {
+                UserId = createdUser.Id,
+                TenantId = TestTenantId,
+                IsOwner = true,
+                JoinedAt = DateTime.UtcNow.AddDays(-10),
             });
         }
 

@@ -7,15 +7,18 @@ namespace BabaPlay.Application.Commands.Auth;
 public sealed class LoginCommandHandler : ICommandHandler<LoginCommand, Result<AuthResponse>>
 {
     private readonly IUserRepository _userRepository;
+    private readonly IUserTenantRepository _userTenantRepository;
     private readonly ITokenService _tokenService;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
 
     public LoginCommandHandler(
         IUserRepository userRepository,
+        IUserTenantRepository userTenantRepository,
         ITokenService tokenService,
         IRefreshTokenRepository refreshTokenRepository)
     {
         _userRepository = userRepository;
+        _userTenantRepository = userTenantRepository;
         _tokenService = tokenService;
         _refreshTokenRepository = refreshTokenRepository;
     }
@@ -37,9 +40,16 @@ public sealed class LoginCommandHandler : ICommandHandler<LoginCommand, Result<A
         var accessToken = _tokenService.GenerateAccessToken(user.Id, user.Email, roles);
         var refreshToken = _tokenService.GenerateRefreshToken();
         var expiresAt = DateTime.UtcNow.AddDays(_tokenService.RefreshTokenExpiresInDays);
+        var memberships = await _userTenantRepository.GetMembershipsAsync(user.Id, cancellationToken);
+        var primaryTenant = memberships.FirstOrDefault();
 
         await _refreshTokenRepository.AddAsync(refreshToken, user.Id, expiresAt, cancellationToken);
 
-        return Result.Ok(new AuthResponse(accessToken, refreshToken, _tokenService.AccessTokenExpiresInSeconds));
+        return Result.Ok(new AuthResponse(
+            accessToken,
+            refreshToken,
+            _tokenService.AccessTokenExpiresInSeconds,
+            PrimaryTenant: primaryTenant,
+            Tenants: memberships));
     }
 }
