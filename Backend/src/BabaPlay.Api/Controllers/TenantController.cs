@@ -35,7 +35,7 @@ public sealed class TenantController : ControllerBase
     /// <response code="409">Slug is already taken (TENANT_SLUG_TAKEN).</response>
     /// <response code="422">Validation error (name or slug empty).</response>
     [HttpPost]
-    [Authorize]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(TenantResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
@@ -70,7 +70,7 @@ public sealed class TenantController : ControllerBase
     /// <response code="200">Tenant found; status returned.</response>
     /// <response code="404">Tenant not found (TENANT_NOT_FOUND).</response>
     [HttpGet("{id:guid}/status")]
-    [Authorize]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(TenantResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetStatus(Guid id, CancellationToken ct)

@@ -6,6 +6,10 @@ export const API_ROUTES = {
     LOGOUT: '/api/v1/auth/logout',
     ME: '/api/v1/auth/me',
   },
+  TENANT: {
+    CREATE: '/api/v1/tenant',
+    STATUS: (id: string) => `/api/v1/tenant/${id}/status`,
+  },
   PLAYER: {
     LIST: '/api/v1/player',
     BY_ID: (id: string) => `/api/v1/player/${id}`,

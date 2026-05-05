@@ -1,9 +1,11 @@
 import { useLogin } from '@/features/auth/hooks/useLogin'
 import { LoginForm } from '@/features/auth/components/LoginForm'
+import { useNavigate } from '@tanstack/react-router'
 import type { LoginFormValues } from '@/features/auth/schemas/loginSchema'
 
 export function LoginPage() {
   const { login, isPending, errorCode } = useLogin()
+  const navigate = useNavigate()
 
   return (
     <div className="bg-surface min-h-screen flex items-center justify-center p-4 md:p-10 relative overflow-hidden">
@@ -67,6 +69,7 @@ export function LoginPage() {
             <p className="text-sm text-on-surface-variant">Não tem uma conta de associação?</p>
             <button
               type="button"
+              onClick={() => navigate({ to: '/register-association' })}
               className="w-full h-11 border border-outline-variant text-on-surface text-sm font-medium rounded-lg hover:bg-surface-container-high active:bg-surface-container-highest transition-all"
             >
               Registrar Nova Associação

@@ -1456,6 +1456,72 @@ Construir um sistema SaaS escalável, com:
 ### 7. Ranking — pendente
 ### 8. Financeiro — pendente
 
+### 9. Associações (Onboarding) — 🚧 em andamento
+
+#### Entregas concluídas (slice 1 — fluxo público de criação)
+- Rotas públicas adicionadas no frontend:
+  - `/register-association`
+  - `/register-association/status/{tenantId}`
+- Tela de login integrada com CTA de registro:
+  - botão `Registrar Nova Associação` agora navega para o onboarding público
+- Nova página de cadastro de associação:
+  - formulário com validação via Zod (`name`, `slug`)
+  - criação via `POST /api/v1/tenant`
+  - tratamento de erros por `ProblemDetails.title`
+- Nova página de acompanhamento de provisionamento:
+  - consulta de status via `GET /api/v1/tenant/{id}/status`
+  - polling automático enquanto status não terminal
+  - estados de sucesso, falha e retry de consulta
+- Contratos frontend adicionados:
+  - `API_ROUTES.TENANT.CREATE`
+  - `API_ROUTES.TENANT.STATUS(id)`
+  - códigos de erro: `TENANT_NAME_REQUIRED`, `TENANT_SLUG_REQUIRED`, `TENANT_SLUG_TAKEN`, `TENANT_NOT_FOUND`
+
+#### Entregas concluídas (slice 2 — hardening de status e redirecionamento)
+- Página de status evoluída com mensagens operacionais por estado terminal:
+  - `Failed`: orientação para revisar dados e recriar associação
+  - `Cancelled`: orientação para reiniciar cadastro
+- CTA final de acesso aprimorado para tenant-aware login:
+  - em ambiente com domínio válido, redireciona para subdomínio da associação (`https://{slug}.{dominio}/login`)
+  - em ambiente local/IP, mantém fallback para `/login?tenant={slug}`
+- Cenários de erro avançados de provisionamento cobertos na UI sem regressão do fluxo principal
+
+#### Entregas concluídas (slice 3 — jornada visual de provisionamento)
+- Página de status evoluída para exibir timeline de etapas do onboarding:
+  - `Solicitação recebida`
+  - `Provisionamento em fila`
+  - `Configuração do ambiente`
+  - `Ambiente pronto`
+- Timeline com estados visuais por etapa:
+  - concluída
+  - em andamento
+  - pendente
+  - falha (quando status terminal com erro)
+- Contexto de etapa atual exibido na UI para facilitar suporte operacional durante onboarding
+- Redirecionamento tenant-aware validado também para ambiente local (`/login?tenant={slug}`)
+
+#### Testes (frontend)
+- Novas suítes TDD da fase 16.9:
+  - `features/tenant-onboarding/schemas/__tests__/associationFormSchema.test.ts`
+  - `features/tenant-onboarding/services/__tests__/associationService.test.ts`
+  - `features/tenant-onboarding/hooks/__tests__/tenantOnboardingHooks.test.ts`
+  - `pages/__tests__/RegisterAssociationPage.test.tsx`
+  - `pages/__tests__/AssociationProvisioningStatusPage.test.tsx`
+  - `pages/__tests__/LoginPage.test.tsx` (CTA de onboarding)
+- Cobertura ampliada de `AssociationProvisioningStatusPage` para:
+  - redirecionamento para subdomínio da associação quando status `Ready`
+  - mensagens dedicadas para `Failed` e `Cancelled`
+  - renderização da timeline para status de progresso (`Pending`)
+  - fallback de redirecionamento para localhost
+
+#### Status atual da suíte web
+- `npm run test:run`: **243 testes, 100% passando**
+- `npm run lint`: **passando**
+
+#### Próximos slices da 16.9
+- instrumentação de observabilidade do onboarding (eventos de sucesso/falha por etapa)
+- página de status com metadata operacional adicional (tempo desde criação, dicas de troubleshooting)
+
 ---
 
 ## 📱 Fase 17 — Mobile (Flutter)

@@ -15,6 +15,8 @@ import { TeamsPage } from '@/pages/TeamsPage'
 import { MatchesPage } from '@/pages/MatchesPage'
 import { PublicLayout } from '@/layouts/PublicLayout'
 import { ProtectedLayout } from '@/layouts/ProtectedLayout'
+import { RegisterAssociationPage } from '@/pages/RegisterAssociationPage'
+import { AssociationProvisioningStatusPage } from '@/pages/AssociationProvisioningStatusPage'
 
 // ── Root ─────────────────────────────────────────────────────────────────────
 const rootRoute = createRootRoute({
@@ -43,6 +45,18 @@ const loginRoute = createRoute({
     }
   },
   component: LoginPage,
+})
+
+const registerAssociationRoute = createRoute({
+  getParentRoute: () => publicRoute,
+  path: '/register-association',
+  component: RegisterAssociationPage,
+})
+
+const associationProvisioningStatusRoute = createRoute({
+  getParentRoute: () => publicRoute,
+  path: '/register-association/status/$tenantId',
+  component: AssociationProvisioningStatusPage,
 })
 
 // ── Protected routes ──────────────────────────────────────────────────────────
@@ -89,7 +103,11 @@ const matchesRoute = createRoute({
 
 // ── Router ────────────────────────────────────────────────────────────────────
 const routeTree = rootRoute.addChildren([
-  publicRoute.addChildren([loginRoute]),
+  publicRoute.addChildren([
+    loginRoute,
+    registerAssociationRoute,
+    associationProvisioningStatusRoute,
+  ]),
   protectedRoute.addChildren([
     dashboardRoute,
     playersRoute,
