@@ -3,6 +3,8 @@ using BabaPlay.Api.Middlewares;
 using BabaPlay.Application;
 using BabaPlay.Infrastructure;
 using BabaPlay.Infrastructure.Hubs;
+using BabaPlay.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -75,6 +77,14 @@ builder.Services.AddSwaggerGen(options =>
 
 // --- Pipeline ---
 var app = builder.Build();
+
+// Applies pending EF Core migrations for the master database on startup.
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    using var scope = app.Services.CreateScope();
+    var masterDb = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+    masterDb.Database.Migrate();
+}
 
 app.UseExceptionHandler();
 

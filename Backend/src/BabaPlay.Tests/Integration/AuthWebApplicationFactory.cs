@@ -26,6 +26,8 @@ public sealed class AuthWebApplicationFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseEnvironment("Testing");
+
         // 1. Inject test-specific configuration (JWT + SQLite placeholder)
         builder.ConfigureAppConfiguration((_, config) =>
         {
@@ -85,38 +87,49 @@ public sealed class AuthWebApplicationFactory : WebApplicationFactory<Program>
 
     private static async Task SeedAsync(MasterDbContext db, UserManager<ApplicationUser> userManager)
     {
-        if (await userManager.FindByEmailAsync(TestUserEmail) is not null)
-            return; // already seeded
+        var createdUser = await userManager.FindByEmailAsync(TestUserEmail);
 
-        var user = new ApplicationUser
+        if (createdUser is null)
         {
-            UserName = TestUserEmail,
-            Email = TestUserEmail,
-            EmailConfirmed = true,
-            IsActive = true,
-        };
-        var result = await userManager.CreateAsync(user, TestUserPassword);
-        if (!result.Succeeded)
-            throw new InvalidOperationException($"Test seed failed: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+            var user = new ApplicationUser
+            {
+                UserName = TestUserEmail,
+                Email = TestUserEmail,
+                EmailConfirmed = true,
+                IsActive = true,
+            };
 
-        var createdUser = await userManager.FindByEmailAsync(TestUserEmail)
-            ?? throw new InvalidOperationException("Seeded user not found.");
+            var result = await userManager.CreateAsync(user, TestUserPassword);
+            if (!result.Succeeded)
+                throw new InvalidOperationException($"Test seed failed: {string.Join(", ", result.Errors.Select(e => e.Description))}");
 
-        db.RefreshTokens.AddRange(
-            new RefreshToken
+            createdUser = await userManager.FindByEmailAsync(TestUserEmail)
+                ?? throw new InvalidOperationException("Seeded user not found.");
+        }
+
+        var hasValidToken = await db.RefreshTokens.AnyAsync(t => t.Token == ValidRefreshToken);
+        if (!hasValidToken)
+        {
+            db.RefreshTokens.Add(new RefreshToken
             {
                 Token = ValidRefreshToken,
                 UserId = createdUser.Id,
                 ExpiresAt = DateTime.UtcNow.AddDays(30),
                 CreatedAt = DateTime.UtcNow,
-            },
-            new RefreshToken
+            });
+        }
+
+        var hasExpiredToken = await db.RefreshTokens.AnyAsync(t => t.Token == ExpiredRefreshToken);
+        if (!hasExpiredToken)
+        {
+            db.RefreshTokens.Add(new RefreshToken
             {
                 Token = ExpiredRefreshToken,
                 UserId = createdUser.Id,
                 ExpiresAt = DateTime.UtcNow.AddDays(-1),
                 CreatedAt = DateTime.UtcNow.AddDays(-31),
             });
+        }
 
         await db.SaveChangesAsync();
     }
