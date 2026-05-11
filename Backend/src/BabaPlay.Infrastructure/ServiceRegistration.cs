@@ -34,6 +34,9 @@ public static class ServiceRegistration
         var matchSummaryStorageSection = configuration.GetSection(MatchSummaryStorageSettings.SectionName);
         services.Configure<MatchSummaryStorageSettings>(matchSummaryStorageSection);
 
+        var resendEmailSection = configuration.GetSection(ResendEmailSettings.SectionName);
+        services.Configure<ResendEmailSettings>(resendEmailSection);
+
         // --- Master Database ---
         services.AddDbContext<MasterDbContext>(options =>
             options.UseSqlServer(
@@ -209,6 +212,18 @@ public static class ServiceRegistration
         services.AddScoped<IMatchSummaryPdfGenerator, MinimalPdfMatchSummaryGenerator>();
         services.AddScoped<IMatchSummaryStorageService, LocalMatchSummaryStorageService>();
         services.AddScoped<ITenantLogoStorageService, LocalTenantLogoStorageService>();
+        services.AddHttpClient<IEmailService, ResendEmailService>((serviceProvider, client) =>
+        {
+            var settings = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<ResendEmailSettings>>().Value;
+            var baseUrl = string.IsNullOrWhiteSpace(settings.BaseUrl)
+                ? "https://api.resend.com"
+                : settings.BaseUrl;
+
+            client.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
+        services.AddSingleton<IEmailDispatchQueue, EmailDispatchQueue>();
+        services.AddHostedService<EmailDispatchWorker>();
 
         // --- RBAC repositories (Fase 4) ---
         services.AddScoped<IRoleRepository, RoleRepository>();
