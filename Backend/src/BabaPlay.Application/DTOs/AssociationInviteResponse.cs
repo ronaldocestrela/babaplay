@@ -21,4 +21,5 @@ public sealed record AssociationInviteAcceptResponse(
     string TenantSlug,
     string UserId,
     string Email,
+    bool RequiresPlayerProfile,
     bool AlreadyMember);

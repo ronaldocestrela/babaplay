@@ -13,6 +13,7 @@ export function AcceptAssociationInvitePage() {
   const navigate = useNavigate()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const setCurrentTenant = useAuthStore((s) => s.setCurrentTenant)
+  const setPlayerOnboardingRequired = useAuthStore((s) => s.setPlayerOnboardingRequired)
   const [step, setStep] = useState<Step>('loading')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -43,8 +44,9 @@ export function AcceptAssociationInvitePage() {
         try {
           const accepted = await acceptMutation.mutateAsync(token)
           setCurrentTenant({ slug: accepted.tenantSlug, source: 'profile' })
+          setPlayerOnboardingRequired(accepted.requiresPlayerProfile)
           setStep('success')
-          void navigate({ to: '/' })
+          void navigate({ to: accepted.requiresPlayerProfile ? '/players/complete-profile' : '/' })
           return
         } catch {
           setStep('error')
@@ -87,8 +89,9 @@ export function AcceptAssociationInvitePage() {
       const auth = await authService.login({ email, password })
       useAuthStore.getState().setTokens(auth)
       setCurrentTenant({ slug: accepted.tenantSlug, source: 'profile' })
+      setPlayerOnboardingRequired(accepted.requiresPlayerProfile)
       setStep('success')
-      void navigate({ to: '/' })
+      void navigate({ to: accepted.requiresPlayerProfile ? '/players/complete-profile' : '/' })
     } catch {
       setStep('error')
       setValidationError(getErrorCode(registerAndAcceptMutation.error))

@@ -13,19 +13,22 @@ public sealed class AcceptAssociationInviteCommandHandler
     private readonly IUserRepository _userRepository;
     private readonly IUserInvitationAccountService _userInvitationAccountService;
     private readonly IUserTenantMembershipService _userTenantMembershipService;
+    private readonly IPlayerOnboardingReadService _playerOnboardingReadService;
 
     public AcceptAssociationInviteCommandHandler(
         IAssociationInviteRepository associationInviteRepository,
         ITenantRepository tenantRepository,
         IUserRepository userRepository,
         IUserInvitationAccountService userInvitationAccountService,
-        IUserTenantMembershipService userTenantMembershipService)
+        IUserTenantMembershipService userTenantMembershipService,
+        IPlayerOnboardingReadService playerOnboardingReadService)
     {
         _associationInviteRepository = associationInviteRepository;
         _tenantRepository = tenantRepository;
         _userRepository = userRepository;
         _userInvitationAccountService = userInvitationAccountService;
         _userTenantMembershipService = userTenantMembershipService;
+        _playerOnboardingReadService = playerOnboardingReadService;
     }
 
     public async Task<Result<AssociationInviteAcceptResponse>> HandleAsync(AcceptAssociationInviteCommand command, CancellationToken ct = default)
@@ -107,6 +110,8 @@ public sealed class AcceptAssociationInviteCommandHandler
             return Result<AssociationInviteAcceptResponse>.Fail("TENANT_NOT_FOUND", "Tenant not found.");
 
         var alreadyMember = await _userTenantMembershipService.EnsureMemberAsync(userId, invite.TenantId, ct);
+        var hasActivePlayerProfile = await _playerOnboardingReadService.HasActivePlayerProfileAsync(invite.TenantId, userId, ct);
+        var requiresPlayerProfile = !hasActivePlayerProfile;
 
         await _associationInviteRepository.MarkAcceptedAsync(invite.Id, userId, DateTime.UtcNow, ct);
 
@@ -116,6 +121,7 @@ public sealed class AcceptAssociationInviteCommandHandler
             tenant.Slug,
             userId,
             userEmail,
+            requiresPlayerProfile,
             alreadyMember));
     }
 }

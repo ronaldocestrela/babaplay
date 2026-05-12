@@ -16,6 +16,7 @@ export interface AssociationInviteAcceptResponse {
   tenantSlug: string
   userId: string
   email: string
+  requiresPlayerProfile: boolean
   alreadyMember: boolean
 }
 

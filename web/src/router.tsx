@@ -19,6 +19,7 @@ import { ProtectedLayout } from '@/layouts/ProtectedLayout'
 import { RegisterAssociationPage } from '@/pages/RegisterAssociationPage'
 import { AssociationProvisioningStatusPage } from '@/pages/AssociationProvisioningStatusPage'
 import { AcceptAssociationInvitePage } from '@/pages/AcceptAssociationInvitePage'
+import { CompletePlayerProfilePage } from '@/pages/CompletePlayerProfilePage'
 
 // ── Root ─────────────────────────────────────────────────────────────────────
 const rootRoute = createRootRoute({
@@ -73,12 +74,29 @@ const acceptAssociationInviteRoute = createRoute({
 const protectedRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: 'protected',
-  beforeLoad: () => {
-    if (!useAuthStore.getState().isAuthenticated) {
+  beforeLoad: ({ location }) => {
+    const store = useAuthStore.getState()
+
+    if (!store.isAuthenticated) {
       throw redirect({ to: '/login' })
+    }
+
+    if (store.requiresPlayerOnboarding && location.pathname !== '/players/complete-profile') {
+      throw redirect({ to: '/players/complete-profile' })
     }
   },
   component: ProtectedLayout,
+})
+
+const completePlayerProfileRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/players/complete-profile',
+  beforeLoad: () => {
+    if (!useAuthStore.getState().requiresPlayerOnboarding) {
+      throw redirect({ to: '/' })
+    }
+  },
+  component: CompletePlayerProfilePage,
 })
 
 const dashboardRoute = createRoute({
@@ -127,6 +145,7 @@ const routeTree = rootRoute.addChildren([
   ]),
   protectedRoute.addChildren([
     dashboardRoute,
+    completePlayerProfileRoute,
     playersRoute,
     checkinsRoute,
     teamsRoute,

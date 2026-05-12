@@ -8,9 +8,11 @@ interface AuthState {
   isAuthenticated: boolean
   currentUser: UserProfile | null
   currentTenant: TenantContext | null
+  requiresPlayerOnboarding: boolean
   setTokens: (auth: AuthResponse) => void
   setCurrentUser: (user: UserProfile) => void
   setCurrentTenant: (tenant: TenantContext | null) => void
+  setPlayerOnboardingRequired: (required: boolean) => void
   clearTokens: () => void
 }
 
@@ -22,12 +24,14 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       currentUser: null,
       currentTenant: null,
+      requiresPlayerOnboarding: false,
 
       setTokens: (auth: AuthResponse) =>
         set({
           accessToken: auth.accessToken,
           refreshToken: auth.refreshToken,
           isAuthenticated: true,
+          requiresPlayerOnboarding: false,
         }),
 
       setCurrentUser: (user: UserProfile) =>
@@ -36,6 +40,9 @@ export const useAuthStore = create<AuthState>()(
       setCurrentTenant: (tenant: TenantContext | null) =>
         set({ currentTenant: tenant }),
 
+      setPlayerOnboardingRequired: (required: boolean) =>
+        set({ requiresPlayerOnboarding: required }),
+
       clearTokens: () =>
         set({
           accessToken: null,
@@ -43,6 +50,7 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: false,
           currentUser: null,
           currentTenant: null,
+          requiresPlayerOnboarding: false,
         }),
     }),
     { name: 'auth-storage' },

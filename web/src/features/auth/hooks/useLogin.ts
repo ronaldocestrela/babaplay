@@ -12,6 +12,7 @@ import { invitationService } from '@/features/tenant-invitations/services/invita
 export function useLogin() {
   const setTokens = useAuthStore((s) => s.setTokens)
   const setCurrentTenant = useAuthStore((s) => s.setCurrentTenant)
+  const setPlayerOnboardingRequired = useAuthStore((s) => s.setPlayerOnboardingRequired)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -55,9 +56,22 @@ export function useLogin() {
         try {
           const accepted = await invitationService.accept(pendingInviteToken)
           setCurrentTenant({ slug: accepted.tenantSlug, source: 'profile' })
+          setPlayerOnboardingRequired(accepted.requiresPlayerProfile)
+
+          await queryClient.invalidateQueries({ queryKey: CURRENT_USER_QUERY_KEY })
+
+          if (accepted.requiresPlayerProfile) {
+            void navigate({ to: '/players/complete-profile' })
+            return
+          }
         } finally {
           clearPendingInviteToken()
         }
+      }
+
+      if (useAuthStore.getState().requiresPlayerOnboarding) {
+        void navigate({ to: '/players/complete-profile' })
+        return
       }
 
       void navigate({ to: '/' })

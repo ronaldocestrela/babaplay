@@ -185,6 +185,7 @@ public static class ServiceRegistration
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IPlayerOnboardingReadService, PlayerOnboardingReadService>();
         services.AddScoped<IUserInvitationAccountService, UserInvitationAccountService>();
         services.AddScoped<IUserTenantMembershipService, UserTenantMembershipService>();
         services.AddScoped<IAssociationInviteRepository, AssociationInviteRepository>();

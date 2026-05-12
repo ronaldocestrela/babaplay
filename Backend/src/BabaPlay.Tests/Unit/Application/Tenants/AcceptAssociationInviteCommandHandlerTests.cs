@@ -14,6 +14,7 @@ public class AcceptAssociationInviteCommandHandlerTests
     private readonly Mock<IUserRepository> _userRepository = new();
     private readonly Mock<IUserInvitationAccountService> _userInvitationAccountService = new();
     private readonly Mock<IUserTenantMembershipService> _userTenantMembershipService = new();
+    private readonly Mock<IPlayerOnboardingReadService> _playerOnboardingReadService = new();
 
     private readonly AcceptAssociationInviteCommandHandler _handler;
 
@@ -24,7 +25,8 @@ public class AcceptAssociationInviteCommandHandlerTests
             _tenantRepository.Object,
             _userRepository.Object,
             _userInvitationAccountService.Object,
-            _userTenantMembershipService.Object);
+            _userTenantMembershipService.Object,
+            _playerOnboardingReadService.Object);
     }
 
     [Fact]
@@ -72,6 +74,10 @@ public class AcceptAssociationInviteCommandHandlerTests
             .Setup(x => x.EnsureMemberAsync("new-user-id", tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
+        _playerOnboardingReadService
+            .Setup(x => x.HasActivePlayerProfileAsync(tenantId, "new-user-id", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
         var result = await _handler.HandleAsync(new RegisterAndAcceptAssociationInviteCommand(
             "token",
             "invitee@club.com",
@@ -81,8 +87,43 @@ public class AcceptAssociationInviteCommandHandlerTests
         result.Value.Should().NotBeNull();
         result.Value!.TenantId.Should().Be(tenantId);
         result.Value.UserId.Should().Be("new-user-id");
+        result.Value.RequiresPlayerProfile.Should().BeTrue();
 
         _associationInviteRepository.Verify(x => x.MarkAcceptedAsync(invite.Id, "new-user-id", It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_Accept_WhenPlayerAlreadyExists_ShouldReturnRequiresPlayerProfileFalse()
+    {
+        var tenantId = Guid.NewGuid();
+        var invite = CreateValidInvite(tenantId);
+
+        _associationInviteRepository
+            .Setup(x => x.GetByTokenHashAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(invite);
+
+        _userRepository
+            .Setup(x => x.FindByIdAsync("user-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserAuthDto("user-1", "invitee@club.com", true));
+
+        _tenantRepository
+            .Setup(x => x.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TenantInfoDto(tenantId, "Club", "club", true, string.Empty, "Ready"));
+
+        _userTenantMembershipService
+            .Setup(x => x.EnsureMemberAsync("user-1", tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _playerOnboardingReadService
+            .Setup(x => x.HasActivePlayerProfileAsync(tenantId, "user-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await _handler.HandleAsync(new AcceptAssociationInviteCommand("token", "user-1"));
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.RequiresPlayerProfile.Should().BeFalse();
+        result.Value.AlreadyMember.Should().BeTrue();
     }
 
     private static AssociationInviteData CreateValidInvite(Guid? tenantId = null) => new(
