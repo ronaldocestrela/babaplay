@@ -18,6 +18,7 @@ public sealed class MasterDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<UserTenant> UserTenants => Set<UserTenant>();
     public DbSet<Subscription> Subscriptions => Set<Subscription>();
     public DbSet<Plan> Plans => Set<Plan>();
+    public DbSet<AssociationInvite> AssociationInvites => Set<AssociationInvite>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -69,6 +70,21 @@ public sealed class MasterDbContext : IdentityDbContext<ApplicationUser>
             e.HasKey(s => s.Id);
             e.HasOne(s => s.Tenant).WithMany(t => t.Subscriptions).HasForeignKey(s => s.TenantId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(s => s.Plan).WithMany(p => p.Subscriptions).HasForeignKey(s => s.PlanId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<AssociationInvite>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => x.TokenHash).IsUnique();
+            e.HasIndex(x => new { x.TenantId, x.NormalizedEmail });
+            e.Property(x => x.Email).HasMaxLength(320);
+            e.Property(x => x.NormalizedEmail).HasMaxLength(320);
+            e.Property(x => x.TokenHash).HasMaxLength(128);
+
+            e.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

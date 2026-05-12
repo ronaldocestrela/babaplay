@@ -11,6 +11,12 @@ export const API_ROUTES = {
     STATUS: (id: string) => `/api/v1/tenant/${id}/status`,
     SETTINGS: '/api/v1/tenant/settings',
   },
+  ASSOCIATION_INVITE: {
+    SEND: '/api/v1/association-invite',
+    VALIDATE: '/api/v1/association-invite/validate',
+    ACCEPT: '/api/v1/association-invite/accept',
+    REGISTER_ACCEPT: '/api/v1/association-invite/register-accept',
+  },
   PLAYER: {
     LIST: '/api/v1/player',
     BY_ID: (id: string) => `/api/v1/player/${id}`,

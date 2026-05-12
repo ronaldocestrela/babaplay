@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { getErrorCode } from '@/core/utils/getErrorCode'
@@ -13,6 +14,7 @@ import {
 } from '@/features/players/hooks'
 import { playerFormSchema, type PlayerFormValues } from '@/features/players/schemas/playerFormSchema'
 import { usePlayerStore } from '@/features/players/store/playerStore'
+import { invitationService } from '@/features/tenant-invitations/services/invitationService'
 
 const ERROR_MESSAGES: Record<string, string> = {
   [ERROR_CODES.PLAYER_ALREADY_EXISTS]: 'Já existe um jogador para este usuário.',
@@ -23,6 +25,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   [ERROR_CODES.POSITIONS_LIMIT_EXCEEDED]: 'Máximo de 3 posições por jogador.',
   [ERROR_CODES.DUPLICATE_POSITIONS]: 'Posições duplicadas não são permitidas.',
   [ERROR_CODES.INVALID_POSITION_ID]: 'Uma ou mais posições são inválidas.',
+  [ERROR_CODES.ASSOCIATION_INVITE_EMAIL_REQUIRED]: 'Informe um e-mail para enviar o convite.',
+  [ERROR_CODES.ASSOCIATION_INVITE_EMAIL_INVALID]: 'E-mail inválido para convite.',
+  [ERROR_CODES.FORBIDDEN]: 'Somente administradores podem enviar convites.',
 }
 
 function toNullable(value: string | undefined): string | null {
@@ -45,10 +50,17 @@ export function PlayersPage() {
     modalMode,
     isModalOpen,
     setSearch,
-    openCreateModal,
     openEditModal,
     closeModal,
   } = usePlayerStore()
+
+  const sendInvite = useMutation({
+    mutationFn: invitationService.send,
+  })
+
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteSuccessMessage, setInviteSuccessMessage] = useState<string | null>(null)
 
   const selectedPlayer = useMemo(
     () => players.find((player) => player.id === selectedPlayerId) ?? null,
@@ -122,8 +134,38 @@ export function PlayersPage() {
     create.errorCode ?? update.errorCode ?? remove.errorCode ?? updatePositions.errorCode ?? null
   const isSubmitting = create.isPending || update.isPending || updatePositions.isPending
   const isDeleting = remove.isPending
+  const isSendingInvite = sendInvite.isPending
 
   const apiErrorCode = getErrorCode(error)
+  const inviteErrorCode = getErrorCode(sendInvite.error)
+
+  const isInviteEmailInvalid =
+    inviteEmail.trim().length > 0 && !inviteEmail.includes('@')
+
+  const handleOpenInviteModal = () => {
+    setInviteSuccessMessage(null)
+    setInviteEmail('')
+    setIsInviteModalOpen(true)
+  }
+
+  const handleCloseInviteModal = () => {
+    if (isSendingInvite) return
+    setIsInviteModalOpen(false)
+  }
+
+  const handleSendInvite = () => {
+    if (isSendingInvite) return
+
+    const email = inviteEmail.trim()
+    if (!email || !email.includes('@')) return
+
+    sendInvite.mutate(email, {
+      onSuccess: () => {
+        setInviteSuccessMessage('Convite enviado com sucesso.')
+        setInviteEmail('')
+      },
+    })
+  }
 
   const onSubmit = (values: PlayerFormValues) => {
     const positionIds = values.positionIds
@@ -240,13 +282,19 @@ export function PlayersPage() {
 
         <button
           type="button"
-          onClick={openCreateModal}
-          disabled={isSubmitting || isDeleting}
+          onClick={handleOpenInviteModal}
+          disabled={isSubmitting || isDeleting || isSendingInvite}
           className="h-10 px-4 rounded-lg border border-primary bg-primary text-white text-sm"
         >
-          Novo jogador
+          Enviar convite por e-mail
         </button>
       </header>
+
+      {inviteErrorCode ? (
+        <p role="alert" className="text-sm text-error" aria-live="polite">
+          {ERROR_MESSAGES[inviteErrorCode] ?? 'Não foi possível enviar o convite.'}
+        </p>
+      ) : null}
 
       <section className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
         <label htmlFor="players-search" className="sr-only">
@@ -450,6 +498,76 @@ export function PlayersPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      ) : null}
+
+      {isInviteModalOpen ? (
+        <div className="fixed inset-0 bg-black/40 p-4 flex items-center justify-center z-50">
+          <div className="w-full max-w-md bg-white rounded-xl shadow-xl border border-outline-variant">
+            <div className="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-on-surface">Enviar convite por e-mail</h2>
+              <button
+                type="button"
+                onClick={handleCloseInviteModal}
+                disabled={isSendingInvite}
+                className="text-on-surface-variant hover:text-on-surface"
+              >
+                Fechar
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="space-y-1">
+                <label htmlFor="invite-email" className="text-sm text-on-surface">
+                  E-mail do convidado
+                </label>
+                <input
+                  id="invite-email"
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(event) => setInviteEmail(event.target.value)}
+                  placeholder="nome@exemplo.com"
+                  className="w-full h-10 px-3 rounded-lg border border-outline-variant bg-surface"
+                />
+                {isInviteEmailInvalid ? (
+                  <p role="alert" className="text-xs text-error">
+                    Informe um e-mail válido.
+                  </p>
+                ) : null}
+              </div>
+
+              {inviteErrorCode ? (
+                <p role="alert" className="text-sm text-error" aria-live="polite">
+                  {ERROR_MESSAGES[inviteErrorCode] ?? 'Não foi possível enviar o convite.'}
+                </p>
+              ) : null}
+
+              {inviteSuccessMessage ? (
+                <p role="status" className="text-sm text-green-700" aria-live="polite">
+                  {inviteSuccessMessage}
+                </p>
+              ) : null}
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={handleCloseInviteModal}
+                  disabled={isSendingInvite}
+                  className="h-10 px-4 rounded-lg border border-outline-variant"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendInvite}
+                  disabled={isSendingInvite || !inviteEmail.trim() || isInviteEmailInvalid}
+                  className="h-10 px-4 rounded-lg border border-primary bg-primary text-white"
+                >
+                  {isSendingInvite ? 'Enviando convite...' : 'Enviar convite'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       ) : null}

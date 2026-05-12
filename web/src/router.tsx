@@ -18,6 +18,7 @@ import { PublicLayout } from '@/layouts/PublicLayout'
 import { ProtectedLayout } from '@/layouts/ProtectedLayout'
 import { RegisterAssociationPage } from '@/pages/RegisterAssociationPage'
 import { AssociationProvisioningStatusPage } from '@/pages/AssociationProvisioningStatusPage'
+import { AcceptAssociationInvitePage } from '@/pages/AcceptAssociationInvitePage'
 
 // ── Root ─────────────────────────────────────────────────────────────────────
 const rootRoute = createRootRoute({
@@ -60,6 +61,12 @@ const associationProvisioningStatusRoute = createRoute({
   getParentRoute: () => publicRoute,
   path: '/register-association/status/$tenantId',
   component: AssociationProvisioningStatusPage,
+})
+
+const acceptAssociationInviteRoute = createRoute({
+  getParentRoute: () => publicRoute,
+  path: '/invite/accept',
+  component: AcceptAssociationInvitePage,
 })
 
 // ── Protected routes ──────────────────────────────────────────────────────────
@@ -116,6 +123,7 @@ const routeTree = rootRoute.addChildren([
     loginRoute,
     registerAssociationRoute,
     associationProvisioningStatusRoute,
+    acceptAssociationInviteRoute,
   ]),
   protectedRoute.addChildren([
     dashboardRoute,

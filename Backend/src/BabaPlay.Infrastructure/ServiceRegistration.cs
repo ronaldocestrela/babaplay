@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Resend;
 
 namespace BabaPlay.Infrastructure;
 
@@ -36,6 +37,9 @@ public static class ServiceRegistration
 
         var resendEmailSection = configuration.GetSection(ResendEmailSettings.SectionName);
         services.Configure<ResendEmailSettings>(resendEmailSection);
+
+        var associationInviteSection = configuration.GetSection(AssociationInviteSettings.SectionName);
+        services.Configure<AssociationInviteSettings>(associationInviteSection);
 
         // --- Master Database ---
         services.AddDbContext<MasterDbContext>(options =>
@@ -181,6 +185,9 @@ public static class ServiceRegistration
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IUserInvitationAccountService, UserInvitationAccountService>();
+        services.AddScoped<IUserTenantMembershipService, UserTenantMembershipService>();
+        services.AddScoped<IAssociationInviteRepository, AssociationInviteRepository>();
 
         // --- Multi-tenancy (Fase 2) ---
         services.AddHttpContextAccessor();
@@ -212,16 +219,23 @@ public static class ServiceRegistration
         services.AddScoped<IMatchSummaryPdfGenerator, MinimalPdfMatchSummaryGenerator>();
         services.AddScoped<IMatchSummaryStorageService, LocalMatchSummaryStorageService>();
         services.AddScoped<ITenantLogoStorageService, LocalTenantLogoStorageService>();
-        services.AddHttpClient<IEmailService, ResendEmailService>((serviceProvider, client) =>
-        {
-            var settings = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<ResendEmailSettings>>().Value;
-            var baseUrl = string.IsNullOrWhiteSpace(settings.BaseUrl)
-                ? "https://api.resend.com"
-                : settings.BaseUrl;
 
-            client.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
-            client.Timeout = TimeSpan.FromSeconds(10);
+        var resendApiToken = configuration["ResendEmail:ApiKey"];
+        if (string.IsNullOrWhiteSpace(resendApiToken))
+            resendApiToken = Environment.GetEnvironmentVariable("RESEND_API_KEY");
+
+        services.Configure<ResendClientOptions>(options =>
+        {
+            options.ApiToken = resendApiToken ?? string.Empty;
+
+            var baseUrl = configuration["ResendEmail:BaseUrl"];
+            if (!string.IsNullOrWhiteSpace(baseUrl))
+                options.ApiUrl = baseUrl;
         });
+        services.AddHttpClient<ResendClient>();
+        services.AddTransient<IResend, ResendClient>();
+
+        services.AddScoped<IEmailService, ResendEmailService>();
         services.AddSingleton<IEmailDispatchQueue, EmailDispatchQueue>();
         services.AddHostedService<EmailDispatchWorker>();
 

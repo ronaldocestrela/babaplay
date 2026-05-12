@@ -1,22 +1,23 @@
 using BabaPlay.Application.Interfaces;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BabaPlay.Infrastructure.Workers;
 
 public sealed class EmailDispatchWorker : BackgroundService
 {
     private readonly IEmailDispatchQueue _queue;
-    private readonly IEmailService _emailService;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<EmailDispatchWorker> _logger;
 
     public EmailDispatchWorker(
         IEmailDispatchQueue queue,
-        IEmailService emailService,
+        IServiceScopeFactory scopeFactory,
         ILogger<EmailDispatchWorker> logger)
     {
         _queue = queue;
-        _emailService = emailService;
+        _scopeFactory = scopeFactory;
         _logger = logger;
     }
 
@@ -38,7 +39,10 @@ public sealed class EmailDispatchWorker : BackgroundService
 
             try
             {
-                var result = await _emailService.SendAsync(message, stoppingToken);
+                using var scope = _scopeFactory.CreateScope();
+                var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+
+                var result = await emailService.SendAsync(message, stoppingToken);
                 if (!result.IsSuccess)
                 {
                     _logger.LogWarning(

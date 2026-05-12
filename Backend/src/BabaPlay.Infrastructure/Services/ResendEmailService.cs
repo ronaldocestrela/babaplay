@@ -1,23 +1,24 @@
-using System.Net.Http.Json;
 using BabaPlay.Application.Common;
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Infrastructure.Settings;
 using Microsoft.Extensions.Options;
+using Resend;
+using ApplicationEmailMessage = BabaPlay.Application.Interfaces.EmailMessage;
 
 namespace BabaPlay.Infrastructure.Services;
 
 public sealed class ResendEmailService : IEmailService
 {
-    private readonly HttpClient _httpClient;
+    private readonly IResend _resend;
     private readonly ResendEmailSettings _settings;
 
-    public ResendEmailService(HttpClient httpClient, IOptions<ResendEmailSettings> settings)
+    public ResendEmailService(IResend resend, IOptions<ResendEmailSettings> settings)
     {
-        _httpClient = httpClient;
+        _resend = resend;
         _settings = settings.Value;
     }
 
-    public async Task<Result> SendAsync(EmailMessage message, CancellationToken ct = default)
+    public async Task<Result> SendAsync(ApplicationEmailMessage message, CancellationToken ct = default)
     {
         var apiKey = ResolveApiKey();
         if (string.IsNullOrWhiteSpace(apiKey))
@@ -29,44 +30,36 @@ public sealed class ResendEmailService : IEmailService
         if (string.IsNullOrWhiteSpace(message.To) || string.IsNullOrWhiteSpace(message.Subject) || string.IsNullOrWhiteSpace(message.Html))
             return Result.Fail("EMAIL_INVALID_PAYLOAD", "Email payload must include recipient, subject and html body.");
 
-        var baseUrl = string.IsNullOrWhiteSpace(_settings.BaseUrl)
-            ? "https://api.resend.com"
-            : _settings.BaseUrl;
-        var endpoint = new Uri(new Uri(baseUrl, UriKind.Absolute), "emails");
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
-
         var from = string.IsNullOrWhiteSpace(_settings.FromName)
             ? _settings.FromEmail
             : $"{_settings.FromName} <{_settings.FromEmail}>";
 
-        request.Content = JsonContent.Create(new
+        var resendMessage = new Resend.EmailMessage
         {
-            from,
-            to = new[] { message.To },
-            subject = message.Subject,
-            html = message.Html,
-            text = message.Text,
-        });
+            From = from,
+            Subject = message.Subject,
+            HtmlBody = message.Html,
+            TextBody = message.Text,
+        };
+        resendMessage.To.Add(message.To);
 
-        HttpResponseMessage response;
+        ResendResponse<Guid> response;
         try
         {
-            response = await _httpClient.SendAsync(request, ct);
+            response = await _resend.EmailSendAsync(resendMessage, ct);
         }
         catch (Exception ex)
         {
-            return Result.Fail("EMAIL_SEND_FAILED", $"Failed to call Resend API: {ex.Message}");
+            return Result.Fail("EMAIL_SEND_FAILED", $"Failed to call Resend SDK: {ex.Message}");
         }
 
-        if (response.IsSuccessStatusCode)
+        if (response.Success)
             return Result.Ok();
 
-        var responseBody = await response.Content.ReadAsStringAsync(ct);
+        var errorMessage = response.Exception?.Message ?? "Unknown error from Resend provider.";
         return Result.Fail(
             "EMAIL_SEND_FAILED",
-            $"Resend returned status {(int)response.StatusCode}: {responseBody}");
+            $"Resend send failed: {errorMessage}");
     }
 
     private string ResolveApiKey()

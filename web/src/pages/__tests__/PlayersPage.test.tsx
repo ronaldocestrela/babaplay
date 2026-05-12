@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { PlayersPage } from '../PlayersPage'
 import { usePlayerStore } from '@/features/players/store/playerStore'
+import { invitationService } from '@/features/tenant-invitations/services/invitationService'
 
 vi.mock('@/features/players/hooks', () => ({
   usePlayers: vi.fn(),
@@ -11,6 +13,12 @@ vi.mock('@/features/players/hooks', () => ({
   useUpdatePlayer: vi.fn(),
   useDeletePlayer: vi.fn(),
   useUpdatePlayerPositions: vi.fn(),
+}))
+
+vi.mock('@/features/tenant-invitations/services/invitationService', () => ({
+  invitationService: {
+    send: vi.fn(),
+  },
 }))
 
 import {
@@ -27,9 +35,32 @@ const updatePlayer = vi.fn()
 const deletePlayer = vi.fn()
 const updatePlayerPositions = vi.fn()
 
+function renderPlayersPage() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  })
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <PlayersPage />
+    </QueryClientProvider>,
+  )
+}
+
 describe('PlayersPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+
+    vi.mocked(invitationService.send).mockResolvedValue({
+      invitationId: 'invite-1',
+      tenantId: 'tenant-1',
+      tenantSlug: 'tenant-slug',
+      email: 'invitee@club.com',
+      expiresAtUtc: '2026-01-01T00:00:00.000Z',
+    })
     usePlayerStore.setState({
       search: '',
       selectedPlayerId: null,
@@ -92,7 +123,7 @@ describe('PlayersPage', () => {
       error: null,
     } as ReturnType<typeof usePlayers>)
 
-    render(<PlayersPage />)
+    renderPlayersPage()
 
     expect(screen.getByText(/carregando jogadores/i)).toBeInTheDocument()
   })
@@ -109,12 +140,12 @@ describe('PlayersPage', () => {
       },
     } as ReturnType<typeof usePlayers>)
 
-    render(<PlayersPage />)
+    renderPlayersPage()
 
     expect(screen.getByText(/perfil de acesso/i)).toBeInTheDocument()
   })
 
-  it('deve renderizar lista, filtrar e abrir modal de criação', async () => {
+  it('deve renderizar lista, filtrar e enviar convite por email', async () => {
     vi.mocked(usePlayers).mockReturnValue({
       data: [
         {
@@ -143,7 +174,7 @@ describe('PlayersPage', () => {
       error: null,
     } as ReturnType<typeof usePlayers>)
 
-    render(<PlayersPage />)
+    renderPlayersPage()
 
     expect(screen.getByText('Joao Silva')).toBeInTheDocument()
     expect(screen.getByText('Carlos Lima')).toBeInTheDocument()
@@ -153,9 +184,16 @@ describe('PlayersPage', () => {
     expect(screen.getByText('Joao Silva')).toBeInTheDocument()
     expect(screen.queryByText('Carlos Lima')).not.toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: /novo jogador/i }))
+    await userEvent.click(screen.getByRole('button', { name: /enviar convite por e-mail/i }))
+    expect(screen.getByRole('heading', { name: /enviar convite por e-mail/i })).toBeInTheDocument()
 
-    expect(screen.getByRole('heading', { name: /novo jogador/i })).toBeInTheDocument()
+    await userEvent.type(screen.getByLabelText(/e-mail do convidado/i), 'invitee@club.com')
+    await userEvent.click(screen.getByRole('button', { name: /^enviar convite$/i }))
+
+    await waitFor(() => {
+      expect(invitationService.send).toHaveBeenCalled()
+      expect(vi.mocked(invitationService.send).mock.calls[0]?.[0]).toBe('invitee@club.com')
+    })
   })
 
   it('deve abrir edição e permitir exclusão', async () => {
@@ -179,7 +217,7 @@ describe('PlayersPage', () => {
 
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
 
-    render(<PlayersPage />)
+    renderPlayersPage()
 
     await userEvent.click(screen.getByRole('button', { name: /editar/i }))
     expect(screen.getByRole('heading', { name: /editar jogador/i })).toBeInTheDocument()
@@ -223,7 +261,7 @@ describe('PlayersPage', () => {
 
     usePlayerStore.getState().openCreateModal()
 
-    render(<PlayersPage />)
+    renderPlayersPage()
 
     expect(screen.getByRole('button', { name: /salvando/i })).toBeDisabled()
   })
@@ -255,9 +293,9 @@ describe('PlayersPage', () => {
       errorCode: 'POSITION_NOT_FOUND',
     })
 
-    render(<PlayersPage />)
+    usePlayerStore.getState().openCreateModal()
 
-    await userEvent.click(screen.getByRole('button', { name: /novo jogador/i }))
+    renderPlayersPage()
     expect(screen.getByText(/não foram encontradas/i)).toBeInTheDocument()
   })
 
@@ -288,9 +326,9 @@ describe('PlayersPage', () => {
       errorCode: 'DUPLICATE_POSITIONS',
     })
 
-    render(<PlayersPage />)
+    usePlayerStore.getState().openCreateModal()
 
-    await userEvent.click(screen.getByRole('button', { name: /novo jogador/i }))
+    renderPlayersPage()
     expect(screen.getByText(/duplicadas não são permitidas/i)).toBeInTheDocument()
   })
 
@@ -321,9 +359,9 @@ describe('PlayersPage', () => {
       errorCode: 'POSITIONS_LIMIT_EXCEEDED',
     })
 
-    render(<PlayersPage />)
+    usePlayerStore.getState().openCreateModal()
 
-    await userEvent.click(screen.getByRole('button', { name: /novo jogador/i }))
+    renderPlayersPage()
     expect(screen.getByText(/máximo de 3 posições/i)).toBeInTheDocument()
   })
 })

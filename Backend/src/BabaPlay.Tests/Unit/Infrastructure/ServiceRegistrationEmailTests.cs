@@ -22,6 +22,7 @@ public class ServiceRegistrationEmailTests
                 ["Jwt:SecretKey"] = "test-secret-key-at-least-256-bits-long-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
                 ["Jwt:Issuer"] = "BabaPlay.Api",
                 ["Jwt:Audience"] = "BabaPlay.Clients",
+                ["ResendEmail:ApiKey"] = "re_test_key",
                 ["ResendEmail:FromEmail"] = "noreply@babaplay.com",
                 ["ResendEmail:FromName"] = "BabaPlay",
             })

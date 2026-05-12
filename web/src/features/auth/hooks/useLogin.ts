@@ -6,6 +6,8 @@ import { getTenantFromUrl } from '../services/tenantService'
 import { getErrorCode } from '@/core/utils/getErrorCode'
 import { CURRENT_USER_QUERY_KEY } from './useCurrentUser'
 import type { LoginRequest } from '../types'
+import { getPendingInviteToken, clearPendingInviteToken } from '@/features/tenant-invitations/utils/pendingInviteStorage'
+import { invitationService } from '@/features/tenant-invitations/services/invitationService'
 
 export function useLogin() {
   const setTokens = useAuthStore((s) => s.setTokens)
@@ -47,6 +49,17 @@ export function useLogin() {
           return user
         },
       })
+
+      const pendingInviteToken = getPendingInviteToken()
+      if (pendingInviteToken) {
+        try {
+          const accepted = await invitationService.accept(pendingInviteToken)
+          setCurrentTenant({ slug: accepted.tenantSlug, source: 'profile' })
+        } finally {
+          clearPendingInviteToken()
+        }
+      }
+
       void navigate({ to: '/' })
     },
   })

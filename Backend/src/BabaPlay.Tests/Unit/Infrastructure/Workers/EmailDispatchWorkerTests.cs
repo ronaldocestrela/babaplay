@@ -2,6 +2,7 @@ using BabaPlay.Application.Common;
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Infrastructure.Workers;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -20,8 +21,21 @@ public class EmailDispatchWorkerTests
             .ReturnsAsync(Result.Ok())
             .Callback(() => dispatched.TrySetResult(true));
 
+        var serviceProvider = new Mock<IServiceProvider>();
+        serviceProvider
+            .Setup(x => x.GetService(typeof(IEmailService)))
+            .Returns(emailService.Object);
+
+        var scope = new Mock<IServiceScope>();
+        scope.SetupGet(x => x.ServiceProvider).Returns(serviceProvider.Object);
+
+        var scopeFactory = new Mock<IServiceScopeFactory>();
+        scopeFactory
+            .Setup(x => x.CreateScope())
+            .Returns(scope.Object);
+
         var queue = new TestEmailDispatchQueue(new EmailMessage("user@club.com", "Subject", "<p>Body</p>"));
-        var sut = new EmailDispatchWorker(queue, emailService.Object, NullLogger<EmailDispatchWorker>.Instance);
+        var sut = new EmailDispatchWorker(queue, scopeFactory.Object, NullLogger<EmailDispatchWorker>.Instance);
 
         await sut.StartAsync(CancellationToken.None);
 
@@ -35,6 +49,7 @@ public class EmailDispatchWorkerTests
                 It.Is<EmailMessage>(m => m.To == "user@club.com" && m.Subject == "Subject"),
                 It.IsAny<CancellationToken>()),
             Times.Once);
+        scopeFactory.Verify(x => x.CreateScope(), Times.AtLeastOnce);
     }
 
     private sealed class TestEmailDispatchQueue : IEmailDispatchQueue
