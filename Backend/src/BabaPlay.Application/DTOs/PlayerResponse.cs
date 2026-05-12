@@ -8,5 +8,6 @@ public sealed record PlayerResponse(
     string? Nickname,
     string? Phone,
     DateOnly? DateOfBirth,
+    IReadOnlyList<Guid> PositionIds,
     bool IsActive,
     DateTime CreatedAt);

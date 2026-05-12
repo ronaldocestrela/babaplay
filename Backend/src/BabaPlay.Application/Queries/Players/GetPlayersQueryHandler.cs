@@ -31,6 +31,7 @@ public sealed class GetPlayersQueryHandler
         p.Nickname,
         p.Phone,
         p.DateOfBirth,
+        p.PositionIds.ToList(),
         p.IsActive,
         p.CreatedAt);
 }

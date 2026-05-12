@@ -25,6 +25,8 @@ public sealed class PlayerIntegrationTests : IClassFixture<PlayerWebApplicationF
     {
         _client = factory.CreateClient();
         _client.DefaultRequestHeaders.Add("X-Tenant-Slug", PlayerWebApplicationFactory.TestTenantSlug);
+        _client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, PlayerWebApplicationFactory.TestUserIds[0].ToString());
+        _client.DefaultRequestHeaders.Add(TestAuthHandler.UserEmailHeader, "player-test-1@babaplay.com");
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
