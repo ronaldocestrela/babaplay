@@ -17,6 +17,11 @@ public sealed class PositionIntegrationTests : IClassFixture<PlayerWebApplicatio
 
     private readonly HttpClient _client;
 
+    private static readonly Guid OwnerUserId = PlayerWebApplicationFactory.TestUserIds[0];
+    private const string OwnerUserEmail = "player-test-1@babaplay.com";
+    private static readonly Guid NonOwnerUserId = PlayerWebApplicationFactory.TestUserIds[1];
+    private const string NonOwnerUserEmail = "player-test-2@babaplay.com";
+
     private static readonly Guid[] Phase5UserIds =
     [
         Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-000000000008"),
@@ -27,6 +32,8 @@ public sealed class PositionIntegrationTests : IClassFixture<PlayerWebApplicatio
     {
         _client = factory.CreateClient();
         _client.DefaultRequestHeaders.Add("X-Tenant-Slug", PlayerWebApplicationFactory.TestTenantSlug);
+        _client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, OwnerUserId.ToString());
+        _client.DefaultRequestHeaders.Add(TestAuthHandler.UserEmailHeader, OwnerUserEmail);
     }
 
     private static HttpContent CreatePositionBody(string code = "GK", string name = "Goleiro", string? description = null)
@@ -65,6 +72,19 @@ public sealed class PositionIntegrationTests : IClassFixture<PlayerWebApplicatio
 
         var problem = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
         problem.GetProperty("title").GetString().Should().Be("INVALID_CODE");
+    }
+
+    [Fact]
+    public async Task Post_NonOwner_ShouldReturn403()
+    {
+        _client.DefaultRequestHeaders.Remove(TestAuthHandler.UserIdHeader);
+        _client.DefaultRequestHeaders.Remove(TestAuthHandler.UserEmailHeader);
+        _client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, NonOwnerUserId.ToString());
+        _client.DefaultRequestHeaders.Add(TestAuthHandler.UserEmailHeader, NonOwnerUserEmail);
+
+        var response = await _client.PostAsync("/api/v1/position", CreatePositionBody("DM", "Volante", null));
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Fact]

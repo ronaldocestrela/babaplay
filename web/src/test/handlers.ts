@@ -84,7 +84,17 @@ const mockPlayers = [
   },
 ]
 
-const mockPositions = [
+type MockPosition = {
+  id: string
+  tenantId: string
+  code: string
+  name: string
+  description: string | null
+  isActive: boolean
+  createdAt: string
+}
+
+let mockPositions: MockPosition[] = [
   {
     id: 'position-1',
     tenantId: 'tenant-123',
@@ -718,6 +728,136 @@ export const handlers = [
 
   // GET /api/v1/position
   http.get(`${BASE_URL}/api/v1/position`, () => HttpResponse.json(mockPositions)),
+
+  // POST /api/v1/position
+  http.post(`${BASE_URL}/api/v1/position`, async ({ request }) => {
+    const body = (await request.json()) as {
+      code?: string
+      name?: string
+      description?: string | null
+    }
+
+    const code = body.code?.trim() ?? ''
+    const name = body.name?.trim() ?? ''
+
+    if (code.length === 0) {
+      return HttpResponse.json(
+        { title: 'INVALID_CODE', detail: 'Code is required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (name.length === 0) {
+      return HttpResponse.json(
+        { title: 'INVALID_NAME', detail: 'Name is required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    const duplicated = mockPositions.some(
+      (item) => item.code.trim().toLowerCase() === code.toLowerCase(),
+    )
+
+    if (duplicated) {
+      return HttpResponse.json(
+        { title: 'POSITION_ALREADY_EXISTS', detail: 'Position already exists', status: 409 },
+        { status: 409 },
+      )
+    }
+
+    const created = {
+      id: `position-new-${Date.now()}`,
+      tenantId: 'tenant-123',
+      code,
+      name,
+      description: body.description?.trim() ? body.description.trim() : null,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    }
+
+    mockPositions = [...mockPositions, created]
+
+    return HttpResponse.json(created, { status: 201 })
+  }),
+
+  // PUT /api/v1/position/:id
+  http.put(`${BASE_URL}/api/v1/position/:id`, async ({ params, request }) => {
+    const target = mockPositions.find((item) => item.id === params.id)
+
+    if (!target) {
+      return HttpResponse.json(
+        { title: 'POSITION_NOT_FOUND', detail: 'Position not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    const body = (await request.json()) as {
+      code?: string
+      name?: string
+      description?: string | null
+    }
+
+    const code = body.code?.trim() ?? ''
+    const name = body.name?.trim() ?? ''
+
+    if (code.length === 0) {
+      return HttpResponse.json(
+        { title: 'INVALID_CODE', detail: 'Code is required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (name.length === 0) {
+      return HttpResponse.json(
+        { title: 'INVALID_NAME', detail: 'Name is required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    const duplicated = mockPositions.some(
+      (item) => item.id !== target.id && item.code.trim().toLowerCase() === code.toLowerCase(),
+    )
+
+    if (duplicated) {
+      return HttpResponse.json(
+        { title: 'POSITION_ALREADY_EXISTS', detail: 'Position already exists', status: 409 },
+        { status: 409 },
+      )
+    }
+
+    const updated = {
+      ...target,
+      code,
+      name,
+      description: body.description?.trim() ? body.description.trim() : null,
+    }
+
+    mockPositions = mockPositions.map((item) => (item.id === target.id ? updated : item))
+
+    return HttpResponse.json(updated)
+  }),
+
+  // DELETE /api/v1/position/:id
+  http.delete(`${BASE_URL}/api/v1/position/:id`, ({ params }) => {
+    const target = mockPositions.find((item) => item.id === params.id)
+
+    if (!target) {
+      return HttpResponse.json(
+        { title: 'POSITION_NOT_FOUND', detail: 'Position not found', status: 404 },
+        { status: 404 },
+      )
+    }
+
+    if (target.id === 'position-1') {
+      return HttpResponse.json(
+        { title: 'POSITION_IN_USE', detail: 'Position is in use', status: 409 },
+        { status: 409 },
+      )
+    }
+
+    mockPositions = mockPositions.filter((item) => item.id !== target.id)
+    return new HttpResponse(null, { status: 204 })
+  }),
 
   // GET /api/v1/team
   http.get(`${BASE_URL}/api/v1/team`, () => HttpResponse.json(mockTeams)),

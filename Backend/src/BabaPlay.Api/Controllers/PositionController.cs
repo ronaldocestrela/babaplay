@@ -11,7 +11,7 @@ namespace BabaPlay.Api.Controllers;
 /// <summary>Manages tenant positions.</summary>
 [ApiController]
 [Route("api/v1/[controller]")]
-[Authorize]
+[Authorize(Policy = AuthorizationPolicyNames.TenantMember)]
 public sealed class PositionController : ControllerBase
 {
     private readonly ICommandHandler<CreatePositionCommand, Result<PositionResponse>> _createHandler;
@@ -36,6 +36,7 @@ public sealed class PositionController : ControllerBase
 
     /// <summary>Creates a position in the current tenant.</summary>
     [HttpPost]
+    [Authorize(Policy = AuthorizationPolicyNames.TenantOwner)]
     [ProducesResponseType(typeof(PositionResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
@@ -92,6 +93,7 @@ public sealed class PositionController : ControllerBase
 
     /// <summary>Updates a position in the current tenant.</summary>
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicyNames.TenantOwner)]
     [ProducesResponseType(typeof(PositionResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
@@ -124,6 +126,7 @@ public sealed class PositionController : ControllerBase
 
     /// <summary>Soft deletes a position in the current tenant.</summary>
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicyNames.TenantOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]

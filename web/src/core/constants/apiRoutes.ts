@@ -24,6 +24,7 @@ export const API_ROUTES = {
   },
   POSITION: {
     LIST: '/api/v1/position',
+    BY_ID: (id: string) => `/api/v1/position/${id}`,
   },
   TEAM: {
     LIST: '/api/v1/team',

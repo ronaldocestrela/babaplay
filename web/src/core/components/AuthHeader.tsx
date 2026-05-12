@@ -8,7 +8,7 @@ export function AuthHeader() {
   const currentTenant = useAuthStore((s) => s.currentTenant)
   const { logout, isPending } = useLogout()
   const navigate = useNavigate()
-  const canEditTenantSettings = isTenantAdmin(currentUser, currentTenant)
+  const canManageTenant = isTenantAdmin(currentUser, currentTenant)
 
   return (
     <header className="bg-white border-b border-gray-200 px-4 py-3">
@@ -57,7 +57,17 @@ export function AuthHeader() {
             >
               Partidas
             </button>
-            {canEditTenantSettings && (
+            {canManageTenant && (
+              <button
+                type="button"
+                onClick={() => navigate({ to: '/positions' })}
+                className="px-3 py-1.5 rounded-lg text-sm text-gray-700 hover:bg-gray-100"
+                disabled={isPending}
+              >
+                Posições
+              </button>
+            )}
+            {canManageTenant && (
               <button
                 type="button"
                 onClick={() => navigate({ to: '/tenant/settings' })}

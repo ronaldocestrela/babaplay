@@ -87,6 +87,9 @@ public static class ServiceRegistration
             options.AddPolicy(AuthorizationPolicyNames.TenantMember, policy =>
                 policy.Requirements.Add(new TenantMemberRequirement()));
 
+            options.AddPolicy(AuthorizationPolicyNames.TenantOwner, policy =>
+                policy.Requirements.Add(new TenantOwnerRequirement()));
+
             options.AddPolicy(AuthorizationPolicyNames.RbacRolesRead, policy =>
             {
                 policy.Requirements.Add(new TenantMemberRequirement());
@@ -179,6 +182,7 @@ public static class ServiceRegistration
         });
 
         services.AddScoped<IAuthorizationHandler, TenantMemberAuthorizationHandler>();
+        services.AddScoped<IAuthorizationHandler, TenantOwnerAuthorizationHandler>();
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
         // --- Application-level service abstractions ---

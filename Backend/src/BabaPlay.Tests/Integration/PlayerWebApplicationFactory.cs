@@ -198,7 +198,7 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
                 {
                     UserId = userId,
                     TenantId = tenant.Id,
-                    IsOwner = false,
+                    IsOwner = testUserId == TestUserIds[0],
                 });
             }
         }
