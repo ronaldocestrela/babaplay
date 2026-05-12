@@ -78,6 +78,10 @@ export function PlayersPage() {
     })
   }, [players, search])
 
+  const positionNameById = useMemo(() => {
+    return new Map(positions.map((position) => [position.id, position.name]))
+  }, [positions])
+
   const {
     register,
     handleSubmit,
@@ -115,7 +119,7 @@ export function PlayersPage() {
         nickname: selectedPlayer.nickname ?? '',
         phone: selectedPlayer.phone ?? '',
         dateOfBirth: selectedPlayer.dateOfBirth ?? '',
-        positionIds: [],
+        positionIds: selectedPlayer.positionIds ?? [],
       })
       return
     }
@@ -221,19 +225,14 @@ export function PlayersPage() {
       },
       {
         onSuccess: () => {
-          if (positionIds.length > 0) {
-            updatePositions.updatePlayerPositions(
-              { id: selectedPlayer.id, payload: { positionIds } },
-              {
-                onSuccess: () => {
-                  closeModal()
-                },
+          updatePositions.updatePlayerPositions(
+            { id: selectedPlayer.id, payload: { positionIds } },
+            {
+              onSuccess: () => {
+                closeModal()
               },
-            )
-            return
-          }
-
-          closeModal()
+            },
+          )
         },
       },
     )
@@ -320,6 +319,7 @@ export function PlayersPage() {
                 <th className="text-left p-3 font-medium">Nome</th>
                 <th className="text-left p-3 font-medium">Apelido</th>
                 <th className="text-left p-3 font-medium">Telefone</th>
+                <th className="text-left p-3 font-medium">Posições</th>
                 <th className="text-left p-3 font-medium">Status</th>
                 <th className="text-right p-3 font-medium">Ações</th>
               </tr>
@@ -330,6 +330,22 @@ export function PlayersPage() {
                   <td className="p-3 text-on-surface">{player.name}</td>
                   <td className="p-3 text-on-surface-variant">{player.nickname ?? '-'}</td>
                   <td className="p-3 text-on-surface-variant">{player.phone ?? '-'}</td>
+                  <td className="p-3 text-on-surface-variant">
+                    {player.positionIds && player.positionIds.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {player.positionIds.map((positionId) => (
+                          <span
+                            key={positionId}
+                            className="inline-flex items-center rounded-full bg-surface-container-high px-2 py-0.5 text-xs text-on-surface"
+                          >
+                            {positionNameById.get(positionId) ?? 'Posição não encontrada'}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      'Sem posição'
+                    )}
+                  </td>
                   <td className="p-3 text-on-surface-variant">{player.isActive ? 'Ativo' : 'Inativo'}</td>
                   <td className="p-3">
                     <div className="flex justify-end gap-2">
@@ -451,21 +467,27 @@ export function PlayersPage() {
 
                 <div className="space-y-2 md:col-span-2">
                   <p className="text-sm text-on-surface">Posições (máximo 3)</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {positions.map((position) => (
-                      <label
-                        key={position.id}
-                        className="flex items-center gap-2 text-sm text-on-surface-variant"
-                      >
-                        <input
-                          type="checkbox"
-                          value={position.id}
-                          {...register('positionIds')}
-                        />
-                        {position.name}
-                      </label>
-                    ))}
-                  </div>
+                  {positions.length === 0 ? (
+                    <p className="text-xs text-on-surface-variant">
+                      Nenhuma posição ativa cadastrada no momento.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {positions.map((position) => (
+                        <label
+                          key={position.id}
+                          className="flex items-center gap-2 text-sm text-on-surface-variant"
+                        >
+                          <input
+                            type="checkbox"
+                            value={position.id}
+                            {...register('positionIds')}
+                          />
+                          {position.code} - {position.name}
+                        </label>
+                      ))}
+                    </div>
+                  )}
                   {errors.positionIds ? (
                     <p role="alert" className="text-xs text-error">
                       {errors.positionIds.message}

@@ -665,7 +665,7 @@ export const handlers = [
   http.put(`${BASE_URL}/api/v1/player/:id/positions`, async ({ params, request }) => {
     const body = (await request.json()) as { positionIds: string[] }
 
-    if (!Array.isArray(body.positionIds) || body.positionIds.length === 0) {
+    if (!Array.isArray(body.positionIds)) {
       return HttpResponse.json(
         { title: 'INVALID_POSITION_ID', detail: 'Position ids are required', status: 422 },
         { status: 422 },

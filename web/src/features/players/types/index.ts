@@ -5,6 +5,7 @@ export interface Player {
   nickname: string | null
   phone: string | null
   dateOfBirth: string | null
+  positionIds?: string[]
   isActive: boolean
   createdAt: string
 }

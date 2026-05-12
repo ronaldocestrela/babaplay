@@ -1,7 +1,18 @@
 import { FormEvent, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { useCreatePlayer } from '@/features/players/hooks'
+import { ERROR_CODES } from '@/core/constants/errorCodes'
+import { getErrorCode } from '@/core/utils/getErrorCode'
+import { useCreatePlayer, usePositions, useUpdatePlayerPositions } from '@/features/players/hooks'
 import { useAuthStore } from '@/features/auth/store/authStore'
+
+const ERROR_MESSAGES: Record<string, string> = {
+  REQUIRED_FIELDS_MISSING: 'Preencha os campos obrigatórios para continuar.',
+  [ERROR_CODES.USER_NOT_FOUND]: 'Usuário não encontrado.',
+  [ERROR_CODES.POSITIONS_LIMIT_EXCEEDED]: 'Selecione no máximo 3 posições.',
+  [ERROR_CODES.POSITION_NOT_FOUND]: 'Uma ou mais posições não foram encontradas.',
+  [ERROR_CODES.DUPLICATE_POSITIONS]: 'Posições duplicadas não são permitidas.',
+  [ERROR_CODES.INVALID_POSITION_ID]: 'Uma ou mais posições são inválidas.',
+}
 
 export function CompletePlayerProfilePage() {
   const navigate = useNavigate()
@@ -9,19 +20,48 @@ export function CompletePlayerProfilePage() {
   const setPlayerOnboardingRequired = useAuthStore((s) => s.setPlayerOnboardingRequired)
 
   const createPlayer = useCreatePlayer()
+  const updatePlayerPositions = useUpdatePlayerPositions()
+  const { data: positions = [] } = usePositions()
 
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [dateOfBirth, setDateOfBirth] = useState('')
+  const [positionIds, setPositionIds] = useState<string[]>([])
   const [validationError, setValidationError] = useState<string | null>(null)
 
-  const submitting = createPlayer.isPending
+  const submitting = createPlayer.isPending || updatePlayerPositions.isPending
+
+  const createErrorCode = createPlayer.errorCode
+  const updatePositionsErrorCode = getErrorCode(updatePlayerPositions.error)
+
+  const togglePosition = (positionId: string) => {
+    setValidationError(null)
+
+    setPositionIds((current) => {
+      if (current.includes(positionId)) {
+        return current.filter((id) => id !== positionId)
+      }
+
+      if (current.length >= 3) {
+        setValidationError(ERROR_CODES.POSITIONS_LIMIT_EXCEEDED)
+        return current
+      }
+
+      return [...current, positionId]
+    })
+  }
+
+  const completeOnboarding = () => {
+    setPlayerOnboardingRequired(false)
+    void navigate({ to: '/' })
+  }
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    setValidationError(null)
 
     if (!currentUser?.id) {
-      setValidationError('USER_NOT_FOUND')
+      setValidationError(ERROR_CODES.USER_NOT_FOUND)
       return
     }
 
@@ -38,9 +78,25 @@ export function CompletePlayerProfilePage() {
         dateOfBirth: dateOfBirth.trim(),
       },
       {
-        onSuccess: () => {
-          setPlayerOnboardingRequired(false)
-          void navigate({ to: '/' })
+        onSuccess: (created) => {
+          if (positionIds.length > 0) {
+            updatePlayerPositions.updatePlayerPositions(
+              {
+                id: created.id,
+                payload: {
+                  positionIds,
+                },
+              },
+              {
+                onSuccess: () => {
+                  completeOnboarding()
+                },
+              },
+            )
+            return
+          }
+
+          completeOnboarding()
         },
       },
     )
@@ -90,10 +146,42 @@ export function CompletePlayerProfilePage() {
           />
         </div>
 
-        {validationError ? <p className="text-sm text-red-600">{validationError}</p> : null}
+        <div className="space-y-2">
+          <p className="text-sm">Posições (opcional, máximo 3)</p>
+          {positions.length === 0 ? (
+            <p className="text-xs text-gray-600">Nenhuma posição ativa cadastrada no momento.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {positions.map((position) => {
+                const checked = positionIds.includes(position.id)
+
+                return (
+                  <label key={position.id} className="flex items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => togglePosition(position.id)}
+                    />
+                    {position.code} - {position.name}
+                  </label>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {validationError ? (
+          <p className="text-sm text-red-600">{ERROR_MESSAGES[validationError] ?? validationError}</p>
+        ) : null}
 
         {createPlayer.errorCode ? (
-          <p className="text-sm text-red-600">{createPlayer.errorCode}</p>
+          <p className="text-sm text-red-600">{ERROR_MESSAGES[createErrorCode] ?? createErrorCode}</p>
+        ) : null}
+
+        {updatePositionsErrorCode ? (
+          <p className="text-sm text-red-600">
+            {ERROR_MESSAGES[updatePositionsErrorCode] ?? updatePositionsErrorCode}
+          </p>
         ) : null}
 
         <button type="submit" className="w-full h-10 rounded bg-black text-white" disabled={submitting}>

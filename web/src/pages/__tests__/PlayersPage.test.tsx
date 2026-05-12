@@ -71,7 +71,7 @@ describe('PlayersPage', () => {
     vi.mocked(usePositions).mockReturnValue({
       data: [
         {
-          id: 'position-1',
+          id: '11111111-1111-1111-1111-111111111111',
           tenantId: 'tenant-1',
           code: 'GK',
           name: 'Goleiro',
@@ -206,6 +206,7 @@ describe('PlayersPage', () => {
           nickname: 'JS10',
           phone: '11999990001',
           dateOfBirth: null,
+          positionIds: ['11111111-1111-1111-1111-111111111111'],
           isActive: true,
           createdAt: '2026-01-01T00:00:00.000Z',
         },
@@ -224,12 +225,51 @@ describe('PlayersPage', () => {
 
     await waitFor(() => {
       expect(screen.getByDisplayValue('Joao Silva')).toBeInTheDocument()
+      expect(screen.getByRole('checkbox')).toBeChecked()
     })
 
     await userEvent.click(screen.getByRole('button', { name: /excluir/i }))
     expect(deletePlayer).toHaveBeenCalledWith('player-1')
 
     confirmSpy.mockRestore()
+  })
+
+  it('deve exibir coluna de posições na listagem', () => {
+    vi.mocked(usePlayers).mockReturnValue({
+      data: [
+        {
+          id: 'player-1',
+          userId: 'user-1',
+          name: 'Joao Silva',
+          nickname: 'JS10',
+          phone: '11999990001',
+          dateOfBirth: null,
+          positionIds: ['11111111-1111-1111-1111-111111111111'],
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
+        {
+          id: 'player-2',
+          userId: 'user-2',
+          name: 'Carlos Lima',
+          nickname: null,
+          phone: null,
+          dateOfBirth: null,
+          positionIds: [],
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof usePlayers>)
+
+    renderPlayersPage()
+
+    expect(screen.getByRole('columnheader', { name: 'Posições' })).toBeInTheDocument()
+    expect(screen.getByText('Goleiro')).toBeInTheDocument()
+    expect(screen.getByText('Sem posição')).toBeInTheDocument()
   })
 
   it('deve exibir estado de salvamento no modal', async () => {
