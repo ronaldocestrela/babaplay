@@ -30,13 +30,14 @@ public sealed class UpdateMatchCommandHandler
         if (cmd.GameDayId == Guid.Empty)
             return Result<MatchResponse>.Fail("INVALID_GAMEDAY_ID", "GameDayId is required.");
 
-        if (cmd.HomeTeamId == Guid.Empty)
-            return Result<MatchResponse>.Fail("INVALID_HOME_TEAM_ID", "HomeTeamId is required.");
+        var homeTeamId = cmd.HomeTeamId ?? Guid.Empty;
+        var awayTeamId = cmd.AwayTeamId ?? Guid.Empty;
+        var hasFixedTeams = homeTeamId != Guid.Empty || awayTeamId != Guid.Empty;
 
-        if (cmd.AwayTeamId == Guid.Empty)
-            return Result<MatchResponse>.Fail("INVALID_AWAY_TEAM_ID", "AwayTeamId is required.");
+        if ((homeTeamId == Guid.Empty) != (awayTeamId == Guid.Empty))
+            return Result<MatchResponse>.Fail("MATCH_TEAMS_PAIR_REQUIRED", "Home and away teams must be both provided or both empty.");
 
-        if (cmd.HomeTeamId == cmd.AwayTeamId)
+        if (hasFixedTeams && homeTeamId == awayTeamId)
             return Result<MatchResponse>.Fail("TEAMS_MUST_BE_DIFFERENT", "Home and away teams must be different.");
 
         var gameDay = await _gameDayRepository.GetByIdAsync(cmd.GameDayId, ct);
@@ -46,22 +47,30 @@ public sealed class UpdateMatchCommandHandler
         if (gameDay.ScheduledAt <= DateTime.UtcNow)
             return Result<MatchResponse>.Fail("GAMEDAY_PAST", "Cannot update match for a past game day.");
 
-        var homeTeam = await _teamRepository.GetByIdAsync(cmd.HomeTeamId, ct);
-        var awayTeam = await _teamRepository.GetByIdAsync(cmd.AwayTeamId, ct);
-        if (homeTeam is null || awayTeam is null || !homeTeam.IsActive || !awayTeam.IsActive)
-            return Result<MatchResponse>.Fail("TEAM_NOT_FOUND", "One or both teams were not found.");
+        bool exists;
+        if (hasFixedTeams)
+        {
+            var homeTeam = await _teamRepository.GetByIdAsync(homeTeamId, ct);
+            var awayTeam = await _teamRepository.GetByIdAsync(awayTeamId, ct);
+            if (homeTeam is null || awayTeam is null || !homeTeam.IsActive || !awayTeam.IsActive)
+                return Result<MatchResponse>.Fail("TEAM_NOT_FOUND", "One or both teams were not found.");
 
-        var exists = await _matchRepository.ExistsByGameDayAndTeamsAsync(
-            cmd.GameDayId,
-            cmd.HomeTeamId,
-            cmd.AwayTeamId,
-            cmd.MatchId,
-            ct);
+            exists = await _matchRepository.ExistsByGameDayAndTeamsAsync(
+                cmd.GameDayId,
+                homeTeamId,
+                awayTeamId,
+                cmd.MatchId,
+                ct);
+        }
+        else
+        {
+            exists = await _matchRepository.ExistsByGameDayAsync(cmd.GameDayId, cmd.MatchId, ct);
+        }
 
         if (exists)
-            return Result<MatchResponse>.Fail("MATCH_ALREADY_EXISTS", "A match for the same game day and teams already exists.");
+            return Result<MatchResponse>.Fail("MATCH_ALREADY_EXISTS", "A match for the same game day already exists.");
 
-        match.Update(cmd.GameDayId, cmd.HomeTeamId, cmd.AwayTeamId, cmd.Description);
+        match.Update(cmd.GameDayId, homeTeamId, awayTeamId, cmd.Description);
 
         await _matchRepository.UpdateAsync(match, ct);
         await _matchRepository.SaveChangesAsync(ct);

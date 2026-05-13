@@ -44,14 +44,7 @@ public sealed class Match : EntityBase
         if (gameDayId == Guid.Empty)
             throw new ValidationException("GameDayId", "GameDayId is required.");
 
-        if (homeTeamId == Guid.Empty)
-            throw new ValidationException("HomeTeamId", "HomeTeamId is required.");
-
-        if (awayTeamId == Guid.Empty)
-            throw new ValidationException("AwayTeamId", "AwayTeamId is required.");
-
-        if (homeTeamId == awayTeamId)
-            throw new ValidationException("Teams", "Home and away teams must be different.");
+        ValidateTeamPair(homeTeamId, awayTeamId);
 
         GameDayId = gameDayId;
         HomeTeamId = homeTeamId;
@@ -99,13 +92,18 @@ public sealed class Match : EntityBase
         if (gameDayId == Guid.Empty)
             throw new ValidationException("GameDayId", "GameDayId is required.");
 
-        if (homeTeamId == Guid.Empty)
-            throw new ValidationException("HomeTeamId", "HomeTeamId is required.");
+        ValidateTeamPair(homeTeamId, awayTeamId);
+    }
 
-        if (awayTeamId == Guid.Empty)
-            throw new ValidationException("AwayTeamId", "AwayTeamId is required.");
+    private static void ValidateTeamPair(Guid homeTeamId, Guid awayTeamId)
+    {
+        var hasHome = homeTeamId != Guid.Empty;
+        var hasAway = awayTeamId != Guid.Empty;
 
-        if (homeTeamId == awayTeamId)
+        if (hasHome != hasAway)
+            throw new ValidationException("Teams", "Home and away teams must be both provided or both empty.");
+
+        if (hasHome && homeTeamId == awayTeamId)
             throw new ValidationException("Teams", "Home and away teams must be different.");
     }
 }

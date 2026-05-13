@@ -36,6 +36,18 @@ public sealed class MatchRepository : IMatchRepository
             .ToListAsync(ct);
     }
 
+    public async Task<bool> ExistsByGameDayAsync(Guid gameDayId, Guid? excludeMatchId, CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+
+        var query = db.Matches.Where(m => m.IsActive && m.GameDayId == gameDayId);
+
+        if (excludeMatchId.HasValue)
+            query = query.Where(m => m.Id != excludeMatchId.Value);
+
+        return await query.AnyAsync(ct);
+    }
+
     public async Task<bool> ExistsByGameDayAndTeamsAsync(
         Guid gameDayId,
         Guid homeTeamId,

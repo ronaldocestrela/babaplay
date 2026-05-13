@@ -30,6 +30,7 @@ public sealed class GetTenantSettingsQueryHandler
             tenant.Name,
             tenant.Slug,
             tenant.ProvisioningStatus,
+            tenant.PlayersPerTeam,
             tenant.LogoPath,
             tenant.Street,
             tenant.Number,

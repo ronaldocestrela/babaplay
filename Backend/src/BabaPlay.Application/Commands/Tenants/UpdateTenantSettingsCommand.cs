@@ -8,6 +8,7 @@ public sealed record UpdateTenantSettingsCommand(
     Guid TenantId,
     string RequestedByUserId,
     string Name,
+    int PlayersPerTeam,
     TenantLogoUploadRequest? Logo,
     string Street,
     string Number,

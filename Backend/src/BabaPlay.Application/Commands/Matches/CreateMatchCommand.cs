@@ -6,7 +6,7 @@ namespace BabaPlay.Application.Commands.Matches;
 
 public sealed record CreateMatchCommand(
     Guid GameDayId,
-    Guid HomeTeamId,
-    Guid AwayTeamId,
+    Guid? HomeTeamId,
+    Guid? AwayTeamId,
     string? Description)
     : ICommand<Result<MatchResponse>>;

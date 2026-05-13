@@ -9,6 +9,8 @@ public interface IMatchRepository
 
     Task<IReadOnlyList<Match>> GetAllActiveAsync(MatchStatus? status, CancellationToken ct = default);
 
+    Task<bool> ExistsByGameDayAsync(Guid gameDayId, Guid? excludeMatchId, CancellationToken ct = default);
+
     Task<bool> ExistsByGameDayAndTeamsAsync(
         Guid gameDayId,
         Guid homeTeamId,

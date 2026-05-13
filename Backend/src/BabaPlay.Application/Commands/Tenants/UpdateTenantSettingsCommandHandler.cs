@@ -60,6 +60,9 @@ public sealed class UpdateTenantSettingsCommandHandler
         if (string.IsNullOrWhiteSpace(cmd.ZipCode))
             return Result<TenantResponse>.Fail("TENANT_ZIPCODE_REQUIRED", "Zip code is required.");
 
+        if (cmd.PlayersPerTeam <= 0)
+            return Result<TenantResponse>.Fail("TENANT_PLAYERS_PER_TEAM_INVALID", "PlayersPerTeam must be greater than zero.");
+
         string? logoPath = null;
         if (cmd.Logo is not null)
         {
@@ -81,6 +84,7 @@ public sealed class UpdateTenantSettingsCommandHandler
         var updated = await _tenantRepository.UpdateAssociationSettingsAsync(
             cmd.TenantId,
             cmd.Name.Trim(),
+            cmd.PlayersPerTeam,
             logoPath,
             cmd.Street.Trim(),
             cmd.Number.Trim(),
@@ -102,6 +106,7 @@ public sealed class UpdateTenantSettingsCommandHandler
             tenant.Name,
             tenant.Slug,
             tenant.ProvisioningStatus,
+            tenant.PlayersPerTeam,
             tenant.LogoPath,
             tenant.Street,
             tenant.Number,

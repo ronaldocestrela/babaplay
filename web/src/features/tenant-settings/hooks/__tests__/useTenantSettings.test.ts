@@ -10,6 +10,7 @@ describe('tenant settings hooks', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.id).toBe('tenant-123')
     expect(result.current.data?.name).toBe('Mock Tenant')
+    expect(result.current.data?.playersPerTeam).toBe(11)
   })
 
   it('deve atualizar configurações do tenant com useUpdateTenantSettings', async () => {
@@ -19,6 +20,7 @@ describe('tenant settings hooks', () => {
     act(() => {
       result.current.updateSettings({
         name: 'Tenant Hook',
+        playersPerTeam: 8,
         logo,
         street: 'Rua Hook',
         number: '77',

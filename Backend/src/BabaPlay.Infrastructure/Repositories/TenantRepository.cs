@@ -90,6 +90,7 @@ public sealed class TenantRepository : ITenantRepository
     public async Task<bool> UpdateAssociationSettingsAsync(
         Guid id,
         string name,
+        int playersPerTeam,
         string? logoPath,
         string street,
         string number,
@@ -103,6 +104,7 @@ public sealed class TenantRepository : ITenantRepository
         if (entity is null) return false;
 
         entity.Name = name;
+        entity.PlayersPerTeam = playersPerTeam;
         if (!string.IsNullOrWhiteSpace(logoPath))
             entity.LogoPath = logoPath;
         entity.Street = street;
@@ -123,6 +125,7 @@ public sealed class TenantRepository : ITenantRepository
         t.IsActive,
         t.ConnectionString,
         t.ProvisioningStatus.ToString(),
+        t.PlayersPerTeam,
         t.LogoPath,
         t.Street,
         t.Number,

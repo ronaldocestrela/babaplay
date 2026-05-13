@@ -3,6 +3,7 @@ export interface TenantSettingsResponse {
   name: string
   slug: string
   provisioningStatus: string
+  playersPerTeam: number
   logoPath?: string | null
   street?: string | null
   number?: string | null
@@ -14,6 +15,7 @@ export interface TenantSettingsResponse {
 
 export interface UpdateTenantSettingsRequest {
   name: string
+  playersPerTeam: number
   logo?: File
   street: string
   number: string

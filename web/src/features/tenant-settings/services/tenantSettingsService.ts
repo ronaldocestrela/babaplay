@@ -11,6 +11,7 @@ export const tenantSettingsService = {
   updateSettings: (payload: UpdateTenantSettingsRequest): Promise<TenantSettingsResponse> => {
     const formData = new FormData()
     formData.append('Name', payload.name)
+    formData.append('PlayersPerTeam', String(payload.playersPerTeam))
     formData.append('Street', payload.street)
     formData.append('Number', payload.number)
     if (payload.neighborhood) formData.append('Neighborhood', payload.neighborhood)
@@ -23,6 +24,7 @@ export const tenantSettingsService = {
       import.meta.env.MODE === 'test'
         ? {
             'X-Tenant-Name': payload.name,
+            'X-Tenant-PlayersPerTeam': String(payload.playersPerTeam),
             'X-Tenant-Street': payload.street,
             'X-Tenant-Number': payload.number,
             'X-Tenant-Neighborhood': payload.neighborhood ?? '',

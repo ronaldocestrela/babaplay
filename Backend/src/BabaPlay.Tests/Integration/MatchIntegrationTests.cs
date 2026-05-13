@@ -48,6 +48,24 @@ public sealed class MatchIntegrationTests : IClassFixture<PlayerWebApplicationFa
     }
 
     [Fact]
+    public async Task Post_WithoutFixedTeams_ShouldReturn201WithEmptyTeamIds()
+    {
+        var gameDay = await CreateGameDayAsync("Rodada Match Dynamic");
+
+        var response = await _client.PostAsJsonAsync("/api/v1/match", new
+        {
+            gameDayId = gameDay.Id,
+            description = "Definição por chegada",
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var body = await response.Content.ReadFromJsonAsync<MatchResponse>(JsonOptions);
+        body.Should().NotBeNull();
+        body!.HomeTeamId.Should().Be(Guid.Empty);
+        body.AwayTeamId.Should().Be(Guid.Empty);
+    }
+
+    [Fact]
     public async Task Post_DuplicateMatch_ShouldReturn409()
     {
         var gameDay = await CreateGameDayAsync("Rodada Match 2");

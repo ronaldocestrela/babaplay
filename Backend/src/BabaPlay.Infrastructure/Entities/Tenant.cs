@@ -20,6 +20,7 @@ public sealed class Tenant
     public string? City { get; set; }
     public string? State { get; set; }
     public string? ZipCode { get; set; }
+    public int PlayersPerTeam { get; set; } = 11;
     public string DatabaseName { get; set; } = string.Empty;
     public string ConnectionString { get; set; } = string.Empty;
     public double? AssociationLatitude { get; set; }

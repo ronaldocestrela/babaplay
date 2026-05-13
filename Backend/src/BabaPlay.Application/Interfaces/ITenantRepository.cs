@@ -42,6 +42,7 @@ public interface ITenantRepository
     Task<bool> UpdateAssociationSettingsAsync(
         Guid id,
         string name,
+        int playersPerTeam,
         string? logoPath,
         string street,
         string number,

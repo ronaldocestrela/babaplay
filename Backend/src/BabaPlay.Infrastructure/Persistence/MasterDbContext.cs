@@ -47,6 +47,7 @@ public sealed class MasterDbContext : IdentityDbContext<ApplicationUser>
             e.Property(t => t.City).HasMaxLength(100);
             e.Property(t => t.State).HasMaxLength(100);
             e.Property(t => t.ZipCode).HasMaxLength(20);
+            e.Property(t => t.PlayersPerTeam).HasDefaultValue(11);
             e.Property(t => t.AssociationLatitude);
             e.Property(t => t.AssociationLongitude);
             e.Property(t => t.CheckinRadiusMeters);

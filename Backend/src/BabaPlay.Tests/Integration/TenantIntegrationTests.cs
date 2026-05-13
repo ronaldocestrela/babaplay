@@ -55,6 +55,7 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
         var content = new MultipartFormDataContent
         {
             { new StringContent(name), "Name" },
+            { new StringContent("11"), "PlayersPerTeam" },
             { new StringContent("Rua Atualizada"), "Street" },
             { new StringContent("321"), "Number" },
             { new StringContent("Bairro Novo"), "Neighborhood" },
@@ -90,6 +91,7 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
         body!.Name.Should().Be("Test Club");
         body.Slug.Should().Be(slug);
         body.ProvisioningStatus.Should().Be("Pending");
+        body.PlayersPerTeam.Should().Be(11);
         body.Id.Should().NotBeEmpty();
         body.LogoPath.Should().NotBeNullOrWhiteSpace();
         body.Street.Should().Be("Rua das Palmeiras");
@@ -232,6 +234,7 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
         var body = await response.Content.ReadFromJsonAsync<TenantResponse>();
         body.Should().NotBeNull();
         body!.Name.Should().Be("Clube Atualizado");
+        body.PlayersPerTeam.Should().Be(11);
         body.City.Should().Be("Rio de Janeiro");
     }
 

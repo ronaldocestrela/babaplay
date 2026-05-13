@@ -34,7 +34,7 @@ public class UpdateMatchCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_EmptyHomeTeamId_ShouldReturnInvalidHomeTeamId()
+    public async Task Handle_OnlyHomeTeamId_ShouldReturnTeamsPairRequired()
     {
         var match = DomainMatch.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null);
         var cmd = new UpdateMatchCommand(match.Id, Guid.NewGuid(), Guid.Empty, Guid.NewGuid(), null);
@@ -44,11 +44,11 @@ public class UpdateMatchCommandHandlerTests
         var result = await _handler.HandleAsync(cmd);
 
         result.IsSuccess.Should().BeFalse();
-        result.ErrorCode.Should().Be("INVALID_HOME_TEAM_ID");
+        result.ErrorCode.Should().Be("MATCH_TEAMS_PAIR_REQUIRED");
     }
 
     [Fact]
-    public async Task Handle_EmptyAwayTeamId_ShouldReturnInvalidAwayTeamId()
+    public async Task Handle_OnlyAwayTeamId_ShouldReturnTeamsPairRequired()
     {
         var match = DomainMatch.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null);
         var cmd = new UpdateMatchCommand(match.Id, Guid.NewGuid(), Guid.NewGuid(), Guid.Empty, null);
@@ -58,7 +58,7 @@ public class UpdateMatchCommandHandlerTests
         var result = await _handler.HandleAsync(cmd);
 
         result.IsSuccess.Should().BeFalse();
-        result.ErrorCode.Should().Be("INVALID_AWAY_TEAM_ID");
+        result.ErrorCode.Should().Be("MATCH_TEAMS_PAIR_REQUIRED");
     }
 
     [Fact]
@@ -97,11 +97,11 @@ public class UpdateMatchCommandHandlerTests
         _matchRepository.Setup(x => x.GetByIdAsync(match.Id, It.IsAny<CancellationToken>())).ReturnsAsync(match);
         _gameDayRepository.Setup(x => x.GetByIdAsync(cmd.GameDayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(GameDay.Create(Guid.NewGuid(), "Rodada", DateTime.UtcNow.AddHours(2), null, null, 22));
-        _teamRepository.Setup(x => x.GetByIdAsync(cmd.HomeTeamId, It.IsAny<CancellationToken>()))
+        _teamRepository.Setup(x => x.GetByIdAsync(cmd.HomeTeamId!.Value, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Team.Create(Guid.NewGuid(), "Casa", 11));
-        _teamRepository.Setup(x => x.GetByIdAsync(cmd.AwayTeamId, It.IsAny<CancellationToken>()))
+        _teamRepository.Setup(x => x.GetByIdAsync(cmd.AwayTeamId!.Value, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Team.Create(Guid.NewGuid(), "Visitante", 11));
-        _matchRepository.Setup(x => x.ExistsByGameDayAndTeamsAsync(cmd.GameDayId, cmd.HomeTeamId, cmd.AwayTeamId, cmd.MatchId, It.IsAny<CancellationToken>()))
+        _matchRepository.Setup(x => x.ExistsByGameDayAndTeamsAsync(cmd.GameDayId, cmd.HomeTeamId!.Value, cmd.AwayTeamId!.Value, cmd.MatchId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         var result = await _handler.HandleAsync(cmd);
@@ -154,16 +154,35 @@ public class UpdateMatchCommandHandlerTests
         _matchRepository.Setup(x => x.GetByIdAsync(match.Id, It.IsAny<CancellationToken>())).ReturnsAsync(match);
         _gameDayRepository.Setup(x => x.GetByIdAsync(cmd.GameDayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(GameDay.Create(Guid.NewGuid(), "Rodada", DateTime.UtcNow.AddHours(2), null, null, 22));
-        _teamRepository.Setup(x => x.GetByIdAsync(cmd.HomeTeamId, It.IsAny<CancellationToken>()))
+        _teamRepository.Setup(x => x.GetByIdAsync(cmd.HomeTeamId!.Value, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Team.Create(Guid.NewGuid(), "Casa", 11));
-        _teamRepository.Setup(x => x.GetByIdAsync(cmd.AwayTeamId, It.IsAny<CancellationToken>()))
+        _teamRepository.Setup(x => x.GetByIdAsync(cmd.AwayTeamId!.Value, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Team.Create(Guid.NewGuid(), "Visitante", 11));
-        _matchRepository.Setup(x => x.ExistsByGameDayAndTeamsAsync(cmd.GameDayId, cmd.HomeTeamId, cmd.AwayTeamId, cmd.MatchId, It.IsAny<CancellationToken>()))
+        _matchRepository.Setup(x => x.ExistsByGameDayAndTeamsAsync(cmd.GameDayId, cmd.HomeTeamId!.Value, cmd.AwayTeamId!.Value, cmd.MatchId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         var result = await _handler.HandleAsync(cmd);
 
         result.IsSuccess.Should().BeFalse();
         result.ErrorCode.Should().Be("MATCH_ALREADY_EXISTS");
+    }
+
+    [Fact]
+    public async Task Handle_WithoutFixedTeams_ShouldUpdateMatch()
+    {
+        var match = DomainMatch.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "old");
+        var cmd = new UpdateMatchCommand(match.Id, Guid.NewGuid(), null, null, "novo sem times");
+
+        _matchRepository.Setup(x => x.GetByIdAsync(match.Id, It.IsAny<CancellationToken>())).ReturnsAsync(match);
+        _gameDayRepository.Setup(x => x.GetByIdAsync(cmd.GameDayId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(GameDay.Create(Guid.NewGuid(), "Rodada", DateTime.UtcNow.AddHours(2), null, null, 22));
+        _matchRepository.Setup(x => x.ExistsByGameDayAsync(cmd.GameDayId, cmd.MatchId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var result = await _handler.HandleAsync(cmd);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.HomeTeamId.Should().Be(Guid.Empty);
+        result.Value.AwayTeamId.Should().Be(Guid.Empty);
     }
 }

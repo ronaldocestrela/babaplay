@@ -448,6 +448,7 @@ export const handlers = [
       name: body.name,
       slug: body.slug.toLowerCase(),
       provisioningStatus: 'Pending',
+      playersPerTeam: 11,
       logoPath: 'tenant-logos/tenant-123/logo.png',
       street: body.street,
       number: body.number,
@@ -476,6 +477,7 @@ export const handlers = [
       name: 'Mock Tenant',
       slug: 'mock-tenant',
       provisioningStatus: 'Ready',
+      playersPerTeam: 11,
       logoPath: 'tenant-logos/tenant-123/logo.png',
       street: 'Rua das Palmeiras',
       number: '123',
@@ -495,6 +497,7 @@ export const handlers = [
       name: 'Mock Tenant',
       slug: 'mock-tenant',
       provisioningStatus: 'Ready',
+      playersPerTeam: 11,
       logoPath: 'tenant-logos/tenant-123/logo.png',
       street: 'Rua das Palmeiras',
       number: '123',
@@ -518,10 +521,12 @@ export const handlers = [
     let city = ''
     let state = ''
     let zipCode = ''
+    let playersPerTeam = 0
 
     try {
       const formData = await request.formData()
       name = String(formData.get('Name') ?? '')
+      playersPerTeam = Number(formData.get('PlayersPerTeam') ?? 0)
       street = String(formData.get('Street') ?? '')
       number = String(formData.get('Number') ?? '')
       neighborhood = String(formData.get('Neighborhood') ?? '')
@@ -539,6 +544,7 @@ export const handlers = [
       }
 
       name = getMultipartValue('Name') || getHeaderValue('X-Tenant-Name')
+      playersPerTeam = Number(getMultipartValue('PlayersPerTeam') || getHeaderValue('X-Tenant-PlayersPerTeam') || '0')
       street = getMultipartValue('Street') || getHeaderValue('X-Tenant-Street')
       number = getMultipartValue('Number') || getHeaderValue('X-Tenant-Number')
       neighborhood = getMultipartValue('Neighborhood') || getHeaderValue('X-Tenant-Neighborhood')
@@ -554,11 +560,23 @@ export const handlers = [
       )
     }
 
+    if (playersPerTeam <= 0) {
+      return HttpResponse.json(
+        {
+          title: 'TENANT_PLAYERS_PER_TEAM_INVALID',
+          detail: 'PlayersPerTeam must be greater than zero',
+          status: 422,
+        },
+        { status: 422 },
+      )
+    }
+
     const response: TenantResponse = {
       id: 'tenant-123',
       name,
       slug: 'mock-tenant',
       provisioningStatus: 'Ready',
+      playersPerTeam,
       logoPath: 'tenant-logos/tenant-123/new-logo.png',
       street,
       number,

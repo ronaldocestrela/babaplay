@@ -178,14 +178,14 @@ public sealed class MatchController : ControllerBase
 
 public sealed record CreateMatchRequest(
     Guid GameDayId,
-    Guid HomeTeamId,
-    Guid AwayTeamId,
+    Guid? HomeTeamId,
+    Guid? AwayTeamId,
     string? Description);
 
 public sealed record UpdateMatchRequest(
     Guid GameDayId,
-    Guid HomeTeamId,
-    Guid AwayTeamId,
+    Guid? HomeTeamId,
+    Guid? AwayTeamId,
     string? Description);
 
 public sealed record ChangeMatchStatusRequest(MatchStatus Status);

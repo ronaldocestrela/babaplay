@@ -11,6 +11,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   [ERROR_CODES.TENANT_CITY_REQUIRED]: 'Cidade é obrigatória.',
   [ERROR_CODES.TENANT_STATE_REQUIRED]: 'Estado é obrigatório.',
   [ERROR_CODES.TENANT_ZIPCODE_REQUIRED]: 'CEP é obrigatório.',
+  [ERROR_CODES.TENANT_PLAYERS_PER_TEAM_INVALID]: 'Jogadores por time deve ser maior que zero.',
   [ERROR_CODES.TENANT_LOGO_INVALID_TYPE]: 'Logo deve ser PNG, JPG ou WEBP.',
   [ERROR_CODES.TENANT_LOGO_INVALID_SIZE]: 'Logo deve ter até 2MB.',
   [ERROR_CODES.FORBIDDEN]: 'Somente admin pode editar as opções da associação.',
@@ -25,6 +26,7 @@ export function TenantSettingsPage() {
   const { updateSettings, isPending, errorCode } = useUpdateTenantSettings()
 
   const [name, setName] = useState('')
+  const [playersPerTeam, setPlayersPerTeam] = useState(11)
   const [street, setStreet] = useState('')
   const [number, setNumber] = useState('')
   const [neighborhood, setNeighborhood] = useState('')
@@ -38,6 +40,7 @@ export function TenantSettingsPage() {
     if (!data) return
 
     setName(data.name)
+    setPlayersPerTeam(data.playersPerTeam)
     setStreet(data.street ?? '')
     setNumber(data.number ?? '')
     setNeighborhood(data.neighborhood ?? '')
@@ -71,6 +74,7 @@ export function TenantSettingsPage() {
     updateSettings(
       {
         name,
+        playersPerTeam,
         logo,
         street,
         number,
@@ -118,6 +122,21 @@ export function TenantSettingsPage() {
               type="text"
               value={name}
               onChange={(event) => setName(event.target.value)}
+              className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-indigo-500"
+              disabled={isPending}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="tenant-players-per-team" className="mb-1 block text-sm font-medium text-gray-700">
+              Jogadores por time
+            </label>
+            <input
+              id="tenant-players-per-team"
+              type="number"
+              min={1}
+              value={playersPerTeam}
+              onChange={(event) => setPlayersPerTeam(Number(event.target.value) || 0)}
               className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-indigo-500"
               disabled={isPending}
             />

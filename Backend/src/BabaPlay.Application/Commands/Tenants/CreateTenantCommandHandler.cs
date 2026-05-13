@@ -130,6 +130,7 @@ public sealed class CreateTenantCommandHandler
             cmd.Name.Trim(),
             slugNormalised,
             "Pending",
+            11,
             logoStored.StoragePath,
             cmd.Street.Trim(),
             cmd.Number.Trim(),

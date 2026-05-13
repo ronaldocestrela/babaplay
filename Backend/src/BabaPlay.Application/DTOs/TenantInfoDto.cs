@@ -8,6 +8,7 @@ public sealed record TenantInfoDto(
     bool IsActive,
     string ConnectionString,
     string ProvisioningStatus,
+    int PlayersPerTeam = 11,
     string? LogoPath = null,
     string? Street = null,
     string? Number = null,

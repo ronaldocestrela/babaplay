@@ -156,6 +156,7 @@ public sealed class TenantController : ControllerBase
                 _tenantContext.TenantId,
                 requestedByUserId,
                 request.Name ?? string.Empty,
+                request.PlayersPerTeam,
                 logo,
                 request.Street ?? string.Empty,
                 request.Number ?? string.Empty,
@@ -199,6 +200,7 @@ public sealed record CreateTenantRequest(
 
 public sealed record UpdateTenantSettingsRequest(
     string? Name,
+    int PlayersPerTeam,
     IFormFile? Logo,
     string? Street,
     string? Number,

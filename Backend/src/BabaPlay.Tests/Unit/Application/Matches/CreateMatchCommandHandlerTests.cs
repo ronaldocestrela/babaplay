@@ -35,21 +35,21 @@ public class CreateMatchCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_EmptyHomeTeamId_ShouldReturnInvalidHomeTeamId()
+    public async Task Handle_OnlyHomeTeamId_ShouldReturnTeamsPairRequired()
     {
         var result = await _handler.HandleAsync(new CreateMatchCommand(Guid.NewGuid(), Guid.Empty, Guid.NewGuid(), null));
 
         result.IsSuccess.Should().BeFalse();
-        result.ErrorCode.Should().Be("INVALID_HOME_TEAM_ID");
+        result.ErrorCode.Should().Be("MATCH_TEAMS_PAIR_REQUIRED");
     }
 
     [Fact]
-    public async Task Handle_EmptyAwayTeamId_ShouldReturnInvalidAwayTeamId()
+    public async Task Handle_OnlyAwayTeamId_ShouldReturnTeamsPairRequired()
     {
         var result = await _handler.HandleAsync(new CreateMatchCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.Empty, null));
 
         result.IsSuccess.Should().BeFalse();
-        result.ErrorCode.Should().Be("INVALID_AWAY_TEAM_ID");
+        result.ErrorCode.Should().Be("MATCH_TEAMS_PAIR_REQUIRED");
     }
 
     [Fact]
@@ -126,5 +126,25 @@ public class CreateMatchCommandHandlerTests
 
         result.IsSuccess.Should().BeFalse();
         result.ErrorCode.Should().Be("GAMEDAY_PAST");
+    }
+
+    [Fact]
+    public async Task Handle_WithoutFixedTeams_ShouldCreatePendingMatch()
+    {
+        var gameDayId = Guid.NewGuid();
+
+        _gameDayRepository
+            .Setup(x => x.GetByIdAsync(gameDayId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(GameDay.Create(Guid.NewGuid(), "Rodada", DateTime.UtcNow.AddHours(2), null, null, 22));
+
+        _matchRepository
+            .Setup(x => x.ExistsByGameDayAsync(gameDayId, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var result = await _handler.HandleAsync(new CreateMatchCommand(gameDayId, null, null, "Sem times fixos"));
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.HomeTeamId.Should().Be(Guid.Empty);
+        result.Value.AwayTeamId.Should().Be(Guid.Empty);
     }
 }

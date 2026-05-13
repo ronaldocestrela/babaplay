@@ -7,6 +7,7 @@ describe('tenantSettingsService', () => {
 
     expect(result.id).toBe('tenant-123')
     expect(result.name).toBe('Mock Tenant')
+    expect(result.playersPerTeam).toBe(11)
     expect(result.city).toBe('Sao Paulo')
   })
 
@@ -15,6 +16,7 @@ describe('tenantSettingsService', () => {
 
     const result = await tenantSettingsService.updateSettings({
       name: 'Tenant Atualizado',
+      playersPerTeam: 9,
       logo,
       street: 'Rua Nova',
       number: '99',
@@ -25,6 +27,7 @@ describe('tenantSettingsService', () => {
     })
 
     expect(result.name).toBe('Tenant Atualizado')
+    expect(result.playersPerTeam).toBe(9)
     expect(result.street).toBe('Rua Nova')
     expect(result.number).toBe('99')
     expect(result.city).toBe('Campinas')
