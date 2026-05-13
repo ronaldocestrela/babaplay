@@ -49,7 +49,7 @@ public class CreateCheckinCommandHandlerTests
     public async Task Handle_PlayerInactive_ShouldReturnPlayerInactive()
     {
         var command = BuildValidCommand();
-        var player = Player.Create(command.PlayerId, "Ronaldo", null, null, null);
+        var player = BuildOwnedPlayer(command);
         player.Deactivate();
 
         _playerRepository
@@ -63,6 +63,21 @@ public class CreateCheckinCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_RequesterIsNotPlayerOwner_ShouldReturnForbidden()
+    {
+        var command = BuildValidCommand();
+
+        _playerRepository
+            .Setup(x => x.GetByIdAsync(command.PlayerId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Player.Create(Guid.NewGuid(), "Ronaldo", null, null, null));
+
+        var result = await _handler.HandleAsync(command);
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorCode.Should().Be("FORBIDDEN");
+    }
+
+    [Fact]
     public async Task Handle_OutsideAllowedRadius_ShouldReturnOutsideRadius()
     {
         var command = BuildValidCommand() with { Latitude = -23.5610, Longitude = -46.7000 };
@@ -70,7 +85,7 @@ public class CreateCheckinCommandHandlerTests
 
         _playerRepository
             .Setup(x => x.GetByIdAsync(command.PlayerId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Player.Create(command.PlayerId, "Ronaldo", null, null, null));
+            .ReturnsAsync(BuildOwnedPlayer(command));
 
         _gameDayRepository
             .Setup(x => x.GetByIdAsync(command.GameDayId, It.IsAny<CancellationToken>()))
@@ -103,7 +118,7 @@ public class CreateCheckinCommandHandlerTests
 
         _playerRepository
             .Setup(x => x.GetByIdAsync(command.PlayerId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Player.Create(command.PlayerId, "Ronaldo", null, null, null));
+            .ReturnsAsync(BuildOwnedPlayer(command));
 
         _gameDayRepository
             .Setup(x => x.GetByIdAsync(command.GameDayId, It.IsAny<CancellationToken>()))
@@ -131,7 +146,7 @@ public class CreateCheckinCommandHandlerTests
 
         _playerRepository
             .Setup(x => x.GetByIdAsync(command.PlayerId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Player.Create(command.PlayerId, "Ronaldo", null, null, null));
+            .ReturnsAsync(BuildOwnedPlayer(command));
 
         _gameDayRepository
             .Setup(x => x.GetByIdAsync(command.GameDayId, It.IsAny<CancellationToken>()))
@@ -165,7 +180,7 @@ public class CreateCheckinCommandHandlerTests
 
         _playerRepository
             .Setup(x => x.GetByIdAsync(command.PlayerId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Player.Create(command.PlayerId, "Ronaldo", null, null, null));
+            .ReturnsAsync(BuildOwnedPlayer(command));
 
         _gameDayRepository
             .Setup(x => x.GetByIdAsync(command.GameDayId, It.IsAny<CancellationToken>()))
@@ -180,12 +195,17 @@ public class CreateCheckinCommandHandlerTests
     private static CreateCheckinCommand BuildValidCommand()
     {
         var checkedInAt = DateTime.UtcNow.Date.AddDays(1).AddHours(9);
+        var requestedByUserId = Guid.NewGuid().ToString();
 
         return new CreateCheckinCommand(
             Guid.NewGuid(),
             Guid.NewGuid(),
             checkedInAt,
             -23.5505,
-            -46.6333);
+            -46.6333,
+            requestedByUserId);
     }
+
+    private static Player BuildOwnedPlayer(CreateCheckinCommand command)
+        => Player.Create(Guid.Parse(command.RequestedByUserId), "Ronaldo", null, null, null);
 }

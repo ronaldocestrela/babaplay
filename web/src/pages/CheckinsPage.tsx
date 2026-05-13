@@ -5,15 +5,13 @@ import { CheckinForm } from '@/features/checkin/components/CheckinForm'
 import { CheckinList } from '@/features/checkin/components/CheckinList'
 import { CheckinMap } from '@/features/checkin/components/CheckinMap'
 import {
-  useCancelCheckin,
   useCheckinGameDays,
   useCheckinPlayers,
-  useCheckinsByGameDay,
   useCheckinsByPlayer,
   useCreateCheckin,
 } from '@/features/checkin/hooks'
 import { checkinFormSchema } from '@/features/checkin/schemas/checkinFormSchema'
-import { useCheckinStore } from '@/features/checkin/store/checkinStore'
+import { useAuthStore } from '@/features/auth/store/authStore'
 
 const ERROR_MESSAGES: Record<string, string> = {
   [ERROR_CODES.CHECKIN_ALREADY_EXISTS]: 'Já existe check-in para este jogador neste dia de jogo.',
@@ -34,17 +32,8 @@ function resolveErrorMessage(errorCode: string | null): string {
 }
 
 export function CheckinsPage() {
-  const {
-    selectedGameDayId,
-    selectedPlayerId,
-    filter,
-    setSelectedGameDayId,
-    setSelectedPlayerId,
-    setFilter,
-  } = useCheckinStore()
-
-  const [playerId, setPlayerId] = useState(selectedPlayerId ?? '')
-  const [gameDayId, setGameDayId] = useState(selectedGameDayId ?? '')
+  const currentUser = useAuthStore((s) => s.currentUser)
+  const [gameDayId, setGameDayId] = useState('')
   const [checkedInAtUtc, setCheckedInAtUtc] = useState(new Date().toISOString())
   const [latitude, setLatitude] = useState('')
   const [longitude, setLongitude] = useState('')
@@ -53,24 +42,27 @@ export function CheckinsPage() {
     type: 'success' | 'error'
     message: string
   } | null>(null)
-  const [cancellingCheckinId, setCancellingCheckinId] = useState<string | null>(null)
 
-  const byGameDay = useCheckinsByGameDay(selectedGameDayId ?? undefined)
-  const byPlayer = useCheckinsByPlayer(selectedPlayerId ?? undefined)
   const playersQuery = useCheckinPlayers()
   const gameDaysQuery = useCheckinGameDays()
   const create = useCreateCheckin()
-  const cancel = useCancelCheckin()
+  const currentPlayer = useMemo(
+    () =>
+      (playersQuery.data ?? []).find(
+        (player) => player.isActive && player.userId === currentUser?.id,
+      ) ?? null,
+    [currentUser?.id, playersQuery.data],
+  )
 
-  const activeQuery = selectedPlayerId ? byPlayer : byGameDay
+  const byPlayer = useCheckinsByPlayer(currentPlayer?.id)
+
   const activeErrorCode =
-    create.errorCode ?? cancel.errorCode ?? (activeQuery.error as { response?: { data?: { title?: string } } } | null)?.response?.data?.title ?? null
+    create.errorCode ?? (byPlayer.error as { response?: { data?: { title?: string } } } | null)?.response?.data?.title ?? null
 
   const list = useMemo(() => {
-    const source = activeQuery.data ?? []
-    if (filter === 'all') return source
+    const source = byPlayer.data ?? []
     return source.filter((item) => item.isActive)
-  }, [activeQuery.data, filter])
+  }, [byPlayer.data])
 
   const useCurrentLocation = () => {
     setFormError(null)
@@ -97,8 +89,13 @@ export function CheckinsPage() {
     setFormError(null)
     setActionFeedback(null)
 
+    if (!currentPlayer?.id) {
+      setFormError('Voce ainda nao possui perfil de jogador ativo para realizar check-in.')
+      return
+    }
+
     const parsed = checkinFormSchema.safeParse({
-      playerId,
+      playerId: currentPlayer.id,
       gameDayId,
       checkedInAtUtc,
       latitude: Number(latitude),
@@ -109,9 +106,6 @@ export function CheckinsPage() {
       setFormError(parsed.error.issues[0]?.message ?? 'Dados inválidos para check-in.')
       return
     }
-
-    setSelectedPlayerId(parsed.data.playerId)
-    setSelectedGameDayId(parsed.data.gameDayId)
 
     create.createCheckin(parsed.data, {
       onSuccess: () => {
@@ -130,37 +124,7 @@ export function CheckinsPage() {
       },
     })
   }
-
-  const handleCancel = (id: string, checkinPlayerId: string, checkinGameDayId: string) => {
-    setActionFeedback(null)
-    setCancellingCheckinId(id)
-
-    cancel.cancelCheckin(
-      { id, playerId: checkinPlayerId, gameDayId: checkinGameDayId },
-      {
-        onSuccess: () => {
-          setActionFeedback({
-            type: 'success',
-            message: 'Check-in cancelado com sucesso.',
-          })
-        },
-        onError: (error) => {
-          const errorCode = getErrorCode(error)
-          setActionFeedback({
-            type: 'error',
-            message: resolveErrorMessage(errorCode),
-          })
-        },
-        onSettled: () => {
-          setCancellingCheckinId(null)
-        },
-      },
-    )
-  }
-
-  const loadingMessage = selectedPlayerId
-    ? 'Carregando check-ins do jogador...'
-    : 'Carregando check-ins por dia de jogo...'
+  const loadingMessage = 'Carregando seus check-ins...'
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
@@ -185,18 +149,14 @@ export function CheckinsPage() {
       ) : null}
 
       <CheckinForm
-        playerId={playerId}
         gameDayId={gameDayId}
-        playerOptions={(playersQuery.data ?? []).filter((player) => player.isActive)}
         gameDayOptions={gameDaysQuery.data ?? []}
-        isPlayersLoading={playersQuery.isLoading}
         isGameDaysLoading={gameDaysQuery.isLoading}
         latitude={latitude}
         longitude={longitude}
-        isSubmitting={create.isPending || cancel.isPending}
+        isSubmitting={create.isPending}
         formError={formError}
         apiErrorMessage={activeErrorCode ? (ERROR_MESSAGES[activeErrorCode] ?? 'Erro ao processar check-in.') : null}
-        onPlayerIdChange={setPlayerId}
         onGameDayIdChange={setGameDayId}
         onLatitudeChange={setLatitude}
         onLongitudeChange={setLongitude}
@@ -206,14 +166,8 @@ export function CheckinsPage() {
 
       <CheckinList
         list={list}
-        filter={filter}
-        isLoading={activeQuery.isLoading}
-        isCancelling={cancel.isPending}
-        cancellingCheckinId={cancellingCheckinId}
+        isLoading={byPlayer.isLoading}
         loadingMessage={loadingMessage}
-        onFilterChange={setFilter}
-        onViewByGameDay={() => setSelectedPlayerId(null)}
-        onCancel={handleCancel}
       />
 
       <CheckinMap latitude={latitude} longitude={longitude} />

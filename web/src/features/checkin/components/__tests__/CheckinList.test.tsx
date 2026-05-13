@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { CheckinList } from '../CheckinList'
 
@@ -20,63 +19,40 @@ const mockList = [
 ]
 
 describe('CheckinList', () => {
-  it('deve renderizar lista e cancelar item', async () => {
-    const onCancel = vi.fn()
-
+  it('deve renderizar lista de check-ins', () => {
     render(
       <CheckinList
         list={mockList}
-        filter="active"
         isLoading={false}
-        isCancelling={false}
-        cancellingCheckinId={null}
         loadingMessage="Carregando..."
-        onFilterChange={vi.fn()}
-        onViewByGameDay={vi.fn()}
-        onCancel={onCancel}
       />,
     )
 
+    expect(screen.getByRole('heading', { name: /meus check-ins/i })).toBeInTheDocument()
     expect(screen.getByText(/player: player-1/i)).toBeInTheDocument()
-
-    await userEvent.click(screen.getByRole('button', { name: /cancelar/i }))
-
-    expect(onCancel).toHaveBeenCalledWith('checkin-1', 'player-1', 'gameday-1')
   })
 
   it('deve exibir estado vazio', () => {
     render(
       <CheckinList
         list={[]}
-        filter="active"
         isLoading={false}
-        isCancelling={false}
-        cancellingCheckinId={null}
         loadingMessage="Carregando..."
-        onFilterChange={vi.fn()}
-        onViewByGameDay={vi.fn()}
-        onCancel={vi.fn()}
       />,
     )
 
     expect(screen.getByText(/nenhum check-in encontrado/i)).toBeInTheDocument()
   })
 
-  it('deve exibir estado de cancelamento apenas para item em progresso', () => {
+  it('deve exibir loading quando consulta estiver pendente', () => {
     render(
       <CheckinList
         list={mockList}
-        filter="active"
-        isLoading={false}
-        isCancelling={true}
-        cancellingCheckinId="checkin-1"
+        isLoading={true}
         loadingMessage="Carregando..."
-        onFilterChange={vi.fn()}
-        onViewByGameDay={vi.fn()}
-        onCancel={vi.fn()}
       />,
     )
 
-    expect(screen.getByRole('button', { name: /cancelando/i })).toBeDisabled()
+    expect(screen.getByText(/carregando/i)).toBeInTheDocument()
   })
 })

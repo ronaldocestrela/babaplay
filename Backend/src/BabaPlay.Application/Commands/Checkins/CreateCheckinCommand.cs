@@ -9,4 +9,5 @@ public sealed record CreateCheckinCommand(
     Guid GameDayId,
     DateTime CheckedInAtUtc,
     double Latitude,
-    double Longitude) : ICommand<Result<CheckinResponse>>;
+    double Longitude,
+    string RequestedByUserId) : ICommand<Result<CheckinResponse>>;

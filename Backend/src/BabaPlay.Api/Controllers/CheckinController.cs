@@ -5,6 +5,8 @@ using BabaPlay.Application.Interfaces;
 using BabaPlay.Application.Queries.Checkins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace BabaPlay.Api.Controllers;
 
@@ -38,22 +40,29 @@ public sealed class CheckinController : ControllerBase
     /// <response code="422">Validation/business rule violation.</response>
     [HttpPost]
     [ProducesResponseType(typeof(CheckinResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Create([FromBody] CreateCheckinRequest request, CancellationToken ct)
     {
+        var requestedByUserId = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+            ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? string.Empty;
+
         var result = await _createHandler.HandleAsync(new CreateCheckinCommand(
             request.PlayerId,
             request.GameDayId,
             request.CheckedInAtUtc,
             request.Latitude,
-            request.Longitude), ct);
+            request.Longitude,
+            requestedByUserId), ct);
 
         if (!result.IsSuccess)
         {
             var statusCode = result.ErrorCode switch
             {
+                "FORBIDDEN" => StatusCodes.Status403Forbidden,
                 "PLAYER_NOT_FOUND" => StatusCodes.Status404NotFound,
                 "GAMEDAY_NOT_FOUND" => StatusCodes.Status404NotFound,
                 "CHECKIN_ALREADY_EXISTS" => StatusCodes.Status409Conflict,
@@ -94,16 +103,24 @@ public sealed class CheckinController : ControllerBase
     /// <response code="404">Check-in not found.</response>
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Cancel(Guid id, CancellationToken ct)
     {
-        var result = await _cancelHandler.HandleAsync(new CancelCheckinCommand(id), ct);
+        var requestedByUserId = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+            ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? string.Empty;
+
+        var result = await _cancelHandler.HandleAsync(new CancelCheckinCommand(id, requestedByUserId), ct);
 
         if (!result.IsSuccess)
         {
-            var statusCode = result.ErrorCode == "CHECKIN_NOT_FOUND"
-                ? StatusCodes.Status404NotFound
-                : StatusCodes.Status422UnprocessableEntity;
+            var statusCode = result.ErrorCode switch
+            {
+                "FORBIDDEN" => StatusCodes.Status403Forbidden,
+                "CHECKIN_NOT_FOUND" => StatusCodes.Status404NotFound,
+                _ => StatusCodes.Status422UnprocessableEntity,
+            };
 
             return StatusCode(statusCode, new ProblemDetails
             {

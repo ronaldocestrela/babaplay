@@ -2,50 +2,47 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CheckinsPage } from '../CheckinsPage'
-import { useCheckinStore } from '@/features/checkin/store/checkinStore'
+import { useAuthStore } from '@/features/auth/store/authStore'
 
 vi.mock('@/features/checkin/hooks', () => ({
   useCheckinPlayers: vi.fn(),
   useCheckinGameDays: vi.fn(),
-  useCheckinsByGameDay: vi.fn(),
   useCheckinsByPlayer: vi.fn(),
   useCreateCheckin: vi.fn(),
-  useCancelCheckin: vi.fn(),
 }))
 
 import {
-  useCancelCheckin,
   useCheckinGameDays,
   useCheckinPlayers,
-  useCheckinsByGameDay,
   useCheckinsByPlayer,
   useCreateCheckin,
 } from '@/features/checkin/hooks'
 
 const createCheckin = vi.fn()
-const cancelCheckin = vi.fn()
 
 describe('CheckinsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     createCheckin.mockReset()
-    cancelCheckin.mockReset()
 
     createCheckin.mockImplementation((_, options) => {
       options?.onSuccess?.()
     })
 
-    cancelCheckin.mockImplementation((_, options) => {
-      options?.onSuccess?.()
-      options?.onSettled?.()
+    useAuthStore.setState({
+      currentUser: {
+        id: 'user-123',
+        email: 'player@example.com',
+        roles: ['Player'],
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
     })
-
-    useCheckinStore.getState().reset()
 
     vi.mocked(useCheckinPlayers).mockReturnValue({
       data: [
-        { id: 'player-1', name: 'Joao Silva', isActive: true },
-        { id: 'player-2', name: 'Carlos Lima', isActive: true },
+        { id: 'player-1', userId: 'user-123', name: 'Joao Silva', isActive: true },
+        { id: 'player-2', userId: 'user-999', name: 'Carlos Lima', isActive: true },
       ],
       isLoading: false,
       error: null,
@@ -61,7 +58,7 @@ describe('CheckinsPage', () => {
       isError: false,
     } as ReturnType<typeof useCheckinGameDays>)
 
-    vi.mocked(useCheckinsByGameDay).mockReturnValue({
+    vi.mocked(useCheckinsByPlayer).mockReturnValue({
       data: [
         {
           id: 'checkin-1',
@@ -80,25 +77,10 @@ describe('CheckinsPage', () => {
       isLoading: false,
       error: null,
       isError: false,
-    } as ReturnType<typeof useCheckinsByGameDay>)
-
-    vi.mocked(useCheckinsByPlayer).mockReturnValue({
-      data: [],
-      isLoading: false,
-      error: null,
-      isError: false,
     } as ReturnType<typeof useCheckinsByPlayer>)
 
     vi.mocked(useCreateCheckin).mockReturnValue({
       createCheckin,
-      isPending: false,
-      isError: false,
-      error: null,
-      errorCode: null,
-    })
-
-    vi.mocked(useCancelCheckin).mockReturnValue({
-      cancelCheckin,
       isPending: false,
       isError: false,
       error: null,
@@ -109,12 +91,12 @@ describe('CheckinsPage', () => {
   it('deve renderizar título da página e lista de check-ins', () => {
     render(<CheckinsPage />)
 
-    expect(screen.getByRole('heading', { name: /check-ins/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: /check-ins/i })).toBeInTheDocument()
     expect(screen.getByText(/player: player-1/i)).toBeInTheDocument()
   })
 
   it('deve exibir erro de acesso quando query retorna forbidden', () => {
-    vi.mocked(useCheckinsByGameDay).mockReturnValue({
+    vi.mocked(useCheckinsByPlayer).mockReturnValue({
       data: [],
       isLoading: false,
       error: {
@@ -123,17 +105,16 @@ describe('CheckinsPage', () => {
         },
       },
       isError: true,
-    } as ReturnType<typeof useCheckinsByGameDay>)
+    } as ReturnType<typeof useCheckinsByPlayer>)
 
     render(<CheckinsPage />)
 
     expect(screen.getByText(/perfil de acesso/i)).toBeInTheDocument()
   })
 
-  it('deve submeter criação de check-in com dados válidos', async () => {
+  it('deve submeter criação de check-in do usuário logado com dados válidos', async () => {
     render(<CheckinsPage />)
 
-    await userEvent.selectOptions(screen.getByLabelText(/jogador/i), 'player-2')
     await userEvent.selectOptions(screen.getByLabelText(/dia de jogo/i), 'gameday-1')
     await userEvent.type(screen.getByLabelText(/latitude/i), '-23.5505')
     await userEvent.type(screen.getByLabelText(/longitude/i), '-46.6333')
@@ -141,15 +122,29 @@ describe('CheckinsPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /registrar check-in/i }))
 
     expect(createCheckin).toHaveBeenCalledTimes(1)
+    expect(createCheckin).toHaveBeenCalledWith(
+      expect.objectContaining({ playerId: 'player-1' }),
+      expect.any(Object),
+    )
     expect(screen.getByText(/check-in registrado com sucesso/i)).toBeInTheDocument()
   })
 
-  it('deve exibir feedback de sucesso ao cancelar check-in', async () => {
+  it('deve exibir mensagem quando usuário não possui perfil de jogador ativo', async () => {
+    vi.mocked(useCheckinPlayers).mockReturnValue({
+      data: [{ id: 'player-2', userId: 'user-999', name: 'Carlos Lima', isActive: true }],
+      isLoading: false,
+      error: null,
+      isError: false,
+    } as ReturnType<typeof useCheckinPlayers>)
+
     render(<CheckinsPage />)
 
-    await userEvent.click(screen.getByRole('button', { name: /cancelar/i }))
+    await userEvent.selectOptions(screen.getByLabelText(/dia de jogo/i), 'gameday-1')
+    await userEvent.type(screen.getByLabelText(/latitude/i), '-23.5505')
+    await userEvent.type(screen.getByLabelText(/longitude/i), '-46.6333')
+    await userEvent.click(screen.getByRole('button', { name: /registrar check-in/i }))
 
-    expect(cancelCheckin).toHaveBeenCalledTimes(1)
-    expect(screen.getByText(/check-in cancelado com sucesso/i)).toBeInTheDocument()
+    expect(createCheckin).not.toHaveBeenCalled()
+    expect(screen.getByText(/voce ainda nao possui perfil de jogador ativo/i)).toBeInTheDocument()
   })
 })

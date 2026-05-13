@@ -1,19 +1,15 @@
 import { type FormEvent } from 'react'
-import type { CheckinGameDayOption, CheckinPlayerOption } from '../types'
+import type { CheckinGameDayOption } from '../types'
 
 interface CheckinFormProps {
-  playerId: string
   gameDayId: string
-  playerOptions: CheckinPlayerOption[]
   gameDayOptions: CheckinGameDayOption[]
-  isPlayersLoading: boolean
   isGameDaysLoading: boolean
   latitude: string
   longitude: string
   isSubmitting: boolean
   formError: string | null
   apiErrorMessage: string | null
-  onPlayerIdChange: (value: string) => void
   onGameDayIdChange: (value: string) => void
   onLatitudeChange: (value: string) => void
   onLongitudeChange: (value: string) => void
@@ -22,18 +18,14 @@ interface CheckinFormProps {
 }
 
 export function CheckinForm({
-  playerId,
   gameDayId,
-  playerOptions,
   gameDayOptions,
-  isPlayersLoading,
   isGameDaysLoading,
   latitude,
   longitude,
   isSubmitting,
   formError,
   apiErrorMessage,
-  onPlayerIdChange,
   onGameDayIdChange,
   onLatitudeChange,
   onLongitudeChange,
@@ -43,28 +35,9 @@ export function CheckinForm({
   return (
     <section className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 space-y-4">
       <h2 className="text-lg font-medium text-on-surface">Novo check-in</h2>
+      <p className="text-sm text-on-surface-variant">Seu check-in sera registrado no seu perfil de jogador.</p>
 
       <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={onSubmit} noValidate>
-        <div className="space-y-1">
-          <label htmlFor="checkin-player-id" className="text-sm text-on-surface">
-            Jogador
-          </label>
-          <select
-            id="checkin-player-id"
-            value={playerId}
-            onChange={(event) => onPlayerIdChange(event.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-outline-variant bg-surface"
-            disabled={isPlayersLoading || isSubmitting}
-          >
-            <option value="">{isPlayersLoading ? 'Carregando jogadores...' : 'Selecione um jogador'}</option>
-            {playerOptions.map((player) => (
-              <option key={player.id} value={player.id}>
-                {player.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
         <div className="space-y-1">
           <label htmlFor="checkin-gameday-id" className="text-sm text-on-surface">
             Dia de jogo

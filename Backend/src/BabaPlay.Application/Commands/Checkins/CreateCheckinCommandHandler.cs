@@ -41,6 +41,9 @@ public sealed class CreateCheckinCommandHandler
         if (!player.IsActive)
             return Result<CheckinResponse>.Fail("PLAYER_INACTIVE", "Player is inactive.");
 
+        if (!Guid.TryParse(cmd.RequestedByUserId, out var requestedByUserId) || requestedByUserId != player.UserId)
+            return Result<CheckinResponse>.Fail("FORBIDDEN", "You are not allowed to perform check-in for this player.");
+
         var gameDay = await _gameDayRepository.GetByIdAsync(cmd.GameDayId, ct);
         if (gameDay is null)
             return Result<CheckinResponse>.Fail("GAMEDAY_NOT_FOUND", "Game day was not found.");

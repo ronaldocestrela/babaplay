@@ -22,6 +22,7 @@ export interface CreateCheckinRequest {
 
 export interface CheckinPlayerOption {
   id: string
+  userId: string
   name: string
   isActive: boolean
 }
