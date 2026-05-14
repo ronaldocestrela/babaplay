@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CheckinsPage } from '../CheckinsPage'
 import { useAuthStore } from '@/features/auth/store/authStore'
+import { ERROR_CODES } from '@/core/constants/errorCodes'
 
 vi.mock('@/features/checkin/hooks', () => ({
   useCheckinPlayers: vi.fn(),
@@ -238,5 +239,80 @@ describe('CheckinsPage', () => {
 
     expect(screen.getByText(/player: player-1/i)).toBeInTheDocument()
     expect(screen.queryByText(/player: player-inactive/i)).not.toBeInTheDocument()
+  })
+
+  it('deve preencher latitude e longitude ao usar geolocalização com sucesso', async () => {
+    Object.defineProperty(global.navigator, 'geolocation', {
+      configurable: true,
+      value: {
+        getCurrentPosition: (success: (value: { coords: { latitude: number; longitude: number } }) => void) => {
+          success({ coords: { latitude: -23.1234, longitude: -46.9876 } })
+        },
+      },
+    })
+
+    render(<CheckinsPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /usar minha localização/i }))
+
+    expect(screen.getByLabelText(/latitude/i)).toHaveValue(-23.1234)
+    expect(screen.getByLabelText(/longitude/i)).toHaveValue(-46.9876)
+  })
+
+  it('deve exibir loading da lista quando consulta de check-ins está pendente', () => {
+    vi.mocked(useCheckinsByPlayer).mockReturnValue({
+      data: [],
+      isLoading: true,
+      error: null,
+      isError: false,
+    } as ReturnType<typeof useCheckinsByPlayer>)
+
+    render(<CheckinsPage />)
+
+    expect(screen.getByText(/carregando seus check-ins/i)).toBeInTheDocument()
+  })
+
+  it('deve exibir mensagem de erro da API quando query retorna FORBIDDEN', () => {
+    vi.mocked(useCheckinsByPlayer).mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: {
+        response: {
+          data: { title: ERROR_CODES.FORBIDDEN },
+        },
+      },
+      isError: true,
+    } as ReturnType<typeof useCheckinsByPlayer>)
+
+    render(<CheckinsPage />)
+
+    expect(screen.getByText(/indisponível para o seu perfil de acesso/i)).toBeInTheDocument()
+  })
+
+  it('deve exibir fallback genérico quando criação falha sem código de erro', async () => {
+    createCheckin.mockImplementation((_payload, options) => {
+      options?.onError?.({})
+    })
+
+    render(<CheckinsPage />)
+
+    await userEvent.selectOptions(screen.getByLabelText(/dia de jogo/i), 'gameday-1')
+    await userEvent.type(screen.getByLabelText(/latitude/i), '-23.5505')
+    await userEvent.type(screen.getByLabelText(/longitude/i), '-46.6333')
+    await userEvent.click(screen.getByRole('button', { name: /registrar check-in/i }))
+
+    expect(screen.getByText(/não foi possível concluir a ação/i)).toBeInTheDocument()
+  })
+
+  it('deve exibir erro de validação quando coordenadas são inválidas', async () => {
+    render(<CheckinsPage />)
+
+    await userEvent.selectOptions(screen.getByLabelText(/dia de jogo/i), 'gameday-1')
+    await userEvent.type(screen.getByLabelText(/latitude/i), '999')
+    await userEvent.type(screen.getByLabelText(/longitude/i), '-46.6333')
+    await userEvent.click(screen.getByRole('button', { name: /registrar check-in/i }))
+
+    expect(createCheckin).not.toHaveBeenCalled()
+    expect(screen.getByText(/latitude inválida/i)).toBeInTheDocument()
   })
 })

@@ -38,6 +38,15 @@ describe('checkin hooks', () => {
     expect(result.current.data?.length).toBeGreaterThan(0)
   })
 
+  it('não deve buscar check-ins por game day sem id', async () => {
+    const { result } = renderHook(() => useCheckinsByGameDay(undefined), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    expect(result.current.data).toBeUndefined()
+  })
+
   it('deve listar check-ins por jogador', async () => {
     const { result } = renderHook(() => useCheckinsByPlayer('player-1'), {
       wrapper: createWrapper(),
@@ -45,6 +54,15 @@ describe('checkin hooks', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.length).toBeGreaterThan(0)
+  })
+
+  it('não deve buscar check-ins por jogador sem id', async () => {
+    const { result } = renderHook(() => useCheckinsByPlayer(undefined), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    expect(result.current.data).toBeUndefined()
   })
 
   it('deve criar check-in', async () => {
@@ -107,6 +125,17 @@ describe('checkin hooks', () => {
         gameDayId: 'gameday-1',
         playerId: 'player-1',
       })
+    })
+
+    await waitFor(() => expect(result.current.isPending).toBe(false))
+    expect(result.current.isError).toBe(false)
+  })
+
+  it('deve cancelar check-in sem gameDayId/playerId opcionais', async () => {
+    const { result } = renderHook(() => useCancelCheckin(), { wrapper: createWrapper() })
+
+    act(() => {
+      result.current.cancelCheckin({ id: 'checkin-1' })
     })
 
     await waitFor(() => expect(result.current.isPending).toBe(false))

@@ -27,6 +27,15 @@ describe('match hooks', () => {
     expect(result.current.data?.id).toBe('match-1')
   })
 
+  it('não deve executar busca de partida sem id', async () => {
+    const { result } = renderHook(() => useMatch(undefined), { wrapper: createWrapper() })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+    expect(result.current.data).toBeUndefined()
+  })
+
   it('deve listar game days e times para formulário', async () => {
     const { result: gameDays } = renderHook(() => useMatchGameDays(), { wrapper: createWrapper() })
     const { result: teams } = renderHook(() => useMatchTeams(), { wrapper: createWrapper() })

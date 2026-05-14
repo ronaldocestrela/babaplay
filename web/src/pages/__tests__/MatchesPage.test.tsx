@@ -274,4 +274,37 @@ describe('MatchesPage', () => {
     expect(createMatch).not.toHaveBeenCalled()
     expect(screen.getByText(/devem ser diferentes/i)).toBeInTheDocument()
   })
+
+  it('deve abrir modal de edição quando item não está mais na lista', async () => {
+    render(<MatchesPage />)
+
+    await userEvent.click(screen.getAllByRole('button', { name: /editar/i })[1]!)
+    expect(screen.getByRole('heading', { name: /editar partida/i })).toBeInTheDocument()
+  })
+
+  it('deve bloquear submit em modo edição sem partida selecionada', async () => {
+    useMatchStore.setState({
+      isModalOpen: true,
+      modalMode: 'edit',
+      selectedMatchId: 'match-does-not-exist',
+    })
+
+    render(<MatchesPage />)
+
+    await userEvent.selectOptions(screen.getByLabelText(/dia de jogo/i), 'gameday-1')
+    await userEvent.selectOptions(screen.getByLabelText(/time mandante/i), 'team-1')
+    await userEvent.selectOptions(screen.getByLabelText(/time visitante/i), 'team-2')
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }))
+
+    expect(updateMatch).not.toHaveBeenCalled()
+  })
+
+  it('deve filtrar por status pending', async () => {
+    render(<MatchesPage />)
+
+    await userEvent.type(screen.getByPlaceholderText(/buscar por time ou status/i), 'pending')
+
+    expect(screen.getByText(/time azul x time laranja/i)).toBeInTheDocument()
+    expect(screen.queryByText(/time laranja x time azul/i)).not.toBeInTheDocument()
+  })
 })

@@ -26,6 +26,15 @@ describe('players hooks', () => {
     expect(result.current.data?.id).toBe('player-1')
   })
 
+  it('não deve executar busca de jogador sem id', async () => {
+    const { result } = renderHook(() => usePlayer(undefined), { wrapper: createWrapper() })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+    expect(result.current.data).toBeUndefined()
+  })
+
   it('deve listar posições com usePositions', async () => {
     const { result } = renderHook(() => usePositions(), { wrapper: createWrapper() })
 

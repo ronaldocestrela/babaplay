@@ -501,4 +501,97 @@ describe('PlayersPage', () => {
     expect(updatePlayer).not.toHaveBeenCalled()
   })
 
+  it('deve exibir lista vazia quando filtro não encontra jogadores', async () => {
+    vi.mocked(usePlayers).mockReturnValue({
+      data: [
+        {
+          id: 'player-1',
+          userId: 'user-1',
+          name: 'Joao Silva',
+          nickname: 'JS10',
+          phone: '11999990001',
+          dateOfBirth: null,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof usePlayers>)
+
+    renderPlayersPage()
+
+    await userEvent.type(screen.getByPlaceholderText(/buscar por nome/i), 'nao-encontra')
+
+    expect(screen.getByText(/nenhum jogador encontrado/i)).toBeInTheDocument()
+  })
+
+  it('deve exibir fallback quando posição do jogador não existe no catálogo', () => {
+    vi.mocked(usePlayers).mockReturnValue({
+      data: [
+        {
+          id: 'player-1',
+          userId: 'user-1',
+          name: 'Joao Silva',
+          nickname: null,
+          phone: null,
+          dateOfBirth: null,
+          positionIds: ['position-not-found'],
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof usePlayers>)
+
+    renderPlayersPage()
+
+    expect(screen.getByText(/posição não encontrada/i)).toBeInTheDocument()
+  })
+
+  it('deve bloquear criação quando userId não é informado', async () => {
+    vi.mocked(usePlayers).mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof usePlayers>)
+
+    usePlayerStore.getState().openCreateModal()
+    renderPlayersPage()
+
+    await userEvent.type(screen.getByLabelText(/^nome$/i), 'Novo Jogador')
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }))
+
+    expect(createPlayer).not.toHaveBeenCalled()
+  })
+
+  it('deve exibir fallback de erro ao enviar convite quando código é desconhecido', async () => {
+    vi.mocked(usePlayers).mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof usePlayers>)
+
+    vi.mocked(invitationService.send).mockRejectedValue({
+      response: {
+        data: { title: 'ANY_UNKNOWN_CODE' },
+      },
+    })
+
+    renderPlayersPage()
+
+    await userEvent.click(screen.getByRole('button', { name: /enviar convite por e-mail/i }))
+    await userEvent.type(screen.getByLabelText(/e-mail do convidado/i), 'invitee@club.com')
+    await userEvent.click(screen.getByRole('button', { name: /^enviar convite$/i }))
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/não foi possível enviar o convite/i).length).toBeGreaterThan(0)
+    })
+  })
+
 })

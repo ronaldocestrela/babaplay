@@ -64,4 +64,19 @@ describe('useLogout', () => {
       expect(mockNavigate).toHaveBeenCalledWith({ to: '/login' })
     })
   })
+
+  it('deve fazer logout mesmo sem refreshToken armazenado', async () => {
+    useAuthStore.getState().setTokens({ ...mockAuthResponse, refreshToken: null })
+
+    const { result } = renderHook(() => useLogout(), { wrapper: createWrapper() })
+
+    act(() => {
+      result.current.logout()
+    })
+
+    await waitFor(() => {
+      expect(useAuthStore.getState().isAuthenticated).toBe(false)
+      expect(mockNavigate).toHaveBeenCalledWith({ to: '/login' })
+    })
+  })
 })

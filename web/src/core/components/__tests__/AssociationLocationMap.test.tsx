@@ -45,4 +45,28 @@ describe('AssociationLocationMap', () => {
 
     expect(onCoordinateChange).toHaveBeenCalledWith('-23.567890', '-46.678910')
   })
+
+  it('não deve renderizar marcador quando coordenadas não são numéricas', () => {
+    render(
+      <AssociationLocationMap
+        latitude="abc"
+        longitude="def"
+        onCoordinateChange={() => {}}
+      />,
+    )
+
+    expect(screen.queryByTestId('leaflet-marker')).not.toBeInTheDocument()
+  })
+
+  it('não deve renderizar marcador quando coordenadas estão fora do intervalo válido', () => {
+    render(
+      <AssociationLocationMap
+        latitude="91"
+        longitude="181"
+        onCoordinateChange={() => {}}
+      />,
+    )
+
+    expect(screen.queryByTestId('leaflet-marker')).not.toBeInTheDocument()
+  })
 })

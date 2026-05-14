@@ -303,4 +303,70 @@ describe('TeamsPage', () => {
     expect(updateTeamPlayers).not.toHaveBeenCalled()
     expect(screen.getByText(/excede o limite do time/i)).toBeInTheDocument()
   })
+
+  it('deve abrir modal de edição mesmo quando time selecionado não existe na lista', async () => {
+    render(<TeamsPage />)
+
+    await userEvent.click(screen.getAllByRole('button', { name: /editar/i })[0]!)
+    expect(screen.getByRole('heading', { name: /editar time/i })).toBeInTheDocument()
+  })
+
+  it('deve bloquear submit em modo edição sem selectedTeamId', async () => {
+    useTeamStore.setState({
+      isTeamModalOpen: true,
+      modalMode: 'edit',
+      selectedTeamId: null,
+    })
+
+    render(<TeamsPage />)
+
+    await userEvent.type(screen.getByLabelText(/nome/i), 'Time Sem Id')
+    await userEvent.clear(screen.getByLabelText(/máximo de jogadores/i))
+    await userEvent.type(screen.getByLabelText(/máximo de jogadores/i), '7')
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }))
+
+    expect(updateTeam).not.toHaveBeenCalled()
+  })
+
+  it('deve exibir erro de jogadores duplicados no elenco quando estado inicial tem duplicidade', async () => {
+    vi.mocked(useTeams).mockReturnValue({
+      data: [
+        {
+          id: 'team-1',
+          tenantId: 'tenant-1',
+          name: 'Time Azul',
+          maxPlayers: 8,
+          isActive: true,
+          createdAt: '2026-05-05T10:00:00.000Z',
+          playerIds: ['player-1', 'player-1'],
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useTeams>)
+
+    vi.mocked(useTeam).mockReturnValue({
+      data: {
+        id: 'team-1',
+        tenantId: 'tenant-1',
+        name: 'Time Azul',
+        maxPlayers: 8,
+        isActive: true,
+        createdAt: '2026-05-05T10:00:00.000Z',
+        playerIds: ['player-1', 'player-1'],
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useTeam>)
+
+    render(<TeamsPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /elenco/i }))
+    await userEvent.click(screen.getByRole('button', { name: /salvar elenco/i }))
+
+    expect(updateTeamPlayers).not.toHaveBeenCalled()
+    expect(screen.getByText(/duplicados não são permitidos/i)).toBeInTheDocument()
+  })
 })

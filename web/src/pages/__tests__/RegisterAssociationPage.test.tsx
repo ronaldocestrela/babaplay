@@ -240,4 +240,122 @@ describe('RegisterAssociationPage', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith({ to: '/login' })
   })
+
+  it('não deve consultar CEP quando formato é inválido', async () => {
+    render(<RegisterAssociationPage />)
+
+    await userEvent.type(screen.getByLabelText(/cep/i), '123')
+    await userEvent.click(screen.getByRole('button', { name: /buscar cep/i }))
+
+    expect(lookupAddressByZipCode).not.toHaveBeenCalled()
+  })
+
+  it('deve exibir erro quando lookup de CEP lança exceção', async () => {
+    vi.mocked(lookupAddressByZipCode).mockRejectedValue(new Error('zip down'))
+
+    render(<RegisterAssociationPage />)
+
+    await userEvent.type(screen.getByLabelText(/cep/i), '04101-300')
+    await userEvent.click(screen.getByRole('button', { name: /buscar cep/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/falha ao consultar o cep/i)).toBeInTheDocument()
+    })
+  })
+
+  it('deve exibir erro quando endereço não pode ser geolocalizado', async () => {
+    vi.mocked(lookupAddressByZipCode).mockResolvedValue({
+      street: 'Rua Vergueiro',
+      neighborhood: 'Vila Mariana',
+      city: 'Sao Paulo',
+      state: 'SP',
+    })
+    vi.mocked(geocodeAddress).mockResolvedValue(null)
+
+    render(<RegisterAssociationPage />)
+
+    await userEvent.type(screen.getByLabelText(/cep/i), '04101-300')
+    await userEvent.click(screen.getByRole('button', { name: /buscar cep/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/não foi possível localizar esse endereço no mapa/i)).toBeInTheDocument()
+    })
+  })
+
+  it('deve exibir mensagem de fallback quando API falha com código desconhecido', async () => {
+    createAssociation.mockImplementation((_payload, options) => {
+      options?.onError?.()
+    })
+
+    vi.mocked(useCreateAssociation).mockReturnValue({
+      createAssociation,
+      isPending: false,
+      isError: true,
+      error: null,
+      errorCode: 'ANY_UNKNOWN_CODE',
+    })
+
+    render(<RegisterAssociationPage />)
+
+    await fillRequiredAssociationFields()
+    await userEvent.type(screen.getByLabelText(/nome da associação/i), 'Associação Atlética')
+    await userEvent.type(screen.getByLabelText(/^slug$/i), 'associacao-atletica')
+    await userEvent.type(screen.getByLabelText(/email do admin inicial/i), 'admin@atletica.com')
+    await userEvent.type(screen.getByLabelText(/senha do admin inicial/i), 'Admin1234')
+    await userEvent.type(screen.getByLabelText(/confirmar senha do admin/i), 'Admin1234')
+    await userEvent.click(screen.getByRole('button', { name: /criar associação/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/falha ao criar associação/i)).toBeInTheDocument()
+    })
+  })
+
+  it('não deve tentar geocodificar quando endereço retornado pelo CEP está incompleto', async () => {
+    vi.mocked(lookupAddressByZipCode).mockResolvedValue({
+      street: '',
+      neighborhood: 'Centro',
+      city: '',
+      state: 'SP',
+    })
+
+    render(<RegisterAssociationPage />)
+
+    await userEvent.type(screen.getByLabelText(/cep/i), '04101-300')
+    await userEvent.click(screen.getByRole('button', { name: /buscar cep/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/endereço preenchido automaticamente com base no cep/i)).toBeInTheDocument()
+    })
+    expect(geocodeAddress).not.toHaveBeenCalled()
+  })
+
+  it('deve exibir mensagem de geocodificação pendente enquanto localização é resolvida', async () => {
+    let resolveGeocode: ((value: { latitude: number; longitude: number } | null) => void) | null = null
+
+    vi.mocked(lookupAddressByZipCode).mockResolvedValue({
+      street: 'Rua Vergueiro',
+      neighborhood: 'Vila Mariana',
+      city: 'Sao Paulo',
+      state: 'SP',
+    })
+    vi.mocked(geocodeAddress).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveGeocode = resolve
+        }),
+    )
+
+    render(<RegisterAssociationPage />)
+
+    await userEvent.type(screen.getByLabelText(/cep/i), '04101-300')
+    await userEvent.click(screen.getByRole('button', { name: /buscar cep/i }))
+
+    expect(screen.getByText(/localizando coordenadas do endereço/i)).toBeInTheDocument()
+
+    resolveGeocode?.({ latitude: -23.55, longitude: -46.63 })
+
+    await waitFor(() => {
+      expect(screen.getByText(/localização da associação atualizada automaticamente no mapa/i)).toBeInTheDocument()
+    })
+  })
 })

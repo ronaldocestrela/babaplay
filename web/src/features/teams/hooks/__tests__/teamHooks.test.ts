@@ -26,6 +26,15 @@ describe('team hooks', () => {
     expect(result.current.data?.id).toBe('team-1')
   })
 
+  it('não deve executar busca de time sem id', async () => {
+    const { result } = renderHook(() => useTeam(undefined), { wrapper: createWrapper() })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+    expect(result.current.data).toBeUndefined()
+  })
+
   it('deve listar jogadores para elenco', async () => {
     const { result } = renderHook(() => useTeamPlayers(), { wrapper: createWrapper() })
 
