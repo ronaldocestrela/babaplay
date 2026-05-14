@@ -27,6 +27,9 @@ public sealed class CheckinHubIntegrationTests : IClassFixture<PlayerWebApplicat
         var playerId = await CreatePlayerAsync(userId, "Hub Player");
         var gameDayId = await CreateGameDayAsync("Hub Day", DateTime.UtcNow.Date.AddDays(1).AddHours(10));
 
+        _client.DefaultRequestHeaders.Remove(TestAuthHandler.UserIdHeader);
+        _client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, userId.ToString());
+
         var createdTcs = new TaskCompletionSource<(Guid GameDayId, Guid PlayerId)>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         var connection = new HubConnectionBuilder()
