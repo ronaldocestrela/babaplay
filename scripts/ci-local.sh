@@ -78,7 +78,11 @@ run_frontend() {
   ok "Lint OK"
 
   step "Executando testes com cobertura (>= 80%)..."
-  (cd "$WEB_DIR" && yarn coverage)
+  (cd "$WEB_DIR" && yarn coverage \
+    --coverage.thresholds.lines=80 \
+    --coverage.thresholds.functions=80 \
+    --coverage.thresholds.statements=80 \
+    --coverage.thresholds.branches=70)
   ok "Testes e cobertura OK"
 
   echo -e "\n  Relatório: ${CYAN}file://$WEB_DIR/coverage/index.html${RESET}"

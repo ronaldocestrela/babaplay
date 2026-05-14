@@ -98,9 +98,11 @@ export function TenantSettingsPage() {
 
   const gameDayOptionErrorCode = createOptionErrorCode ?? changeOptionStatusErrorCode
 
+  // Hydration from remote tenant settings must run once data loads.
   useEffect(() => {
     if (!data) return
 
+    /* eslint-disable react-hooks/set-state-in-effect */
     setName(data.name)
     setPlayersPerTeam(data.playersPerTeam)
     setStreet(data.street ?? '')
@@ -111,6 +113,7 @@ export function TenantSettingsPage() {
     setZipCode(data.zipCode ?? '')
     setAssociationLatitude(data.associationLatitude?.toFixed(6) ?? '')
     setAssociationLongitude(data.associationLongitude?.toFixed(6) ?? '')
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [data])
 
   const resolveCoordinatesFromCurrentAddress = async (values?: {

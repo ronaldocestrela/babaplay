@@ -564,16 +564,16 @@ export const handlers = [
   http.put(`${BASE_URL}/api/v1/tenant/settings`, async ({ request }) => {
     const requestClone = request.clone()
 
-    let name = ''
-    let street = ''
-    let number = ''
-    let neighborhood = ''
-    let city = ''
-    let state = ''
-    let zipCode = ''
-    let associationLatitude = Number.NaN
-    let associationLongitude = Number.NaN
-    let playersPerTeam = 0
+    let name: string
+    let street: string
+    let number: string
+    let neighborhood: string
+    let city: string
+    let state: string
+    let zipCode: string
+    let associationLatitude: number
+    let associationLongitude: number
+    let playersPerTeam: number
 
     try {
       const formData = await request.formData()

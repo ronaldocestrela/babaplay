@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { AssociationLocationMap } from '@/core/components/AssociationLocationMap'
 import { ERROR_CODES } from '@/core/constants/errorCodes'
 import { geocodeAddress, lookupAddressByZipCode } from '@/core/services/addressLookup'
@@ -42,11 +42,11 @@ export function RegisterAssociationPage() {
   const { createAssociation, isPending, errorCode } = useCreateAssociation()
 
   const {
+    control,
     register,
     handleSubmit,
     setValue,
     getValues,
-    watch,
     trigger,
     formState: { errors },
   } = useForm<AssociationFormValues>({
@@ -68,8 +68,8 @@ export function RegisterAssociationPage() {
     },
   })
 
-  const watchedAssociationLatitude = watch('associationLatitude')
-  const watchedAssociationLongitude = watch('associationLongitude')
+  const watchedAssociationLatitude = useWatch({ control, name: 'associationLatitude' })
+  const watchedAssociationLongitude = useWatch({ control, name: 'associationLongitude' })
 
   const resolveCoordinatesFromCurrentAddress = async (values?: {
     street?: string
