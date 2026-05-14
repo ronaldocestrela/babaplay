@@ -76,6 +76,15 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
         return content;
     }
 
+    private sealed record TenantGameDayOptionResponse(
+        Guid Id,
+        Guid TenantId,
+        DayOfWeek DayOfWeek,
+        TimeOnly LocalStartTime,
+        bool IsActive,
+        DateTime CreatedAt,
+        DateTime? UpdatedAt);
+
     // ── POST /api/v1/tenant ────────────────────────────────────────────────
 
     [Fact]
@@ -293,6 +302,180 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
         request.Headers.Add("X-Tenant-Slug", slug);
         request.Headers.Add(TestAuthHandler.UserIdHeader, nonOwnerId);
         request.Headers.Add(TestAuthHandler.UserEmailHeader, "member@tenant.com");
+
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        problem.Should().NotBeNull();
+        problem!.Title.Should().Be("FORBIDDEN");
+    }
+
+    [Fact]
+    public async Task POST_TenantGameDayOption_AsOwner_ShouldReturn201()
+    {
+        var slug = $"settings-gdo-{Guid.NewGuid():N}"[..20];
+        await _client.PostAsync("/api/v1/tenant", BuildTenantCreateContent("Option Club", slug));
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/tenant/settings/game-day-options")
+        {
+            Content = JsonContent.Create(new
+            {
+                dayOfWeek = DayOfWeek.Tuesday,
+                localStartTime = new TimeOnly(20, 0),
+            }),
+        };
+        request.Headers.Authorization = new("Bearer", "test-token");
+        request.Headers.Add("X-Tenant-Slug", slug);
+
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var body = await response.Content.ReadFromJsonAsync<TenantGameDayOptionResponse>();
+        body.Should().NotBeNull();
+        body!.DayOfWeek.Should().Be(DayOfWeek.Tuesday);
+        body.LocalStartTime.Should().Be(new TimeOnly(20, 0));
+        body.IsActive.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task POST_TenantGameDayOption_DuplicateSlot_ShouldReturn409()
+    {
+        var slug = $"settings-gdo-dup-{Guid.NewGuid():N}"[..20];
+        await _client.PostAsync("/api/v1/tenant", BuildTenantCreateContent("Option Club", slug));
+
+        using var first = new HttpRequestMessage(HttpMethod.Post, "/api/v1/tenant/settings/game-day-options")
+        {
+            Content = JsonContent.Create(new
+            {
+                dayOfWeek = DayOfWeek.Thursday,
+                localStartTime = new TimeOnly(19, 30),
+            }),
+        };
+        first.Headers.Authorization = new("Bearer", "test-token");
+        first.Headers.Add("X-Tenant-Slug", slug);
+
+        var firstResponse = await _client.SendAsync(first);
+        firstResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        using var duplicate = new HttpRequestMessage(HttpMethod.Post, "/api/v1/tenant/settings/game-day-options")
+        {
+            Content = JsonContent.Create(new
+            {
+                dayOfWeek = DayOfWeek.Thursday,
+                localStartTime = new TimeOnly(19, 30),
+            }),
+        };
+        duplicate.Headers.Authorization = new("Bearer", "test-token");
+        duplicate.Headers.Add("X-Tenant-Slug", slug);
+
+        var response = await _client.SendAsync(duplicate);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        problem.Should().NotBeNull();
+        problem!.Title.Should().Be("TENANT_GAMEDAY_OPTION_ALREADY_EXISTS");
+    }
+
+    [Fact]
+    public async Task GET_TenantGameDayOptions_AsMember_ShouldReturn200WithList()
+    {
+        var slug = $"settings-gdo-list-{Guid.NewGuid():N}"[..20];
+        await _client.PostAsync("/api/v1/tenant", BuildTenantCreateContent("Option Club", slug));
+
+        using (var createRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/tenant/settings/game-day-options")
+        {
+            Content = JsonContent.Create(new
+            {
+                dayOfWeek = DayOfWeek.Saturday,
+                localStartTime = new TimeOnly(9, 0),
+            }),
+        })
+        {
+            createRequest.Headers.Authorization = new("Bearer", "test-token");
+            createRequest.Headers.Add("X-Tenant-Slug", slug);
+            var createResponse = await _client.SendAsync(createRequest);
+            createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        }
+
+        using var listRequest = new HttpRequestMessage(HttpMethod.Get, "/api/v1/tenant/settings/game-day-options");
+        listRequest.Headers.Authorization = new("Bearer", "test-token");
+        listRequest.Headers.Add("X-Tenant-Slug", slug);
+
+        var response = await _client.SendAsync(listRequest);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<List<TenantGameDayOptionResponse>>();
+        body.Should().NotBeNull();
+        body.Should().ContainSingle(x => x.DayOfWeek == DayOfWeek.Saturday && x.LocalStartTime == new TimeOnly(9, 0));
+    }
+
+    [Fact]
+    public async Task PUT_TenantGameDayOptionStatus_AsNonOwner_ShouldReturn403()
+    {
+        var slug = $"settings-gdo-forbid-{Guid.NewGuid():N}"[..20];
+        var create = await _client.PostAsync("/api/v1/tenant", BuildTenantCreateContent("Owner Club", slug));
+        var created = await create.Content.ReadFromJsonAsync<TenantResponse>();
+
+        Guid optionId;
+        using (var createOptionRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/tenant/settings/game-day-options")
+        {
+            Content = JsonContent.Create(new
+            {
+                dayOfWeek = DayOfWeek.Monday,
+                localStartTime = new TimeOnly(21, 0),
+            }),
+        })
+        {
+            createOptionRequest.Headers.Authorization = new("Bearer", "test-token");
+            createOptionRequest.Headers.Add("X-Tenant-Slug", slug);
+            var createOptionResponse = await _client.SendAsync(createOptionRequest);
+            createOptionResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+            var option = await createOptionResponse.Content.ReadFromJsonAsync<TenantGameDayOptionResponse>();
+            optionId = option!.Id;
+        }
+
+        var nonOwnerId = "member-user-id-2";
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+            if (await userManager.FindByIdAsync(nonOwnerId) is null)
+            {
+                var user = new ApplicationUser
+                {
+                    Id = nonOwnerId,
+                    UserName = "member2@tenant.com",
+                    Email = "member2@tenant.com",
+                    EmailConfirmed = true,
+                    IsActive = true,
+                };
+                var identityResult = await userManager.CreateAsync(user, "Member2@123456");
+                identityResult.Succeeded.Should().BeTrue();
+            }
+
+            db.UserTenants.Add(new UserTenant
+            {
+                UserId = nonOwnerId,
+                TenantId = created!.Id,
+                IsOwner = false,
+                JoinedAt = DateTime.UtcNow,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Put, $"/api/v1/tenant/settings/game-day-options/{optionId}/status")
+        {
+            Content = JsonContent.Create(new
+            {
+                isActive = false,
+            }),
+        };
+        request.Headers.Authorization = new("Bearer", "test-token");
+        request.Headers.Add("X-Tenant-Slug", slug);
+        request.Headers.Add(TestAuthHandler.UserIdHeader, nonOwnerId);
+        request.Headers.Add(TestAuthHandler.UserEmailHeader, "member2@tenant.com");
 
         var response = await _client.SendAsync(request);
 

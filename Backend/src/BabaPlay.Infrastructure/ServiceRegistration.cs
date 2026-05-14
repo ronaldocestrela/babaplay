@@ -199,6 +199,7 @@ public static class ServiceRegistration
         services.AddScoped<ITenantContext, RequestTenantContext>();
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IUserTenantRepository, UserTenantRepository>();
+        services.AddScoped<ITenantGameDayOptionRepository, TenantGameDayOptionRepository>();
         services.AddScoped<ITenantOwnerProvisioningService, TenantOwnerProvisioningService>();
         services.AddScoped<TenantDbContextFactory>();
         services.AddSingleton<ITenantProvisioningQueue, TenantProvisioningQueue>();

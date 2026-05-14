@@ -1,7 +1,9 @@
 using BabaPlay.Application.Commands.Tenants;
+using BabaPlay.Application.Commands.TenantGameDayOptions;
 using BabaPlay.Application.Common;
 using BabaPlay.Application.DTOs;
 using BabaPlay.Application.Interfaces;
+using BabaPlay.Application.Queries.TenantGameDayOptions;
 using BabaPlay.Application.Queries.Tenants;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -19,6 +21,9 @@ public sealed class TenantController : ControllerBase
     private readonly IQueryHandler<GetTenantStatusQuery, Result<TenantResponse>> _statusHandler;
     private readonly IQueryHandler<GetTenantSettingsQuery, Result<TenantResponse>> _settingsHandler;
     private readonly ICommandHandler<UpdateTenantSettingsCommand, Result<TenantResponse>> _updateSettingsHandler;
+    private readonly IQueryHandler<GetTenantGameDayOptionsQuery, Result<IReadOnlyList<TenantGameDayOptionResponse>>> _gameDayOptionsHandler;
+    private readonly ICommandHandler<CreateTenantGameDayOptionCommand, Result<TenantGameDayOptionResponse>> _createGameDayOptionHandler;
+    private readonly ICommandHandler<ChangeTenantGameDayOptionStatusCommand, Result<TenantGameDayOptionResponse>> _changeGameDayOptionStatusHandler;
     private readonly ITenantContext _tenantContext;
 
     public TenantController(
@@ -26,12 +31,18 @@ public sealed class TenantController : ControllerBase
         IQueryHandler<GetTenantStatusQuery, Result<TenantResponse>> statusHandler,
         IQueryHandler<GetTenantSettingsQuery, Result<TenantResponse>> settingsHandler,
         ICommandHandler<UpdateTenantSettingsCommand, Result<TenantResponse>> updateSettingsHandler,
+        IQueryHandler<GetTenantGameDayOptionsQuery, Result<IReadOnlyList<TenantGameDayOptionResponse>>> gameDayOptionsHandler,
+        ICommandHandler<CreateTenantGameDayOptionCommand, Result<TenantGameDayOptionResponse>> createGameDayOptionHandler,
+        ICommandHandler<ChangeTenantGameDayOptionStatusCommand, Result<TenantGameDayOptionResponse>> changeGameDayOptionStatusHandler,
         ITenantContext tenantContext)
     {
         _createHandler = createHandler;
         _statusHandler = statusHandler;
         _settingsHandler = settingsHandler;
         _updateSettingsHandler = updateSettingsHandler;
+        _gameDayOptionsHandler = gameDayOptionsHandler;
+        _createGameDayOptionHandler = createGameDayOptionHandler;
+        _changeGameDayOptionStatusHandler = changeGameDayOptionStatusHandler;
         _tenantContext = tenantContext;
     }
 
@@ -186,6 +197,106 @@ public sealed class TenantController : ControllerBase
 
         return Ok(result.Value);
     }
+
+    [Authorize(Policy = AuthorizationPolicyNames.TenantMember)]
+    [HttpGet("settings/game-day-options")]
+    [ProducesResponseType(typeof(IReadOnlyList<TenantGameDayOptionResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetGameDayOptions([FromQuery] bool? isActive, CancellationToken ct)
+    {
+        var result = await _gameDayOptionsHandler.HandleAsync(
+            new GetTenantGameDayOptionsQuery(_tenantContext.TenantId, isActive),
+            ct);
+
+        if (!result.IsSuccess)
+        {
+            return StatusCode(StatusCodes.Status422UnprocessableEntity, new ProblemDetails
+            {
+                Status = StatusCodes.Status422UnprocessableEntity,
+                Title = result.ErrorCode,
+                Detail = result.ErrorMessage,
+            });
+        }
+
+        return Ok(result.Value);
+    }
+
+    [Authorize(Policy = AuthorizationPolicyNames.TenantMember)]
+    [HttpPost("settings/game-day-options")]
+    [ProducesResponseType(typeof(TenantGameDayOptionResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> CreateGameDayOption([FromBody] CreateTenantGameDayOptionRequest request, CancellationToken ct)
+    {
+        var requestedByUserId = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+            ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? string.Empty;
+
+        var result = await _createGameDayOptionHandler.HandleAsync(
+            new CreateTenantGameDayOptionCommand(
+                _tenantContext.TenantId,
+                requestedByUserId,
+                request.DayOfWeek,
+                request.LocalStartTime),
+            ct);
+
+        if (!result.IsSuccess)
+        {
+            var statusCode = result.ErrorCode switch
+            {
+                "FORBIDDEN" => StatusCodes.Status403Forbidden,
+                "TENANT_GAMEDAY_OPTION_ALREADY_EXISTS" => StatusCodes.Status409Conflict,
+                _ => StatusCodes.Status422UnprocessableEntity,
+            };
+
+            return StatusCode(statusCode, new ProblemDetails
+            {
+                Status = statusCode,
+                Title = result.ErrorCode,
+                Detail = result.ErrorMessage,
+            });
+        }
+
+        return CreatedAtAction(nameof(GetGameDayOptions), null, result.Value);
+    }
+
+    [Authorize(Policy = AuthorizationPolicyNames.TenantMember)]
+    [HttpPut("settings/game-day-options/{id:guid}/status")]
+    [ProducesResponseType(typeof(TenantGameDayOptionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ChangeGameDayOptionStatus(Guid id, [FromBody] ChangeTenantGameDayOptionStatusRequest request, CancellationToken ct)
+    {
+        var requestedByUserId = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+            ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? string.Empty;
+
+        var result = await _changeGameDayOptionStatusHandler.HandleAsync(
+            new ChangeTenantGameDayOptionStatusCommand(_tenantContext.TenantId, id, requestedByUserId, request.IsActive),
+            ct);
+
+        if (!result.IsSuccess)
+        {
+            var statusCode = result.ErrorCode switch
+            {
+                "FORBIDDEN" => StatusCodes.Status403Forbidden,
+                "TENANT_GAMEDAY_OPTION_NOT_FOUND" => StatusCodes.Status404NotFound,
+                "TENANT_GAMEDAY_OPTION_ALREADY_EXISTS" => StatusCodes.Status409Conflict,
+                _ => StatusCodes.Status422UnprocessableEntity,
+            };
+
+            return StatusCode(statusCode, new ProblemDetails
+            {
+                Status = statusCode,
+                Title = result.ErrorCode,
+                Detail = result.ErrorMessage,
+            });
+        }
+
+        return Ok(result.Value);
+    }
 }
 
 /// <summary>Request body for tenant creation.</summary>
@@ -216,3 +327,9 @@ public sealed record UpdateTenantSettingsRequest(
     string? ZipCode,
     double AssociationLatitude,
     double AssociationLongitude);
+
+public sealed record CreateTenantGameDayOptionRequest(
+    DayOfWeek DayOfWeek,
+    TimeOnly LocalStartTime);
+
+public sealed record ChangeTenantGameDayOptionStatusRequest(bool IsActive);

@@ -2,6 +2,11 @@ import { useEffect, useState } from 'react'
 import { AssociationLocationMap } from '@/core/components/AssociationLocationMap'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { isTenantAdmin } from '@/features/auth/utils/tenantAccess'
+import {
+  useChangeTenantGameDayOptionStatus,
+  useCreateTenantGameDayOption,
+  useTenantGameDayOptions,
+} from '@/features/tenant-settings/hooks/useTenantGameDayOptions'
 import { useTenantSettings, useUpdateTenantSettings } from '@/features/tenant-settings/hooks/useTenantSettings'
 import { ERROR_CODES } from '@/core/constants/errorCodes'
 import { geocodeAddress, lookupAddressByZipCode } from '@/core/services/addressLookup'
@@ -18,7 +23,32 @@ const ERROR_MESSAGES: Record<string, string> = {
   [ERROR_CODES.TENANT_LOGO_INVALID_SIZE]: 'Logo deve ter até 2MB.',
   TENANT_ASSOCIATION_LATITUDE_INVALID: 'Latitude da associação inválida.',
   TENANT_ASSOCIATION_LONGITUDE_INVALID: 'Longitude da associação inválida.',
+  [ERROR_CODES.TENANT_GAMEDAY_OPTION_ALREADY_EXISTS]: 'Já existe uma opção ativa para este dia e horário.',
+  [ERROR_CODES.TENANT_GAMEDAY_OPTION_NOT_FOUND]: 'Opção de dia de jogo não encontrada.',
   [ERROR_CODES.FORBIDDEN]: 'Somente admin pode editar as opções da associação.',
+}
+
+const GAME_DAY_LABELS: Record<number, string> = {
+  0: 'Domingo',
+  1: 'Segunda',
+  2: 'Terça',
+  3: 'Quarta',
+  4: 'Quinta',
+  5: 'Sexta',
+  6: 'Sábado',
+}
+
+function normalizeTimeForApi(timeValue: string): string {
+  if (timeValue.length === 5) {
+    return `${timeValue}:00`
+  }
+
+  return timeValue
+}
+
+function formatTime(timeValue: string): string {
+  const [hours, minutes] = timeValue.split(':')
+  return `${hours ?? '00'}:${minutes ?? '00'}`
 }
 
 function isValidCoordinate(value: number, min: number, max: number): boolean {
@@ -32,6 +62,17 @@ export function TenantSettingsPage() {
 
   const { data, isLoading } = useTenantSettings()
   const { updateSettings, isPending, errorCode } = useUpdateTenantSettings()
+  const { data: gameDayOptions, isLoading: isGameDayOptionsLoading } = useTenantGameDayOptions()
+  const {
+    createOption,
+    isPending: isCreatingOption,
+    errorCode: createOptionErrorCode,
+  } = useCreateTenantGameDayOption()
+  const {
+    changeStatus,
+    isPending: isChangingOptionStatus,
+    errorCode: changeOptionStatusErrorCode,
+  } = useChangeTenantGameDayOptionStatus()
 
   const [name, setName] = useState('')
   const [playersPerTeam, setPlayersPerTeam] = useState(11)
@@ -51,6 +92,11 @@ export function TenantSettingsPage() {
   const [locationLookupSuccess, setLocationLookupSuccess] = useState<string | null>(null)
   const [isZipLookupPending, setIsZipLookupPending] = useState(false)
   const [isGeocodingPending, setIsGeocodingPending] = useState(false)
+  const [newOptionDayOfWeek, setNewOptionDayOfWeek] = useState(2)
+  const [newOptionStartTime, setNewOptionStartTime] = useState('20:00')
+  const [gameDayOptionSuccessMessage, setGameDayOptionSuccessMessage] = useState<string | null>(null)
+
+  const gameDayOptionErrorCode = createOptionErrorCode ?? changeOptionStatusErrorCode
 
   useEffect(() => {
     if (!data) return
@@ -255,6 +301,128 @@ export function TenantSettingsPage() {
               className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-indigo-500"
               disabled={isPending}
             />
+          </div>
+
+          <div className="rounded-lg border border-gray-200 p-4 space-y-3">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">Dias de jogo recorrentes</h2>
+              <p className="text-sm text-gray-600">Defina os dias e horários padrão para a associação.</p>
+            </div>
+
+            {gameDayOptionSuccessMessage && (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                {gameDayOptionSuccessMessage}
+              </div>
+            )}
+
+            {gameDayOptionErrorCode && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {ERROR_MESSAGES[gameDayOptionErrorCode] ?? 'Falha ao atualizar opções de dia de jogo.'}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:items-end">
+              <div>
+                <label htmlFor="tenant-gameday-day" className="mb-1 block text-sm font-medium text-gray-700">
+                  Dia da semana
+                </label>
+                <select
+                  id="tenant-gameday-day"
+                  value={newOptionDayOfWeek}
+                  onChange={(event) => setNewOptionDayOfWeek(Number(event.target.value))}
+                  className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-indigo-500"
+                  disabled={isPending || isCreatingOption || isChangingOptionStatus}
+                >
+                  {Object.entries(GAME_DAY_LABELS).map(([key, label]) => (
+                    <option key={key} value={Number(key)}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="tenant-gameday-time" className="mb-1 block text-sm font-medium text-gray-700">
+                  Horário
+                </label>
+                <input
+                  id="tenant-gameday-time"
+                  type="time"
+                  value={newOptionStartTime}
+                  onChange={(event) => setNewOptionStartTime(event.target.value)}
+                  className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-indigo-500"
+                  disabled={isPending || isCreatingOption || isChangingOptionStatus}
+                />
+              </div>
+
+              <button
+                type="button"
+                className="h-11 rounded-lg border border-indigo-200 bg-indigo-50 px-4 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-60"
+                disabled={isPending || isCreatingOption || isChangingOptionStatus}
+                onClick={() => {
+                  setGameDayOptionSuccessMessage(null)
+                  createOption(
+                    {
+                      dayOfWeek: newOptionDayOfWeek,
+                      localStartTime: normalizeTimeForApi(newOptionStartTime),
+                    },
+                    {
+                      onSuccess: () => {
+                        setGameDayOptionSuccessMessage('Opção de dia de jogo adicionada com sucesso.')
+                      },
+                    },
+                  )
+                }}
+              >
+                {isCreatingOption ? 'Adicionando...' : 'Adicionar opção'}
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {isGameDayOptionsLoading ? (
+                <p className="text-sm text-gray-600">Carregando opções de dia de jogo...</p>
+              ) : gameDayOptions && gameDayOptions.length > 0 ? (
+                gameDayOptions.map((option) => (
+                  <div key={option.id} className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {GAME_DAY_LABELS[option.dayOfWeek] ?? `Dia ${option.dayOfWeek}`} às {formatTime(option.localStartTime)}
+                      </p>
+                      <p className={`text-xs ${option.isActive ? 'text-emerald-700' : 'text-gray-500'}`}>
+                        {option.isActive ? 'Ativo' : 'Inativo'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+                      disabled={isPending || isCreatingOption || isChangingOptionStatus}
+                      onClick={() => {
+                        setGameDayOptionSuccessMessage(null)
+                        changeStatus(
+                          {
+                            id: option.id,
+                            isActive: !option.isActive,
+                          },
+                          {
+                            onSuccess: () => {
+                              setGameDayOptionSuccessMessage(
+                                option.isActive
+                                  ? 'Opção desativada com sucesso.'
+                                  : 'Opção ativada com sucesso.',
+                              )
+                            },
+                          },
+                        )
+                      }}
+                    >
+                      {option.isActive ? 'Desativar' : 'Ativar'}
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-600">Nenhuma opção recorrente cadastrada.</p>
+              )}
+            </div>
           </div>
 
           <div>

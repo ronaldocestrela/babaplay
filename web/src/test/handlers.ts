@@ -226,6 +226,18 @@ const mockMatches = [
   },
 ]
 
+let mockTenantGameDayOptions = [
+  {
+    id: 'tenant-gdo-1',
+    tenantId: 'tenant-123',
+    dayOfWeek: 2,
+    localStartTime: '20:00:00',
+    isActive: true,
+    createdAt: '2026-05-01T10:00:00.000Z',
+    updatedAt: null,
+  },
+]
+
 const goalkeeperPlayerIds = new Set(['player-1'])
 
 export const handlers = [
@@ -655,6 +667,99 @@ export const handlers = [
     }
 
     return HttpResponse.json(response)
+  }),
+
+  // GET /api/v1/tenant/settings/game-day-options
+  http.get(`${BASE_URL}/api/v1/tenant/settings/game-day-options`, () => {
+    return HttpResponse.json(mockTenantGameDayOptions)
+  }),
+
+  // POST /api/v1/tenant/settings/game-day-options
+  http.post(`${BASE_URL}/api/v1/tenant/settings/game-day-options`, async ({ request }) => {
+    const body = (await request.json()) as {
+      dayOfWeek: number
+      localStartTime: string
+    }
+
+    if (
+      mockTenantGameDayOptions.some(
+        (item) => item.isActive && item.dayOfWeek === body.dayOfWeek && item.localStartTime === body.localStartTime,
+      )
+    ) {
+      return HttpResponse.json(
+        {
+          title: 'TENANT_GAMEDAY_OPTION_ALREADY_EXISTS',
+          detail: 'An active option with the same day and time already exists.',
+          status: 409,
+        },
+        { status: 409 },
+      )
+    }
+
+    const created = {
+      id: `tenant-gdo-${crypto.randomUUID()}`,
+      tenantId: 'tenant-123',
+      dayOfWeek: body.dayOfWeek,
+      localStartTime: body.localStartTime,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: null,
+    }
+
+    mockTenantGameDayOptions = [...mockTenantGameDayOptions, created]
+
+    return HttpResponse.json(created, { status: 201 })
+  }),
+
+  // PUT /api/v1/tenant/settings/game-day-options/:id/status
+  http.put(`${BASE_URL}/api/v1/tenant/settings/game-day-options/:id/status`, async ({ params, request }) => {
+    const id = String(params.id)
+    const body = (await request.json()) as { isActive: boolean }
+
+    const existing = mockTenantGameDayOptions.find((item) => item.id === id)
+    if (!existing) {
+      return HttpResponse.json(
+        {
+          title: 'TENANT_GAMEDAY_OPTION_NOT_FOUND',
+          detail: 'Game day option was not found.',
+          status: 404,
+        },
+        { status: 404 },
+      )
+    }
+
+    if (body.isActive) {
+      const duplicate = mockTenantGameDayOptions.some(
+        (item) =>
+          item.id !== existing.id &&
+          item.isActive &&
+          item.dayOfWeek === existing.dayOfWeek &&
+          item.localStartTime === existing.localStartTime,
+      )
+
+      if (duplicate) {
+        return HttpResponse.json(
+          {
+            title: 'TENANT_GAMEDAY_OPTION_ALREADY_EXISTS',
+            detail: 'An active option with the same day and time already exists.',
+            status: 409,
+          },
+          { status: 409 },
+        )
+      }
+    }
+
+    mockTenantGameDayOptions = mockTenantGameDayOptions.map((item) =>
+      item.id === id
+        ? {
+            ...item,
+            isActive: body.isActive,
+            updatedAt: new Date().toISOString(),
+          }
+        : item,
+    )
+
+    return HttpResponse.json(mockTenantGameDayOptions.find((item) => item.id === id))
   }),
 
   // GET /api/v1/player

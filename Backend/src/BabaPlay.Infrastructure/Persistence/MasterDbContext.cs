@@ -1,4 +1,5 @@
 using BabaPlay.Infrastructure.Entities;
+using BabaPlay.Domain.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +20,7 @@ public sealed class MasterDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Subscription> Subscriptions => Set<Subscription>();
     public DbSet<Plan> Plans => Set<Plan>();
     public DbSet<AssociationInvite> AssociationInvites => Set<AssociationInvite>();
+    public DbSet<TenantGameDayOption> TenantGameDayOptions => Set<TenantGameDayOption>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -51,6 +53,21 @@ public sealed class MasterDbContext : IdentityDbContext<ApplicationUser>
             e.Property(t => t.AssociationLatitude);
             e.Property(t => t.AssociationLongitude);
             e.Property(t => t.CheckinRadiusMeters);
+        });
+
+        builder.Entity<TenantGameDayOption>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.TenantId).IsRequired();
+            e.Property(x => x.DayOfWeek).IsRequired();
+            e.Property(x => x.LocalStartTime).IsRequired();
+            e.Property(x => x.IsActive).IsRequired();
+            e.HasIndex(x => new { x.TenantId, x.DayOfWeek, x.LocalStartTime, x.IsActive }).IsUnique();
+
+            e.HasOne<Tenant>()
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<UserTenant>(e =>

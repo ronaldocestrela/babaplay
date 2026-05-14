@@ -11,6 +11,7 @@ using BabaPlay.Application.Commands.Positions;
 using BabaPlay.Application.Commands.Roles;
 using BabaPlay.Application.Commands.Scores;
 using BabaPlay.Application.Commands.Teams;
+using BabaPlay.Application.Commands.TenantGameDayOptions;
 using BabaPlay.Application.Commands.Tenants;
 using BabaPlay.Application.Common;
 using BabaPlay.Application.DTOs;
@@ -28,6 +29,7 @@ using BabaPlay.Application.Queries.Positions;
 using BabaPlay.Application.Queries.Roles;
 using BabaPlay.Application.Queries.Scores;
 using BabaPlay.Application.Queries.Teams;
+using BabaPlay.Application.Queries.TenantGameDayOptions;
 using BabaPlay.Application.Queries.Tenants;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -52,6 +54,9 @@ public static class ServiceRegistration
         services.AddScoped<IQueryHandler<GetTenantStatusQuery, Result<TenantResponse>>, GetTenantStatusQueryHandler>();
         services.AddScoped<ICommandHandler<UpdateTenantSettingsCommand, Result<TenantResponse>>, UpdateTenantSettingsCommandHandler>();
         services.AddScoped<IQueryHandler<GetTenantSettingsQuery, Result<TenantResponse>>, GetTenantSettingsQueryHandler>();
+        services.AddScoped<ICommandHandler<CreateTenantGameDayOptionCommand, Result<TenantGameDayOptionResponse>>, CreateTenantGameDayOptionCommandHandler>();
+        services.AddScoped<ICommandHandler<ChangeTenantGameDayOptionStatusCommand, Result<TenantGameDayOptionResponse>>, ChangeTenantGameDayOptionStatusCommandHandler>();
+        services.AddScoped<IQueryHandler<GetTenantGameDayOptionsQuery, Result<IReadOnlyList<TenantGameDayOptionResponse>>>, GetTenantGameDayOptionsQueryHandler>();
         services.AddScoped<ICommandHandler<SendAssociationInviteCommand, Result<AssociationInviteResponse>>, SendAssociationInviteCommandHandler>();
         services.AddScoped<ICommandHandler<AcceptAssociationInviteCommand, Result<AssociationInviteAcceptResponse>>, AcceptAssociationInviteCommandHandler>();
         services.AddScoped<ICommandHandler<RegisterAndAcceptAssociationInviteCommand, Result<AssociationInviteAcceptResponse>>, AcceptAssociationInviteCommandHandler>();
