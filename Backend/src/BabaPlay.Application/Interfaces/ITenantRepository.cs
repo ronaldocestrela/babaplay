@@ -29,6 +29,8 @@ public interface ITenantRepository
         string city,
         string state,
         string zipCode,
+        double associationLatitude,
+        double associationLongitude,
         CancellationToken ct = default);
 
     /// <summary>Updates provisioning status and (on success) the connection string.</summary>
@@ -50,5 +52,7 @@ public interface ITenantRepository
         string city,
         string state,
         string zipCode,
+        double associationLatitude,
+        double associationLongitude,
         CancellationToken ct = default);
 }

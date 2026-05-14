@@ -36,6 +36,8 @@ public sealed class GetTenantStatusQueryHandler
             tenant.Neighborhood,
             tenant.City,
             tenant.State,
-            tenant.ZipCode));
+            tenant.ZipCode,
+            tenant.AssociationLatitude,
+            tenant.AssociationLongitude));
     }
 }

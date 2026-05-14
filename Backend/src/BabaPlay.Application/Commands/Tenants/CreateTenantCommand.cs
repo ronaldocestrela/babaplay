@@ -17,7 +17,9 @@ public sealed record CreateTenantCommand(
 	string? Neighborhood,
 	string City,
 	string State,
-	string ZipCode)
+	string ZipCode,
+	double AssociationLatitude,
+	double AssociationLongitude)
 	: ICommand<Result<TenantResponse>>;
 
 public sealed record TenantLogoUploadRequest(

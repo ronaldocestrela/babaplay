@@ -28,6 +28,8 @@ describe('tenant settings hooks', () => {
         city: 'Santos',
         state: 'SP',
         zipCode: '11000-000',
+        associationLatitude: -23.9608,
+        associationLongitude: -46.3336,
       })
     })
 

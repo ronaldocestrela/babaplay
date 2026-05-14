@@ -82,7 +82,9 @@ public sealed class TenantController : ControllerBase
                 request.Neighborhood,
                 request.City ?? string.Empty,
                 request.State ?? string.Empty,
-                request.ZipCode ?? string.Empty),
+                request.ZipCode ?? string.Empty,
+                request.AssociationLatitude,
+                request.AssociationLongitude),
             ct);
 
         if (!result.IsSuccess)
@@ -163,7 +165,9 @@ public sealed class TenantController : ControllerBase
                 request.Neighborhood,
                 request.City ?? string.Empty,
                 request.State ?? string.Empty,
-                request.ZipCode ?? string.Empty),
+                request.ZipCode ?? string.Empty,
+                request.AssociationLatitude,
+                request.AssociationLongitude),
             ct);
 
         if (!result.IsSuccess)
@@ -195,6 +199,8 @@ public sealed record CreateTenantRequest(
     string? City,
     string? State,
     string? ZipCode,
+    double AssociationLatitude,
+    double AssociationLongitude,
     string? AdminEmail = null,
     string? AdminPassword = null);
 
@@ -207,4 +213,6 @@ public sealed record UpdateTenantSettingsRequest(
     string? Neighborhood,
     string? City,
     string? State,
-    string? ZipCode);
+    string? ZipCode,
+    double AssociationLatitude,
+    double AssociationLongitude);

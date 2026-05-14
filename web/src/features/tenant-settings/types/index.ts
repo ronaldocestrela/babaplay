@@ -11,6 +11,8 @@ export interface TenantSettingsResponse {
   city?: string | null
   state?: string | null
   zipCode?: string | null
+  associationLatitude?: number | null
+  associationLongitude?: number | null
 }
 
 export interface UpdateTenantSettingsRequest {
@@ -23,4 +25,6 @@ export interface UpdateTenantSettingsRequest {
   city: string
   state: string
   zipCode: string
+  associationLatitude: number
+  associationLongitude: number
 }

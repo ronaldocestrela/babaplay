@@ -34,6 +34,8 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
             { new StringContent("Sao Paulo"), "City" },
             { new StringContent("SP"), "State" },
             { new StringContent("01000-000"), "ZipCode" },
+            { new StringContent("-23.5505"), "AssociationLatitude" },
+            { new StringContent("-46.6333"), "AssociationLongitude" },
         };
 
         var logoBytes = new byte[] { 1, 2, 3, 4 };
@@ -62,6 +64,8 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
             { new StringContent("Rio de Janeiro"), "City" },
             { new StringContent("RJ"), "State" },
             { new StringContent("20000-000"), "ZipCode" },
+            { new StringContent("-22.9068"), "AssociationLatitude" },
+            { new StringContent("-43.1729"), "AssociationLongitude" },
         };
 
         var logoBytes = new byte[] { 9, 8, 7, 6 };
@@ -99,6 +103,8 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
         body.City.Should().Be("Sao Paulo");
         body.State.Should().Be("SP");
         body.ZipCode.Should().Be("01000-000");
+        body.AssociationLatitude.Should().Be(-23.5505);
+        body.AssociationLongitude.Should().Be(-46.6333);
     }
 
     [Fact]
@@ -213,6 +219,8 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
         var body = await response.Content.ReadFromJsonAsync<TenantResponse>();
         body.Should().NotBeNull();
         body!.Name.Should().Be("Settings Club");
+        body.AssociationLatitude.Should().Be(-23.5505);
+        body.AssociationLongitude.Should().Be(-46.6333);
     }
 
     [Fact]
@@ -236,6 +244,8 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
         body!.Name.Should().Be("Clube Atualizado");
         body.PlayersPerTeam.Should().Be(11);
         body.City.Should().Be("Rio de Janeiro");
+        body.AssociationLatitude.Should().Be(-22.9068);
+        body.AssociationLongitude.Should().Be(-43.1729);
     }
 
     [Fact]

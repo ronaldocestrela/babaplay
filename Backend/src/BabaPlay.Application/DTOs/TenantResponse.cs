@@ -13,4 +13,6 @@ public sealed record TenantResponse(
     string? Neighborhood = null,
     string? City = null,
     string? State = null,
-    string? ZipCode = null);
+    string? ZipCode = null,
+    double? AssociationLatitude = null,
+    double? AssociationLongitude = null);

@@ -15,6 +15,8 @@ describe('associationFormSchema', () => {
       city: 'Sao Paulo',
       state: 'SP',
       zipCode: '01000-000',
+      associationLatitude: '-23.5505',
+      associationLongitude: '-46.6333',
       adminEmail: 'admin@bairro.com',
       adminPassword: 'Admin1234',
       confirmAdminPassword: 'Admin1234',
@@ -36,6 +38,8 @@ describe('associationFormSchema', () => {
         city: 'Sao Paulo',
         state: 'SP',
         zipCode: '01000-000',
+        associationLatitude: '-23.5505',
+        associationLongitude: '-46.6333',
         adminEmail: 'admin@clube.com',
         adminPassword: 'Admin1234',
         confirmAdminPassword: 'Admin1234',
@@ -55,6 +59,8 @@ describe('associationFormSchema', () => {
         city: 'Sao Paulo',
         state: 'SP',
         zipCode: '01000-000',
+        associationLatitude: '-23.5505',
+        associationLongitude: '-46.6333',
         adminEmail: 'admin@clube.com',
         adminPassword: 'Admin1234',
         confirmAdminPassword: 'Admin1234',
@@ -74,6 +80,8 @@ describe('associationFormSchema', () => {
         city: 'Sao Paulo',
         state: 'SP',
         zipCode: '01000-000',
+        associationLatitude: '-23.5505',
+        associationLongitude: '-46.6333',
         adminEmail: 'admin@clube.com',
         adminPassword: 'Admin1234',
         confirmAdminPassword: 'Admin1234',
@@ -93,6 +101,8 @@ describe('associationFormSchema', () => {
         city: 'Sao Paulo',
         state: 'SP',
         zipCode: '01000-000',
+        associationLatitude: '-23.5505',
+        associationLongitude: '-46.6333',
         adminEmail: 'admin@clube.com',
         adminPassword: 'Admin1234',
         confirmAdminPassword: 'Admin12345',
@@ -111,10 +121,54 @@ describe('associationFormSchema', () => {
         city: 'Sao Paulo',
         state: 'SP',
         zipCode: '01000-000',
+        associationLatitude: '-23.5505',
+        associationLongitude: '-46.6333',
         adminEmail: 'admin@clube.com',
         adminPassword: 'Admin1234',
         confirmAdminPassword: 'Admin1234',
       }),
     ).toThrow('Logo da associação é obrigatório')
+  })
+
+  it('deve falhar com latitude inválida', () => {
+    expect(() =>
+      associationFormSchema.parse({
+        name: 'Clube A',
+        slug: 'clube-a',
+        logo: validLogo,
+        street: 'Rua das Flores',
+        number: '120',
+        neighborhood: 'Centro',
+        city: 'Sao Paulo',
+        state: 'SP',
+        zipCode: '01000-000',
+        associationLatitude: '91',
+        associationLongitude: '-46.6333',
+        adminEmail: 'admin@clube.com',
+        adminPassword: 'Admin1234',
+        confirmAdminPassword: 'Admin1234',
+      }),
+    ).toThrow('Latitude inválida')
+  })
+
+  it('deve falhar com longitude inválida', () => {
+    expect(() =>
+      associationFormSchema.parse({
+        name: 'Clube A',
+        slug: 'clube-a',
+        logo: validLogo,
+        street: 'Rua das Flores',
+        number: '120',
+        neighborhood: 'Centro',
+        city: 'Sao Paulo',
+        state: 'SP',
+        zipCode: '01000-000',
+        associationLatitude: '-23.5505',
+        associationLongitude: '-181',
+        adminEmail: 'admin@clube.com',
+        adminPassword: 'Admin1234',
+        confirmAdminPassword: 'Admin1234',
+      }),
+    ).toThrow('Longitude inválida')
   })
 })

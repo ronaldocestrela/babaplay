@@ -18,6 +18,8 @@ export const tenantSettingsService = {
     formData.append('City', payload.city)
     formData.append('State', payload.state)
     formData.append('ZipCode', payload.zipCode)
+    formData.append('AssociationLatitude', String(payload.associationLatitude))
+    formData.append('AssociationLongitude', String(payload.associationLongitude))
     if (payload.logo) formData.append('Logo', payload.logo)
 
     const testHeaders =
@@ -31,6 +33,8 @@ export const tenantSettingsService = {
             'X-Tenant-City': payload.city,
             'X-Tenant-State': payload.state,
             'X-Tenant-ZipCode': payload.zipCode,
+            'X-Tenant-Latitude': String(payload.associationLatitude),
+            'X-Tenant-Longitude': String(payload.associationLongitude),
           }
         : undefined
 

@@ -18,6 +18,8 @@ export const associationService = {
     formData.append('City', payload.city)
     formData.append('State', payload.state)
     formData.append('ZipCode', payload.zipCode)
+    formData.append('AssociationLatitude', String(payload.associationLatitude))
+    formData.append('AssociationLongitude', String(payload.associationLongitude))
     formData.append('AdminEmail', payload.adminEmail)
     formData.append('AdminPassword', payload.adminPassword)
 
@@ -32,6 +34,8 @@ export const associationService = {
             'X-Association-City': payload.city,
             'X-Association-State': payload.state,
             'X-Association-ZipCode': payload.zipCode,
+            'X-Association-Latitude': String(payload.associationLatitude),
+            'X-Association-Longitude': String(payload.associationLongitude),
             'X-Association-AdminEmail': payload.adminEmail,
             'X-Association-AdminPassword': payload.adminPassword,
           }

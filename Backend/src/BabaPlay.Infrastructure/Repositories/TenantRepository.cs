@@ -50,6 +50,8 @@ public sealed class TenantRepository : ITenantRepository
         string city,
         string state,
         string zipCode,
+        double associationLatitude,
+        double associationLongitude,
         CancellationToken ct = default)
     {
         _context.Tenants.Add(new Tenant
@@ -64,6 +66,8 @@ public sealed class TenantRepository : ITenantRepository
             City = city,
             State = state,
             ZipCode = zipCode,
+            AssociationLatitude = associationLatitude,
+            AssociationLongitude = associationLongitude,
             ProvisioningStatus = ProvisioningStatus.Pending,
         });
         await _context.SaveChangesAsync(ct);
@@ -98,6 +102,8 @@ public sealed class TenantRepository : ITenantRepository
         string city,
         string state,
         string zipCode,
+        double associationLatitude,
+        double associationLongitude,
         CancellationToken ct = default)
     {
         var entity = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == id, ct);
@@ -113,6 +119,8 @@ public sealed class TenantRepository : ITenantRepository
         entity.City = city;
         entity.State = state;
         entity.ZipCode = zipCode;
+        entity.AssociationLatitude = associationLatitude;
+        entity.AssociationLongitude = associationLongitude;
 
         await _context.SaveChangesAsync(ct);
         return true;
@@ -132,5 +140,7 @@ public sealed class TenantRepository : ITenantRepository
         t.Neighborhood,
         t.City,
         t.State,
-        t.ZipCode);
+        t.ZipCode,
+        t.AssociationLatitude,
+        t.AssociationLongitude);
 }

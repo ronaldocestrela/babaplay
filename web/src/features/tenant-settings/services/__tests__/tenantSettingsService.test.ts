@@ -24,6 +24,8 @@ describe('tenantSettingsService', () => {
       city: 'Campinas',
       state: 'SP',
       zipCode: '13000-000',
+      associationLatitude: -22.9056,
+      associationLongitude: -47.0608,
     })
 
     expect(result.name).toBe('Tenant Atualizado')
@@ -33,6 +35,8 @@ describe('tenantSettingsService', () => {
     expect(result.city).toBe('Campinas')
     expect(result.state).toBe('SP')
     expect(result.zipCode).toBe('13000-000')
+    expect(result.associationLatitude).toBe(-22.9056)
+    expect(result.associationLongitude).toBe(-47.0608)
     expect(result.logoPath).toContain('tenant-logos/')
   })
 })

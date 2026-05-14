@@ -3,6 +3,16 @@ import { z } from 'zod'
 const MAX_LOGO_BYTES = 2 * 1024 * 1024
 const ALLOWED_LOGO_TYPES = ['image/png', 'image/jpeg', 'image/webp']
 
+function isValidLatitude(value: string): boolean {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed >= -90 && parsed <= 90
+}
+
+function isValidLongitude(value: string): boolean {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed >= -180 && parsed <= 180
+}
+
 export const associationFormSchema = z.object({
   name: z
     .string()
@@ -58,6 +68,16 @@ export const associationFormSchema = z.object({
     .trim()
     .min(1, 'CEP é obrigatório')
     .max(20, 'CEP deve ter no máximo 20 caracteres'),
+  associationLatitude: z
+    .string()
+    .trim()
+    .min(1, 'Latitude é obrigatória')
+    .refine((value) => isValidLatitude(value), 'Latitude inválida'),
+  associationLongitude: z
+    .string()
+    .trim()
+    .min(1, 'Longitude é obrigatória')
+    .refine((value) => isValidLongitude(value), 'Longitude inválida'),
   adminEmail: z
     .string()
     .trim()

@@ -15,6 +15,8 @@ describe('associationService', () => {
       city: 'Sao Paulo',
       state: 'SP',
       zipCode: '01000-000',
+      associationLatitude: -23.5505,
+      associationLongitude: -46.6333,
       adminEmail: 'admin@clubeverde.com',
       adminPassword: 'Admin1234',
     })
@@ -37,6 +39,8 @@ describe('associationService', () => {
         city: 'Sao Paulo',
         state: 'SP',
         zipCode: '01000-000',
+        associationLatitude: -23.5505,
+        associationLongitude: -46.6333,
         adminEmail: 'admin@duplicado.com',
         adminPassword: 'Admin1234',
       }),

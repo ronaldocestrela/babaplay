@@ -325,6 +325,8 @@ export const handlers = [
       city: string
       state: string
       zipCode: string
+      associationLatitude: number
+      associationLongitude: number
       adminEmail: string
       adminPassword: string
     }
@@ -341,6 +343,8 @@ export const handlers = [
         city: String(formData.get('City') ?? ''),
         state: String(formData.get('State') ?? ''),
         zipCode: String(formData.get('ZipCode') ?? ''),
+        associationLatitude: Number(formData.get('AssociationLatitude') ?? NaN),
+        associationLongitude: Number(formData.get('AssociationLongitude') ?? NaN),
         adminEmail: String(formData.get('AdminEmail') ?? ''),
         adminPassword: String(formData.get('AdminPassword') ?? ''),
       }
@@ -364,6 +368,12 @@ export const handlers = [
         city: getMultipartValue('City') || getHeaderValue('X-Association-City'),
         state: getMultipartValue('State') || getHeaderValue('X-Association-State'),
         zipCode: getMultipartValue('ZipCode') || getHeaderValue('X-Association-ZipCode'),
+        associationLatitude: Number(
+          getMultipartValue('AssociationLatitude') || getHeaderValue('X-Association-Latitude') || NaN,
+        ),
+        associationLongitude: Number(
+          getMultipartValue('AssociationLongitude') || getHeaderValue('X-Association-Longitude') || NaN,
+        ),
         adminEmail: getMultipartValue('AdminEmail') || getHeaderValue('X-Association-AdminEmail'),
         adminPassword: getMultipartValue('AdminPassword') || getHeaderValue('X-Association-AdminPassword'),
       }
@@ -425,6 +435,28 @@ export const handlers = [
       )
     }
 
+    if (!Number.isFinite(body.associationLatitude) || body.associationLatitude < -90 || body.associationLatitude > 90) {
+      return HttpResponse.json(
+        {
+          title: 'TENANT_ASSOCIATION_LATITUDE_INVALID',
+          detail: 'Association latitude must be between -90 and 90',
+          status: 422,
+        },
+        { status: 422 },
+      )
+    }
+
+    if (!Number.isFinite(body.associationLongitude) || body.associationLongitude < -180 || body.associationLongitude > 180) {
+      return HttpResponse.json(
+        {
+          title: 'TENANT_ASSOCIATION_LONGITUDE_INVALID',
+          detail: 'Association longitude must be between -180 and 180',
+          status: 422,
+        },
+        { status: 422 },
+      )
+    }
+
     if (!body.adminEmail || !body.adminPassword) {
       return HttpResponse.json(
         {
@@ -456,6 +488,8 @@ export const handlers = [
       city: body.city,
       state: body.state,
       zipCode: body.zipCode,
+      associationLatitude: body.associationLatitude,
+      associationLongitude: body.associationLongitude,
     }
 
     return HttpResponse.json(response, { status: 201 })
@@ -485,6 +519,8 @@ export const handlers = [
       city: 'Sao Paulo',
       state: 'SP',
       zipCode: '01000-000',
+      associationLatitude: -23.5505,
+      associationLongitude: -46.6333,
     }
 
     return HttpResponse.json(response)
@@ -505,6 +541,8 @@ export const handlers = [
       city: 'Sao Paulo',
       state: 'SP',
       zipCode: '01000-000',
+      associationLatitude: -23.5505,
+      associationLongitude: -46.6333,
     }
 
     return HttpResponse.json(response)
@@ -521,6 +559,8 @@ export const handlers = [
     let city = ''
     let state = ''
     let zipCode = ''
+    let associationLatitude = Number.NaN
+    let associationLongitude = Number.NaN
     let playersPerTeam = 0
 
     try {
@@ -533,6 +573,8 @@ export const handlers = [
       city = String(formData.get('City') ?? '')
       state = String(formData.get('State') ?? '')
       zipCode = String(formData.get('ZipCode') ?? '')
+      associationLatitude = Number(formData.get('AssociationLatitude') ?? NaN)
+      associationLongitude = Number(formData.get('AssociationLongitude') ?? NaN)
     } catch {
       const rawBody = await requestClone.text().catch(() => '')
       const getHeaderValue = (headerName: string): string => request.headers.get(headerName) ?? ''
@@ -551,6 +593,8 @@ export const handlers = [
       city = getMultipartValue('City') || getHeaderValue('X-Tenant-City')
       state = getMultipartValue('State') || getHeaderValue('X-Tenant-State')
       zipCode = getMultipartValue('ZipCode') || getHeaderValue('X-Tenant-ZipCode')
+      associationLatitude = Number(getMultipartValue('AssociationLatitude') || getHeaderValue('X-Tenant-Latitude') || NaN)
+      associationLongitude = Number(getMultipartValue('AssociationLongitude') || getHeaderValue('X-Tenant-Longitude') || NaN)
     }
 
     if (!name) {
@@ -571,6 +615,28 @@ export const handlers = [
       )
     }
 
+    if (!Number.isFinite(associationLatitude) || associationLatitude < -90 || associationLatitude > 90) {
+      return HttpResponse.json(
+        {
+          title: 'TENANT_ASSOCIATION_LATITUDE_INVALID',
+          detail: 'Association latitude must be between -90 and 90',
+          status: 422,
+        },
+        { status: 422 },
+      )
+    }
+
+    if (!Number.isFinite(associationLongitude) || associationLongitude < -180 || associationLongitude > 180) {
+      return HttpResponse.json(
+        {
+          title: 'TENANT_ASSOCIATION_LONGITUDE_INVALID',
+          detail: 'Association longitude must be between -180 and 180',
+          status: 422,
+        },
+        { status: 422 },
+      )
+    }
+
     const response: TenantResponse = {
       id: 'tenant-123',
       name,
@@ -584,6 +650,8 @@ export const handlers = [
       city,
       state,
       zipCode,
+      associationLatitude,
+      associationLongitude,
     }
 
     return HttpResponse.json(response)

@@ -57,6 +57,8 @@ export interface TenantResponse {
   city?: string | null
   state?: string | null
   zipCode?: string | null
+  associationLatitude?: number | null
+  associationLongitude?: number | null
 }
 
 /** Payload enviado para POST /api/v1/tenant. */

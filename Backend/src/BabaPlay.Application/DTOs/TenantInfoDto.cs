@@ -15,4 +15,6 @@ public sealed record TenantInfoDto(
     string? Neighborhood = null,
     string? City = null,
     string? State = null,
-    string? ZipCode = null);
+    string? ZipCode = null,
+    double? AssociationLatitude = null,
+    double? AssociationLongitude = null);

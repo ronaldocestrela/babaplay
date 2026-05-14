@@ -20,6 +20,8 @@ describe('tenant onboarding hooks', () => {
         city: 'Sao Paulo',
         state: 'SP',
         zipCode: '01000-000',
+        associationLatitude: -23.5505,
+        associationLongitude: -46.6333,
         adminEmail: 'admin@hook.com',
         adminPassword: 'Admin1234',
       })
@@ -43,6 +45,8 @@ describe('tenant onboarding hooks', () => {
         city: 'Sao Paulo',
         state: 'SP',
         zipCode: '01000-000',
+        associationLatitude: -23.5505,
+        associationLongitude: -46.6333,
         adminEmail: 'admin@duplicada.com',
         adminPassword: 'Admin1234',
       })

@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { RegisterAssociationPage } from '../RegisterAssociationPage'
+import { geocodeAddress, lookupAddressByZipCode } from '@/core/services/addressLookup'
 
 const mockNavigate = vi.fn()
 const createAssociation = vi.fn()
@@ -15,6 +16,15 @@ vi.mock('@/features/tenant-onboarding/hooks', () => ({
   useCreateAssociation: vi.fn(),
 }))
 
+vi.mock('@/core/components/AssociationLocationMap', () => ({
+  AssociationLocationMap: () => <div data-testid="association-location-map" />,
+}))
+
+vi.mock('@/core/services/addressLookup', () => ({
+  lookupAddressByZipCode: vi.fn().mockResolvedValue(null),
+  geocodeAddress: vi.fn().mockResolvedValue(null),
+}))
+
 import { useCreateAssociation } from '@/features/tenant-onboarding/hooks'
 
 async function fillRequiredAssociationFields() {
@@ -25,6 +35,8 @@ async function fillRequiredAssociationFields() {
   await userEvent.type(screen.getByLabelText(/cidade/i), 'Sao Paulo')
   await userEvent.type(screen.getByLabelText(/estado/i), 'SP')
   await userEvent.type(screen.getByLabelText(/cep/i), '01000-000')
+  await userEvent.type(screen.getByLabelText(/^latitude$/i), '-23.5505')
+  await userEvent.type(screen.getByLabelText(/^longitude$/i), '-46.6333')
   await userEvent.upload(screen.getByLabelText(/logo da associação/i), logoFile)
 
   return logoFile
@@ -33,6 +45,9 @@ async function fillRequiredAssociationFields() {
 describe('RegisterAssociationPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+
+    vi.mocked(lookupAddressByZipCode).mockResolvedValue(null)
+    vi.mocked(geocodeAddress).mockResolvedValue(null)
 
     createAssociation.mockImplementation((payload, options) => {
       options?.onSuccess?.({
@@ -86,6 +101,8 @@ describe('RegisterAssociationPage', () => {
           city: 'Sao Paulo',
           state: 'SP',
           zipCode: '01000-000',
+          associationLatitude: -23.5505,
+          associationLongitude: -46.6333,
           adminEmail: 'admin@atletica.com',
           adminPassword: 'Admin1234',
         },
@@ -127,6 +144,32 @@ describe('RegisterAssociationPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/as senhas do admin devem ser iguais/i)).toBeInTheDocument()
+    })
+  })
+
+  it('deve preencher endereço e coordenadas ao buscar CEP válido', async () => {
+    vi.mocked(lookupAddressByZipCode).mockResolvedValue({
+      street: 'Rua Vergueiro',
+      neighborhood: 'Vila Mariana',
+      city: 'Sao Paulo',
+      state: 'SP',
+    })
+    vi.mocked(geocodeAddress).mockResolvedValue({ latitude: -23.5882, longitude: -46.6324 })
+
+    render(<RegisterAssociationPage />)
+
+    await userEvent.type(screen.getByLabelText(/cep/i), '04101-300')
+    await userEvent.tab()
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/rua/i)).toHaveValue('Rua Vergueiro')
+      expect(screen.getByLabelText(/bairro/i)).toHaveValue('Vila Mariana')
+      expect(screen.getByLabelText(/cidade/i)).toHaveValue('Sao Paulo')
+      expect(screen.getByLabelText(/estado/i)).toHaveValue('SP')
+      expect(screen.getByLabelText(/^latitude$/i)).toHaveValue('-23.588200')
+      expect(screen.getByLabelText(/^longitude$/i)).toHaveValue('-46.632400')
+      expect(screen.getByText(/endereço preenchido automaticamente com base no cep/i)).toBeInTheDocument()
+      expect(screen.getByText(/localização da associação atualizada automaticamente no mapa/i)).toBeInTheDocument()
     })
   })
 })

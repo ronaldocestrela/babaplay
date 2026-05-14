@@ -31,7 +31,9 @@ public class CreateTenantCommandHandlerTests
             "Centro",
             "Sao Paulo",
             "SP",
-            "01000-000");
+            "01000-000",
+            -23.5505,
+            -46.6333);
 
     public CreateTenantCommandHandlerTests()
     {
@@ -81,6 +83,8 @@ public class CreateTenantCommandHandlerTests
             It.IsAny<string>(),
             It.IsAny<string>(),
             It.IsAny<string>(),
+            It.IsAny<double>(),
+            It.IsAny<double>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -104,6 +108,8 @@ public class CreateTenantCommandHandlerTests
             It.IsAny<string>(),
             It.IsAny<string>(),
             It.IsAny<string>(),
+            It.IsAny<double>(),
+            It.IsAny<double>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -123,7 +129,9 @@ public class CreateTenantCommandHandlerTests
             "Centro",
             "Sao Paulo",
             "SP",
-            "01000-000"));
+            "01000-000",
+            -23.5505,
+            -46.6333));
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -156,6 +164,8 @@ public class CreateTenantCommandHandlerTests
             It.IsAny<string>(),
             It.IsAny<string>(),
             It.IsAny<string>(),
+            It.IsAny<double>(),
+            It.IsAny<double>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -178,6 +188,8 @@ public class CreateTenantCommandHandlerTests
                 "Sao Paulo",
                 "SP",
                 "01000-000",
+                -23.5505,
+                -46.6333,
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
@@ -196,6 +208,8 @@ public class CreateTenantCommandHandlerTests
         result.Value.LogoPath.Should().NotBeNullOrWhiteSpace();
         result.Value.Street.Should().Be("Rua Central");
         result.Value.City.Should().Be("Sao Paulo");
+        result.Value.AssociationLatitude.Should().Be(-23.5505);
+        result.Value.AssociationLongitude.Should().Be(-46.6333);
         _tenantRepo.Verify(r => r.AddAsync(
             It.IsAny<Guid>(),
             "My Club",
@@ -207,6 +221,8 @@ public class CreateTenantCommandHandlerTests
             "Sao Paulo",
             "SP",
             "01000-000",
+            -23.5505,
+            -46.6333,
             It.IsAny<CancellationToken>()), Times.Once);
         _tenantLogoStorage.Verify(x => x.SaveAsync(It.IsAny<TenantLogoSaveRequest>(), It.IsAny<CancellationToken>()), Times.Once);
         _queue.Verify(q => q.EnqueueAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -237,6 +253,8 @@ public class CreateTenantCommandHandlerTests
             It.IsAny<string>(),
             It.IsAny<string>(),
             It.IsAny<string>(),
+            It.IsAny<double>(),
+            It.IsAny<double>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -256,7 +274,9 @@ public class CreateTenantCommandHandlerTests
             "Centro",
             "Sao Paulo",
             "SP",
-            "01000-000"));
+            "01000-000",
+            -23.5505,
+            -46.6333));
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -272,6 +292,8 @@ public class CreateTenantCommandHandlerTests
             It.IsAny<string>(),
             It.IsAny<string>(),
             It.IsAny<string>(),
+            It.IsAny<double>(),
+            It.IsAny<double>(),
             It.IsAny<CancellationToken>()), Times.Never);
         _queue.Verify(q => q.EnqueueAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         _tenantLogoStorage.Verify(x => x.SaveAsync(It.IsAny<TenantLogoSaveRequest>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -284,5 +306,27 @@ public class CreateTenantCommandHandlerTests
             It.IsAny<string>(),
             It.IsAny<Guid>(),
             It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_InvalidAssociationLatitude_ShouldReturnLatitudeInvalid()
+    {
+        // Act
+        var result = await _handler.HandleAsync(CreateValidCommand() with { AssociationLatitude = 91 });
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorCode.Should().Be("TENANT_ASSOCIATION_LATITUDE_INVALID");
+    }
+
+    [Fact]
+    public async Task Handle_InvalidAssociationLongitude_ShouldReturnLongitudeInvalid()
+    {
+        // Act
+        var result = await _handler.HandleAsync(CreateValidCommand() with { AssociationLongitude = -181 });
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorCode.Should().Be("TENANT_ASSOCIATION_LONGITUDE_INVALID");
     }
 }

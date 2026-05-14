@@ -60,6 +60,12 @@ public sealed class UpdateTenantSettingsCommandHandler
         if (string.IsNullOrWhiteSpace(cmd.ZipCode))
             return Result<TenantResponse>.Fail("TENANT_ZIPCODE_REQUIRED", "Zip code is required.");
 
+        if (cmd.AssociationLatitude < -90 || cmd.AssociationLatitude > 90)
+            return Result<TenantResponse>.Fail("TENANT_ASSOCIATION_LATITUDE_INVALID", "Association latitude must be between -90 and 90.");
+
+        if (cmd.AssociationLongitude < -180 || cmd.AssociationLongitude > 180)
+            return Result<TenantResponse>.Fail("TENANT_ASSOCIATION_LONGITUDE_INVALID", "Association longitude must be between -180 and 180.");
+
         if (cmd.PlayersPerTeam <= 0)
             return Result<TenantResponse>.Fail("TENANT_PLAYERS_PER_TEAM_INVALID", "PlayersPerTeam must be greater than zero.");
 
@@ -92,6 +98,8 @@ public sealed class UpdateTenantSettingsCommandHandler
             cmd.City.Trim(),
             cmd.State.Trim(),
             cmd.ZipCode.Trim(),
+            cmd.AssociationLatitude,
+            cmd.AssociationLongitude,
             ct);
 
         if (!updated)
@@ -113,6 +121,8 @@ public sealed class UpdateTenantSettingsCommandHandler
             tenant.Neighborhood,
             tenant.City,
             tenant.State,
-            tenant.ZipCode));
+            tenant.ZipCode,
+            tenant.AssociationLatitude,
+            tenant.AssociationLongitude));
     }
 }

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+import { AssociationLocationMap } from '@/core/components/AssociationLocationMap'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { isTenantAdmin } from '@/features/auth/utils/tenantAccess'
 import { useTenantSettings, useUpdateTenantSettings } from '@/features/tenant-settings/hooks/useTenantSettings'
 import { ERROR_CODES } from '@/core/constants/errorCodes'
+import { geocodeAddress, lookupAddressByZipCode } from '@/core/services/addressLookup'
 
 const ERROR_MESSAGES: Record<string, string> = {
   [ERROR_CODES.TENANT_NAME_REQUIRED]: 'Nome da associação é obrigatório.',
@@ -14,7 +16,13 @@ const ERROR_MESSAGES: Record<string, string> = {
   [ERROR_CODES.TENANT_PLAYERS_PER_TEAM_INVALID]: 'Jogadores por time deve ser maior que zero.',
   [ERROR_CODES.TENANT_LOGO_INVALID_TYPE]: 'Logo deve ser PNG, JPG ou WEBP.',
   [ERROR_CODES.TENANT_LOGO_INVALID_SIZE]: 'Logo deve ter até 2MB.',
+  TENANT_ASSOCIATION_LATITUDE_INVALID: 'Latitude da associação inválida.',
+  TENANT_ASSOCIATION_LONGITUDE_INVALID: 'Longitude da associação inválida.',
   [ERROR_CODES.FORBIDDEN]: 'Somente admin pode editar as opções da associação.',
+}
+
+function isValidCoordinate(value: number, min: number, max: number): boolean {
+  return Number.isFinite(value) && value >= min && value <= max
 }
 
 export function TenantSettingsPage() {
@@ -33,8 +41,16 @@ export function TenantSettingsPage() {
   const [city, setCity] = useState('')
   const [state, setState] = useState('')
   const [zipCode, setZipCode] = useState('')
+  const [associationLatitude, setAssociationLatitude] = useState('')
+  const [associationLongitude, setAssociationLongitude] = useState('')
   const [logo, setLogo] = useState<File | undefined>(undefined)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [zipLookupError, setZipLookupError] = useState<string | null>(null)
+  const [locationLookupError, setLocationLookupError] = useState<string | null>(null)
+  const [zipLookupSuccess, setZipLookupSuccess] = useState<string | null>(null)
+  const [locationLookupSuccess, setLocationLookupSuccess] = useState<string | null>(null)
+  const [isZipLookupPending, setIsZipLookupPending] = useState(false)
+  const [isGeocodingPending, setIsGeocodingPending] = useState(false)
 
   useEffect(() => {
     if (!data) return
@@ -47,7 +63,91 @@ export function TenantSettingsPage() {
     setCity(data.city ?? '')
     setState(data.state ?? '')
     setZipCode(data.zipCode ?? '')
+    setAssociationLatitude(data.associationLatitude?.toFixed(6) ?? '')
+    setAssociationLongitude(data.associationLongitude?.toFixed(6) ?? '')
   }, [data])
+
+  const resolveCoordinatesFromCurrentAddress = async (values?: {
+    street?: string
+    neighborhood?: string
+    city?: string
+    state?: string
+  }) => {
+    const resolvedStreet = values?.street ?? street
+    const resolvedNeighborhood = values?.neighborhood ?? neighborhood
+    const resolvedCity = values?.city ?? city
+    const resolvedState = values?.state ?? state
+
+    if (!resolvedStreet.trim() || !resolvedCity.trim() || !resolvedState.trim()) {
+      return
+    }
+
+    setLocationLookupError(null)
+    setLocationLookupSuccess(null)
+    setIsGeocodingPending(true)
+
+    try {
+      const geocoded = await geocodeAddress(
+        {
+          zipCode,
+          street: resolvedStreet,
+          number,
+          neighborhood: resolvedNeighborhood,
+          city: resolvedCity,
+          state: resolvedState,
+        },
+      )
+
+      if (!geocoded) {
+        setLocationLookupError('Não foi possível localizar esse endereço no mapa. Ajuste latitude/longitude manualmente.')
+        return
+      }
+
+      setAssociationLatitude(geocoded.latitude.toFixed(6))
+      setAssociationLongitude(geocoded.longitude.toFixed(6))
+      setLocationLookupSuccess('Localização da associação atualizada automaticamente no mapa.')
+    } catch {
+      setLocationLookupError('Falha ao obter latitude e longitude do endereço informado.')
+    } finally {
+      setIsGeocodingPending(false)
+    }
+  }
+
+  const handleZipCodeLookup = async () => {
+    const normalizedZipCode = zipCode.replace(/\D/g, '')
+    if (normalizedZipCode.length !== 8) {
+      return
+    }
+
+    setZipLookupError(null)
+    setZipLookupSuccess(null)
+    setIsZipLookupPending(true)
+
+    try {
+      const address = await lookupAddressByZipCode(zipCode)
+      if (!address) {
+        setZipLookupError('CEP não encontrado. Confira o CEP e preencha o endereço manualmente.')
+        return
+      }
+
+      setStreet(address.street)
+      setNeighborhood(address.neighborhood)
+      setCity(address.city)
+      setState(address.state)
+      setZipLookupSuccess('Endereço preenchido automaticamente com base no CEP.')
+
+      await resolveCoordinatesFromCurrentAddress({
+        street: address.street,
+        neighborhood: address.neighborhood,
+        city: address.city,
+        state: address.state,
+      })
+    } catch {
+      setZipLookupError('Falha ao consultar o CEP. Tente novamente em instantes.')
+    } finally {
+      setIsZipLookupPending(false)
+    }
+  }
 
   if (!canEdit) {
     return (
@@ -71,6 +171,19 @@ export function TenantSettingsPage() {
     event.preventDefault()
     setSuccessMessage(null)
 
+    const parsedLatitude = Number(associationLatitude)
+    const parsedLongitude = Number(associationLongitude)
+
+    if (!isValidCoordinate(parsedLatitude, -90, 90)) {
+      setLocationLookupError('Latitude inválida. Informe um valor entre -90 e 90.')
+      return
+    }
+
+    if (!isValidCoordinate(parsedLongitude, -180, 180)) {
+      setLocationLookupError('Longitude inválida. Informe um valor entre -180 e 180.')
+      return
+    }
+
     updateSettings(
       {
         name,
@@ -82,6 +195,8 @@ export function TenantSettingsPage() {
         city,
         state,
         zipCode,
+        associationLatitude: parsedLatitude,
+        associationLongitude: parsedLongitude,
       },
       {
         onSuccess: () => {
@@ -237,15 +352,75 @@ export function TenantSettingsPage() {
             <label htmlFor="tenant-zip" className="mb-1 block text-sm font-medium text-gray-700">
               CEP
             </label>
-            <input
-              id="tenant-zip"
-              type="text"
-              value={zipCode}
-              onChange={(event) => setZipCode(event.target.value)}
-              className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-indigo-500"
-              disabled={isPending}
-            />
+            <div className="flex gap-2">
+              <input
+                id="tenant-zip"
+                type="text"
+                value={zipCode}
+                onChange={(event) => setZipCode(event.target.value)}
+                onBlur={handleZipCodeLookup}
+                className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-indigo-500"
+                disabled={isPending || isZipLookupPending}
+              />
+              <button
+                type="button"
+                onClick={handleZipCodeLookup}
+                disabled={isPending || isZipLookupPending}
+                className="h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+              >
+                {isZipLookupPending ? 'Buscando...' : 'Buscar CEP'}
+              </button>
+            </div>
+            {zipLookupError ? <p className="mt-1 text-xs text-red-600">{zipLookupError}</p> : null}
+            {zipLookupSuccess ? <p className="mt-1 text-xs text-emerald-700">{zipLookupSuccess}</p> : null}
           </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="tenant-association-latitude" className="mb-1 block text-sm font-medium text-gray-700">
+                Latitude
+              </label>
+              <input
+                id="tenant-association-latitude"
+                type="text"
+                value={associationLatitude}
+                onChange={(event) => setAssociationLatitude(event.target.value)}
+                className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-indigo-500"
+                disabled={isPending}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="tenant-association-longitude" className="mb-1 block text-sm font-medium text-gray-700">
+                Longitude
+              </label>
+              <input
+                id="tenant-association-longitude"
+                type="text"
+                value={associationLongitude}
+                onChange={(event) => setAssociationLongitude(event.target.value)}
+                className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-indigo-500"
+                disabled={isPending}
+              />
+            </div>
+          </div>
+
+          {(isGeocodingPending || locationLookupError || locationLookupSuccess) ? (
+            <p className={`text-xs ${locationLookupError ? 'text-red-600' : locationLookupSuccess ? 'text-emerald-700' : 'text-gray-600'}`}>
+              {isGeocodingPending
+                ? 'Localizando coordenadas do endereço...'
+                : (locationLookupError ?? locationLookupSuccess)}
+            </p>
+          ) : null}
+
+          <AssociationLocationMap
+            latitude={associationLatitude}
+            longitude={associationLongitude}
+            onCoordinateChange={(latitude, longitude) => {
+              setAssociationLatitude(latitude)
+              setAssociationLongitude(longitude)
+            }}
+          />
 
           <button
             type="submit"
