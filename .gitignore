@@ -2,3 +2,4 @@
 .vscode/mcp.json
 coverage/
 storage/
+deploy/docker/.env.manual

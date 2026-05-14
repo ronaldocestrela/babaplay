@@ -8,6 +8,23 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Infra: Deploy manual com Docker (sem CD)
+
+- Estrutura de deploy manual adicionada:
+	- `deploy/docker/docker-compose.manual.yml` com `api`, `web` e `sqlserver`
+	- `deploy/docker/.env.manual.example` com variaveis de ambiente necessarias para operacao
+- Containerizacao do backend:
+	- `Backend/Dockerfile` multi-stage (.NET 10 SDK -> ASP.NET runtime)
+	- `Backend/.dockerignore` para reduzir contexto de build
+- Containerizacao do frontend:
+	- `web/Dockerfile` multi-stage (build Vite + runtime Nginx)
+	- `web/nginx/default.conf` com fallback SPA (`try_files ... /index.html`)
+	- `web/.dockerignore` para reduzir contexto de build
+- Documentacao operacional:
+	- `docs/deploy-manual-docker.md` com fluxo completo de build, subida, validacao, update, rollback e troubleshooting
+- Seguranca operacional:
+	- `.gitignore` atualizado para ignorar `deploy/docker/.env.manual` (arquivo local com segredos)
+
 ### Added — Fase 16.6: Frontend Partidas (CRUD + status)
 
 - Frontend (Matches base):
