@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CompletePlayerProfilePage } from '../CompletePlayerProfilePage'
 import { useAuthStore } from '@/features/auth/store/authStore'
@@ -194,5 +194,76 @@ describe('CompletePlayerProfilePage', () => {
     await userEvent.click(screen.getByLabelText(/fw - atacante/i))
 
     expect(screen.getByText(/selecione no máximo 3 posições/i)).toBeInTheDocument()
+  })
+
+  it('deve exibir aviso quando não houver posições ativas', () => {
+    vi.mocked(usePositions).mockReturnValue({
+      data: [],
+    } as ReturnType<typeof usePositions>)
+
+    render(<CompletePlayerProfilePage />)
+
+    expect(screen.getByText(/nenhuma posição ativa cadastrada/i)).toBeInTheDocument()
+  })
+
+  it('deve validar campos obrigatórios antes de enviar', async () => {
+    render(<CompletePlayerProfilePage />)
+
+    const submitButton = screen.getByRole('button', { name: /concluir cadastro/i })
+    const form = submitButton.closest('form')
+    expect(form).not.toBeNull()
+
+    fireEvent.submit(form!)
+
+    expect(createPlayer).not.toHaveBeenCalled()
+    expect(screen.getByText(/preencha os campos obrigatórios/i)).toBeInTheDocument()
+  })
+
+  it('deve exibir erro quando usuário logado não estiver disponível', async () => {
+    useAuthStore.setState({ currentUser: null })
+
+    render(<CompletePlayerProfilePage />)
+
+    await userEvent.type(screen.getByLabelText(/^nome$/i), 'Joao Silva')
+    await userEvent.type(screen.getByLabelText(/telefone/i), '11999990001')
+    await userEvent.type(screen.getByLabelText(/data de nascimento/i), '1990-01-01')
+    await userEvent.click(screen.getByRole('button', { name: /concluir cadastro/i }))
+
+    expect(createPlayer).not.toHaveBeenCalled()
+    expect(screen.getByText(/usuário não encontrado/i)).toBeInTheDocument()
+  })
+
+  it('deve exibir mensagem de erro da criação quando hook retorna errorCode', () => {
+    vi.mocked(useCreatePlayer).mockReturnValue({
+      createPlayer,
+      isPending: false,
+      isError: true,
+      error: null,
+      errorCode: 'USER_NOT_FOUND',
+    })
+
+    render(<CompletePlayerProfilePage />)
+
+    expect(screen.getByText(/usuário não encontrado/i)).toBeInTheDocument()
+  })
+
+  it('deve exibir mensagem de erro de atualização de posições', () => {
+    vi.mocked(useUpdatePlayerPositions).mockReturnValue({
+      updatePlayerPositions,
+      isPending: false,
+      isError: true,
+      error: {
+        response: {
+          data: {
+            title: 'POSITION_NOT_FOUND',
+          },
+        },
+      },
+      errorCode: null,
+    })
+
+    render(<CompletePlayerProfilePage />)
+
+    expect(screen.getByText(/não foram encontradas/i)).toBeInTheDocument()
   })
 })

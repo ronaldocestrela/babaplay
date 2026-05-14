@@ -205,4 +205,102 @@ describe('TeamsPage', () => {
 
     confirmSpy.mockRestore()
   })
+
+  it('deve renderizar estado de carregamento', () => {
+    vi.mocked(useTeams).mockReturnValue({
+      data: [],
+      isLoading: true,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useTeams>)
+
+    render(<TeamsPage />)
+
+    expect(screen.getByText(/carregando times/i)).toBeInTheDocument()
+  })
+
+  it('deve exibir erro genérico quando falha sem forbidden', () => {
+    vi.mocked(useTeams).mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: true,
+      error: {
+        response: {
+          data: { title: 'UNKNOWN_ERROR' },
+        },
+      },
+    } as ReturnType<typeof useTeams>)
+
+    render(<TeamsPage />)
+
+    expect(screen.getByText(/não foi possível carregar times/i)).toBeInTheDocument()
+  })
+
+  it('não deve excluir time quando usuário cancela confirmação', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
+
+    render(<TeamsPage />)
+
+    const deleteButtons = screen.getAllByRole('button', { name: /excluir/i })
+    await userEvent.click(deleteButtons[0]!)
+
+    expect(deleteTeam).not.toHaveBeenCalled()
+    confirmSpy.mockRestore()
+  })
+
+  it('deve bloquear submit com dados inválidos do formulário', async () => {
+    render(<TeamsPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /novo time/i }))
+    await userEvent.type(screen.getByLabelText(/nome/i), 'Time Inválido')
+    await userEvent.clear(screen.getByLabelText(/máximo de jogadores/i))
+    await userEvent.type(screen.getByLabelText(/máximo de jogadores/i), '0')
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }))
+
+    expect(createTeam).not.toHaveBeenCalled()
+    expect(screen.getByText(/maior que zero/i)).toBeInTheDocument()
+  })
+
+  it('deve bloquear salvamento do elenco acima do limite do time', async () => {
+    vi.mocked(useTeams).mockReturnValue({
+      data: [
+        {
+          id: 'team-1',
+          tenantId: 'tenant-1',
+          name: 'Time Azul',
+          maxPlayers: 1,
+          isActive: true,
+          createdAt: '2026-05-05T10:00:00.000Z',
+          playerIds: ['player-1'],
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useTeams>)
+
+    vi.mocked(useTeam).mockReturnValue({
+      data: {
+        id: 'team-1',
+        tenantId: 'tenant-1',
+        name: 'Time Azul',
+        maxPlayers: 1,
+        isActive: true,
+        createdAt: '2026-05-05T10:00:00.000Z',
+        playerIds: ['player-1'],
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useTeam>)
+
+    render(<TeamsPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /elenco/i }))
+    await userEvent.click(screen.getByLabelText(/carlos lima/i))
+    await userEvent.click(screen.getByRole('button', { name: /salvar elenco/i }))
+
+    expect(updateTeamPlayers).not.toHaveBeenCalled()
+    expect(screen.getByText(/excede o limite do time/i)).toBeInTheDocument()
+  })
 })

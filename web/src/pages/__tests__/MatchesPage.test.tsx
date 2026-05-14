@@ -220,4 +220,58 @@ describe('MatchesPage', () => {
 
     confirmSpy.mockRestore()
   })
+
+  it('deve renderizar estado de carregamento', () => {
+    vi.mocked(useMatches).mockReturnValue({
+      data: [],
+      isLoading: true,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useMatches>)
+
+    render(<MatchesPage />)
+
+    expect(screen.getByText(/carregando partidas/i)).toBeInTheDocument()
+  })
+
+  it('deve exibir erro genérico quando falha sem forbidden', () => {
+    vi.mocked(useMatches).mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: true,
+      error: {
+        response: {
+          data: { title: 'ANY_OTHER_ERROR' },
+        },
+      },
+    } as ReturnType<typeof useMatches>)
+
+    render(<MatchesPage />)
+
+    expect(screen.getByText(/não foi possível carregar partidas/i)).toBeInTheDocument()
+  })
+
+  it('não deve excluir partida quando usuário cancela confirmação', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
+
+    render(<MatchesPage />)
+
+    await userEvent.click(screen.getAllByRole('button', { name: /excluir/i })[0]!)
+
+    expect(deleteMatch).not.toHaveBeenCalled()
+    confirmSpy.mockRestore()
+  })
+
+  it('deve bloquear submit quando times são iguais', async () => {
+    render(<MatchesPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /nova partida/i }))
+    await userEvent.selectOptions(screen.getByLabelText(/dia de jogo/i), 'gameday-1')
+    await userEvent.selectOptions(screen.getByLabelText(/time mandante/i), 'team-1')
+    await userEvent.selectOptions(screen.getByLabelText(/time visitante/i), 'team-1')
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }))
+
+    expect(createMatch).not.toHaveBeenCalled()
+    expect(screen.getByText(/devem ser diferentes/i)).toBeInTheDocument()
+  })
 })

@@ -147,4 +147,96 @@ describe('CheckinsPage', () => {
     expect(createCheckin).not.toHaveBeenCalled()
     expect(screen.getByText(/voce ainda nao possui perfil de jogador ativo/i)).toBeInTheDocument()
   })
+
+  it('deve mostrar erro quando geolocalização não é suportada', async () => {
+    Object.defineProperty(global.navigator, 'geolocation', {
+      configurable: true,
+      value: undefined,
+    })
+
+    render(<CheckinsPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /usar minha localização/i }))
+
+    expect(screen.getByText(/geolocalização não suportada/i)).toBeInTheDocument()
+  })
+
+  it('deve mostrar erro quando geolocalização falha', async () => {
+    Object.defineProperty(global.navigator, 'geolocation', {
+      configurable: true,
+      value: {
+        getCurrentPosition: (_success: unknown, error: () => void) => {
+          error()
+        },
+      },
+    })
+
+    render(<CheckinsPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /usar minha localização/i }))
+
+    expect(screen.getByText(/não foi possível obter sua localização/i)).toBeInTheDocument()
+  })
+
+  it('deve exibir feedback de erro quando criação falha', async () => {
+    createCheckin.mockImplementation((_payload, options) => {
+      options?.onError?.({
+        response: {
+          data: {
+            title: 'CHECKIN_OUTSIDE_ALLOWED_RADIUS',
+          },
+        },
+      })
+    })
+
+    render(<CheckinsPage />)
+
+    await userEvent.selectOptions(screen.getByLabelText(/dia de jogo/i), 'gameday-1')
+    await userEvent.type(screen.getByLabelText(/latitude/i), '-23.5505')
+    await userEvent.type(screen.getByLabelText(/longitude/i), '-46.6333')
+    await userEvent.click(screen.getByRole('button', { name: /registrar check-in/i }))
+
+    expect(screen.getByText(/fora do raio permitido/i)).toBeInTheDocument()
+  })
+
+  it('deve ocultar check-ins inativos na lista', () => {
+    vi.mocked(useCheckinsByPlayer).mockReturnValue({
+      data: [
+        {
+          id: 'checkin-1',
+          tenantId: 'tenant-1',
+          playerId: 'player-1',
+          gameDayId: 'gameday-1',
+          checkedInAtUtc: '2026-05-05T10:00:00.000Z',
+          latitude: -23.55,
+          longitude: -46.63,
+          distanceFromAssociationMeters: 30,
+          isActive: true,
+          createdAt: '2026-05-05T10:00:00.000Z',
+          cancelledAtUtc: null,
+        },
+        {
+          id: 'checkin-2',
+          tenantId: 'tenant-1',
+          playerId: 'player-inactive',
+          gameDayId: 'gameday-1',
+          checkedInAtUtc: '2026-05-05T10:00:00.000Z',
+          latitude: -23.55,
+          longitude: -46.63,
+          distanceFromAssociationMeters: 40,
+          isActive: false,
+          createdAt: '2026-05-05T10:00:00.000Z',
+          cancelledAtUtc: '2026-05-05T11:00:00.000Z',
+        },
+      ],
+      isLoading: false,
+      error: null,
+      isError: false,
+    } as ReturnType<typeof useCheckinsByPlayer>)
+
+    render(<CheckinsPage />)
+
+    expect(screen.getByText(/player: player-1/i)).toBeInTheDocument()
+    expect(screen.queryByText(/player: player-inactive/i)).not.toBeInTheDocument()
+  })
 })

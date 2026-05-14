@@ -404,4 +404,101 @@ describe('PlayersPage', () => {
     renderPlayersPage()
     expect(screen.getByText(/máximo de 3 posições/i)).toBeInTheDocument()
   })
+
+  it('deve exibir mensagem genérica quando falha sem forbidden', () => {
+    vi.mocked(usePlayers).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: {
+        response: {
+          data: { title: 'UNKNOWN_ERROR' },
+        },
+      },
+    } as ReturnType<typeof usePlayers>)
+
+    renderPlayersPage()
+
+    expect(screen.getByText(/não foi possível carregar jogadores/i)).toBeInTheDocument()
+  })
+
+  it('não deve excluir jogador quando confirmação é cancelada', async () => {
+    vi.mocked(usePlayers).mockReturnValue({
+      data: [
+        {
+          id: 'player-1',
+          userId: 'user-1',
+          name: 'Joao Silva',
+          nickname: 'JS10',
+          phone: '11999990001',
+          dateOfBirth: null,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof usePlayers>)
+
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
+
+    renderPlayersPage()
+
+    await userEvent.click(screen.getByRole('button', { name: /excluir/i }))
+
+    expect(deletePlayer).not.toHaveBeenCalled()
+    confirmSpy.mockRestore()
+  })
+
+  it('deve impedir envio de convite com e-mail inválido', async () => {
+    vi.mocked(usePlayers).mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof usePlayers>)
+
+    renderPlayersPage()
+
+    await userEvent.click(screen.getByRole('button', { name: /enviar convite por e-mail/i }))
+    await userEvent.type(screen.getByLabelText(/e-mail do convidado/i), 'email-invalido')
+
+    expect(screen.getByText(/informe um e-mail válido/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^enviar convite$/i })).toBeDisabled()
+  })
+
+  it('não deve atualizar jogador ao salvar em modo edição sem seleção válida', async () => {
+    vi.mocked(usePlayers).mockReturnValue({
+      data: [
+        {
+          id: 'player-1',
+          userId: 'user-1',
+          name: 'Joao Silva',
+          nickname: 'JS10',
+          phone: '11999990001',
+          dateOfBirth: null,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof usePlayers>)
+
+    usePlayerStore.setState({
+      isModalOpen: true,
+      modalMode: 'edit',
+      selectedPlayerId: 'player-not-found',
+    })
+
+    renderPlayersPage()
+
+    await userEvent.type(screen.getByLabelText(/^nome$/i), 'Nome Atualizado')
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }))
+
+    expect(updatePlayer).not.toHaveBeenCalled()
+  })
+
 })

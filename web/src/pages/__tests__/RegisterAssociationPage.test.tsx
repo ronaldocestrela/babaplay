@@ -172,4 +172,72 @@ describe('RegisterAssociationPage', () => {
       expect(screen.getByText(/localização da associação atualizada automaticamente no mapa/i)).toBeInTheDocument()
     })
   })
+
+  it('deve exibir erro da API quando criação falha', async () => {
+    createAssociation.mockImplementation((_payload, options) => {
+      options?.onError?.()
+    })
+
+    vi.mocked(useCreateAssociation).mockReturnValue({
+      createAssociation,
+      isPending: false,
+      isError: true,
+      error: null,
+      errorCode: 'TENANT_SLUG_TAKEN',
+    })
+
+    render(<RegisterAssociationPage />)
+
+    await fillRequiredAssociationFields()
+    await userEvent.type(screen.getByLabelText(/nome da associação/i), 'Associação Atlética')
+    await userEvent.type(screen.getByLabelText(/^slug$/i), 'associacao-atletica')
+    await userEvent.type(screen.getByLabelText(/email do admin inicial/i), 'admin@atletica.com')
+    await userEvent.type(screen.getByLabelText(/senha do admin inicial/i), 'Admin1234')
+    await userEvent.type(screen.getByLabelText(/confirmar senha do admin/i), 'Admin1234')
+    await userEvent.click(screen.getByRole('button', { name: /criar associação/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/slug já está em uso/i)).toBeInTheDocument()
+    })
+  })
+
+  it('deve exibir erro quando CEP não é encontrado', async () => {
+    vi.mocked(lookupAddressByZipCode).mockResolvedValue(null)
+
+    render(<RegisterAssociationPage />)
+
+    await userEvent.type(screen.getByLabelText(/cep/i), '04101-300')
+    await userEvent.click(screen.getByRole('button', { name: /buscar cep/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/cep não encontrado/i)).toBeInTheDocument()
+    })
+  })
+
+  it('deve exibir erro quando geocoding falha', async () => {
+    vi.mocked(lookupAddressByZipCode).mockResolvedValue({
+      street: 'Rua Vergueiro',
+      neighborhood: 'Vila Mariana',
+      city: 'Sao Paulo',
+      state: 'SP',
+    })
+    vi.mocked(geocodeAddress).mockRejectedValue(new Error('geocode failed'))
+
+    render(<RegisterAssociationPage />)
+
+    await userEvent.type(screen.getByLabelText(/cep/i), '04101-300')
+    await userEvent.click(screen.getByRole('button', { name: /buscar cep/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/falha ao obter latitude e longitude/i)).toBeInTheDocument()
+    })
+  })
+
+  it('deve voltar para login ao clicar no botão de retorno', async () => {
+    render(<RegisterAssociationPage />)
+
+    await userEvent.click(screen.getByRole('button', { name: /voltar para login/i }))
+
+    expect(mockNavigate).toHaveBeenCalledWith({ to: '/login' })
+  })
 })
