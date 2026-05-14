@@ -1,0 +1,73 @@
+name: babaplay-manual
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: babaplay-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SQL_SA_PASSWORD}
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - babaplay_sql_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q \"SELECT 1\" || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  api:
+    build:
+      context: ../../Backend
+      dockerfile: Dockerfile
+    container_name: babaplay-api
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__MasterDb: ${MASTER_DB_CONNECTION_STRING}
+      Jwt__SecretKey: ${JWT_SECRET_KEY}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
+      Jwt__AccessTokenExpiresInMinutes: ${JWT_ACCESS_TOKEN_EXPIRES_MINUTES}
+      Jwt__RefreshTokenExpiresInDays: ${JWT_REFRESH_TOKEN_EXPIRES_DAYS}
+      Cors__AllowedOrigins__0: ${CORS_ALLOWED_ORIGIN}
+      MatchSummaryStorage__RootPath: /app/storage
+      ResendEmail__ApiKey: ${RESEND_API_KEY}
+      ResendEmail__BaseUrl: ${RESEND_BASE_URL}
+      ResendEmail__FromEmail: ${RESEND_FROM_EMAIL}
+      ResendEmail__FromName: ${RESEND_FROM_NAME}
+      AssociationInvite__AcceptLinkBaseUrl: ${ASSOCIATION_INVITE_ACCEPT_LINK_BASE_URL}
+      AssociationInvite__TokenExpiresInHours: ${ASSOCIATION_INVITE_TOKEN_EXPIRES_HOURS}
+    ports:
+      - "5050:8080"
+    volumes:
+      - babaplay_api_storage:/app/storage
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/swagger/index.html > /dev/null || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  web:
+    build:
+      context: ../../web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${WEB_VITE_API_URL}
+    container_name: babaplay-web
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+
+volumes:
+  babaplay_sql_data:
+  babaplay_api_storage:
