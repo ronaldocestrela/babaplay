@@ -11,6 +11,26 @@ export const apiClient = axios.create({
   baseURL: BASE_URL,
 })
 
+function getRequestPath(url?: string) {
+  if (!url) return ''
+
+  try {
+    return new URL(url, BASE_URL).pathname
+  } catch {
+    return ''
+  }
+}
+
+function isPublicAuthRequest(config?: InternalAxiosRequestConfig) {
+  const path = getRequestPath(config?.url)
+
+  return (
+    path === API_ROUTES.AUTH.LOGIN ||
+    path === API_ROUTES.AUTH.REFRESH_TOKEN ||
+    path === API_ROUTES.AUTH.LOGOUT
+  )
+}
+
 function resolveTenantContext() {
   const state = useAuthStore.getState()
   const urlTenant = getTenantFromUrl()
@@ -51,6 +71,10 @@ apiClient.interceptors.response.use(
   (res) => res,
   async (error: AxiosError<ProblemDetails>) => {
     const req = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
+
+    if (isPublicAuthRequest(req)) {
+      return Promise.reject(error)
+    }
 
     if (error.response?.status !== 401 || req?._retry) {
       return Promise.reject(error)

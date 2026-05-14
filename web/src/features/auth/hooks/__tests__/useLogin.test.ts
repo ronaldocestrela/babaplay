@@ -44,6 +44,8 @@ describe('useLogin', () => {
       expect(result.current.isError).toBe(true)
       expect(useAuthStore.getState().isAuthenticated).toBe(false)
     })
+
+    expect(mockNavigate).not.toHaveBeenCalled()
   })
 
   it('deve expor errorCode USER_INACTIVE para usuário inativo', async () => {

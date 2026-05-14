@@ -75,6 +75,38 @@ describe('apiClient', () => {
   })
 
   describe('response interceptor — renovação de token', () => {
+    it('não deve tentar refresh ou redirecionar quando login retorna 401', async () => {
+      useAuthStore.getState().setTokens(mockAuthResponse)
+
+      let refreshCount = 0
+
+      server.use(
+        http.post(`${BASE_URL}/api/v1/auth/login`, () =>
+          HttpResponse.json(
+            { title: 'INVALID_CREDENTIALS', status: 401 },
+            { status: 401 },
+          ),
+        ),
+        http.post(`${BASE_URL}/api/v1/auth/refresh-token`, () => {
+          refreshCount++
+          return HttpResponse.json(
+            { title: 'INVALID_TOKEN', status: 401 },
+            { status: 401 },
+          )
+        }),
+      )
+
+      await expect(
+        apiClient.post('/api/v1/auth/login', {
+          email: 'wrong@example.com',
+          password: 'wrongpass',
+        }),
+      ).rejects.toMatchObject({ response: { status: 401 } })
+
+      expect(refreshCount).toBe(0)
+      expect(useAuthStore.getState().isAuthenticated).toBe(true)
+    })
+
     it('deve renovar o access token ao receber 401 e retentar', async () => {
       useAuthStore.getState().setTokens({
         ...mockAuthResponse,
