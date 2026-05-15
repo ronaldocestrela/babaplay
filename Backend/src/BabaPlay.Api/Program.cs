@@ -5,6 +5,7 @@ using BabaPlay.Infrastructure;
 using BabaPlay.Infrastructure.Hubs;
 using BabaPlay.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,17 +15,30 @@ builder.Services
     .AddApplicationServices()
     .AddInfrastructureServices(builder.Configuration);
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 // CORS: permite frontend local em desenvolvimento
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendPolicy", policy =>
     {
-        var allowedOrigins = builder.Configuration
+        var allowedOrigins = (builder.Configuration
             .GetSection("Cors:AllowedOrigins")
-            .Get<string[]>() ?? ["http://localhost:5173"];
+            .Get<string[]>() ?? ["http://localhost:5173"])
+            .Where(origin => !string.IsNullOrWhiteSpace(origin))
+            .Select(origin => origin.Trim().TrimEnd('/'))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        static string NormalizeOrigin(string origin)
+            => origin.Trim().TrimEnd('/');
 
         policy
-            .WithOrigins(allowedOrigins)
+            .SetIsOriginAllowed(origin => allowedOrigins.Contains(NormalizeOrigin(origin)))
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -87,6 +101,7 @@ if (!app.Environment.IsEnvironment("Testing"))
 }
 
 app.UseExceptionHandler();
+app.UseForwardedHeaders();
 
 if (app.Environment.IsDevelopment())
 {
