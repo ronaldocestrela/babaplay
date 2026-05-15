@@ -127,6 +127,96 @@ public class UpdateTenantSettingsCommandHandlerTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task Handle_WithLogo_ShouldPersistCloudUrlFromStorage()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var cmd = new UpdateTenantSettingsCommand(
+            tenantId,
+            "owner-user-id",
+            "Clube Atualizado",
+            11,
+            new TenantLogoUploadRequest("logo.webp", "image/webp", [1, 2, 3]),
+            "Rua Atualizada",
+            "321",
+            "Centro",
+            "Sao Paulo",
+            "SP",
+            "01000-000",
+            -23.5505,
+            -46.6333);
+
+        const string cloudUrl = "https://res.cloudinary.com/demo/image/upload/v1/tenant-logos/abc/new-logo.webp";
+
+        _userTenantRepository
+            .Setup(x => x.IsOwnerAsync(cmd.RequestedByUserId, cmd.TenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _tenantLogoStorageService
+            .Setup(x => x.SaveAsync(It.IsAny<TenantLogoSaveRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TenantLogoStoredFile(cloudUrl, "image/webp", 3));
+
+        _tenantRepository
+            .Setup(x => x.UpdateAssociationSettingsAsync(
+                cmd.TenantId,
+                "Clube Atualizado",
+                11,
+                cloudUrl,
+                "Rua Atualizada",
+                "321",
+                "Centro",
+                "Sao Paulo",
+                "SP",
+                "01000-000",
+                -23.5505,
+                -46.6333,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _tenantRepository
+            .Setup(x => x.GetByIdAsync(cmd.TenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TenantInfoDto(
+                cmd.TenantId,
+                "Clube Atualizado",
+                "clube-atualizado",
+                true,
+                "conn",
+                "Ready",
+                11,
+                cloudUrl,
+                "Rua Atualizada",
+                "321",
+                "Centro",
+                "Sao Paulo",
+                "SP",
+                "01000-000",
+                -23.5505,
+                -46.6333));
+
+        // Act
+        var result = await _handler.HandleAsync(cmd);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.LogoPath.Should().Be(cloudUrl);
+        _tenantRepository.Verify(x => x.UpdateAssociationSettingsAsync(
+            cmd.TenantId,
+            "Clube Atualizado",
+            11,
+            cloudUrl,
+            "Rua Atualizada",
+            "321",
+            "Centro",
+            "Sao Paulo",
+            "SP",
+            "01000-000",
+            -23.5505,
+            -46.6333,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private static UpdateTenantSettingsCommand CreateValidCommand()
     {
         return new UpdateTenantSettingsCommand(

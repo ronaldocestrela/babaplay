@@ -41,6 +41,9 @@ public static class ServiceRegistration
         var associationInviteSection = configuration.GetSection(AssociationInviteSettings.SectionName);
         services.Configure<AssociationInviteSettings>(associationInviteSection);
 
+        var tenantLogoStorageSection = configuration.GetSection(TenantLogoStorageSettings.SectionName);
+        services.Configure<TenantLogoStorageSettings>(tenantLogoStorageSection);
+
         // --- Master Database ---
         services.AddDbContext<MasterDbContext>(options =>
             options.UseSqlServer(
@@ -225,7 +228,23 @@ public static class ServiceRegistration
         services.AddScoped<IMatchEventRealtimeNotifier, SignalRMatchEventRealtimeNotifier>();
         services.AddScoped<IMatchSummaryPdfGenerator, MinimalPdfMatchSummaryGenerator>();
         services.AddScoped<IMatchSummaryStorageService, LocalMatchSummaryStorageService>();
-        services.AddScoped<ITenantLogoStorageService, LocalTenantLogoStorageService>();
+
+        var tenantLogoStorageSettings = tenantLogoStorageSection.Get<TenantLogoStorageSettings>()
+            ?? new TenantLogoStorageSettings();
+
+        if (string.Equals(
+            tenantLogoStorageSettings.Provider,
+            TenantLogoStorageProviders.Cloudinary,
+            StringComparison.OrdinalIgnoreCase))
+        {
+            EnsureCloudinaryTenantLogoSettings(tenantLogoStorageSettings.Cloudinary);
+            services.AddScoped<ICloudinaryImageUploader, CloudinaryImageUploader>();
+            services.AddScoped<ITenantLogoStorageService, CloudinaryTenantLogoStorageService>();
+        }
+        else
+        {
+            services.AddScoped<ITenantLogoStorageService, LocalTenantLogoStorageService>();
+        }
 
         var resendApiToken = configuration["ResendEmail:ApiKey"];
         if (string.IsNullOrWhiteSpace(resendApiToken))
@@ -252,6 +271,33 @@ public static class ServiceRegistration
         services.AddScoped<IUserRoleRepository, UserRoleRepository>();
 
         return services;
+    }
+
+    private static void EnsureCloudinaryTenantLogoSettings(CloudinaryTenantLogoStorageSettings settings)
+    {
+        var cloudName = ResolveWithEnvironmentFallback(settings.CloudName, "CLOUDINARY_CLOUD_NAME");
+        var apiKey = ResolveWithEnvironmentFallback(settings.ApiKey, "CLOUDINARY_API_KEY");
+        var apiSecret = ResolveWithEnvironmentFallback(settings.ApiSecret, "CLOUDINARY_API_SECRET");
+
+        var missing = new List<string>();
+        if (string.IsNullOrWhiteSpace(cloudName)) missing.Add("CloudName/CLOUDINARY_CLOUD_NAME");
+        if (string.IsNullOrWhiteSpace(apiKey)) missing.Add("ApiKey/CLOUDINARY_API_KEY");
+        if (string.IsNullOrWhiteSpace(apiSecret)) missing.Add("ApiSecret/CLOUDINARY_API_SECRET");
+
+        if (missing.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"Invalid TenantLogoStorage Cloudinary configuration. Missing: {string.Join(", ", missing)}.");
+        }
+    }
+
+    private static string ResolveWithEnvironmentFallback(string value, string environmentVariable)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+            return value.Trim();
+
+        var fromEnvironment = Environment.GetEnvironmentVariable(environmentVariable);
+        return string.IsNullOrWhiteSpace(fromEnvironment) ? string.Empty : fromEnvironment.Trim();
     }
 }
 

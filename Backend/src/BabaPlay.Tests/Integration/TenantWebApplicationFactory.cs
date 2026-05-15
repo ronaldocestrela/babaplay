@@ -1,6 +1,7 @@
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Infrastructure.Entities;
 using BabaPlay.Infrastructure.Persistence;
+using BabaPlay.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -9,6 +10,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace BabaPlay.Tests.Integration;
 
@@ -39,6 +41,11 @@ public sealed class TenantWebApplicationFactory : WebApplicationFactory<Program>
                 ["Jwt:AccessTokenExpiresInMinutes"] = "60",
                 ["Jwt:RefreshTokenExpiresInDays"] = "30",
                 ["ConnectionStrings:MasterDb"] = "Data Source=:memory:",
+                ["TenantLogoStorage:Provider"] = "Cloudinary",
+                ["TenantLogoStorage:Cloudinary:CloudName"] = "integration-cloud",
+                ["TenantLogoStorage:Cloudinary:ApiKey"] = "integration-api-key",
+                ["TenantLogoStorage:Cloudinary:ApiSecret"] = "integration-api-secret",
+                ["TenantLogoStorage:Cloudinary:Folder"] = "tenant-logos",
             });
         });
 
@@ -67,6 +74,14 @@ public sealed class TenantWebApplicationFactory : WebApplicationFactory<Program>
             var queueDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ITenantProvisioningQueue));
             if (queueDescriptor is not null) services.Remove(queueDescriptor);
             services.AddSingleton<ITenantProvisioningQueue, NoOpProvisioningQueue>();
+
+            // --- Replace cloudinary uploader with deterministic fake ---
+            services.RemoveAll<ICloudinaryImageUploader>();
+            services.AddScoped<ICloudinaryImageUploader, FakeCloudinaryImageUploader>();
+
+            // --- Ensure tenant logo storage returns remote URL in integration tests ---
+            services.RemoveAll<ITenantLogoStorageService>();
+            services.AddScoped<ITenantLogoStorageService, FakeTenantLogoStorageService>();
 
             // --- Replace JWT auth with test auth handler (always authenticates) ---
             services.AddAuthentication(options =>
@@ -126,6 +141,39 @@ public sealed class TenantWebApplicationFactory : WebApplicationFactory<Program>
             var tcs = new TaskCompletionSource<Guid>(TaskCreationOptions.RunContinuationsAsynchronously);
             ct.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
             return tcs.Task;
+        }
+    }
+
+    private sealed class FakeCloudinaryImageUploader : ICloudinaryImageUploader
+    {
+        public Task<CloudinaryImageUploadResult> UploadAsync(CloudinaryImageUploadRequest request, CancellationToken ct = default)
+        {
+            var safeFolder = request.Folder.Replace("//", "/");
+            var safePublicId = request.PublicId.Trim('/');
+            var url = $"https://res.cloudinary.com/integration-cloud/image/upload/v1/{safeFolder}/{safePublicId}";
+
+            return Task.FromResult(new CloudinaryImageUploadResult(
+                true,
+                url,
+                $"{safeFolder}/{safePublicId}",
+                request.Content.LongLength,
+                null));
+        }
+    }
+
+    private sealed class FakeTenantLogoStorageService : ITenantLogoStorageService
+    {
+        public Task<TenantLogoStoredFile> SaveAsync(TenantLogoSaveRequest request, CancellationToken ct = default)
+        {
+            var extension = Path.GetExtension(request.FileName);
+            var safeExtension = string.IsNullOrWhiteSpace(extension) ? ".bin" : extension.ToLowerInvariant();
+            var fileName = $"{Guid.NewGuid():N}{safeExtension}";
+            var url = $"https://res.cloudinary.com/integration-cloud/image/upload/v1/tenant-logos/{request.TenantId:N}/{fileName}";
+
+            return Task.FromResult(new TenantLogoStoredFile(
+                url,
+                request.ContentType,
+                request.Content.LongLength));
         }
     }
 }

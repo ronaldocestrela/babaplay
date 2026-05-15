@@ -38,6 +38,12 @@ services:
       Jwt__RefreshTokenExpiresInDays: ${JWT_REFRESH_TOKEN_EXPIRES_DAYS}
       Cors__AllowedOrigins__0: ${CORS_ALLOWED_ORIGIN}
       MatchSummaryStorage__RootPath: /app/storage
+      TenantLogoStorage__Provider: ${TENANT_LOGO_STORAGE_PROVIDER}
+      TenantLogoStorage__LocalRootPath: /app/storage
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      TenantLogoStorage__Cloudinary__Folder: ${CLOUDINARY_FOLDER}
       ResendEmail__ApiKey: ${RESEND_API_KEY}
       ResendEmail__BaseUrl: ${RESEND_BASE_URL}
       ResendEmail__FromEmail: ${RESEND_FROM_EMAIL}

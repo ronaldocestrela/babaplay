@@ -107,6 +107,7 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
         body.PlayersPerTeam.Should().Be(11);
         body.Id.Should().NotBeEmpty();
         body.LogoPath.Should().NotBeNullOrWhiteSpace();
+        body.LogoPath.Should().StartWith("https://res.cloudinary.com/");
         body.Street.Should().Be("Rua das Palmeiras");
         body.Number.Should().Be("123");
         body.City.Should().Be("Sao Paulo");
@@ -252,6 +253,8 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
         body.Should().NotBeNull();
         body!.Name.Should().Be("Clube Atualizado");
         body.PlayersPerTeam.Should().Be(11);
+        body.LogoPath.Should().NotBeNullOrWhiteSpace();
+        body.LogoPath.Should().StartWith("https://res.cloudinary.com/");
         body.City.Should().Be("Rio de Janeiro");
         body.AssociationLatitude.Should().Be(-22.9068);
         body.AssociationLongitude.Should().Be(-43.1729);

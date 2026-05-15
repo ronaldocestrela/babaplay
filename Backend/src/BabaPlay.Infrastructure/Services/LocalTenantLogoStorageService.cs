@@ -1,5 +1,7 @@
 using BabaPlay.Application.Interfaces;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using BabaPlay.Infrastructure.Settings;
 
 namespace BabaPlay.Infrastructure.Services;
 
@@ -7,9 +9,17 @@ public sealed class LocalTenantLogoStorageService : ITenantLogoStorageService
 {
     private readonly string _storageRoot;
 
-    public LocalTenantLogoStorageService(IHostEnvironment hostEnvironment)
+    public LocalTenantLogoStorageService(
+        IHostEnvironment hostEnvironment,
+        IOptions<TenantLogoStorageSettings> storageOptions)
     {
-        _storageRoot = Path.Combine(hostEnvironment.ContentRootPath, "storage");
+        var configuredRootPath = storageOptions.Value.LocalRootPath?.Trim();
+        var rootPath = string.IsNullOrWhiteSpace(configuredRootPath) ? "storage" : configuredRootPath;
+
+        _storageRoot = Path.IsPathRooted(rootPath)
+            ? rootPath
+            : Path.Combine(hostEnvironment.ContentRootPath, rootPath);
+
         _storageRoot = Path.GetFullPath(_storageRoot);
     }
 

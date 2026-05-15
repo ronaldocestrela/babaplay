@@ -329,4 +329,62 @@ public class CreateTenantCommandHandlerTests
         result.IsSuccess.Should().BeFalse();
         result.ErrorCode.Should().Be("TENANT_ASSOCIATION_LONGITUDE_INVALID");
     }
+
+    [Fact]
+    public async Task Handle_StorageReturnsCloudUrl_ShouldPersistAndReturnCloudUrl()
+    {
+        // Arrange
+        const string cloudUrl = "https://res.cloudinary.com/demo/image/upload/v1/tenant-logos/abc/logo.png";
+
+        _tenantRepo
+            .Setup(r => r.ExistsAsync("myclob", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        _tenantLogoStorage
+            .Setup(x => x.SaveAsync(It.IsAny<TenantLogoSaveRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TenantLogoStoredFile(cloudUrl, "image/png", 3));
+
+        _tenantRepo
+            .Setup(r => r.AddAsync(
+                It.IsAny<Guid>(),
+                "My Club",
+                "myclob",
+                cloudUrl,
+                "Rua Central",
+                "123",
+                "Centro",
+                "Sao Paulo",
+                "SP",
+                "01000-000",
+                -23.5505,
+                -46.6333,
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        _queue
+            .Setup(q => q.EnqueueAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _handler.HandleAsync(CreateValidCommand());
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.LogoPath.Should().Be(cloudUrl);
+        _tenantRepo.Verify(r => r.AddAsync(
+            It.IsAny<Guid>(),
+            "My Club",
+            "myclob",
+            cloudUrl,
+            "Rua Central",
+            "123",
+            "Centro",
+            "Sao Paulo",
+            "SP",
+            "01000-000",
+            -23.5505,
+            -46.6333,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
 }

@@ -45,6 +45,9 @@ Edite o arquivo `deploy/docker/.env.manual` com valores reais, principalmente:
 - `CORS_ALLOWED_ORIGIN`
 - `WEB_VITE_API_URL`
 - `RESEND_API_KEY` (se houver envio real de e-mails)
+- `TENANT_LOGO_STORAGE_PROVIDER` (`Local` ou `Cloudinary`)
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+- `CLOUDINARY_FOLDER`
 
 Observacoes:
 
@@ -52,6 +55,7 @@ Observacoes:
 - `MASTER_DB_CONNECTION_STRING` deve apontar para `sqlserver,1433` quando usar o compose fornecido.
 - `WEB_VITE_API_URL` e injetada no build do frontend. Para este stack: `http://localhost:5050`.
 - `CORS_ALLOWED_ORIGIN` deve bater com a URL publica da web. Para este stack: `http://localhost:8080`.
+- Para ativar Cloudinary no logo da associacao, defina `TENANT_LOGO_STORAGE_PROVIDER=Cloudinary` e preencha as variaveis `CLOUDINARY_*`.
 
 ## 2) Build das imagens
 
