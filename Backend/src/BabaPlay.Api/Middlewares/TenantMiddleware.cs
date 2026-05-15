@@ -27,6 +27,12 @@ public sealed class TenantMiddleware
         ITenantRepository tenantRepository,
         ITenantContext tenantContext)
     {
+        if (ShouldSkipTenantResolution(context.Request))
+        {
+            await _next(context);
+            return;
+        }
+
         if (context.Request.Headers.TryGetValue(HeaderName, out var slugValues))
         {
             var slug = slugValues.FirstOrDefault()?.Trim().ToLowerInvariant();
@@ -43,6 +49,31 @@ public sealed class TenantMiddleware
         }
 
         await _next(context);
+    }
+
+    private static bool ShouldSkipTenantResolution(HttpRequest request)
+    {
+        if (HttpMethods.IsPost(request.Method)
+            && request.Path.Equals("/api/v1/tenant", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (!HttpMethods.IsGet(request.Method))
+            return false;
+
+        var segments = request.Path.Value?
+            .Trim('/')
+            .Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+        if (segments is null || segments.Length != 5)
+            return false;
+
+        return segments[0].Equals("api", StringComparison.OrdinalIgnoreCase)
+            && segments[1].Equals("v1", StringComparison.OrdinalIgnoreCase)
+            && segments[2].Equals("tenant", StringComparison.OrdinalIgnoreCase)
+            && Guid.TryParse(segments[3], out _)
+            && segments[4].Equals("status", StringComparison.OrdinalIgnoreCase);
     }
 }
 

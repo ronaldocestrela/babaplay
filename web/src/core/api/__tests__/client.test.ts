@@ -72,6 +72,36 @@ describe('apiClient', () => {
       await apiClient.get('/api/v1/ping')
       expect(capturedTenantHeader).toBe('lions')
     })
+
+    it('não deve injetar X-Tenant-Slug no POST de criação de tenant', async () => {
+      window.history.replaceState({}, '', 'http://localhost:3000/?tenant=babaplay')
+      let capturedTenantHeader: string | null = null
+
+      server.use(
+        http.post(`${BASE_URL}/api/v1/tenant`, ({ request }) => {
+          capturedTenantHeader = request.headers.get('X-Tenant-Slug')
+          return HttpResponse.json({ id: 'x' }, { status: 201 })
+        }),
+      )
+
+      await apiClient.post('/api/v1/tenant', new FormData())
+      expect(capturedTenantHeader).toBeNull()
+    })
+
+    it('não deve injetar X-Tenant-Slug no GET de status do tenant', async () => {
+      window.history.replaceState({}, '', 'http://localhost:3000/?tenant=babaplay')
+      let capturedTenantHeader: string | null = null
+
+      server.use(
+        http.get(`${BASE_URL}/api/v1/tenant/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/status`, ({ request }) => {
+          capturedTenantHeader = request.headers.get('X-Tenant-Slug')
+          return HttpResponse.json({ id: 'x', provisioningStatus: 'Pending' })
+        }),
+      )
+
+      await apiClient.get('/api/v1/tenant/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/status')
+      expect(capturedTenantHeader).toBeNull()
+    })
   })
 
   describe('response interceptor — renovação de token', () => {

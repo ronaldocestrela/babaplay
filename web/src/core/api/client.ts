@@ -31,6 +31,16 @@ function isPublicAuthRequest(config?: InternalAxiosRequestConfig) {
   )
 }
 
+function isTenantHeaderOptionalRequest(config?: InternalAxiosRequestConfig) {
+  const path = getRequestPath(config?.url)
+
+  if (path === API_ROUTES.TENANT.CREATE) {
+    return true
+  }
+
+  return /^\/api\/v1\/tenant\/[^/]+\/status$/i.test(path)
+}
+
 function resolveTenantContext() {
   const state = useAuthStore.getState()
   const urlTenant = getTenantFromUrl()
@@ -50,7 +60,7 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = useAuthStore.getState().accessToken
   if (token) config.headers.Authorization = `Bearer ${token}`
 
-  const tenant = resolveTenantContext()
+  const tenant = isTenantHeaderOptionalRequest(config) ? null : resolveTenantContext()
   if (tenant) {
     config.headers[TENANT_HEADER_NAME] = tenant.slug
     useAuthStore.getState().setCurrentTenant(tenant)

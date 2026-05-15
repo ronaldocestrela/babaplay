@@ -147,6 +147,24 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
         problem!.Title.Should().Be("TENANT_NAME_REQUIRED");
     }
 
+    [Fact]
+    public async Task POST_Tenant_WithInvalidTenantSlugHeader_ShouldStillReturn201()
+    {
+        // Arrange
+        var slug = $"club-header-{Guid.NewGuid():N}"[..20];
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/tenant")
+        {
+            Content = BuildTenantCreateContent("Header Club", slug),
+        };
+        request.Headers.Add("X-Tenant-Slug", "totally-nonexistent-slug");
+
+        // Act
+        var response = await _client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
     // ── GET /api/v1/tenant/{id}/status ─────────────────────────────────────
 
     [Fact]
