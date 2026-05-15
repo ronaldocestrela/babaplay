@@ -1,4 +1,5 @@
-import { FormEvent, useState } from 'react'
+import { useState } from 'react'
+import type { FormEvent } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { ERROR_CODES } from '@/core/constants/errorCodes'
 import { getErrorCode } from '@/core/utils/getErrorCode'
@@ -175,7 +176,9 @@ export function CompletePlayerProfilePage() {
         ) : null}
 
         {createPlayer.errorCode ? (
-          <p className="text-sm text-red-600">{ERROR_MESSAGES[createErrorCode] ?? createErrorCode}</p>
+          <p className="text-sm text-red-600">
+            {createErrorCode ? (ERROR_MESSAGES[createErrorCode] ?? createErrorCode) : null}
+          </p>
         ) : null}
 
         {updatePositionsErrorCode ? (

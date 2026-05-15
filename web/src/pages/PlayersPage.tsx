@@ -25,8 +25,6 @@ const ERROR_MESSAGES: Record<string, string> = {
   [ERROR_CODES.POSITIONS_LIMIT_EXCEEDED]: 'Máximo de 3 posições por jogador.',
   [ERROR_CODES.DUPLICATE_POSITIONS]: 'Posições duplicadas não são permitidas.',
   [ERROR_CODES.INVALID_POSITION_ID]: 'Uma ou mais posições são inválidas.',
-  [ERROR_CODES.ASSOCIATION_INVITE_EMAIL_REQUIRED]: 'Informe um e-mail para enviar o convite.',
-  [ERROR_CODES.ASSOCIATION_INVITE_EMAIL_INVALID]: 'E-mail inválido para convite.',
   [ERROR_CODES.FORBIDDEN]: 'Somente administradores podem enviar convites.',
 }
 

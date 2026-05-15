@@ -16,7 +16,7 @@ describe('DashboardPage', () => {
       isError: false,
       data: undefined,
       error: null,
-    } as ReturnType<typeof useDashboardData>)
+    } as unknown as ReturnType<typeof useDashboardData>)
 
     render(<DashboardPage />)
 
@@ -51,7 +51,7 @@ describe('DashboardPage', () => {
           monthlyFeesPaidAmount: 900,
         },
       },
-    } as ReturnType<typeof useDashboardData>)
+    } as unknown as ReturnType<typeof useDashboardData>)
 
     render(<DashboardPage />)
 
@@ -93,7 +93,7 @@ describe('DashboardPage', () => {
           monthlyFeesPaidAmount: 0,
         },
       },
-    } as ReturnType<typeof useDashboardData>)
+    } as unknown as ReturnType<typeof useDashboardData>)
 
     render(<DashboardPage />)
 
@@ -129,7 +129,7 @@ describe('DashboardPage', () => {
           monthlyFeesPaidAmount: 900,
         },
       },
-    } as ReturnType<typeof useDashboardData>)
+    } as unknown as ReturnType<typeof useDashboardData>)
 
     render(<DashboardPage />)
 

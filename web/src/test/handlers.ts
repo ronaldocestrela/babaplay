@@ -226,7 +226,15 @@ const mockMatches = [
   },
 ]
 
-let mockTenantGameDayOptions = [
+let mockTenantGameDayOptions: Array<{
+  id: string
+  tenantId: string
+  dayOfWeek: number
+  localStartTime: string
+  isActive: boolean
+  createdAt: string
+  updatedAt: string | null
+}> = [
   {
     id: 'tenant-gdo-1',
     tenantId: 'tenant-123',

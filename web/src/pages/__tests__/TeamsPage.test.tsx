@@ -75,7 +75,7 @@ describe('TeamsPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof useTeams>)
+    } as unknown as ReturnType<typeof useTeams>)
 
     vi.mocked(useTeam).mockReturnValue({
       data: {
@@ -90,7 +90,7 @@ describe('TeamsPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof useTeam>)
+    } as unknown as ReturnType<typeof useTeam>)
 
     vi.mocked(useTeamPlayers).mockReturnValue({
       data: [
@@ -100,7 +100,7 @@ describe('TeamsPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof useTeamPlayers>)
+    } as unknown as ReturnType<typeof useTeamPlayers>)
 
     vi.mocked(useCreateTeam).mockReturnValue({
       createTeam,
@@ -184,7 +184,7 @@ describe('TeamsPage', () => {
           data: { title: 'FORBIDDEN' },
         },
       },
-    } as ReturnType<typeof useTeams>)
+    } as unknown as ReturnType<typeof useTeams>)
 
     render(<TeamsPage />)
 
@@ -212,7 +212,7 @@ describe('TeamsPage', () => {
       isLoading: true,
       isError: false,
       error: null,
-    } as ReturnType<typeof useTeams>)
+    } as unknown as ReturnType<typeof useTeams>)
 
     render(<TeamsPage />)
 
@@ -229,7 +229,7 @@ describe('TeamsPage', () => {
           data: { title: 'UNKNOWN_ERROR' },
         },
       },
-    } as ReturnType<typeof useTeams>)
+    } as unknown as ReturnType<typeof useTeams>)
 
     render(<TeamsPage />)
 
@@ -277,7 +277,7 @@ describe('TeamsPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof useTeams>)
+    } as unknown as ReturnType<typeof useTeams>)
 
     vi.mocked(useTeam).mockReturnValue({
       data: {
@@ -292,7 +292,7 @@ describe('TeamsPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof useTeam>)
+    } as unknown as ReturnType<typeof useTeam>)
 
     render(<TeamsPage />)
 
@@ -344,7 +344,7 @@ describe('TeamsPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof useTeams>)
+    } as unknown as ReturnType<typeof useTeams>)
 
     vi.mocked(useTeam).mockReturnValue({
       data: {
@@ -359,7 +359,7 @@ describe('TeamsPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof useTeam>)
+    } as unknown as ReturnType<typeof useTeam>)
 
     render(<TeamsPage />)
 

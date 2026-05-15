@@ -66,7 +66,7 @@ describe('useLogout', () => {
   })
 
   it('deve fazer logout mesmo sem refreshToken armazenado', async () => {
-    useAuthStore.getState().setTokens({ ...mockAuthResponse, refreshToken: null })
+    useAuthStore.setState({ refreshToken: null })
 
     const { result } = renderHook(() => useLogout(), { wrapper: createWrapper() })
 

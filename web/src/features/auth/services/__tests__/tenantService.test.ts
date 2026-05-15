@@ -41,11 +41,15 @@ describe('tenantService', () => {
   describe('getTenantFromUrl', () => {
     const originalLocation = window.location
 
-    beforeEach(() => {
+    const setMockLocation = (hostname: string, search: string) => {
       Object.defineProperty(window, 'location', {
         writable: true,
-        value: { hostname: '', search: '' },
+        value: { hostname, search } as unknown as Location,
       })
+    }
+
+    beforeEach(() => {
+      setMockLocation('', '')
     })
 
     afterEach(() => {
@@ -56,37 +60,37 @@ describe('tenantService', () => {
     })
 
     it('returns TenantContext from subdomain when 3-part hostname present', () => {
-      window.location = { hostname: 'myclob.babaplay.app', search: '' } as Location
+      setMockLocation('myclob.babaplay.app', '')
       const result = getTenantFromUrl()
       expect(result).toEqual({ slug: 'myclob', source: 'subdomain' })
     })
 
     it('returns TenantContext from ?tenant= query param when no subdomain', () => {
-      window.location = { hostname: 'localhost', search: '?tenant=testclub' } as Location
+      setMockLocation('localhost', '?tenant=testclub')
       const result = getTenantFromUrl()
       expect(result).toEqual({ slug: 'testclub', source: 'query' })
     })
 
     it('normalises ?tenant= query param value to lowercase', () => {
-      window.location = { hostname: 'localhost', search: '?tenant=TestClub' } as Location
+      setMockLocation('localhost', '?tenant=TestClub')
       const result = getTenantFromUrl()
       expect(result?.slug).toBe('testclub')
     })
 
     it('returns null when no subdomain and no ?tenant= param', () => {
-      window.location = { hostname: 'localhost', search: '' } as Location
+      setMockLocation('localhost', '')
       const result = getTenantFromUrl()
       expect(result).toBeNull()
     })
 
     it('prefers subdomain over query param', () => {
-      window.location = { hostname: 'myclob.babaplay.app', search: '?tenant=other' } as Location
+      setMockLocation('myclob.babaplay.app', '?tenant=other')
       const result = getTenantFromUrl()
       expect(result).toEqual({ slug: 'myclob', source: 'subdomain' })
     })
 
     it('returns null when window is undefined (SSR guard)', () => {
-      const windowSpy = vi.spyOn(global, 'window', 'get')
+      const windowSpy = vi.spyOn(globalThis, 'window', 'get')
       windowSpy.mockReturnValue(undefined as unknown as Window & typeof globalThis)
       const result = getTenantFromUrl()
       expect(result).toBeNull()

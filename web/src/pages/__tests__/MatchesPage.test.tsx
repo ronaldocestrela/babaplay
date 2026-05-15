@@ -78,7 +78,7 @@ describe('MatchesPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof useMatches>)
+    } as unknown as ReturnType<typeof useMatches>)
 
     vi.mocked(useMatchGameDays).mockReturnValue({
       data: [
@@ -88,7 +88,7 @@ describe('MatchesPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof useMatchGameDays>)
+    } as unknown as ReturnType<typeof useMatchGameDays>)
 
     vi.mocked(useMatchTeams).mockReturnValue({
       data: [
@@ -98,7 +98,7 @@ describe('MatchesPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof useMatchTeams>)
+    } as unknown as ReturnType<typeof useMatchTeams>)
 
     vi.mocked(useCreateMatch).mockReturnValue({
       createMatch,
@@ -200,7 +200,7 @@ describe('MatchesPage', () => {
           data: { title: 'FORBIDDEN' },
         },
       },
-    } as ReturnType<typeof useMatches>)
+    } as unknown as ReturnType<typeof useMatches>)
 
     render(<MatchesPage />)
 
@@ -227,7 +227,7 @@ describe('MatchesPage', () => {
       isLoading: true,
       isError: false,
       error: null,
-    } as ReturnType<typeof useMatches>)
+    } as unknown as ReturnType<typeof useMatches>)
 
     render(<MatchesPage />)
 
@@ -244,7 +244,7 @@ describe('MatchesPage', () => {
           data: { title: 'ANY_OTHER_ERROR' },
         },
       },
-    } as ReturnType<typeof useMatches>)
+    } as unknown as ReturnType<typeof useMatches>)
 
     render(<MatchesPage />)
 

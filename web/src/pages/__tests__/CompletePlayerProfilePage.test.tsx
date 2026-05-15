@@ -63,7 +63,7 @@ describe('CompletePlayerProfilePage', () => {
           createdAt: '2026-01-01T00:00:00.000Z',
         },
       ],
-    } as ReturnType<typeof usePositions>)
+    } as unknown as ReturnType<typeof usePositions>)
 
     vi.mocked(useCreatePlayer).mockReturnValue({
       createPlayer,
@@ -184,7 +184,7 @@ describe('CompletePlayerProfilePage', () => {
           createdAt: '2026-01-01T00:00:00.000Z',
         },
       ],
-    } as ReturnType<typeof usePositions>)
+    } as unknown as ReturnType<typeof usePositions>)
 
     render(<CompletePlayerProfilePage />)
 
@@ -199,7 +199,7 @@ describe('CompletePlayerProfilePage', () => {
   it('deve exibir aviso quando não houver posições ativas', () => {
     vi.mocked(usePositions).mockReturnValue({
       data: [],
-    } as ReturnType<typeof usePositions>)
+    } as unknown as ReturnType<typeof usePositions>)
 
     render(<CompletePlayerProfilePage />)
 
@@ -258,7 +258,7 @@ describe('CompletePlayerProfilePage', () => {
             title: 'POSITION_NOT_FOUND',
           },
         },
-      },
+      } as unknown as Error,
       errorCode: null,
     })
 

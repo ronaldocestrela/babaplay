@@ -1,5 +1,39 @@
+import type { ComponentType, CSSProperties, ReactNode } from 'react'
 import { CircleMarker, MapContainer, TileLayer, useMapEvents } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
+
+type LatLngTuple = [number, number]
+
+interface SafeMapContainerProps {
+  key?: string
+  center: LatLngTuple
+  zoom: number
+  scrollWheelZoom?: boolean
+  style?: CSSProperties
+  children?: ReactNode
+}
+
+interface SafeTileLayerProps {
+  attribution?: string
+  url: string
+}
+
+interface SafeCircleMarkerProps {
+  center: LatLngTuple
+  radius?: number
+  pathOptions?: { color?: string }
+}
+
+interface MapClickEvent {
+  latlng: {
+    lat: number
+    lng: number
+  }
+}
+
+const SafeMapContainer = MapContainer as unknown as ComponentType<SafeMapContainerProps>
+const SafeTileLayer = TileLayer as unknown as ComponentType<SafeTileLayerProps>
+const SafeCircleMarker = CircleMarker as unknown as ComponentType<SafeCircleMarkerProps>
 
 interface AssociationLocationMapProps {
   latitude: string
@@ -13,7 +47,7 @@ function MapClickHandler({
   onCoordinateChange: (latitude: string, longitude: string) => void
 }) {
   useMapEvents({
-    click: (event) => {
+    click: (event: MapClickEvent) => {
       onCoordinateChange(event.latlng.lat.toFixed(6), event.latlng.lng.toFixed(6))
     },
   })
@@ -40,7 +74,7 @@ export function AssociationLocationMap({
     Math.abs(parsedLatitude) <= 90 &&
     Math.abs(parsedLongitude) <= 180
 
-  const center: [number, number] = hasValidCoordinates
+  const center: LatLngTuple = hasValidCoordinates
     ? [parsedLatitude, parsedLongitude]
     : [-23.5505, -46.6333]
 
@@ -52,16 +86,16 @@ export function AssociationLocationMap({
         Clique no mapa para ajustar latitude e longitude da associação.
       </p>
       <div className="mt-3 overflow-hidden rounded-lg border border-gray-200" data-testid="association-location-map">
-        <MapContainer key={mapKey} center={center} zoom={15} scrollWheelZoom style={{ height: '16rem', width: '100%' }}>
-          <TileLayer
+        <SafeMapContainer key={mapKey} center={center} zoom={15} scrollWheelZoom style={{ height: '16rem', width: '100%' }}>
+          <SafeTileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <MapClickHandler onCoordinateChange={onCoordinateChange} />
           {hasValidCoordinates ? (
-            <CircleMarker center={[parsedLatitude, parsedLongitude]} radius={10} pathOptions={{ color: '#2563eb' }} />
+            <SafeCircleMarker center={center} radius={10} pathOptions={{ color: '#2563eb' }} />
           ) : null}
-        </MapContainer>
+        </SafeMapContainer>
       </div>
     </section>
   )

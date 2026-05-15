@@ -106,7 +106,7 @@ describe('CheckinsPage', () => {
         },
       },
       isError: true,
-    } as ReturnType<typeof useCheckinsByPlayer>)
+    } as unknown as ReturnType<typeof useCheckinsByPlayer>)
 
     render(<CheckinsPage />)
 
@@ -150,7 +150,7 @@ describe('CheckinsPage', () => {
   })
 
   it('deve mostrar erro quando geolocalização não é suportada', async () => {
-    Object.defineProperty(global.navigator, 'geolocation', {
+    Object.defineProperty(globalThis.navigator, 'geolocation', {
       configurable: true,
       value: undefined,
     })
@@ -163,7 +163,7 @@ describe('CheckinsPage', () => {
   })
 
   it('deve mostrar erro quando geolocalização falha', async () => {
-    Object.defineProperty(global.navigator, 'geolocation', {
+    Object.defineProperty(globalThis.navigator, 'geolocation', {
       configurable: true,
       value: {
         getCurrentPosition: (_success: unknown, error: () => void) => {
@@ -242,7 +242,7 @@ describe('CheckinsPage', () => {
   })
 
   it('deve preencher latitude e longitude ao usar geolocalização com sucesso', async () => {
-    Object.defineProperty(global.navigator, 'geolocation', {
+    Object.defineProperty(globalThis.navigator, 'geolocation', {
       configurable: true,
       value: {
         getCurrentPosition: (success: (value: { coords: { latitude: number; longitude: number } }) => void) => {
@@ -265,7 +265,7 @@ describe('CheckinsPage', () => {
       isLoading: true,
       error: null,
       isError: false,
-    } as ReturnType<typeof useCheckinsByPlayer>)
+    } as unknown as ReturnType<typeof useCheckinsByPlayer>)
 
     render(<CheckinsPage />)
 
@@ -282,7 +282,7 @@ describe('CheckinsPage', () => {
         },
       },
       isError: true,
-    } as ReturnType<typeof useCheckinsByPlayer>)
+    } as unknown as ReturnType<typeof useCheckinsByPlayer>)
 
     render(<CheckinsPage />)
 

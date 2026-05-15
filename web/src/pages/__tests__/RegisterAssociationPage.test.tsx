@@ -330,7 +330,7 @@ describe('RegisterAssociationPage', () => {
   })
 
   it('deve exibir mensagem de geocodificação pendente enquanto localização é resolvida', async () => {
-    let resolveGeocode: ((value: { latitude: number; longitude: number } | null) => void) | null = null
+    let resolveGeocode: ((value: { latitude: number; longitude: number } | null) => void) | undefined
 
     vi.mocked(lookupAddressByZipCode).mockResolvedValue({
       street: 'Rua Vergueiro',
@@ -338,12 +338,9 @@ describe('RegisterAssociationPage', () => {
       city: 'Sao Paulo',
       state: 'SP',
     })
-    vi.mocked(geocodeAddress).mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          resolveGeocode = resolve
-        }),
-    )
+    vi.mocked(geocodeAddress).mockImplementation(() => new Promise<{ latitude: number; longitude: number } | null>((resolve) => {
+      resolveGeocode = resolve
+    }))
 
     render(<RegisterAssociationPage />)
 

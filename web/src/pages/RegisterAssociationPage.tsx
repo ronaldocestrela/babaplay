@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
+import { z } from 'zod'
 import { AssociationLocationMap } from '@/core/components/AssociationLocationMap'
 import { ERROR_CODES } from '@/core/constants/errorCodes'
 import { geocodeAddress, lookupAddressByZipCode } from '@/core/services/addressLookup'
@@ -30,6 +31,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   TENANT_ADMIN_INVALID_PASSWORD: 'Credenciais do admin inválidas para o email informado.',
 }
 
+type AssociationFormInput = z.input<typeof associationFormSchema>
+
 export function RegisterAssociationPage() {
   const navigate = useNavigate()
   const [apiError, setApiError] = useState<string | null>(null)
@@ -49,7 +52,7 @@ export function RegisterAssociationPage() {
     getValues,
     trigger,
     formState: { errors },
-  } = useForm<AssociationFormValues>({
+  } = useForm<AssociationFormInput, unknown, AssociationFormValues>({
     resolver: zodResolver(associationFormSchema),
     defaultValues: {
       name: '',

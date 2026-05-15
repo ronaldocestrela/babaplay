@@ -80,7 +80,7 @@ describe('PlayersPage', () => {
           createdAt: '2026-01-01T00:00:00.000Z',
         },
       ],
-    } as ReturnType<typeof usePositions>)
+    } as unknown as ReturnType<typeof usePositions>)
 
     vi.mocked(useCreatePlayer).mockReturnValue({
       createPlayer,
@@ -121,7 +121,7 @@ describe('PlayersPage', () => {
       isLoading: true,
       isError: false,
       error: null,
-    } as ReturnType<typeof usePlayers>)
+    } as unknown as ReturnType<typeof usePlayers>)
 
     renderPlayersPage()
 
@@ -138,7 +138,7 @@ describe('PlayersPage', () => {
           data: { title: 'FORBIDDEN' },
         },
       },
-    } as ReturnType<typeof usePlayers>)
+    } as unknown as ReturnType<typeof usePlayers>)
 
     renderPlayersPage()
 
@@ -172,7 +172,7 @@ describe('PlayersPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof usePlayers>)
+    } as unknown as ReturnType<typeof usePlayers>)
 
     renderPlayersPage()
 
@@ -214,7 +214,7 @@ describe('PlayersPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof usePlayers>)
+    } as unknown as ReturnType<typeof usePlayers>)
 
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
 
@@ -263,7 +263,7 @@ describe('PlayersPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof usePlayers>)
+    } as unknown as ReturnType<typeof usePlayers>)
 
     renderPlayersPage()
 
@@ -289,7 +289,7 @@ describe('PlayersPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof usePlayers>)
+    } as unknown as ReturnType<typeof usePlayers>)
 
     vi.mocked(useCreatePlayer).mockReturnValue({
       createPlayer,
@@ -323,7 +323,7 @@ describe('PlayersPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof usePlayers>)
+    } as unknown as ReturnType<typeof usePlayers>)
 
     vi.mocked(useUpdatePlayerPositions).mockReturnValue({
       updatePlayerPositions,
@@ -356,7 +356,7 @@ describe('PlayersPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof usePlayers>)
+    } as unknown as ReturnType<typeof usePlayers>)
 
     vi.mocked(useUpdatePlayerPositions).mockReturnValue({
       updatePlayerPositions,
@@ -389,7 +389,7 @@ describe('PlayersPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof usePlayers>)
+    } as unknown as ReturnType<typeof usePlayers>)
 
     vi.mocked(useUpdatePlayerPositions).mockReturnValue({
       updatePlayerPositions,
@@ -415,7 +415,7 @@ describe('PlayersPage', () => {
           data: { title: 'UNKNOWN_ERROR' },
         },
       },
-    } as ReturnType<typeof usePlayers>)
+    } as unknown as ReturnType<typeof usePlayers>)
 
     renderPlayersPage()
 
@@ -439,7 +439,7 @@ describe('PlayersPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof usePlayers>)
+    } as unknown as ReturnType<typeof usePlayers>)
 
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
 
@@ -457,7 +457,7 @@ describe('PlayersPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof usePlayers>)
+    } as unknown as ReturnType<typeof usePlayers>)
 
     renderPlayersPage()
 
@@ -485,7 +485,7 @@ describe('PlayersPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof usePlayers>)
+    } as unknown as ReturnType<typeof usePlayers>)
 
     usePlayerStore.setState({
       isModalOpen: true,
@@ -518,7 +518,7 @@ describe('PlayersPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof usePlayers>)
+    } as unknown as ReturnType<typeof usePlayers>)
 
     renderPlayersPage()
 
@@ -545,7 +545,7 @@ describe('PlayersPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof usePlayers>)
+    } as unknown as ReturnType<typeof usePlayers>)
 
     renderPlayersPage()
 
@@ -558,7 +558,7 @@ describe('PlayersPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof usePlayers>)
+    } as unknown as ReturnType<typeof usePlayers>)
 
     usePlayerStore.getState().openCreateModal()
     renderPlayersPage()
@@ -575,7 +575,7 @@ describe('PlayersPage', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof usePlayers>)
+    } as unknown as ReturnType<typeof usePlayers>)
 
     vi.mocked(invitationService.send).mockRejectedValue({
       response: {
