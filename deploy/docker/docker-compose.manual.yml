@@ -9,7 +9,7 @@ services:
       MSSQL_SA_PASSWORD: ${SQL_SA_PASSWORD}
       MSSQL_PID: "Developer"
     ports:
-      - "1433:1433"
+      - "${SQL_EXTERNAL_PORT:-1433}:1433"
     volumes:
       - babaplay_sql_data:/var/opt/mssql
     healthcheck:

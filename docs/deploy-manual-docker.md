@@ -25,7 +25,7 @@ Este guia descreve como subir o BabaPlay manualmente com Docker Compose, sem pip
 2. Portas livres no host:
    - 8080 (web)
    - 5050 (api)
-   - 1433 (sqlserver)
+  - 1433 (sqlserver, ou valor configurado em `SQL_EXTERNAL_PORT`)
 3. Minimo de 4 GB de RAM livre para containers.
 
 ## 1) Configurar variaveis de ambiente
@@ -38,6 +38,7 @@ cp deploy/docker/.env.manual.example deploy/docker/.env.manual
 
 Edite o arquivo `deploy/docker/.env.manual` com valores reais, principalmente:
 
+- `SQL_EXTERNAL_PORT` (porta externa do SQL no host; default: `1433`)
 - `SQL_SA_PASSWORD`
 - `MASTER_DB_CONNECTION_STRING`
 - `JWT_SECRET_KEY`
@@ -47,6 +48,7 @@ Edite o arquivo `deploy/docker/.env.manual` com valores reais, principalmente:
 
 Observacoes:
 
+- `SQL_EXTERNAL_PORT` altera apenas a porta exposta no host (`<host>:1433`).
 - `MASTER_DB_CONNECTION_STRING` deve apontar para `sqlserver,1433` quando usar o compose fornecido.
 - `WEB_VITE_API_URL` e injetada no build do frontend. Para este stack: `http://localhost:5050`.
 - `CORS_ALLOWED_ORIGIN` deve bater com a URL publica da web. Para este stack: `http://localhost:8080`.
