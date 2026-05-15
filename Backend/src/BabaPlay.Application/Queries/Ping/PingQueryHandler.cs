@@ -6,9 +6,18 @@ namespace BabaPlay.Application.Queries.Ping;
 
 public sealed class PingQueryHandler : IQueryHandler<PingQuery, Result<PingStatusDto>>
 {
-    public Task<Result<PingStatusDto>> HandleAsync(PingQuery query, CancellationToken cancellationToken = default)
+    private readonly IApiReadinessProbe _readinessProbe;
+
+    public PingQueryHandler(IApiReadinessProbe readinessProbe)
     {
-        var status = new PingStatusDto("healthy", DateTime.UtcNow);
-        return Task.FromResult(Result.Ok<PingStatusDto>(status));
+        _readinessProbe = readinessProbe;
+    }
+
+    public async Task<Result<PingStatusDto>> HandleAsync(PingQuery query, CancellationToken cancellationToken = default)
+    {
+        var isMasterDatabaseReady = await _readinessProbe.IsMasterDatabaseReadyAsync(cancellationToken);
+        var status = isMasterDatabaseReady ? "healthy" : "unhealthy";
+
+        return Result.Ok(new PingStatusDto(status, DateTime.UtcNow));
     }
 }

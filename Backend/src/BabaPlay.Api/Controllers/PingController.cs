@@ -27,9 +27,21 @@ public sealed class PingController : ControllerBase
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(PingStatusDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PingStatusDto), StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> GetStatus(CancellationToken cancellationToken)
     {
         var result = await _pingQueryHandler.HandleAsync(new PingQuery(), cancellationToken);
+
+        if (!result.IsSuccess)
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new ProblemDetails
+            {
+                Title = result.ErrorCode ?? "READINESS_CHECK_FAILED",
+                Detail = result.ErrorMessage
+            });
+
+        if (!string.Equals(result.Value!.Status, "healthy", StringComparison.OrdinalIgnoreCase))
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, result.Value);
+
         return Ok(result.Value);
     }
 

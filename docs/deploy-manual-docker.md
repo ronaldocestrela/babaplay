@@ -87,6 +87,18 @@ Acessos esperados:
 
 - Web: `http://localhost:8080`
 - Swagger: `http://localhost:5050/swagger`
+- Readiness da API: `http://localhost:5050/api/v1/ping`
+
+Exemplo de validacao de readiness:
+
+```bash
+curl -i http://localhost:5050/api/v1/ping
+```
+
+Resultado esperado:
+
+- `200 OK` com `{"status":"healthy",...}` quando banco master estiver acessivel.
+- `503 Service Unavailable` com `{"status":"unhealthy",...}` quando banco master estiver indisponivel.
 
 ## 5) Migrations (master DB)
 
@@ -151,6 +163,7 @@ Sem `down -v`, os dados persistem entre reinicios.
 1. API nao sobe:
    - confira `MASTER_DB_CONNECTION_STRING`
    - valide senha do `sa` e politica de senha forte do SQL Server
+  - valide readiness: `curl -i http://localhost:5050/api/v1/ping`
 2. Frontend sem comunicar com API:
    - confirme `WEB_VITE_API_URL` no arquivo de ambiente
    - confirme `CORS_ALLOWED_ORIGIN`

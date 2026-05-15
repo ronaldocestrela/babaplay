@@ -16,18 +16,21 @@ public class PingIntegrationTests : IClassFixture<WebApplicationFactory<Program>
     }
 
     [Fact]
-    public async Task GET_Ping_ShouldReturnHealthyStatus()
+    public async Task GET_Ping_ShouldRespectReadinessContract()
     {
         // Act
         var response = await _client.GetAsync("/api/v1/ping");
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
         var body = await response.Content.ReadFromJsonAsync<PingStatusDto>();
         body.Should().NotBeNull();
-        body!.Status.Should().Be("healthy");
+        body!.Status.Should().BeOneOf("healthy", "unhealthy");
         body.Timestamp.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(10));
+
+        // Assert
+        var expectedStatusCode = body.Status == "healthy"
+            ? HttpStatusCode.OK
+            : HttpStatusCode.ServiceUnavailable;
+        response.StatusCode.Should().Be(expectedStatusCode);
     }
 
     [Fact]

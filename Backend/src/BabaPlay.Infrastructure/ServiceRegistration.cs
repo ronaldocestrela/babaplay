@@ -187,6 +187,7 @@ public static class ServiceRegistration
 
         // --- Application-level service abstractions ---
         services.AddScoped<ITokenService, JwtTokenService>();
+        services.AddScoped<IApiReadinessProbe, MasterDatabaseReadinessProbe>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IPlayerOnboardingReadService, PlayerOnboardingReadService>();
