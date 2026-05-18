@@ -205,6 +205,7 @@ public static class ServiceRegistration
         services.AddScoped<IUserTenantRepository, UserTenantRepository>();
         services.AddScoped<ITenantGameDayOptionRepository, TenantGameDayOptionRepository>();
         services.AddScoped<ITenantOwnerProvisioningService, TenantOwnerProvisioningService>();
+        services.AddScoped<ITenantOwnerRbacBootstrapService, TenantOwnerRbacBootstrapService>();
         services.AddScoped<TenantDbContextFactory>();
 
         // --- Tenant-scoped repositories (Fase 3) ---

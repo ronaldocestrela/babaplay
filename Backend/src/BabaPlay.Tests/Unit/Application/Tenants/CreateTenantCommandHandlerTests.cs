@@ -10,6 +10,7 @@ public class CreateTenantCommandHandlerTests
 {
     private readonly Mock<ITenantRepository> _tenantRepo = new();
     private readonly Mock<ITenantOwnerProvisioningService> _ownerProvisioning = new();
+    private readonly Mock<ITenantOwnerRbacBootstrapService> _ownerRbacBootstrap = new();
     private readonly Mock<ITenantLogoStorageService> _tenantLogoStorage = new();
     private readonly CreateTenantCommandHandler _handler;
 
@@ -39,6 +40,7 @@ public class CreateTenantCommandHandlerTests
         _handler = new CreateTenantCommandHandler(
             _tenantRepo.Object,
             _ownerProvisioning.Object,
+            _ownerRbacBootstrap.Object,
             _tenantLogoStorage.Object);
 
         _ownerProvisioning
@@ -51,6 +53,13 @@ public class CreateTenantCommandHandlerTests
 
         _ownerProvisioning
             .Setup(x => x.EnsureOwnerMembershipAsync(
+                It.IsAny<string>(),
+                It.IsAny<Guid>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
+
+        _ownerRbacBootstrap
+            .Setup(x => x.EnsureOwnerAdminAccessAsync(
                 It.IsAny<string>(),
                 It.IsAny<Guid>(),
                 It.IsAny<CancellationToken>()))
@@ -217,7 +226,34 @@ public class CreateTenantCommandHandlerTests
             -23.5505,
             -46.6333,
             It.IsAny<CancellationToken>()), Times.Once);
+        _ownerRbacBootstrap.Verify(x => x.EnsureOwnerAdminAccessAsync(
+            "owner-user-id",
+            It.IsAny<Guid>(),
+            It.IsAny<CancellationToken>()), Times.Once);
         _tenantLogoStorage.Verify(x => x.SaveAsync(It.IsAny<TenantLogoSaveRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_RbacBootstrapFailure_ShouldReturnFailure()
+    {
+        // Arrange
+        _tenantRepo
+            .Setup(r => r.ExistsAsync("myclob", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        _ownerRbacBootstrap
+            .Setup(x => x.EnsureOwnerAdminAccessAsync(
+                It.IsAny<string>(),
+                It.IsAny<Guid>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Fail("TENANT_OWNER_RBAC_BOOTSTRAP_FAILED", "Failed to assign owner admin role."));
+
+        // Act
+        var result = await _handler.HandleAsync(CreateValidCommand());
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorCode.Should().Be("TENANT_OWNER_RBAC_BOOTSTRAP_FAILED");
     }
 
     [Fact]

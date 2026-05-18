@@ -22,15 +22,18 @@ public sealed class CreateTenantCommandHandler
 
     private readonly ITenantRepository _tenantRepository;
     private readonly ITenantOwnerProvisioningService _tenantOwnerProvisioningService;
+    private readonly ITenantOwnerRbacBootstrapService _tenantOwnerRbacBootstrapService;
     private readonly ITenantLogoStorageService _tenantLogoStorageService;
 
     public CreateTenantCommandHandler(
         ITenantRepository tenantRepository,
         ITenantOwnerProvisioningService tenantOwnerProvisioningService,
+        ITenantOwnerRbacBootstrapService tenantOwnerRbacBootstrapService,
         ITenantLogoStorageService tenantLogoStorageService)
     {
         _tenantRepository = tenantRepository;
         _tenantOwnerProvisioningService = tenantOwnerProvisioningService;
+        _tenantOwnerRbacBootstrapService = tenantOwnerRbacBootstrapService;
         _tenantLogoStorageService = tenantLogoStorageService;
     }
 
@@ -127,6 +130,14 @@ public sealed class CreateTenantCommandHandler
 
         if (!membershipResult.IsSuccess)
             return Result<TenantResponse>.Fail(membershipResult.ErrorCode!, membershipResult.ErrorMessage!);
+
+        var ownerRbacResult = await _tenantOwnerRbacBootstrapService.EnsureOwnerAdminAccessAsync(
+            ownerResult.Value!,
+            tenantId,
+            ct);
+
+        if (!ownerRbacResult.IsSuccess)
+            return Result<TenantResponse>.Fail(ownerRbacResult.ErrorCode!, ownerRbacResult.ErrorMessage!);
 
         return Result<TenantResponse>.Ok(new TenantResponse(
             tenantId,

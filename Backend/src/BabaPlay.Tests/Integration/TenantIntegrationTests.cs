@@ -1,9 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
+using BabaPlay.Application.Common;
 using BabaPlay.Application.DTOs;
 using BabaPlay.Infrastructure.Entities;
 using BabaPlay.Infrastructure.Persistence;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -162,6 +164,70 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task POST_Tenant_ShouldBootstrapOwnerAdminRoleAndGrantRbacRead()
+    {
+        // Arrange
+        var slug = $"rbac-bootstrap-{Guid.NewGuid():N}"[..20];
+
+        // Act
+        var createResponse = await _client.PostAsync("/api/v1/tenant", BuildTenantCreateContent("RBAC Club", slug));
+
+        // Assert creation
+        createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        var created = await createResponse.Content.ReadFromJsonAsync<TenantResponse>();
+        created.Should().NotBeNull();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var masterDb = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+            var tenantFactory = scope.ServiceProvider.GetRequiredService<TenantDbContextFactory>();
+
+            var membership = await masterDb.UserTenants
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.UserId == TestAuthHandler.TestUserId && x.TenantId == created!.Id);
+
+            membership.Should().NotBeNull();
+            membership!.IsOwner.Should().BeTrue();
+
+            await using var tenantDb = await tenantFactory.CreateAsync(created.Id);
+
+            var adminRole = await tenantDb.Roles
+                .AsNoTracking()
+                .SingleOrDefaultAsync(r =>
+                    r.TenantId == created.Id &&
+                    r.NormalizedName == RbacCatalog.Roles.Admin.ToUpperInvariant());
+
+            adminRole.Should().NotBeNull();
+
+            var adminPermissionCodes = await (
+                from rolePermission in tenantDb.RolePermissions
+                join permission in tenantDb.Permissions on rolePermission.PermissionId equals permission.Id
+                where rolePermission.RoleId == adminRole!.Id
+                select permission.NormalizedCode)
+                .ToListAsync();
+
+            var expectedAdminPermissionCodes = RbacCatalog.DefaultRolePermissions[RbacCatalog.Roles.Admin]
+                .Select(x => x.ToUpperInvariant())
+                .ToList();
+
+            adminPermissionCodes.Should().BeEquivalentTo(expectedAdminPermissionCodes);
+
+            var ownerHasAdminRole = await tenantDb.UserRoles
+                .AsNoTracking()
+                .AnyAsync(ur => ur.UserId == TestAuthHandler.TestUserId && ur.RoleId == adminRole.Id);
+
+            ownerHasAdminRole.Should().BeTrue();
+        }
+
+        using var roleRequest = new HttpRequestMessage(HttpMethod.Get, "/api/v1/role");
+        roleRequest.Headers.Authorization = new("Bearer", "test-token");
+        roleRequest.Headers.Add("X-Tenant-Slug", slug);
+
+        var roleResponse = await _client.SendAsync(roleRequest);
+        roleResponse.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     // ── TenantMiddleware ────────────────────────────────────────────────────
