@@ -29,6 +29,7 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
     public const string AdminUserId = "rbac-admin-user";
     public const string MemberUserId = "rbac-member-user";
     public const string StrangerUserId = "rbac-stranger-user";
+    public const string CrossTenantUserId = "rbac-cross-user";
 
     private readonly SqliteConnection _masterConnection = new("Data Source=:memory:");
     private readonly SqliteConnection _tenantConnection = new("Data Source=:memory:");
@@ -123,6 +124,7 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
             new { Id = AdminUserId, Email = "rbac-admin@babaplay.com" },
             new { Id = MemberUserId, Email = "rbac-member@babaplay.com" },
             new { Id = StrangerUserId, Email = "rbac-stranger@babaplay.com" },
+            new { Id = CrossTenantUserId, Email = "rbac-cross@babaplay.com" },
         };
 
         foreach (var userData in users)
@@ -189,6 +191,26 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
             {
                 UserId = MemberUserId,
                 TenantId = TenantAId,
+                IsOwner = false,
+            });
+        }
+
+        if (!db.UserTenants.Any(ut => ut.UserId == CrossTenantUserId && ut.TenantId == TenantAId))
+        {
+            db.UserTenants.Add(new UserTenant
+            {
+                UserId = CrossTenantUserId,
+                TenantId = TenantAId,
+                IsOwner = false,
+            });
+        }
+
+        if (!db.UserTenants.Any(ut => ut.UserId == CrossTenantUserId && ut.TenantId == TenantBId))
+        {
+            db.UserTenants.Add(new UserTenant
+            {
+                UserId = CrossTenantUserId,
+                TenantId = TenantBId,
                 IsOwner = false,
             });
         }
@@ -283,6 +305,9 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
 
         if (!await db.UserRoles.AnyAsync(ur => ur.UserId == MemberUserId && ur.RoleId == viewerRole.Id))
             db.UserRoles.Add(UserRole.Create(MemberUserId, viewerRole.Id));
+
+        if (!await db.UserRoles.AnyAsync(ur => ur.UserId == CrossTenantUserId && ur.RoleId == adminRole.Id))
+            db.UserRoles.Add(UserRole.Create(CrossTenantUserId, adminRole.Id));
 
         await db.SaveChangesAsync();
     }

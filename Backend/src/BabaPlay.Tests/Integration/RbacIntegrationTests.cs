@@ -88,4 +88,34 @@ public sealed class RbacIntegrationTests : IClassFixture<RbacWebApplicationFacto
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
+
+    [Fact]
+    public async Task GetRoles_CrossTenantMemberWithRoleOnlyInTenantA_ShouldReturn403InTenantB()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/role");
+        request.Headers.Authorization = new("Bearer", "test-token");
+        request.Headers.Add("X-Tenant-Slug", RbacWebApplicationFactory.TenantBSlug);
+        request.Headers.Add(TestAuthHandler.UserIdHeader, RbacWebApplicationFactory.CrossTenantUserId);
+
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task GetMonthlySummary_CrossTenantMemberWithPermissionOnlyInTenantA_ShouldReturn403InTenantB()
+    {
+        var now = DateTime.UtcNow;
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"/api/v1/financial/monthly-summary?year={now.Year}&month={now.Month}");
+        request.Headers.Authorization = new("Bearer", "test-token");
+        request.Headers.Add("X-Tenant-Slug", RbacWebApplicationFactory.TenantBSlug);
+        request.Headers.Add(TestAuthHandler.UserIdHeader, RbacWebApplicationFactory.CrossTenantUserId);
+
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
 }
