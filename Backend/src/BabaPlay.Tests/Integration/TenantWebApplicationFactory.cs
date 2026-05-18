@@ -41,6 +41,7 @@ public sealed class TenantWebApplicationFactory : WebApplicationFactory<Program>
                 ["Jwt:AccessTokenExpiresInMinutes"] = "60",
                 ["Jwt:RefreshTokenExpiresInDays"] = "30",
                 ["ConnectionStrings:MasterDb"] = "Data Source=:memory:",
+                ["Tenancy:UseTenantDatabaseProvisioning"] = "true",
                 ["TenantLogoStorage:Provider"] = "Cloudinary",
                 ["TenantLogoStorage:Cloudinary:CloudName"] = "integration-cloud",
                 ["TenantLogoStorage:Cloudinary:ApiKey"] = "integration-api-key",
