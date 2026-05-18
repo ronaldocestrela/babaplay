@@ -46,7 +46,7 @@ export function LoginPage() {
         {/* Brand identity */}
         <div className="flex flex-col items-center mb-12">
           <div className="w-16 h-16 bg-primary-container rounded-xl flex items-center justify-center shadow-lg shadow-primary-container/20 mb-4">
-            <span className="material-symbols-outlined text-white text-[32px]">sports_soccer</span>
+            <img src="/babaplayicon.png" alt="BabaPlay icon" className="w-10 h-10 object-contain" />
           </div>
           <h1 className="font-[Lexend] text-3xl font-semibold text-on-surface tracking-tight">BabaPlay</h1>
           <p className="text-sm text-on-surface-variant mt-1">Administrative Excellence in Sports</p>
