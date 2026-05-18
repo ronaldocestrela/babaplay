@@ -1,6 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createWrapper } from '@/test/utils'
+import { useAuthStore } from '@/features/auth/store/authStore'
 import { useDashboardData } from '../useDashboardData'
 import { dashboardService } from '../../services/dashboardService'
 
@@ -42,6 +43,20 @@ function mockOperationalDefaults() {
 describe('useDashboardData', () => {
   beforeEach(() => {
     vi.resetAllMocks()
+    useAuthStore.getState().setCurrentTenant({ slug: 'wolves', source: 'profile' })
+  })
+
+  it('deve aguardar tenant selecionado antes de buscar o dashboard', () => {
+    useAuthStore.getState().setCurrentTenant(null)
+
+    const { result } = renderHook(() => useDashboardData(), { wrapper: createWrapper() })
+
+    expect(result.current.isPending).toBe(true)
+    expect(result.current.fetchStatus).toBe('idle')
+    expect(dashboardService.getPlayers).not.toHaveBeenCalled()
+    expect(dashboardService.getTeams).not.toHaveBeenCalled()
+    expect(dashboardService.getGameDays).not.toHaveBeenCalled()
+    expect(dashboardService.getMatches).not.toHaveBeenCalled()
   })
 
   it('deve consolidar os dados do dashboard quando todas as leituras funcionam', async () => {
@@ -137,6 +152,57 @@ describe('useDashboardData', () => {
     expect(result.current.data?.ranking.available).toBe(false)
     expect(result.current.data?.ranking.errorCode).toBe('FORBIDDEN')
     expect(result.current.data?.financial.available).toBe(true)
+  })
+
+  it('deve degradar parcialmente o operacional quando partidas falha com 403', async () => {
+    vi.mocked(dashboardService.getPlayers).mockResolvedValue([
+      { id: 'player-1', isActive: true },
+      { id: 'player-2', isActive: false },
+    ])
+    vi.mocked(dashboardService.getTeams).mockResolvedValue([{ id: 'team-1', isActive: true }])
+    vi.mocked(dashboardService.getGameDays).mockResolvedValue([
+      { id: 'gameday-1', scheduledAt: new Date().toISOString(), status: 'Confirmed' },
+    ])
+    vi.mocked(dashboardService.getMatches).mockRejectedValue({
+      response: { status: 403, data: { title: 'FORBIDDEN' } },
+    })
+    vi.mocked(dashboardService.getCheckinsByGameDay).mockResolvedValue([
+      { id: 'checkin-1', isActive: true },
+    ])
+
+    vi.mocked(dashboardService.getRanking).mockResolvedValue([])
+    vi.mocked(dashboardService.getTopScorers).mockResolvedValue([])
+    vi.mocked(dashboardService.getAttendanceRanking).mockResolvedValue([])
+    vi.mocked(dashboardService.getCashFlow).mockResolvedValue({
+      fromUtc: '2026-05-01T00:00:00.000Z',
+      toUtc: '2026-05-31T23:59:59.999Z',
+      totalIncome: 0,
+      totalExpense: 0,
+      balance: 0,
+    })
+    vi.mocked(dashboardService.getDelinquency).mockResolvedValue({
+      referenceUtc: '2026-05-04T10:00:00.000Z',
+      totalOpenAmount: 0,
+    })
+    vi.mocked(dashboardService.getMonthlySummary).mockResolvedValue({
+      year: 2026,
+      month: 5,
+      monthlyFeesAmount: 0,
+      monthlyFeesPaidAmount: 0,
+      monthlyFeesOpenAmount: 0,
+      cashIncome: 0,
+      cashExpense: 0,
+      cashBalance: 0,
+    })
+
+    const { result } = renderHook(() => useDashboardData(), { wrapper: createWrapper() })
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
+    expect(result.current.data?.operational.activePlayers).toBe(1)
+    expect(result.current.data?.operational.activeTeams).toBe(1)
+    expect(result.current.data?.operational.liveMatches).toBe(0)
+    expect(result.current.isError).toBe(false)
   })
 
   it('deve usar período customizado quando informado', async () => {

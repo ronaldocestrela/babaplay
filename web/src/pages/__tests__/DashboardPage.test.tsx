@@ -13,6 +13,7 @@ describe('DashboardPage', () => {
   it('deve exibir loading enquanto carrega', () => {
     vi.mocked(useDashboardData).mockReturnValue({
       isLoading: true,
+      isPending: true,
       isError: false,
       data: undefined,
       error: null,
@@ -21,6 +22,21 @@ describe('DashboardPage', () => {
     render(<DashboardPage />)
 
     expect(screen.getByText(/carregando dashboard/i)).toBeInTheDocument()
+  })
+
+  it('deve exibir loading enquanto aguarda tenant sem erro', () => {
+    vi.mocked(useDashboardData).mockReturnValue({
+      isLoading: false,
+      isPending: true,
+      isError: false,
+      data: undefined,
+      error: null,
+    } as unknown as ReturnType<typeof useDashboardData>)
+
+    render(<DashboardPage />)
+
+    expect(screen.getByText(/carregando dashboard/i)).toBeInTheDocument()
+    expect(screen.queryByText(/não foi possível carregar o dashboard/i)).not.toBeInTheDocument()
   })
 
   it('deve exibir cards e blocos principais quando sucesso', () => {

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
 import { getErrorCode } from '@/core/utils/getErrorCode'
+import { useAuthStore } from '@/features/auth/store/authStore'
 import { dashboardService } from '../services/dashboardService'
 import type { DashboardOverview } from '../types'
 
@@ -29,9 +30,12 @@ function isForbidden(error: unknown): boolean {
 }
 
 export function useDashboardData(period?: DashboardPeriodFilter) {
+  const currentTenant = useAuthStore((state) => state.currentTenant)
+
   return useQuery({
     queryKey: [
       ...DASHBOARD_OVERVIEW_QUERY_KEY,
+      currentTenant?.slug ?? null,
       period?.fromUtc ?? null,
       period?.toUtc ?? null,
     ],
@@ -42,23 +46,32 @@ export function useDashboardData(period?: DashboardPeriodFilter) {
       const selectedFromUtc = period?.fromUtc ?? toIsoUtc(fromUtc)
       const selectedToUtc = period?.toUtc ?? toIsoUtc(toUtc)
 
-      const [players, teams, gameDays, matches] = await Promise.all([
+      const [playersResult, teamsResult, gameDaysResult, matchesResult] = await Promise.allSettled([
         dashboardService.getPlayers(),
         dashboardService.getTeams(),
         dashboardService.getGameDays(),
         dashboardService.getMatches(),
       ])
 
+      const players = playersResult.status === 'fulfilled' ? playersResult.value : []
+      const teams = teamsResult.status === 'fulfilled' ? teamsResult.value : []
+      const gameDays = gameDaysResult.status === 'fulfilled' ? gameDaysResult.value : []
+      const matches = matchesResult.status === 'fulfilled' ? matchesResult.value : []
+
       const todayGameDayIds = gameDays
         .filter((gameDay) => isSameUtcDate(new Date(gameDay.scheduledAt), now))
         .map((gameDay) => gameDay.id)
 
-      const todayCheckinCollections = await Promise.all(
+      const todayCheckinResults = await Promise.allSettled(
         todayGameDayIds.map((gameDayId) => dashboardService.getCheckinsByGameDay(gameDayId)),
       )
 
-      const todayCheckins = todayCheckinCollections.reduce(
-        (acc, current) => acc + current.filter((checkin) => checkin.isActive).length,
+      const todayCheckins = todayCheckinResults.reduce(
+        (acc, current) =>
+          acc +
+          (current.status === 'fulfilled'
+            ? current.value.filter((checkin) => checkin.isActive).length
+            : 0),
         0,
       )
 
@@ -149,6 +162,7 @@ export function useDashboardData(period?: DashboardPeriodFilter) {
         },
       }
     },
+    enabled: currentTenant !== null,
     staleTime: 2 * 60 * 1000,
     retry: false,
   })

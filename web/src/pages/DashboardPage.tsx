@@ -19,7 +19,7 @@ export function DashboardPage() {
   )
 
   const selectedPeriod = periodMode === 'custom' ? appliedPeriod : undefined
-  const { data, isLoading, isError } = useDashboardData(selectedPeriod)
+  const { data, isLoading, isPending, isError } = useDashboardData(selectedPeriod)
 
   const applyCustomPeriod = () => {
     if (!customFromDate || !customToDate) {
@@ -37,7 +37,7 @@ export function DashboardPage() {
     setAppliedPeriod(undefined)
   }
 
-  if (isLoading) {
+  if (isLoading || isPending || !data) {
     return (
       <div className="p-8 max-w-6xl mx-auto">
         <p className="text-on-surface-variant">Carregando dashboard...</p>
@@ -45,7 +45,7 @@ export function DashboardPage() {
     )
   }
 
-  if (isError || !data) {
+  if (isError) {
     return (
       <div className="p-8 max-w-6xl mx-auto">
         <p className="text-error">Não foi possível carregar o dashboard.</p>
