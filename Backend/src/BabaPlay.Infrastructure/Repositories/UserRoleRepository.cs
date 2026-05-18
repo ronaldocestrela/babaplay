@@ -28,7 +28,6 @@ public sealed class UserRoleRepository : IUserRoleRepository
             join role in db.Roles on userRole.RoleId equals role.Id
             where userRole.UserId == userId
                && userRole.RoleId == roleId
-               && role.TenantId == _tenantContext.TenantId
             select userRole.RoleId
         ).AnyAsync(ct);
     }
@@ -60,8 +59,6 @@ public sealed class UserRoleRepository : IUserRoleRepository
             join permission in db.Permissions on rolePermission.PermissionId equals permission.Id
             where userRole.UserId == userId
                && role.IsActive
-                    && role.TenantId == _tenantContext.TenantId
-                    && permission.TenantId == _tenantContext.TenantId
                && permission.NormalizedCode == normalizedPermissionCode
             select permission.Id
         ).AnyAsync(ct);

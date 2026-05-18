@@ -26,7 +26,7 @@ public sealed class TeamRepository : ITeamRepository
         return await db.Teams
             .Include(t => t.Players)
             .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.Id == id && t.TenantId == _tenantContext.TenantId, ct);
+            .FirstOrDefaultAsync(t => t.Id == id, ct);
     }
 
     public async Task<IReadOnlyList<Team>> GetAllActiveAsync(CancellationToken ct = default)
@@ -35,7 +35,7 @@ public sealed class TeamRepository : ITeamRepository
         return await db.Teams
             .Include(t => t.Players)
             .AsNoTracking()
-            .Where(t => t.TenantId == _tenantContext.TenantId && t.IsActive)
+            .Where(t => t.IsActive)
             .OrderBy(t => t.Name)
             .ToListAsync(ct);
     }
@@ -43,9 +43,7 @@ public sealed class TeamRepository : ITeamRepository
     public async Task<bool> ExistsByNormalizedNameAsync(string normalizedName, CancellationToken ct = default)
     {
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
-        return await db.Teams.AnyAsync(
-            t => t.TenantId == _tenantContext.TenantId && t.NormalizedName == normalizedName,
-            ct);
+        return await db.Teams.AnyAsync(t => t.NormalizedName == normalizedName, ct);
     }
 
     public async Task AddAsync(Team team, CancellationToken ct = default)
@@ -67,7 +65,7 @@ public sealed class TeamRepository : ITeamRepository
 
         var existing = await db.Teams
             .Include(t => t.Players)
-            .FirstOrDefaultAsync(t => t.Id == team.Id && t.TenantId == _tenantContext.TenantId, ct);
+            .FirstOrDefaultAsync(t => t.Id == team.Id, ct);
 
         if (existing is null)
         {

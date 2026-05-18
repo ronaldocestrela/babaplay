@@ -25,7 +25,7 @@ public sealed class RoleRepository : IRoleRepository
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
         return await db.Roles
             .Include(r => r.Permissions)
-            .FirstOrDefaultAsync(r => r.Id == id && r.TenantId == _tenantContext.TenantId, ct);
+            .FirstOrDefaultAsync(r => r.Id == id, ct);
     }
 
     public async Task<IReadOnlyList<Role>> GetAllActiveAsync(CancellationToken ct = default)
@@ -34,7 +34,7 @@ public sealed class RoleRepository : IRoleRepository
         return await db.Roles
             .AsNoTracking()
             .Include(r => r.Permissions)
-            .Where(r => r.TenantId == _tenantContext.TenantId && r.IsActive)
+            .Where(r => r.IsActive)
             .OrderBy(r => r.Name)
             .ToListAsync(ct);
     }
@@ -42,9 +42,7 @@ public sealed class RoleRepository : IRoleRepository
     public async Task<bool> ExistsByNormalizedNameAsync(string normalizedName, CancellationToken ct = default)
     {
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
-        return await db.Roles.AnyAsync(
-            r => r.TenantId == _tenantContext.TenantId && r.NormalizedName == normalizedName,
-            ct);
+        return await db.Roles.AnyAsync(r => r.NormalizedName == normalizedName, ct);
     }
 
     public async Task AddAsync(Role role, CancellationToken ct = default)
