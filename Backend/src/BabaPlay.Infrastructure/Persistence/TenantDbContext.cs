@@ -9,7 +9,10 @@ namespace BabaPlay.Infrastructure.Persistence;
 /// </summary>
 public sealed class TenantDbContext : DbContext
 {
-    public TenantDbContext(DbContextOptions<TenantDbContext> options) : base(options) { }
+    private readonly Guid _tenantId;
+
+    public TenantDbContext(DbContextOptions<TenantDbContext> options, Guid tenantId = default) : base(options)
+        => _tenantId = tenantId;
 
     public DbSet<Player> Players => Set<Player>();
     public DbSet<GameDay> GameDays => Set<GameDay>();
@@ -359,6 +362,23 @@ public sealed class TenantDbContext : DbContext
                 .HasForeignKey(x => x.MonthlyFeeId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+
+        builder.Entity<Player>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
+        builder.Entity<GameDay>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
+        builder.Entity<Match>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
+        builder.Entity<MatchSummary>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
+        builder.Entity<MatchEventType>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
+        builder.Entity<MatchEvent>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
+        builder.Entity<Checkin>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
+        builder.Entity<Position>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
+        builder.Entity<Team>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
+        builder.Entity<Role>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
+        builder.Entity<Permission>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
+        builder.Entity<PlayerScore>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
+        builder.Entity<PlayerScoreSourceEvent>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
+        builder.Entity<CashTransaction>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
+        builder.Entity<PlayerMonthlyFee>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
+        builder.Entity<MonthlyFeePayment>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
 
         base.OnModelCreating(builder);
     }

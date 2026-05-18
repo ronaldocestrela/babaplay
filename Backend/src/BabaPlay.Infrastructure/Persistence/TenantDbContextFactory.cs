@@ -36,6 +36,6 @@ public class TenantDbContextFactory
             .UseSqlServer(tenant.ConnectionString)
             .Options;
 
-        return new TenantDbContext(options);
+        return new TenantDbContext(options, tenantId);
     }
 }

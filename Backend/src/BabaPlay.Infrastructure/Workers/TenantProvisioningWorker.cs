@@ -83,7 +83,7 @@ public sealed class TenantProvisioningWorker : BackgroundService
                 .UseSqlServer(tenantConnectionString)
                 .Options;
 
-            await using var tenantCtx = new TenantDbContext(tenantOptions);
+            await using var tenantCtx = new TenantDbContext(tenantOptions, tenantId);
             await tenantCtx.Database.MigrateAsync(ct);
             await SeedDefaultRbacAsync(tenantCtx, tenantId, ct);
             await SeedOwnerAdminAssignmentsAsync(masterDb, tenantCtx, tenantId, ct);
