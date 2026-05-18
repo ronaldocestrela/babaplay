@@ -34,6 +34,9 @@ public sealed class AddPermissionToRoleCommandHandler
         if (role is null || !role.IsActive)
             return Result<RoleResponse>.Fail("ROLE_NOT_FOUND", $"Role '{cmd.RoleId}' was not found.");
 
+        if (role.TenantId != _tenantContext.TenantId)
+            return Result<RoleResponse>.Fail("ROLE_NOT_FOUND", $"Role '{cmd.RoleId}' was not found.");
+
         var normalizedCode = cmd.PermissionCode.Trim().ToUpperInvariant();
         var permission = await _permissionRepository.GetByNormalizedCodeAsync(normalizedCode, ct);
 

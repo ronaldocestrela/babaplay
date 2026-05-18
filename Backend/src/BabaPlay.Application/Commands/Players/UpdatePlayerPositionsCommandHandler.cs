@@ -39,6 +39,9 @@ public sealed class UpdatePlayerPositionsCommandHandler
         if (positions.Any(p => !p.IsActive))
             return Result<PlayerPositionsResponse>.Fail("POSITION_NOT_FOUND", "One or more positions were not found.");
 
+        if (positions.Any(p => p.TenantId != player.TenantId))
+            return Result<PlayerPositionsResponse>.Fail("POSITION_NOT_FOUND", "One or more positions were not found.");
+
         player.SetPositions(inputIds);
 
         await _playerRepository.UpdateAsync(player, ct);

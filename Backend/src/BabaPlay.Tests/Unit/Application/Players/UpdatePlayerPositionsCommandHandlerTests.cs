@@ -47,13 +47,14 @@ public class UpdatePlayerPositionsCommandHandlerTests
     [Fact]
     public async Task Handle_UnknownPosition_ShouldReturnPositionNotFound()
     {
-        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Player", null, null, null);
+        var tenantId = Guid.NewGuid();
+        var player = Player.Create(tenantId, Guid.NewGuid(), "Player", null, null, null);
         var ids = new[] { Guid.NewGuid(), Guid.NewGuid() };
 
         _playerRepo.Setup(r => r.GetByIdAsync(player.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(player);
         _positionRepo.Setup(r => r.GetByIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([Position.Create(Guid.NewGuid(), "GK", "Goleiro", null)]);
+            .ReturnsAsync([Position.Create(tenantId, "GK", "Goleiro", null)]);
 
         var result = await _handler.HandleAsync(new UpdatePlayerPositionsCommand(player.Id, ids));
 
@@ -96,7 +97,7 @@ public class UpdatePlayerPositionsCommandHandlerTests
     public async Task Handle_ValidRequest_ShouldReplacePlayerPositions()
     {
         var tenantId = Guid.NewGuid();
-        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Player", null, null, null);
+        var player = Player.Create(tenantId, Guid.NewGuid(), "Player", null, null, null);
         var ids = new[] { Guid.NewGuid(), Guid.NewGuid() };
 
         _playerRepo.Setup(r => r.GetByIdAsync(player.Id, It.IsAny<CancellationToken>()))

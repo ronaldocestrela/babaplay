@@ -1,5 +1,6 @@
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Domain.Entities;
+using BabaPlay.Domain.Exceptions;
 using BabaPlay.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,7 +26,7 @@ public sealed class TeamRepository : ITeamRepository
         return await db.Teams
             .Include(t => t.Players)
             .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.Id == id, ct);
+            .FirstOrDefaultAsync(t => t.Id == id && t.TenantId == _tenantContext.TenantId, ct);
     }
 
     public async Task<IReadOnlyList<Team>> GetAllActiveAsync(CancellationToken ct = default)
@@ -34,7 +35,7 @@ public sealed class TeamRepository : ITeamRepository
         return await db.Teams
             .Include(t => t.Players)
             .AsNoTracking()
-            .Where(t => t.IsActive)
+            .Where(t => t.TenantId == _tenantContext.TenantId && t.IsActive)
             .OrderBy(t => t.Name)
             .ToListAsync(ct);
     }
@@ -42,11 +43,16 @@ public sealed class TeamRepository : ITeamRepository
     public async Task<bool> ExistsByNormalizedNameAsync(string normalizedName, CancellationToken ct = default)
     {
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
-        return await db.Teams.AnyAsync(t => t.NormalizedName == normalizedName, ct);
+        return await db.Teams.AnyAsync(
+            t => t.TenantId == _tenantContext.TenantId && t.NormalizedName == normalizedName,
+            ct);
     }
 
     public async Task AddAsync(Team team, CancellationToken ct = default)
     {
+        if (team.TenantId != _tenantContext.TenantId)
+            throw new ValidationException("TenantId", "Team tenant does not match request tenant context.");
+
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
         db.Teams.Add(team);
         await db.SaveChangesAsync(ct);
@@ -54,11 +60,14 @@ public sealed class TeamRepository : ITeamRepository
 
     public async Task UpdateAsync(Team team, CancellationToken ct = default)
     {
+        if (team.TenantId != _tenantContext.TenantId)
+            throw new ValidationException("TenantId", "Team tenant does not match request tenant context.");
+
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
 
         var existing = await db.Teams
             .Include(t => t.Players)
-            .FirstOrDefaultAsync(t => t.Id == team.Id, ct);
+            .FirstOrDefaultAsync(t => t.Id == team.Id && t.TenantId == _tenantContext.TenantId, ct);
 
         if (existing is null)
         {

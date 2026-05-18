@@ -9,6 +9,7 @@ namespace BabaPlay.Tests.Unit.Application.Roles;
 
 public class AssignRoleToUserCommandHandlerTests
 {
+    private static readonly Guid TenantId = Guid.NewGuid();
     private readonly Mock<IRoleRepository> _roleRepo = new();
     private readonly Mock<IUserRoleRepository> _userRoleRepo = new();
     private readonly Mock<IUserRepository> _userRepo = new();
@@ -20,7 +21,7 @@ public class AssignRoleToUserCommandHandlerTests
     public AssignRoleToUserCommandHandlerTests()
     {
         _tenantContext.SetupGet(x => x.IsResolved).Returns(true);
-        _tenantContext.SetupGet(x => x.TenantId).Returns(Guid.NewGuid());
+        _tenantContext.SetupGet(x => x.TenantId).Returns(TenantId);
 
         _handler = new AssignRoleToUserCommandHandler(
             _roleRepo.Object,
@@ -45,7 +46,7 @@ public class AssignRoleToUserCommandHandlerTests
     [Fact]
     public async Task Handle_RoleAlreadyAssigned_ShouldReturnRoleAlreadyAssigned()
     {
-        var role = Role.Create(Guid.NewGuid(), "Admin", null);
+        var role = Role.Create(TenantId, "Admin", null);
         var user = new UserAuthDto("u-1", "u1@test.com", true);
 
         _userRepo.Setup(x => x.FindByIdAsync("u-1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
@@ -62,7 +63,7 @@ public class AssignRoleToUserCommandHandlerTests
     [Fact]
     public async Task Handle_ValidRequest_ShouldAssignRole()
     {
-        var role = Role.Create(Guid.NewGuid(), "Admin", null);
+        var role = Role.Create(TenantId, "Admin", null);
         var user = new UserAuthDto("u-1", "u1@test.com", true);
 
         _userRepo.Setup(x => x.FindByIdAsync("u-1", It.IsAny<CancellationToken>())).ReturnsAsync(user);

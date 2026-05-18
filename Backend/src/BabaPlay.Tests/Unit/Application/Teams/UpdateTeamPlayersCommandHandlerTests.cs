@@ -46,9 +46,10 @@ public class UpdateTeamPlayersCommandHandlerTests
     [Fact]
     public async Task Handle_NoGoalkeeper_ShouldReturnGoalkeeperRequired()
     {
-        var team = Team.Create(Guid.NewGuid(), "Blue", 3);
-        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Player 1", null, null, null);
-        var position = Position.Create(Guid.NewGuid(), "ATA", "Atacante", null);
+        var tenantId = Guid.NewGuid();
+        var team = Team.Create(tenantId, "Blue", 3);
+        var player = Player.Create(tenantId, Guid.NewGuid(), "Player 1", null, null, null);
+        var position = Position.Create(tenantId, "ATA", "Atacante", null);
         player.SetPositions([position.Id]);
 
         _teamRepo.Setup(r => r.GetByIdAsync(team.Id, It.IsAny<CancellationToken>())).ReturnsAsync(team);
@@ -66,9 +67,10 @@ public class UpdateTeamPlayersCommandHandlerTests
     [Fact]
     public async Task Handle_ValidRosterWithGoalkeeper_ShouldUpdateTeam()
     {
-        var team = Team.Create(Guid.NewGuid(), "Blue", 3);
-        var goalkeeper = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Goalkeeper", null, null, null);
-        var goalkeeperPosition = Position.Create(Guid.NewGuid(), "GOLEIRO", "Goleiro", null);
+        var tenantId = Guid.NewGuid();
+        var team = Team.Create(tenantId, "Blue", 3);
+        var goalkeeper = Player.Create(tenantId, Guid.NewGuid(), "Goalkeeper", null, null, null);
+        var goalkeeperPosition = Position.Create(tenantId, "GOLEIRO", "Goleiro", null);
         goalkeeper.SetPositions([goalkeeperPosition.Id]);
 
         _teamRepo.Setup(r => r.GetByIdAsync(team.Id, It.IsAny<CancellationToken>())).ReturnsAsync(team);

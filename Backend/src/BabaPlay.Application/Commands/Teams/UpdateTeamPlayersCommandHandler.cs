@@ -44,6 +44,9 @@ public sealed class UpdateTeamPlayersCommandHandler
         if (players.Count != inputIds.Count || players.Any(p => !p.IsActive))
             return Result<TeamPlayersResponse>.Fail("TEAM_PLAYER_NOT_FOUND", "One or more players were not found.");
 
+        if (players.Any(p => p.TenantId != team.TenantId))
+            return Result<TeamPlayersResponse>.Fail("TEAM_PLAYER_NOT_FOUND", "One or more players were not found.");
+
         var hasGoalkeeper = await HasGoalkeeperAsync(players, ct);
         if (inputIds.Count > 0 && !hasGoalkeeper)
             return Result<TeamPlayersResponse>.Fail("TEAM_GOALKEEPER_REQUIRED", "At least one goalkeeper is required in the roster.");
@@ -70,6 +73,9 @@ public sealed class UpdateTeamPlayersCommandHandler
             return false;
 
         var positions = await _positionRepository.GetByIdsAsync(positionIds, ct);
+        if (positions.Any(p => p.TenantId != players.First().TenantId))
+            return false;
+
         var goalkeeperPositionIds = positions
             .Where(p => p.IsActive && string.Equals(p.NormalizedCode, GoalkeeperCode, StringComparison.Ordinal))
             .Select(p => p.Id)

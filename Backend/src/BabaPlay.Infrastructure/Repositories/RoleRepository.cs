@@ -1,5 +1,6 @@
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Domain.Entities;
+using BabaPlay.Domain.Exceptions;
 using BabaPlay.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,7 +25,7 @@ public sealed class RoleRepository : IRoleRepository
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
         return await db.Roles
             .Include(r => r.Permissions)
-            .FirstOrDefaultAsync(r => r.Id == id, ct);
+            .FirstOrDefaultAsync(r => r.Id == id && r.TenantId == _tenantContext.TenantId, ct);
     }
 
     public async Task<IReadOnlyList<Role>> GetAllActiveAsync(CancellationToken ct = default)
@@ -33,7 +34,7 @@ public sealed class RoleRepository : IRoleRepository
         return await db.Roles
             .AsNoTracking()
             .Include(r => r.Permissions)
-            .Where(r => r.IsActive)
+            .Where(r => r.TenantId == _tenantContext.TenantId && r.IsActive)
             .OrderBy(r => r.Name)
             .ToListAsync(ct);
     }
@@ -41,11 +42,16 @@ public sealed class RoleRepository : IRoleRepository
     public async Task<bool> ExistsByNormalizedNameAsync(string normalizedName, CancellationToken ct = default)
     {
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
-        return await db.Roles.AnyAsync(r => r.NormalizedName == normalizedName, ct);
+        return await db.Roles.AnyAsync(
+            r => r.TenantId == _tenantContext.TenantId && r.NormalizedName == normalizedName,
+            ct);
     }
 
     public async Task AddAsync(Role role, CancellationToken ct = default)
     {
+        if (role.TenantId != _tenantContext.TenantId)
+            throw new ValidationException("TenantId", "Role tenant does not match request tenant context.");
+
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
         db.Roles.Add(role);
         await db.SaveChangesAsync(ct);
@@ -53,6 +59,9 @@ public sealed class RoleRepository : IRoleRepository
 
     public async Task UpdateAsync(Role role, CancellationToken ct = default)
     {
+        if (role.TenantId != _tenantContext.TenantId)
+            throw new ValidationException("TenantId", "Role tenant does not match request tenant context.");
+
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
         db.Roles.Update(role);
         await db.SaveChangesAsync(ct);

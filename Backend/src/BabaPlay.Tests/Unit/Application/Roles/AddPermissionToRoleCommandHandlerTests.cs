@@ -35,7 +35,7 @@ public class AddPermissionToRoleCommandHandlerTests
     [Fact]
     public async Task Handle_NewPermission_ShouldCreateAndAttach()
     {
-        var role = Role.Create(Guid.NewGuid(), "Admin", null);
+        var role = Role.Create(TenantId, "Admin", null);
 
         _roleRepo.Setup(x => x.GetByIdAsync(role.Id, It.IsAny<CancellationToken>())).ReturnsAsync(role);
         _permissionRepo.Setup(x => x.GetByNormalizedCodeAsync("PLAYER.READ", It.IsAny<CancellationToken>()))
@@ -51,7 +51,7 @@ public class AddPermissionToRoleCommandHandlerTests
     [Fact]
     public async Task Handle_ExistingPermission_ShouldNotCreateTwice()
     {
-        var role = Role.Create(Guid.NewGuid(), "Admin", null);
+        var role = Role.Create(TenantId, "Admin", null);
         var permission = Permission.Create(TenantId, "player.read", null);
 
         _roleRepo.Setup(x => x.GetByIdAsync(role.Id, It.IsAny<CancellationToken>())).ReturnsAsync(role);

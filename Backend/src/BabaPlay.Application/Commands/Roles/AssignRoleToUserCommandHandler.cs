@@ -49,10 +49,13 @@ public sealed class AssignRoleToUserCommandHandler : ICommandHandler<AssignRoleT
         if (role is null || !role.IsActive)
             return Result.Fail("ROLE_NOT_FOUND", $"Role '{cmd.RoleId}' was not found.");
 
+        if (role.TenantId != _tenantContext.TenantId)
+            return Result.Fail("ROLE_NOT_FOUND", $"Role '{cmd.RoleId}' was not found.");
+
         if (await _userRoleRepository.ExistsAsync(cmd.UserId.Trim(), cmd.RoleId, ct))
             return Result.Fail("ROLE_ALREADY_ASSIGNED", $"Role is already assigned to user '{cmd.UserId}'.");
 
-        await _userRoleRepository.AddAsync(UserRole.Create(cmd.UserId, cmd.RoleId), ct);
+        await _userRoleRepository.AddAsync(UserRole.Create(cmd.UserId.Trim(), cmd.RoleId), ct);
         await _userRoleRepository.SaveChangesAsync(ct);
 
         return Result.Ok();
