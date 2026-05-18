@@ -4,8 +4,7 @@
 
 Construir um sistema SaaS escalável, com:
 
-- Multi-tenancy (1 DB por associação)
-- Migração gradual para isolamento lógico por `TenantId` em banco único, com toggle de compatibilidade
+- Multi-tenancy com banco único e isolamento lógico por `TenantId`
 - TDD obrigatório
 - CQRS obrigatório
 - ASP.NET Identity
@@ -88,27 +87,27 @@ Construir um sistema SaaS escalável, com:
 
 ---
 
-## 🧭 Fase 2.5 — Migração para Single-DB (em andamento)
+## 🧭 Fase 2.5 — Migração para Single-DB ✅ CONCLUÍDA
 
-### Entregas já concluídas
+### Entregas
 
 - Entidades tenant-scoped principais evoluídas com `TenantId` obrigatório
 - `TenantDbContext` com query filters globais por tenant
 - Guardrails de consistência tenant em handlers e repositórios críticos
 - Testes de isolamento cross-tenant adicionados (dados e RBAC)
-- Toggle de execução de provisioning:
-  - `Tenancy:UseTenantDatabaseProvisioning=true` (legado)
-  - `Tenancy:UseTenantDatabaseProvisioning=false` (single-db)
-- `CreateTenantCommandHandler` com comportamento dual:
-  - legado: `Pending` + queue
-  - single-db: `Ready` sem queue
-- `TenantDbContextFactory` com caminho single-db usando connection string do master
+- Removido modo legado de provisioning por tenant (queue/worker/interfaces/settings)
+- Removido endpoint de status de provisioning de tenant
+- Fluxo de criação de tenant simplificado para operação imediata em single-db
+- Contratos/DTOs de tenant limpos de campos legados de provisioning
+- Migration de master DB para remover colunas legadas em `Tenants`:
+  - `ConnectionString`
+  - `DatabaseName`
+  - `ProvisioningStatus`
 
-### Próximos passos
+### Estado atual
 
-- Remover dependências remanescentes do provisioning por banco
-- Migrar onboarding/status para refletir fluxo `Ready` nativo no modo single-db
-- Consolidar documentação final da estratégia single-db como padrão
+- Estratégia de tenancy consolidada em single-db only
+- Isolamento por tenant mantido via `TenantId` e `TenantMiddleware`
 
 ---
 

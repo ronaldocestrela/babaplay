@@ -16,9 +16,7 @@ namespace BabaPlay.Tests.Integration;
 
 /// <summary>
 /// WebApplicationFactory for multi-tenancy integration tests.
-/// Uses SQLite in-memory for the Master DB and replaces the provisioning queue
-/// with a no-op implementation so the background worker never tries to create
-/// real SQL Server databases.
+/// Uses SQLite in-memory for the Master DB.
 /// </summary>
 public sealed class TenantWebApplicationFactory : WebApplicationFactory<Program>
 {
@@ -41,7 +39,6 @@ public sealed class TenantWebApplicationFactory : WebApplicationFactory<Program>
                 ["Jwt:AccessTokenExpiresInMinutes"] = "60",
                 ["Jwt:RefreshTokenExpiresInDays"] = "30",
                 ["ConnectionStrings:MasterDb"] = "Data Source=:memory:",
-                ["Tenancy:UseTenantDatabaseProvisioning"] = "true",
                 ["TenantLogoStorage:Provider"] = "Cloudinary",
                 ["TenantLogoStorage:Cloudinary:CloudName"] = "integration-cloud",
                 ["TenantLogoStorage:Cloudinary:ApiKey"] = "integration-api-key",
@@ -70,11 +67,6 @@ public sealed class TenantWebApplicationFactory : WebApplicationFactory<Program>
 
             _connection.Open();
             services.AddDbContext<MasterDbContext>(o => o.UseSqlite(_connection));
-
-            // --- Replace provisioning queue with no-op ---
-            var queueDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ITenantProvisioningQueue));
-            if (queueDescriptor is not null) services.Remove(queueDescriptor);
-            services.AddSingleton<ITenantProvisioningQueue, NoOpProvisioningQueue>();
 
             // --- Replace cloudinary uploader with deterministic fake ---
             services.RemoveAll<ICloudinaryImageUploader>();
@@ -127,22 +119,6 @@ public sealed class TenantWebApplicationFactory : WebApplicationFactory<Program>
                 $"Test seed failed: {string.Join(", ", result.Errors.Select(e => e.Description))}");
 
         await db.SaveChangesAsync();
-    }
-
-    /// <summary>
-    /// No-op queue: discards enqueue calls; DequeueAsync blocks until cancellation.
-    /// Prevents the BackgroundService worker from attempting real DB provisioning.
-    /// </summary>
-    private sealed class NoOpProvisioningQueue : ITenantProvisioningQueue
-    {
-        public Task EnqueueAsync(Guid tenantId, CancellationToken ct = default) => Task.CompletedTask;
-
-        public Task<Guid> DequeueAsync(CancellationToken ct = default)
-        {
-            var tcs = new TaskCompletionSource<Guid>(TaskCreationOptions.RunContinuationsAsynchronously);
-            ct.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
-            return tcs.Task;
-        }
     }
 
     private sealed class FakeCloudinaryImageUploader : ICloudinaryImageUploader

@@ -68,7 +68,7 @@ public class AcceptAssociationInviteCommandHandlerTests
 
         _tenantRepository
             .Setup(x => x.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TenantInfoDto(tenantId, "Club", "club", true, string.Empty, "Ready"));
+            .ReturnsAsync(new TenantInfoDto(tenantId, "Club", "club", true));
 
         _userTenantMembershipService
             .Setup(x => x.EnsureMemberAsync("new-user-id", tenantId, It.IsAny<CancellationToken>()))
@@ -108,7 +108,7 @@ public class AcceptAssociationInviteCommandHandlerTests
 
         _tenantRepository
             .Setup(x => x.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TenantInfoDto(tenantId, "Club", "club", true, string.Empty, "Ready"));
+            .ReturnsAsync(new TenantInfoDto(tenantId, "Club", "club", true));
 
         _userTenantMembershipService
             .Setup(x => x.EnsureMemberAsync("user-1", tenantId, It.IsAny<CancellationToken>()))

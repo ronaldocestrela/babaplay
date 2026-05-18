@@ -88,20 +88,6 @@ describe('apiClient', () => {
       expect(capturedTenantHeader).toBeNull()
     })
 
-    it('não deve injetar X-Tenant-Slug no GET de status do tenant', async () => {
-      window.history.replaceState({}, '', 'http://localhost:3000/?tenant=babaplay')
-      let capturedTenantHeader: string | null = null
-
-      server.use(
-        http.get(`${BASE_URL}/api/v1/tenant/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/status`, ({ request }) => {
-          capturedTenantHeader = request.headers.get('X-Tenant-Slug')
-          return HttpResponse.json({ id: 'x', provisioningStatus: 'Pending' })
-        }),
-      )
-
-      await apiClient.get('/api/v1/tenant/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/status')
-      expect(capturedTenantHeader).toBeNull()
-    })
   })
 
   describe('response interceptor — renovação de token', () => {

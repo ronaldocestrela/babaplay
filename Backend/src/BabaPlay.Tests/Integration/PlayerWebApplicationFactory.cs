@@ -1,7 +1,6 @@
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Application.Common;
 using BabaPlay.Domain.Entities;
-using BabaPlay.Domain.Enums;
 using BabaPlay.Infrastructure.Entities;
 using BabaPlay.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication;
@@ -23,7 +22,6 @@ namespace BabaPlay.Tests.Integration;
 /// - SQLite in-memory for the Tenant DB (Players schema created)
 /// - <see cref="TestTenantDbContextFactory"/> that always resolves to the tenant SQLite DB
 /// - Test authentication handler (always authenticates)
-/// - No-op provisioning queue
 /// </summary>
 public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
 {
@@ -106,12 +104,6 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
             services.AddScoped<TenantDbContextFactory>(_ =>
                 new TestTenantDbContextFactory(_tenantConnection));
 
-            // --- Replace provisioning queue with no-op ---
-            var queueDescriptor = services.SingleOrDefault(d =>
-                d.ServiceType == typeof(ITenantProvisioningQueue));
-            if (queueDescriptor is not null) services.Remove(queueDescriptor);
-            services.AddSingleton<ITenantProvisioningQueue, NoOpProvisioningQueue>();
-
             // --- Replace JWT auth with test auth handler ---
             services.AddAuthentication(options =>
             {
@@ -181,8 +173,6 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
                 AssociationLongitude = -46.6333,
                 CheckinRadiusMeters = 300,
                 IsActive = true,
-                ProvisioningStatus = ProvisioningStatus.Ready,
-                ConnectionString = "placeholder-overridden-by-test-factory",
             };
 
             db.Tenants.Add(tenant);
@@ -201,8 +191,6 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
                 AssociationLongitude = -46.6333,
                 CheckinRadiusMeters = 300,
                 IsActive = true,
-                ProvisioningStatus = ProvisioningStatus.Ready,
-                ConnectionString = "placeholder-overridden-by-test-factory",
             };
 
             db.Tenants.Add(tenantB);
@@ -312,10 +300,9 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
     private sealed class TestTenantDbContextFactory : TenantDbContextFactory
     {
         private readonly SqliteConnection _connection;
-        private static readonly ITenantProvisioningMode LegacyMode = new TestTenantProvisioningMode();
 
         public TestTenantDbContextFactory(SqliteConnection connection)
-            : base(null!, LegacyMode) => _connection = connection;
+            : base(null!) => _connection = connection;
 
         public override Task<TenantDbContext> CreateAsync(Guid tenantId, CancellationToken ct = default)
         {
@@ -324,23 +311,6 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
                 .Options;
 
             return Task.FromResult(new TenantDbContext(options, tenantId));
-        }
-    }
-
-    private sealed class TestTenantProvisioningMode : ITenantProvisioningMode
-    {
-        public bool UseTenantDatabaseProvisioning => true;
-    }
-
-    private sealed class NoOpProvisioningQueue : ITenantProvisioningQueue
-    {
-        public Task EnqueueAsync(Guid tenantId, CancellationToken ct = default) => Task.CompletedTask;
-
-        public Task<Guid> DequeueAsync(CancellationToken ct = default)
-        {
-            var tcs = new TaskCompletionSource<Guid>(TaskCreationOptions.RunContinuationsAsynchronously);
-            ct.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
-            return tcs.Task;
         }
     }
 }

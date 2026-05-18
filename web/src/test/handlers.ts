@@ -499,7 +499,6 @@ export const handlers = [
       id: 'tenant-123',
       name: body.name,
       slug: body.slug.toLowerCase(),
-      provisioningStatus: 'Pending',
       playersPerTeam: 11,
       logoPath: 'tenant-logos/tenant-123/logo.png',
       street: body.street,
@@ -515,44 +514,12 @@ export const handlers = [
     return HttpResponse.json(response, { status: 201 })
   }),
 
-  // GET /api/v1/tenant/:id/status
-  http.get(`${BASE_URL}/api/v1/tenant/:id/status`, ({ params }) => {
-    const { id } = params
-
-    if (id === 'unknown-tenant-id') {
-      return HttpResponse.json(
-        { title: 'TENANT_NOT_FOUND', detail: 'Tenant not found', status: 404 },
-        { status: 404 },
-      )
-    }
-
-    const response: TenantResponse = {
-      id: id as string,
-      name: 'Mock Tenant',
-      slug: 'mock-tenant',
-      provisioningStatus: 'Ready',
-      playersPerTeam: 11,
-      logoPath: 'tenant-logos/tenant-123/logo.png',
-      street: 'Rua das Palmeiras',
-      number: '123',
-      neighborhood: 'Centro',
-      city: 'Sao Paulo',
-      state: 'SP',
-      zipCode: '01000-000',
-      associationLatitude: -23.5505,
-      associationLongitude: -46.6333,
-    }
-
-    return HttpResponse.json(response)
-  }),
-
   // GET /api/v1/tenant/settings
   http.get(`${BASE_URL}/api/v1/tenant/settings`, () => {
     const response: TenantResponse = {
       id: 'tenant-123',
       name: 'Mock Tenant',
       slug: 'mock-tenant',
-      provisioningStatus: 'Ready',
       playersPerTeam: 11,
       logoPath: 'tenant-logos/tenant-123/logo.png',
       street: 'Rua das Palmeiras',
@@ -661,7 +628,6 @@ export const handlers = [
       id: 'tenant-123',
       name,
       slug: 'mock-tenant',
-      provisioningStatus: 'Ready',
       playersPerTeam,
       logoPath: 'tenant-logos/tenant-123/new-logo.png',
       street,

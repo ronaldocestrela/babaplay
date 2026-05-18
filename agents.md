@@ -4,9 +4,7 @@
 
 Sistema SaaS para gestão de associações esportivas (futebol) com:
 
-- Multi-tenant em transição controlada:
-	- legado: 1 banco por associação
-	- novo modo: banco único com `TenantId` por coluna
+- Multi-tenant com banco único e isolamento lógico por `TenantId`
 - Tempo real (SignalR)
 - Notificações push (Firebase)
 - Backend: .NET 10 (Clean Architecture + CQRS + TDD obrigatório)
@@ -106,16 +104,13 @@ src/
 
 ### Estratégia
 
-- Estratégia híbrida com feature toggle (`Tenancy:UseTenantDatabaseProvisioning`):
-	- `true`: legado 1 DB por tenant + provisioning worker
-	- `false`: single-db + isolamento lógico por `TenantId`
+- Estratégia única: single-db + isolamento lógico por `TenantId`
 
 ### Componentes
 
 - ITenantResolver
 - TenantMiddleware
 - TenantDbContextFactory
-- ITenantProvisioningMode
 
 ---
 
@@ -305,7 +300,7 @@ Código sem:
 | `AspNetUsers` | `ApplicationUser` com `IsActive` e `CreatedAt` |
 | `AspNetRoles` / tabelas Identity | padrão |
 | `RefreshTokens` | índice único em `Token` |
-| `Tenants` | slug único; `ConnectionString` `HasMaxLength(2000)` |
+| `Tenants` | slug único; metadados da associação |
 | `UserTenants` | PK composta (UserId, TenantId) |
 | `Plans` | `Price` decimal(18,2) |
 | `Subscriptions` | FK → Tenant + Plan; enum `SubscriptionStatus` (Active/Expired/Cancelled) |
@@ -326,20 +321,18 @@ Código sem:
 
 ---
 
-### Fase 2.5 — Migração para Single-DB 🚧
+### Fase 2.5 — Migração para Single-DB ✅
 
-#### Entregas já implementadas
-- Toggle de tenancy via `Tenancy:UseTenantDatabaseProvisioning` (default `true`)
-- `CreateTenant` com comportamento dual:
-	- legado: status `Pending` + enqueue de provisioning
-	- single-db: status `Ready` sem enqueue
-- `TenantDbContextFactory` compatível com modo single-db (usa connection string do master)
-- `NoOpTenantProvisioningQueue` para desativar o worker legado sem quebrar DI
-- Testes unit/integration ajustados para o novo modo
+#### Entregas implementadas
+- Remoção total do legado de multibanco (queue/worker/interfaces/settings)
+- `CreateTenant` simplificado para fluxo único single-db
+- Remoção de endpoint/queries de status de provisioning de tenant
+- `TenantDbContextFactory` consolidado para conexão compartilhada do master
+- Migration para remoção de colunas legadas em `Tenants` (`ConnectionString`, `DatabaseName`, `ProvisioningStatus`)
+- Testes backend e frontend ajustados para contrato single-db only
 
 #### Estado atual
-- Compatibilidade retroativa preservada por default
-- Caminho single-db já habilitável por configuração
+- Aplicação opera somente em single-db com isolamento lógico por `TenantId`
 
 ---
 

@@ -29,7 +29,7 @@ public class SendAssociationInviteCommandHandlerTests
     {
         _tenantRepository
             .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TenantInfoDto(Guid.NewGuid(), "Club", "club", true, string.Empty, "Ready"));
+            .ReturnsAsync(new TenantInfoDto(Guid.NewGuid(), "Club", "club", true));
 
         _userTenantRepository
             .Setup(x => x.IsOwnerAsync(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
@@ -54,7 +54,7 @@ public class SendAssociationInviteCommandHandlerTests
 
         _tenantRepository
             .Setup(x => x.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TenantInfoDto(tenantId, "Club", "club", true, string.Empty, "Ready"));
+            .ReturnsAsync(new TenantInfoDto(tenantId, "Club", "club", true));
 
         _userTenantRepository
             .Setup(x => x.IsOwnerAsync("owner-1", tenantId, It.IsAny<CancellationToken>()))

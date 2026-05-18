@@ -18,7 +18,6 @@ namespace BabaPlay.Api.Controllers;
 public sealed class TenantController : ControllerBase
 {
     private readonly ICommandHandler<CreateTenantCommand, Result<TenantResponse>> _createHandler;
-    private readonly IQueryHandler<GetTenantStatusQuery, Result<TenantResponse>> _statusHandler;
     private readonly IQueryHandler<GetTenantSettingsQuery, Result<TenantResponse>> _settingsHandler;
     private readonly ICommandHandler<UpdateTenantSettingsCommand, Result<TenantResponse>> _updateSettingsHandler;
     private readonly IQueryHandler<GetTenantGameDayOptionsQuery, Result<IReadOnlyList<TenantGameDayOptionResponse>>> _gameDayOptionsHandler;
@@ -28,7 +27,6 @@ public sealed class TenantController : ControllerBase
 
     public TenantController(
         ICommandHandler<CreateTenantCommand, Result<TenantResponse>> createHandler,
-        IQueryHandler<GetTenantStatusQuery, Result<TenantResponse>> statusHandler,
         IQueryHandler<GetTenantSettingsQuery, Result<TenantResponse>> settingsHandler,
         ICommandHandler<UpdateTenantSettingsCommand, Result<TenantResponse>> updateSettingsHandler,
         IQueryHandler<GetTenantGameDayOptionsQuery, Result<IReadOnlyList<TenantGameDayOptionResponse>>> gameDayOptionsHandler,
@@ -37,7 +35,6 @@ public sealed class TenantController : ControllerBase
         ITenantContext tenantContext)
     {
         _createHandler = createHandler;
-        _statusHandler = statusHandler;
         _settingsHandler = settingsHandler;
         _updateSettingsHandler = updateSettingsHandler;
         _gameDayOptionsHandler = gameDayOptionsHandler;
@@ -47,13 +44,9 @@ public sealed class TenantController : ControllerBase
     }
 
     /// <summary>
-    /// Creates a new tenant and enqueues async database provisioning.
+    /// Creates a new tenant.
     /// </summary>
-    /// <remarks>
-    /// The tenant is created immediately with status <c>Pending</c>.
-    /// Poll <c>GET /api/v1/tenant/{id}/status</c> until status is <c>Ready</c>.
-    /// </remarks>
-    /// <response code="201">Tenant created; provisioning enqueued.</response>
+    /// <response code="201">Tenant created.</response>
     /// <response code="409">Slug is already taken (TENANT_SLUG_TAKEN).</response>
     /// <response code="422">Validation error (name or slug empty).</response>
     [HttpPost]
@@ -112,23 +105,7 @@ public sealed class TenantController : ControllerBase
             });
         }
 
-        return CreatedAtAction(
-            nameof(GetStatus),
-            new { id = result.Value!.Id },
-            result.Value);
-    }
-
-    /// <summary>Returns the current provisioning status for a tenant.</summary>
-    /// <response code="200">Tenant found; status returned.</response>
-    /// <response code="404">Tenant not found (TENANT_NOT_FOUND).</response>
-    [HttpGet("{id:guid}/status")]
-    [AllowAnonymous]
-    [ProducesResponseType(typeof(TenantResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetStatus(Guid id, CancellationToken ct)
-    {
-        var result = await _statusHandler.HandleAsync(new GetTenantStatusQuery(id), ct);
-        return Ok(result.Value);
+        return Created($"/api/v1/tenant/{result.Value!.Id}", result.Value);
     }
 
     [Authorize(Policy = AuthorizationPolicyNames.TenantMember)]

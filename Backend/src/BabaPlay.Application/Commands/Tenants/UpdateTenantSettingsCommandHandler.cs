@@ -113,7 +113,6 @@ public sealed class UpdateTenantSettingsCommandHandler
             tenant.Id,
             tenant.Name,
             tenant.Slug,
-            tenant.ProvisioningStatus,
             tenant.PlayersPerTeam,
             tenant.LogoPath,
             tenant.Street,

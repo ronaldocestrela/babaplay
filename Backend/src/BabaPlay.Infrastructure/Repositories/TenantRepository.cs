@@ -1,6 +1,5 @@
 using BabaPlay.Application.DTOs;
 using BabaPlay.Application.Interfaces;
-using BabaPlay.Domain.Enums;
 using BabaPlay.Infrastructure.Entities;
 using BabaPlay.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -68,25 +67,7 @@ public sealed class TenantRepository : ITenantRepository
             ZipCode = zipCode,
             AssociationLatitude = associationLatitude,
             AssociationLongitude = associationLongitude,
-            ProvisioningStatus = ProvisioningStatus.Pending,
         });
-        await _context.SaveChangesAsync(ct);
-    }
-
-    /// <inheritdoc />
-    public async Task UpdateProvisioningAsync(
-        Guid id,
-        ProvisioningStatus status,
-        string connectionString,
-        CancellationToken ct = default)
-    {
-        var entity = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == id, ct);
-        if (entity is null) return;
-
-        entity.ProvisioningStatus = status;
-        if (!string.IsNullOrWhiteSpace(connectionString))
-            entity.ConnectionString = connectionString;
-
         await _context.SaveChangesAsync(ct);
     }
 
@@ -131,8 +112,6 @@ public sealed class TenantRepository : ITenantRepository
         t.Name,
         t.Slug,
         t.IsActive,
-        t.ConnectionString,
-        t.ProvisioningStatus.ToString(),
         t.PlayersPerTeam,
         t.LogoPath,
         t.Street,

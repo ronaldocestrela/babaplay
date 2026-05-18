@@ -44,10 +44,6 @@ public static class ServiceRegistration
         var tenantLogoStorageSection = configuration.GetSection(TenantLogoStorageSettings.SectionName);
         services.Configure<TenantLogoStorageSettings>(tenantLogoStorageSection);
 
-        var tenancySection = configuration.GetSection(TenancySettings.SectionName);
-        services.Configure<TenancySettings>(tenancySection);
-        var tenancySettings = tenancySection.Get<TenancySettings>() ?? new TenancySettings();
-
         // --- Master Database ---
         services.AddDbContext<MasterDbContext>(options =>
             options.UseSqlServer(
@@ -209,18 +205,7 @@ public static class ServiceRegistration
         services.AddScoped<IUserTenantRepository, UserTenantRepository>();
         services.AddScoped<ITenantGameDayOptionRepository, TenantGameDayOptionRepository>();
         services.AddScoped<ITenantOwnerProvisioningService, TenantOwnerProvisioningService>();
-        services.AddSingleton<ITenantProvisioningMode, ConfigTenantProvisioningMode>();
         services.AddScoped<TenantDbContextFactory>();
-
-        if (tenancySettings.UseTenantDatabaseProvisioning)
-        {
-            services.AddSingleton<ITenantProvisioningQueue, TenantProvisioningQueue>();
-            services.AddHostedService<TenantProvisioningWorker>();
-        }
-        else
-        {
-            services.AddSingleton<ITenantProvisioningQueue, NoOpTenantProvisioningQueue>();
-        }
 
         // --- Tenant-scoped repositories (Fase 3) ---
         services.AddScoped<IPlayerRepository, PlayerRepository>();

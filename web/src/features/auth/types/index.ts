@@ -48,7 +48,6 @@ export interface TenantResponse {
   id: string
   name: string
   slug: string
-  provisioningStatus: string
   playersPerTeam?: number
   logoPath?: string | null
   street?: string | null

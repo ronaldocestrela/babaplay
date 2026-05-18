@@ -141,8 +141,6 @@ public sealed class AuthWebApplicationFactory : WebApplicationFactory<Program>
                 Id = TestTenantId,
                 Name = "Integration Club",
                 Slug = TestTenantSlug,
-                DatabaseName = "IntegrationClubDb",
-                ConnectionString = "Server=(local);Database=IntegrationClubDb;Trusted_Connection=True;",
                 IsActive = true,
             };
 

@@ -6,8 +6,6 @@ public sealed record TenantInfoDto(
     string Name,
     string Slug,
     bool IsActive,
-    string ConnectionString,
-    string ProvisioningStatus,
     int PlayersPerTeam = 11,
     string? LogoPath = null,
     string? Street = null,

@@ -4,12 +4,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { RegisterAssociationPage } from '../RegisterAssociationPage'
 import { geocodeAddress, lookupAddressByZipCode } from '@/core/services/addressLookup'
 
-const mockNavigate = vi.fn()
 const createAssociation = vi.fn()
+const mockAssign = vi.fn()
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
-  return { ...actual, useNavigate: () => mockNavigate }
+  return actual
 })
 
 vi.mock('@/features/tenant-onboarding/hooks', () => ({
@@ -45,6 +45,11 @@ async function fillRequiredAssociationFields() {
 describe('RegisterAssociationPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockAssign.mockReset()
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, assign: mockAssign },
+      writable: true,
+    })
 
     vi.mocked(lookupAddressByZipCode).mockResolvedValue(null)
     vi.mocked(geocodeAddress).mockResolvedValue(null)
@@ -54,7 +59,6 @@ describe('RegisterAssociationPage', () => {
         id: 'tenant-123',
         name: payload.name,
         slug: payload.slug,
-        provisioningStatus: 'Pending',
       })
     })
 
@@ -78,7 +82,7 @@ describe('RegisterAssociationPage', () => {
     expect(screen.getByRole('button', { name: /criar associação/i })).toBeInTheDocument()
   })
 
-  it('deve enviar payload válido e navegar para página de status', async () => {
+  it('deve enviar payload válido e redirecionar para login com tenant', async () => {
     render(<RegisterAssociationPage />)
 
     const logoFile = await fillRequiredAssociationFields()
@@ -108,10 +112,7 @@ describe('RegisterAssociationPage', () => {
         },
         expect.any(Object),
       )
-      expect(mockNavigate).toHaveBeenCalledWith({
-        to: '/register-association/status/$tenantId',
-        params: { tenantId: 'tenant-123' },
-      })
+      expect(mockAssign).toHaveBeenCalledWith('/login?tenant=associacao-atletica')
     })
   })
 
@@ -238,7 +239,7 @@ describe('RegisterAssociationPage', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /voltar para login/i }))
 
-    expect(mockNavigate).toHaveBeenCalledWith({ to: '/login' })
+    expect(mockAssign).toHaveBeenCalledWith('/login')
   })
 
   it('não deve consultar CEP quando formato é inválido', async () => {

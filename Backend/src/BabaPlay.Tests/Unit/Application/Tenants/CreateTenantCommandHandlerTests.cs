@@ -9,8 +9,6 @@ namespace BabaPlay.Tests.Unit.Application.Tenants;
 public class CreateTenantCommandHandlerTests
 {
     private readonly Mock<ITenantRepository> _tenantRepo = new();
-    private readonly Mock<ITenantProvisioningQueue> _queue = new();
-    private readonly Mock<ITenantProvisioningMode> _tenantProvisioningMode = new();
     private readonly Mock<ITenantOwnerProvisioningService> _ownerProvisioning = new();
     private readonly Mock<ITenantLogoStorageService> _tenantLogoStorage = new();
     private readonly CreateTenantCommandHandler _handler;
@@ -40,14 +38,8 @@ public class CreateTenantCommandHandlerTests
     {
         _handler = new CreateTenantCommandHandler(
             _tenantRepo.Object,
-            _queue.Object,
-            _tenantProvisioningMode.Object,
             _ownerProvisioning.Object,
             _tenantLogoStorage.Object);
-
-        _tenantProvisioningMode
-            .SetupGet(x => x.UseTenantDatabaseProvisioning)
-            .Returns(true);
 
         _ownerProvisioning
             .Setup(x => x.ResolveOwnerUserIdAsync(
@@ -176,7 +168,7 @@ public class CreateTenantCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ValidCommand_ShouldCreateTenantAndEnqueueProvisioning()
+    public async Task Handle_ValidCommand_ShouldCreateTenant()
     {
         // Arrange
         _tenantRepo
@@ -199,10 +191,6 @@ public class CreateTenantCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        _queue
-            .Setup(q => q.EnqueueAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-
         // Act
         var result = await _handler.HandleAsync(CreateValidCommand());
 
@@ -210,7 +198,6 @@ public class CreateTenantCommandHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value!.Name.Should().Be("My Club");
         result.Value.Slug.Should().Be("myclob");
-        result.Value.ProvisioningStatus.Should().Be("Pending");
         result.Value.LogoPath.Should().NotBeNullOrWhiteSpace();
         result.Value.Street.Should().Be("Rua Central");
         result.Value.City.Should().Be("Sao Paulo");
@@ -231,41 +218,6 @@ public class CreateTenantCommandHandlerTests
             -46.6333,
             It.IsAny<CancellationToken>()), Times.Once);
         _tenantLogoStorage.Verify(x => x.SaveAsync(It.IsAny<TenantLogoSaveRequest>(), It.IsAny<CancellationToken>()), Times.Once);
-        _queue.Verify(q => q.EnqueueAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task Handle_ValidCommand_WithSingleDatabaseMode_ShouldMarkReadyAndSkipQueue()
-    {
-        // Arrange
-        _tenantProvisioningMode
-            .SetupGet(x => x.UseTenantDatabaseProvisioning)
-            .Returns(false);
-
-        _tenantRepo
-            .Setup(r => r.ExistsAsync("myclob", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-
-        _tenantRepo
-            .Setup(r => r.UpdateProvisioningAsync(
-                It.IsAny<Guid>(),
-                global::BabaPlay.Domain.Enums.ProvisioningStatus.Ready,
-                string.Empty,
-                It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        var result = await _handler.HandleAsync(CreateValidCommand());
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value!.ProvisioningStatus.Should().Be("Ready");
-        _queue.Verify(q => q.EnqueueAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
-        _tenantRepo.Verify(r => r.UpdateProvisioningAsync(
-            It.IsAny<Guid>(),
-            global::BabaPlay.Domain.Enums.ProvisioningStatus.Ready,
-            string.Empty,
-            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -335,7 +287,6 @@ public class CreateTenantCommandHandlerTests
             It.IsAny<double>(),
             It.IsAny<double>(),
             It.IsAny<CancellationToken>()), Times.Never);
-        _queue.Verify(q => q.EnqueueAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         _tenantLogoStorage.Verify(x => x.SaveAsync(It.IsAny<TenantLogoSaveRequest>(), It.IsAny<CancellationToken>()), Times.Never);
         _ownerProvisioning.Verify(x => x.ResolveOwnerUserIdAsync(
             It.IsAny<string?>(),
@@ -399,10 +350,6 @@ public class CreateTenantCommandHandlerTests
                 -23.5505,
                 -46.6333,
                 It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-
-        _queue
-            .Setup(q => q.EnqueueAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act

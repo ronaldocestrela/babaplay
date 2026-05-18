@@ -46,7 +46,6 @@ Edite o arquivo `deploy/docker/.env.manual` com valores reais, principalmente:
 - `WEB_VITE_API_URL`
 - `RESEND_API_KEY` (se houver envio real de e-mails)
 - `TENANT_LOGO_STORAGE_PROVIDER` (`Local` ou `Cloudinary`)
-- `TENANCY_USE_TENANT_DATABASE_PROVISIONING` (`true` para legado 1 DB por tenant, `false` para modo single-db)
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
 - `CLOUDINARY_FOLDER`
 
@@ -57,7 +56,7 @@ Observacoes:
 - `WEB_VITE_API_URL` e injetada no build do frontend. Para este stack: `http://localhost:5050`.
 - `CORS_ALLOWED_ORIGIN` deve bater com a URL publica da web. Para este stack: `http://localhost:8080`.
 - Para ativar Cloudinary no logo da associacao, defina `TENANT_LOGO_STORAGE_PROVIDER=Cloudinary` e preencha as variaveis `CLOUDINARY_*`.
-- Quando `TENANCY_USE_TENANT_DATABASE_PROVISIONING=false`, o worker de provisioning por tenant nao e iniciado e o tenant e criado direto com status `Ready`.
+- A aplicacao opera somente em modo single-db com isolamento logico por `TenantId`.
 
 ## 2) Build das imagens
 

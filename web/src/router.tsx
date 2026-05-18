@@ -18,7 +18,6 @@ import { TenantSettingsPage } from '@/pages/TenantSettingsPage'
 import { PublicLayout } from '@/layouts/PublicLayout'
 import { ProtectedLayout } from '@/layouts/ProtectedLayout'
 import { RegisterAssociationPage } from '@/pages/RegisterAssociationPage'
-import { AssociationProvisioningStatusPage } from '@/pages/AssociationProvisioningStatusPage'
 import { AcceptAssociationInvitePage } from '@/pages/AcceptAssociationInvitePage'
 import { CompletePlayerProfilePage } from '@/pages/CompletePlayerProfilePage'
 
@@ -57,12 +56,6 @@ const registerAssociationRoute = createRoute({
   getParentRoute: () => publicRoute,
   path: '/register-association',
   component: RegisterAssociationPage,
-})
-
-const associationProvisioningStatusRoute = createRoute({
-  getParentRoute: () => publicRoute,
-  path: '/register-association/status/$tenantId',
-  component: AssociationProvisioningStatusPage,
 })
 
 const acceptAssociationInviteRoute = createRoute({
@@ -147,7 +140,6 @@ const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([
     loginRoute,
     registerAssociationRoute,
-    associationProvisioningStatusRoute,
     acceptAssociationInviteRoute,
   ]),
   protectedRoute.addChildren([

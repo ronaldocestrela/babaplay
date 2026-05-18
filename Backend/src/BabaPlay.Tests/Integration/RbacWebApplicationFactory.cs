@@ -1,7 +1,6 @@
 using BabaPlay.Application.Common;
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Domain.Entities;
-using BabaPlay.Domain.Enums;
 using BabaPlay.Infrastructure.Entities;
 using BabaPlay.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication;
@@ -80,12 +79,6 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
             _tenantConnection.Open();
             services.AddScoped<TenantDbContextFactory>(_ => new TestTenantDbContextFactory(_tenantConnection));
 
-            var queueDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ITenantProvisioningQueue));
-            if (queueDescriptor is not null)
-                services.Remove(queueDescriptor);
-
-            services.AddSingleton<ITenantProvisioningQueue, NoOpProvisioningQueue>();
-
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
@@ -157,8 +150,6 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
                 Name = "RBAC Tenant A",
                 Slug = TenantASlug,
                 IsActive = true,
-                ProvisioningStatus = ProvisioningStatus.Ready,
-                ConnectionString = "placeholder-overridden-by-test-factory",
             });
         }
 
@@ -170,8 +161,6 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
                 Name = "RBAC Tenant B",
                 Slug = TenantBSlug,
                 IsActive = true,
-                ProvisioningStatus = ProvisioningStatus.Ready,
-                ConnectionString = "placeholder-overridden-by-test-factory",
             });
         }
 
@@ -315,10 +304,9 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
     private sealed class TestTenantDbContextFactory : TenantDbContextFactory
     {
         private readonly SqliteConnection _connection;
-        private static readonly ITenantProvisioningMode LegacyMode = new TestTenantProvisioningMode();
 
         public TestTenantDbContextFactory(SqliteConnection connection)
-            : base(null!, LegacyMode)
+            : base(null!)
         {
             _connection = connection;
         }
@@ -330,23 +318,6 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
                 .Options;
 
             return Task.FromResult(new TenantDbContext(options, tenantId));
-        }
-    }
-
-    private sealed class TestTenantProvisioningMode : ITenantProvisioningMode
-    {
-        public bool UseTenantDatabaseProvisioning => true;
-    }
-
-    private sealed class NoOpProvisioningQueue : ITenantProvisioningQueue
-    {
-        public Task EnqueueAsync(Guid tenantId, CancellationToken ct = default) => Task.CompletedTask;
-
-        public Task<Guid> DequeueAsync(CancellationToken ct = default)
-        {
-            var tcs = new TaskCompletionSource<Guid>(TaskCreationOptions.RunContinuationsAsynchronously);
-            ct.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
-            return tcs.Task;
         }
     }
 }

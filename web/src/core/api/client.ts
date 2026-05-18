@@ -34,11 +34,7 @@ function isPublicAuthRequest(config?: InternalAxiosRequestConfig) {
 function isTenantHeaderOptionalRequest(config?: InternalAxiosRequestConfig) {
   const path = getRequestPath(config?.url)
 
-  if (path === API_ROUTES.TENANT.CREATE) {
-    return true
-  }
-
-  return /^\/api\/v1\/tenant\/[^/]+\/status$/i.test(path)
+  return path === API_ROUTES.TENANT.CREATE
 }
 
 function resolveTenantContext() {

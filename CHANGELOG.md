@@ -8,29 +8,41 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
-### Changed — Tenancy: toggle para legado (1 DB por tenant) vs single-db
+### Changed — Tenancy: single-db only (remoção total do legado)
 
-- Backend (Application/Infrastructure):
-	- novo contrato `ITenantProvisioningMode` para expor o modo de tenancy ativo
-	- nova configuracao `Tenancy:UseTenantDatabaseProvisioning` (default `true`)
-	- novo `ConfigTenantProvisioningMode` para bind de configuracao
-	- novo `NoOpTenantProvisioningQueue` para desabilitar worker legado com seguranca
-	- `ServiceRegistration` atualizado para registrar queue/worker condicionalmente pelo toggle
-	- `CreateTenantCommandHandler` atualizado:
-		- modo legado (`true`): mantem `Pending` + enqueue de provisioning
-		- modo single-db (`false`): marca tenant como `Ready` sem enqueue
-	- `TenantDbContextFactory` atualizado para suportar single-db usando connection string do `MasterDbContext` quando o toggle estiver `false`
+- Backend (Application/Infrastructure/API):
+	- removidos contratos e componentes legados de provisioning por tenant:
+		- `ITenantProvisioningMode`
+		- `ITenantProvisioningQueue`
+		- `ConfigTenantProvisioningMode`
+		- `TenantProvisioningQueue`
+		- `NoOpTenantProvisioningQueue`
+		- `TenantProvisioningWorker`
+		- `TenancySettings`
+	- removidos endpoint/query de status de tenant:
+		- `GET /api/v1/tenant/{id}/status`
+		- `GetTenantStatusQuery` + handler
+	- `CreateTenantCommandHandler` simplificado para fluxo unico single-db (tenant operacional apos criacao)
+	- `TenantDbContextFactory` consolidado para usar conexao compartilhada do master
+	- contratos de tenant limpos de `provisioningStatus` e campos legados de conexao
+	- migration adicionada para remover colunas legadas em `Tenants`:
+		- `ConnectionString`
+		- `DatabaseName`
+		- `ProvisioningStatus`
+- Frontend:
+	- removidos rota/pagina de acompanhamento de provisioning:
+		- `/register-association/status/$tenantId`
+		- `AssociationProvisioningStatusPage`
+	- removidos hook/service de polling de status de associacao
+	- fluxo de registro atualizado para redirecionar direto ao login tenant-aware (`/login?tenant=<slug>`)
+	- tipos e mocks ajustados para novo contrato sem `provisioningStatus`
 - Configuracao e deploy:
-	- `appsettings.json` e `appsettings.Development.json` com secao `Tenancy`
-	- `deploy/docker/.env.manual.example` com `TENANCY_USE_TENANT_DATABASE_PROVISIONING`
-	- `deploy/docker/docker-compose.manual.yml` propagando `Tenancy__UseTenantDatabaseProvisioning`
-	- `docs/deploy-manual-docker.md` atualizado com orientacoes operacionais do toggle
-- Testes:
-	- unit: novo cenario em `CreateTenantCommandHandlerTests` validando fluxo single-db (`Ready` sem queue)
-	- integracao: factories ajustadas para novo construtor de `TenantDbContextFactory`
-	- validacao executada:
-		- `CreateTenantCommandHandlerTests`: 11/11 passando
-		- `RbacIntegrationTests` + `PlayerIntegrationTests` (filtro): 24/24 passando
+	- removida configuracao `Tenancy:UseTenantDatabaseProvisioning` de `appsettings`
+	- removida variavel `TENANCY_USE_TENANT_DATABASE_PROVISIONING` do deploy manual docker
+	- documentacao de deploy atualizada para estrategia single-db only
+- Validacao executada:
+	- backend: `dotnet test Backend/BabaPlay.slnx` => **505/505 passando**
+	- frontend (suites focadas onboarding/client): **100% passando**
 
 ### Added — Infra: Deploy manual com Docker (sem CD)
 

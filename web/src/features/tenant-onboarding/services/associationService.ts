@@ -47,7 +47,4 @@ export const associationService = {
       })
       .then((res) => res.data)
   },
-
-  getAssociationStatus: (id: string): Promise<AssociationResponse> =>
-    apiClient.get<AssociationResponse>(API_ROUTES.TENANT.STATUS(id)).then((res) => res.data),
 }

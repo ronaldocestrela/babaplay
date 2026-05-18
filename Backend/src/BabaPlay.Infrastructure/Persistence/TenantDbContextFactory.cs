@@ -1,5 +1,4 @@
 using BabaPlay.Domain.Exceptions;
-using BabaPlay.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace BabaPlay.Infrastructure.Persistence;
@@ -11,18 +10,15 @@ namespace BabaPlay.Infrastructure.Persistence;
 public class TenantDbContextFactory
 {
     private readonly MasterDbContext _masterDb;
-    private readonly ITenantProvisioningMode _tenantProvisioningMode;
 
-    public TenantDbContextFactory(MasterDbContext masterDb, ITenantProvisioningMode tenantProvisioningMode)
+    public TenantDbContextFactory(MasterDbContext masterDb)
     {
         _masterDb = masterDb;
-        _tenantProvisioningMode = tenantProvisioningMode;
     }
 
     /// <summary>
-    /// Returns a <see cref="TenantDbContext"/> configured with the connection string
-    /// for the given tenant. Throws <see cref="NotFoundException"/> if the tenant does
-    /// not exist or its database has not been provisioned yet.
+    /// Returns a <see cref="TenantDbContext"/> using the shared master connection string.
+    /// Throws <see cref="NotFoundException"/> when the tenant metadata does not exist.
     /// </summary>
     public virtual async Task<TenantDbContext> CreateAsync(Guid tenantId, CancellationToken ct = default)
     {
@@ -33,19 +29,8 @@ public class TenantDbContextFactory
         if (tenant is null)
             throw new NotFoundException("TENANT_NOT_FOUND", $"Tenant '{tenantId}' was not found.");
 
-        var connectionString = tenant.ConnectionString;
-
-        if (!_tenantProvisioningMode.UseTenantDatabaseProvisioning)
-        {
-            connectionString = _masterDb.Database.GetConnectionString()
-                ?? throw new InvalidOperationException("Master connection string is unavailable.");
-        }
-        else if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            throw new NotFoundException(
-                "TENANT_NOT_PROVISIONED",
-                $"Tenant '{tenant.Slug}' database has not been provisioned yet.");
-        }
+        var connectionString = _masterDb.Database.GetConnectionString()
+            ?? throw new InvalidOperationException("Master connection string is unavailable.");
 
         var options = new DbContextOptionsBuilder<TenantDbContext>()
             .UseSqlServer(connectionString)

@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { createWrapper } from '@/test/utils'
-import { useAssociationStatus, useCreateAssociation } from '../index'
+import { useCreateAssociation } from '../index'
 
 describe('tenant onboarding hooks', () => {
   const logo = new File(['logo'], 'logo.png', { type: 'image/png' })
@@ -54,22 +54,5 @@ describe('tenant onboarding hooks', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect(result.current.errorCode).toBe('TENANT_SLUG_TAKEN')
-  })
-
-  it('deve carregar status da associação com useAssociationStatus', async () => {
-    const { result } = renderHook(() => useAssociationStatus('tenant-123'), {
-      wrapper: createWrapper(),
-    })
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data?.provisioningStatus).toBe('Ready')
-  })
-
-  it('não deve executar query quando tenantId não é informado', () => {
-    const { result } = renderHook(() => useAssociationStatus(undefined), {
-      wrapper: createWrapper(),
-    })
-
-    expect(result.current.fetchStatus).toBe('idle')
   })
 })

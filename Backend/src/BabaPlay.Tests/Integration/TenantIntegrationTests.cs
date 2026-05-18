@@ -88,7 +88,7 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
     // ── POST /api/v1/tenant ────────────────────────────────────────────────
 
     [Fact]
-    public async Task POST_Tenant_ValidRequest_ShouldReturn201WithPendingStatus()
+    public async Task POST_Tenant_ValidRequest_ShouldReturn201()
     {
         // Arrange
         var slug = $"club-{Guid.NewGuid():N}"[..20];
@@ -103,7 +103,6 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
         body.Should().NotBeNull();
         body!.Name.Should().Be("Test Club");
         body.Slug.Should().Be(slug);
-        body.ProvisioningStatus.Should().Be("Pending");
         body.PlayersPerTeam.Should().Be(11);
         body.Id.Should().NotBeEmpty();
         body.LogoPath.Should().NotBeNullOrWhiteSpace();
@@ -165,37 +164,6 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
         response.StatusCode.Should().Be(HttpStatusCode.Created);
     }
 
-    // ── GET /api/v1/tenant/{id}/status ─────────────────────────────────────
-
-    [Fact]
-    public async Task GET_TenantStatus_KnownId_ShouldReturn200WithStatus()
-    {
-        // Arrange — create a tenant first
-        var slug = $"status-{Guid.NewGuid():N}"[..20];
-        var createResp = await _client.PostAsync("/api/v1/tenant", BuildTenantCreateContent("Status Club", slug));
-        var created = await createResp.Content.ReadFromJsonAsync<TenantResponse>();
-
-        // Act
-        var response = await _client.GetAsync($"/api/v1/tenant/{created!.Id}/status");
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        var body = await response.Content.ReadFromJsonAsync<TenantResponse>();
-        body!.Id.Should().Be(created.Id);
-        body.ProvisioningStatus.Should().Be("Pending");
-    }
-
-    [Fact]
-    public async Task GET_TenantStatus_UnknownId_ShouldReturn404()
-    {
-        // Act
-        var response = await _client.GetAsync($"/api/v1/tenant/{Guid.NewGuid()}/status");
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
-    }
-
     // ── TenantMiddleware ────────────────────────────────────────────────────
 
     [Fact]
@@ -206,14 +174,14 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
         var createResp = await _client.PostAsync("/api/v1/tenant", BuildTenantCreateContent("MW Club", slug));
         var created = await createResp.Content.ReadFromJsonAsync<TenantResponse>();
 
-        // Act — include X-Tenant-Slug on the status request
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/v1/tenant/{created!.Id}/status");
+        // Act — include X-Tenant-Slug on an authorized tenant endpoint
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/tenant/settings");
         request.Headers.Authorization = new("Bearer", "test-token");
         request.Headers.Add("X-Tenant-Slug", slug);
 
         var response = await _client.SendAsync(request);
 
-        // Assert — middleware resolves slug; controller returns 200 normally
+        // Assert — middleware resolves slug and request succeeds
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
@@ -221,7 +189,7 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
     public async Task Request_WithInvalidTenantSlugHeader_ShouldReturn404()
     {
         // Act — send a request with a slug that doesn't exist in the DB
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/v1/tenant/{Guid.NewGuid()}/status");
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/tenant/settings");
         request.Headers.Authorization = new("Bearer", "test-token");
         request.Headers.Add("X-Tenant-Slug", "totally-nonexistent-slug");
 

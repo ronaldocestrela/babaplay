@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
@@ -33,8 +32,12 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 type AssociationFormInput = z.input<typeof associationFormSchema>
 
+function buildTenantAwareLoginPath(slug: string): string {
+  const normalizedSlug = slug.trim().toLowerCase()
+  return `/login?tenant=${encodeURIComponent(normalizedSlug)}`
+}
+
 export function RegisterAssociationPage() {
-  const navigate = useNavigate()
   const [apiError, setApiError] = useState<string | null>(null)
   const [zipLookupError, setZipLookupError] = useState<string | null>(null)
   const [locationLookupError, setLocationLookupError] = useState<string | null>(null)
@@ -179,10 +182,7 @@ export function RegisterAssociationPage() {
 
     createAssociation(payload, {
       onSuccess: (response) => {
-        void navigate({
-          to: '/register-association/status/$tenantId',
-          params: { tenantId: response.id },
-        })
+        window.location.assign(buildTenantAwareLoginPath(response.slug))
       },
       onError: () => {
         setApiError(ERROR_MESSAGES[errorCode ?? ''] ?? 'Falha ao criar associação.')
@@ -195,7 +195,7 @@ export function RegisterAssociationPage() {
       <main className="w-full max-w-2xl rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-semibold text-gray-900">Registrar Nova Associação</h1>
         <p className="mt-1 text-sm text-gray-600">
-          Crie sua associação para iniciar o provisionamento do ambiente.
+          Crie sua associação para começar a usar a plataforma.
         </p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
@@ -468,7 +468,7 @@ export function RegisterAssociationPage() {
           <button
             type="button"
             className="h-11 w-full rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            onClick={() => navigate({ to: '/login' })}
+            onClick={() => window.location.assign('/login')}
             disabled={isPending}
           >
             Voltar para login

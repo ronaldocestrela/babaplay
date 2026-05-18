@@ -18,7 +18,6 @@ export interface AssociationResponse {
   id: string
   name: string
   slug: string
-  provisioningStatus: string
   logoPath?: string | null
   street?: string | null
   number?: string | null
@@ -28,8 +27,4 @@ export interface AssociationResponse {
   zipCode?: string | null
   associationLatitude?: number | null
   associationLongitude?: number | null
-}
-
-export interface AssociationStatusRouteSearch {
-  tenantId?: string
 }

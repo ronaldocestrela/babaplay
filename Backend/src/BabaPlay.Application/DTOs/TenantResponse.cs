@@ -5,7 +5,6 @@ public sealed record TenantResponse(
     Guid Id,
     string Name,
     string Slug,
-    string ProvisioningStatus,
     int PlayersPerTeam,
     string? LogoPath = null,
     string? Street = null,
