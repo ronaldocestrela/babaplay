@@ -53,6 +53,11 @@ public sealed class TenantMiddleware
 
     private static bool ShouldSkipTenantResolution(HttpRequest request)
     {
+        if (request.Path.StartsWithSegments("/api/v1/auth", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
         if (HttpMethods.IsPost(request.Method)
             && request.Path.Equals("/api/v1/tenant", StringComparison.OrdinalIgnoreCase))
         {

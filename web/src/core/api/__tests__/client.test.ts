@@ -43,7 +43,7 @@ describe('apiClient', () => {
       expect(capturedHeader).toBe(`Bearer ${mockAuthResponse.accessToken}`)
     })
 
-    it('deve injetar X-Tenant-Slug a partir da query string em localhost', async () => {
+    it('não deve injetar X-Tenant-Slug a partir da query string da URL', async () => {
       window.history.replaceState({}, '', 'http://localhost:3000/?tenant=falcons')
       let capturedTenantHeader: string | null = null
 
@@ -55,11 +55,11 @@ describe('apiClient', () => {
       )
 
       await apiClient.get('/api/v1/ping')
-      expect(capturedTenantHeader).toBe('falcons')
+      expect(capturedTenantHeader).toBeNull()
     })
 
     it('deve injetar X-Tenant-Slug a partir do tenant persistido no store quando URL não possui tenant', async () => {
-      useAuthStore.getState().setCurrentTenant({ slug: 'lions', source: 'query' })
+      useAuthStore.getState().setCurrentTenant({ slug: 'lions', source: 'selection' })
       let capturedTenantHeader: string | null = null
 
       server.use(
@@ -168,8 +168,8 @@ describe('apiClient', () => {
       expect(useAuthStore.getState().isAuthenticated).toBe(false)
     })
 
-    it('deve enviar X-Tenant-Slug também na requisição de refresh token', async () => {
-      window.history.replaceState({}, '', 'http://localhost:3000/?tenant=wolves')
+    it('não deve enviar X-Tenant-Slug na requisição de refresh token', async () => {
+      useAuthStore.getState().setCurrentTenant({ slug: 'wolves', source: 'selection' })
       useAuthStore.getState().setTokens({
         ...mockAuthResponse,
         accessToken: 'expired-access-token',
@@ -204,11 +204,11 @@ describe('apiClient', () => {
 
       expect(result.data).toEqual({ data: 'secret' })
       expect(requestCount).toBe(2)
-      expect(refreshTenantHeader).toBe('wolves')
+      expect(refreshTenantHeader).toBeNull()
     })
 
-    it('deve enviar X-Tenant-Slug no refresh token usando tenant persistido no store quando URL não possui tenant', async () => {
-      useAuthStore.getState().setCurrentTenant({ slug: 'hawks', source: 'query' })
+    it('não deve enviar X-Tenant-Slug no refresh token mesmo com tenant persistido no store', async () => {
+      useAuthStore.getState().setCurrentTenant({ slug: 'hawks', source: 'selection' })
       useAuthStore.getState().setTokens({
         ...mockAuthResponse,
         accessToken: 'expired-access-token',
@@ -243,7 +243,26 @@ describe('apiClient', () => {
 
       expect(result.data).toEqual({ data: 'secret' })
       expect(requestCount).toBe(2)
-      expect(refreshTenantHeader).toBe('hawks')
+      expect(refreshTenantHeader).toBeNull()
+    })
+
+    it('não deve enviar X-Tenant-Slug em POST /auth/login mesmo com tenant selecionado', async () => {
+      useAuthStore.getState().setCurrentTenant({ slug: 'wolves', source: 'selection' })
+      let capturedTenantHeader: string | null = null
+
+      server.use(
+        http.post(`${BASE_URL}/api/v1/auth/login`, ({ request }) => {
+          capturedTenantHeader = request.headers.get('X-Tenant-Slug')
+          return HttpResponse.json(mockAuthResponse)
+        }),
+      )
+
+      await apiClient.post('/api/v1/auth/login', {
+        email: 'test@example.com',
+        password: 'password123',
+      })
+
+      expect(capturedTenantHeader).toBeNull()
     })
   })
 })

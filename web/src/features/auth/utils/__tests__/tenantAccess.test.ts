@@ -29,14 +29,14 @@ function buildUser(overrides?: Partial<UserProfile>): UserProfile {
   }
 }
 
-const tenant: TenantContext = { slug: 'tenant-1', source: 'query' }
+const tenant: TenantContext = { slug: 'tenant-1', source: 'selection' }
 
 describe('tenantAccess.isTenantAdmin', () => {
   it('retorna false quando usuário é nulo', () => {
     expect(isTenantAdmin(null, tenant)).toBe(false)
   })
 
-  it('retorna isOwner do membership quando tenant da URL confere', () => {
+  it('retorna isOwner do membership quando tenant atual confere', () => {
     const user = buildUser({
       tenants: [
         {
@@ -52,7 +52,7 @@ describe('tenantAccess.isTenantAdmin', () => {
     expect(isTenantAdmin(user, tenant)).toBe(false)
   })
 
-  it('usa primaryTenant quando tenant da URL não confere', () => {
+  it('usa primaryTenant quando tenant atual não confere', () => {
     const user = buildUser({
       primaryTenant: {
         id: 'tenant-2',
@@ -63,7 +63,7 @@ describe('tenantAccess.isTenantAdmin', () => {
       },
     })
 
-    expect(isTenantAdmin(user, { slug: 'another-tenant', source: 'query' })).toBe(true)
+    expect(isTenantAdmin(user, { slug: 'another-tenant', source: 'selection' })).toBe(true)
   })
 
   it('retorna false quando não há primaryTenant e não há match de membership', () => {
@@ -72,7 +72,7 @@ describe('tenantAccess.isTenantAdmin', () => {
       primaryTenant: null,
     })
 
-    expect(isTenantAdmin(user, { slug: 'tenant-x', source: 'query' })).toBe(false)
+    expect(isTenantAdmin(user, { slug: 'tenant-x', source: 'selection' })).toBe(false)
   })
 
   it('retorna isOwner de primaryTenant quando tenant é nulo', () => {

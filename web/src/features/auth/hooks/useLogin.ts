@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useAuthStore } from '../store/authStore'
 import { authService } from '../services/authService'
-import { getTenantFromUrl } from '../services/tenantService'
 import { getErrorCode } from '@/core/utils/getErrorCode'
 import { CURRENT_USER_QUERY_KEY } from './useCurrentUser'
 import type { LoginRequest } from '../types'
@@ -20,10 +19,7 @@ export function useLogin() {
     mutationFn: (data: LoginRequest) => authService.login(data),
     onSuccess: async (auth) => {
       setTokens(auth)
-
-      if (auth.primaryTenant?.slug) {
-        setCurrentTenant({ slug: auth.primaryTenant.slug, source: 'profile' })
-      }
+      setCurrentTenant(null)
 
       await queryClient.prefetchQuery({
         queryKey: CURRENT_USER_QUERY_KEY,
@@ -32,19 +28,11 @@ export function useLogin() {
           const store = useAuthStore.getState()
           store.setCurrentUser(user)
 
-          const urlTenant = getTenantFromUrl()
           const memberships = user.tenants ?? []
-          if (memberships.length > 0) {
-            const urlTenantIsMember =
-              urlTenant !== null && memberships.some((tenant) => tenant.slug === urlTenant.slug)
-
-            if (urlTenantIsMember) {
-              store.setCurrentTenant(urlTenant)
-            } else if (user.primaryTenant?.slug) {
-              store.setCurrentTenant({ slug: user.primaryTenant.slug, source: 'profile' })
-            } else {
-              store.setCurrentTenant({ slug: memberships[0].slug, source: 'profile' })
-            }
+          if (memberships.length === 1) {
+            store.setCurrentTenant({ slug: memberships[0].slug, source: 'profile' })
+          } else if (memberships.length > 1) {
+            store.setCurrentTenant(null)
           }
 
           return user
@@ -71,6 +59,12 @@ export function useLogin() {
 
       if (useAuthStore.getState().requiresPlayerOnboarding) {
         void navigate({ to: '/players/complete-profile' })
+        return
+      }
+
+      const tenantCount = useAuthStore.getState().currentUser?.tenants?.length ?? 0
+      if (tenantCount > 1 && useAuthStore.getState().currentTenant === null) {
+        void navigate({ to: '/select-tenant' })
         return
       }
 

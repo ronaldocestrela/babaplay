@@ -40,7 +40,7 @@ export interface LogoutRequest {
 
 export interface TenantContext {
   slug: string
-  source: 'subdomain' | 'query' | 'profile'
+  source: 'profile' | 'selection'
 }
 
 /** Espelha TenantResponse do backend (TenantController). */

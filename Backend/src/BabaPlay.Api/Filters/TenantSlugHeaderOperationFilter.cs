@@ -11,6 +11,12 @@ public sealed class TenantSlugHeaderOperationFilter : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
+        if (context.ApiDescription.RelativePath is { } relativePath
+            && relativePath.StartsWith("api/v1/auth", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
         operation.Parameters ??= [];
 
         operation.Parameters.Add(new OpenApiParameter

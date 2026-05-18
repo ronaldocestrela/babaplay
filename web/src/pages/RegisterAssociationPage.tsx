@@ -32,11 +32,6 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 type AssociationFormInput = z.input<typeof associationFormSchema>
 
-function buildTenantAwareLoginPath(slug: string): string {
-  const normalizedSlug = slug.trim().toLowerCase()
-  return `/login?tenant=${encodeURIComponent(normalizedSlug)}`
-}
-
 export function RegisterAssociationPage() {
   const [apiError, setApiError] = useState<string | null>(null)
   const [zipLookupError, setZipLookupError] = useState<string | null>(null)
@@ -181,8 +176,8 @@ export function RegisterAssociationPage() {
     }
 
     createAssociation(payload, {
-      onSuccess: (response) => {
-        window.location.assign(buildTenantAwareLoginPath(response.slug))
+      onSuccess: () => {
+        window.location.assign('/login')
       },
       onError: () => {
         setApiError(ERROR_MESSAGES[errorCode ?? ''] ?? 'Falha ao criar associação.')

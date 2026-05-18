@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '../store/authStore'
 import { authService } from '../services/authService'
-import { getTenantFromUrl } from '../services/tenantService'
 
 export const CURRENT_USER_QUERY_KEY = ['auth', 'me'] as const
 
@@ -14,19 +13,24 @@ export function useCurrentUser() {
       const user = await authService.getCurrentUser()
       setCurrentUser(user)
 
+      const currentTenant = useAuthStore.getState().currentTenant
       const memberships = user.tenants ?? []
-      if (memberships.length > 0) {
-        const urlTenant = getTenantFromUrl()
-        const urlTenantIsMember =
-          urlTenant !== null && memberships.some((tenant) => tenant.slug === urlTenant.slug)
+      if (memberships.length === 0) {
+        setCurrentTenant(null)
+        return user
+      }
 
-        if (urlTenantIsMember) {
-          setCurrentTenant(urlTenant)
-        } else if (user.primaryTenant?.slug) {
-          setCurrentTenant({ slug: user.primaryTenant.slug, source: 'profile' })
-        } else {
-          setCurrentTenant({ slug: memberships[0].slug, source: 'profile' })
-        }
+      if (memberships.length === 1) {
+        setCurrentTenant({ slug: memberships[0].slug, source: 'profile' })
+        return user
+      }
+
+      // Multi-tenant users must choose explicitly after login.
+      const stillMember =
+        currentTenant !== null && memberships.some((tenant) => tenant.slug === currentTenant.slug)
+
+      if (!stillMember) {
+        setCurrentTenant(null)
       }
 
       return user

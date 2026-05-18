@@ -3,7 +3,7 @@ import type { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import type { ProblemDetails } from '@/core/types/api'
 import { API_ROUTES } from '@/core/constants/apiRoutes'
 import { useAuthStore } from '@/features/auth/store/authStore'
-import { getTenantFromUrl, TENANT_HEADER_NAME } from '@/features/auth/services/tenantService'
+import { TENANT_HEADER_NAME } from '@/features/auth/services/tenantService'
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5050'
 
@@ -34,21 +34,11 @@ function isPublicAuthRequest(config?: InternalAxiosRequestConfig) {
 function isTenantHeaderOptionalRequest(config?: InternalAxiosRequestConfig) {
   const path = getRequestPath(config?.url)
 
-  return path === API_ROUTES.TENANT.CREATE
+  return path === API_ROUTES.TENANT.CREATE || isPublicAuthRequest(config)
 }
 
 function resolveTenantContext() {
-  const state = useAuthStore.getState()
-  const urlTenant = getTenantFromUrl()
-  const memberships = state.currentUser?.tenants ?? []
-
-  if (urlTenant) {
-    if (memberships.length === 0 || memberships.some((tenant) => tenant.slug === urlTenant.slug)) {
-      return urlTenant
-    }
-  }
-
-  return state.currentTenant
+  return useAuthStore.getState().currentTenant
 }
 
 // ── Request: injeta Bearer token se disponível ──────────────────────────────
@@ -59,7 +49,6 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const tenant = isTenantHeaderOptionalRequest(config) ? null : resolveTenantContext()
   if (tenant) {
     config.headers[TENANT_HEADER_NAME] = tenant.slug
-    useAuthStore.getState().setCurrentTenant(tenant)
   }
 
   return config
@@ -108,7 +97,6 @@ apiClient.interceptors.response.use(
     }
 
     try {
-      const tenant = resolveTenantContext()
       const { data } = await axios.post<{
         accessToken: string
         refreshToken: string
@@ -117,9 +105,6 @@ apiClient.interceptors.response.use(
       }>(
         `${BASE_URL}${API_ROUTES.AUTH.REFRESH_TOKEN}`,
         { refreshToken },
-        {
-          headers: tenant ? { [TENANT_HEADER_NAME]: tenant.slug } : undefined,
-        },
       )
 
       setTokens(data)

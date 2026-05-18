@@ -19,7 +19,7 @@ const mockUser: UserProfile = {
 
 const mockTenant: TenantContext = {
   slug: 'eagles',
-  source: 'subdomain',
+  source: 'selection',
 }
 
 describe('authStore', () => {

@@ -1,8 +1,11 @@
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { http, HttpResponse } from 'msw'
 import { useLogin } from '../useLogin'
 import { useAuthStore } from '../../store/authStore'
 import { createWrapper } from '@/test/utils'
+import { server } from '@/test/server'
+import { mockAuthResponse, mockUserProfile } from '@/test/handlers'
 
 const mockNavigate = vi.fn()
 
@@ -84,5 +87,46 @@ describe('useLogin', () => {
 
     await waitFor(() => expect(result.current.isPending).toBe(false))
     expect(useAuthStore.getState().isAuthenticated).toBe(true)
+  })
+
+  it('deve navegar para seleção manual quando usuário possui múltiplos tenants', async () => {
+    server.use(
+      http.post('http://localhost:5050/api/v1/auth/login', () => HttpResponse.json(mockAuthResponse)),
+      http.get('http://localhost:5050/api/v1/auth/me', () =>
+        HttpResponse.json({
+          ...mockUserProfile,
+          primaryTenant: null,
+          tenants: [
+            {
+              id: 'tenant-1',
+              name: 'Clube A',
+              slug: 'clube-a',
+              isOwner: true,
+              joinedAt: '2024-01-01T00:00:00Z',
+            },
+            {
+              id: 'tenant-2',
+              name: 'Clube B',
+              slug: 'clube-b',
+              isOwner: false,
+              joinedAt: '2024-02-01T00:00:00Z',
+            },
+          ],
+        }),
+      ),
+    )
+
+    const { result } = renderHook(() => useLogin(), { wrapper: createWrapper() })
+
+    act(() => {
+      result.current.login({ email: 'test@example.com', password: 'password123' })
+    })
+
+    await waitFor(() => {
+      expect(useAuthStore.getState().isAuthenticated).toBe(true)
+      expect(mockNavigate).toHaveBeenCalledWith({ to: '/select-tenant' })
+    })
+
+    expect(useAuthStore.getState().currentTenant).toBeNull()
   })
 })

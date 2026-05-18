@@ -78,6 +78,22 @@ public class AuthIntegrationTests : IClassFixture<AuthWebApplicationFactory>
         problem!.Title.Should().Be("INVALID_CREDENTIALS");
     }
 
+    [Fact]
+    public async Task POST_Login_WithInvalidTenantSlugHeader_ShouldStillReturn200()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/login")
+        {
+            Content = JsonContent.Create(new LoginRequest(
+                AuthWebApplicationFactory.TestUserEmail,
+                AuthWebApplicationFactory.TestUserPassword)),
+        };
+        request.Headers.Add("X-Tenant-Slug", "totally-nonexistent-slug");
+
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
     // ── Refresh Token ──────────────────────────────────────────────────────
 
     [Fact]
@@ -130,6 +146,32 @@ public class AuthIntegrationTests : IClassFixture<AuthWebApplicationFactory>
 
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         problem!.Title.Should().Be("INVALID_TOKEN");
+    }
+
+    [Fact]
+    public async Task POST_RefreshToken_WithInvalidTenantSlugHeader_ShouldStillReturn200()
+    {
+        var loginResponse = await _client.PostAsJsonAsync(
+            "/api/v1/auth/login",
+            new LoginRequest(AuthWebApplicationFactory.TestUserEmail, AuthWebApplicationFactory.TestUserPassword));
+        loginResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var loginBody = await loginResponse.Content.ReadFromJsonAsync<AuthResponse>();
+        loginBody.Should().NotBeNull();
+
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/refresh-token")
+        {
+            Content = JsonContent.Create(new RefreshTokenRequest(loginBody!.RefreshToken)),
+        };
+        request.Headers.Add("X-Tenant-Slug", "totally-nonexistent-slug");
+
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var body = await response.Content.ReadFromJsonAsync<AuthResponse>();
+        body.Should().NotBeNull();
+        body!.AccessToken.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]

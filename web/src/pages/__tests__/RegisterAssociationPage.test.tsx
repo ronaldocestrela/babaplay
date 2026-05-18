@@ -82,7 +82,7 @@ describe('RegisterAssociationPage', () => {
     expect(screen.getByRole('button', { name: /criar associação/i })).toBeInTheDocument()
   })
 
-  it('deve enviar payload válido e redirecionar para login com tenant', async () => {
+  it('deve enviar payload válido e redirecionar para login', async () => {
     render(<RegisterAssociationPage />)
 
     const logoFile = await fillRequiredAssociationFields()
@@ -112,7 +112,7 @@ describe('RegisterAssociationPage', () => {
         },
         expect.any(Object),
       )
-      expect(mockAssign).toHaveBeenCalledWith('/login?tenant=associacao-atletica')
+      expect(mockAssign).toHaveBeenCalledWith('/login')
     })
   })
 

@@ -6,7 +6,6 @@ import {
   redirect,
 } from '@tanstack/react-router'
 import { useAuthStore } from '@/features/auth/store/authStore'
-import { getTenantFromUrl } from '@/features/auth/services/tenantService'
 import { LoginPage } from '@/pages/LoginPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { PlayersPage } from '@/pages/PlayersPage'
@@ -20,17 +19,10 @@ import { ProtectedLayout } from '@/layouts/ProtectedLayout'
 import { RegisterAssociationPage } from '@/pages/RegisterAssociationPage'
 import { AcceptAssociationInvitePage } from '@/pages/AcceptAssociationInvitePage'
 import { CompletePlayerProfilePage } from '@/pages/CompletePlayerProfilePage'
+import { SelectTenantPage } from '@/pages/SelectTenantPage'
 
 // ── Root ─────────────────────────────────────────────────────────────────────
 const rootRoute = createRootRoute({
-  // Resolve tenant once per navigation; store it so components and API
-  // interceptors always have access to the current tenant context.
-  beforeLoad: () => {
-    const tenant = getTenantFromUrl()
-    if (tenant) {
-      useAuthStore.getState().setCurrentTenant(tenant)
-    }
-  },
   component: () => <Outlet />,
 })
 
@@ -78,8 +70,23 @@ const protectedRoute = createRoute({
     if (store.requiresPlayerOnboarding && location.pathname !== '/players/complete-profile') {
       throw redirect({ to: '/players/complete-profile' })
     }
+
+    if (location.pathname === '/select-tenant') {
+      return
+    }
+
+    const memberships = store.currentUser?.tenants ?? []
+    if (memberships.length > 1 && store.currentTenant === null) {
+      throw redirect({ to: '/select-tenant' })
+    }
   },
   component: ProtectedLayout,
+})
+
+const selectTenantRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/select-tenant',
+  component: SelectTenantPage,
 })
 
 const completePlayerProfileRoute = createRoute({
@@ -143,6 +150,7 @@ const routeTree = rootRoute.addChildren([
     acceptAssociationInviteRoute,
   ]),
   protectedRoute.addChildren([
+    selectTenantRoute,
     dashboardRoute,
     completePlayerProfileRoute,
     playersRoute,
