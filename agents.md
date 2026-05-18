@@ -4,7 +4,9 @@
 
 Sistema SaaS para gestão de associações esportivas (futebol) com:
 
-- Multi-tenant (1 banco por associação)
+- Multi-tenant em transição controlada:
+	- legado: 1 banco por associação
+	- novo modo: banco único com `TenantId` por coluna
 - Tempo real (SignalR)
 - Notificações push (Firebase)
 - Backend: .NET 10 (Clean Architecture + CQRS + TDD obrigatório)
@@ -104,14 +106,16 @@ src/
 
 ### Estratégia
 
-- 1 banco por tenant
-- Connection string dinâmica
+- Estratégia híbrida com feature toggle (`Tenancy:UseTenantDatabaseProvisioning`):
+	- `true`: legado 1 DB por tenant + provisioning worker
+	- `false`: single-db + isolamento lógico por `TenantId`
 
 ### Componentes
 
 - ITenantResolver
 - TenantMiddleware
 - TenantDbContextFactory
+- ITenantProvisioningMode
 
 ---
 
@@ -319,6 +323,23 @@ Código sem:
 
 #### Migration
 - `InitialMaster` gerada em `src/BabaPlay.Infrastructure/Persistence/Migrations/`
+
+---
+
+### Fase 2.5 — Migração para Single-DB 🚧
+
+#### Entregas já implementadas
+- Toggle de tenancy via `Tenancy:UseTenantDatabaseProvisioning` (default `true`)
+- `CreateTenant` com comportamento dual:
+	- legado: status `Pending` + enqueue de provisioning
+	- single-db: status `Ready` sem enqueue
+- `TenantDbContextFactory` compatível com modo single-db (usa connection string do master)
+- `NoOpTenantProvisioningQueue` para desativar o worker legado sem quebrar DI
+- Testes unit/integration ajustados para o novo modo
+
+#### Estado atual
+- Compatibilidade retroativa preservada por default
+- Caminho single-db já habilitável por configuração
 
 ---
 

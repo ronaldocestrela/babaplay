@@ -8,6 +8,30 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Changed — Tenancy: toggle para legado (1 DB por tenant) vs single-db
+
+- Backend (Application/Infrastructure):
+	- novo contrato `ITenantProvisioningMode` para expor o modo de tenancy ativo
+	- nova configuracao `Tenancy:UseTenantDatabaseProvisioning` (default `true`)
+	- novo `ConfigTenantProvisioningMode` para bind de configuracao
+	- novo `NoOpTenantProvisioningQueue` para desabilitar worker legado com seguranca
+	- `ServiceRegistration` atualizado para registrar queue/worker condicionalmente pelo toggle
+	- `CreateTenantCommandHandler` atualizado:
+		- modo legado (`true`): mantem `Pending` + enqueue de provisioning
+		- modo single-db (`false`): marca tenant como `Ready` sem enqueue
+	- `TenantDbContextFactory` atualizado para suportar single-db usando connection string do `MasterDbContext` quando o toggle estiver `false`
+- Configuracao e deploy:
+	- `appsettings.json` e `appsettings.Development.json` com secao `Tenancy`
+	- `deploy/docker/.env.manual.example` com `TENANCY_USE_TENANT_DATABASE_PROVISIONING`
+	- `deploy/docker/docker-compose.manual.yml` propagando `Tenancy__UseTenantDatabaseProvisioning`
+	- `docs/deploy-manual-docker.md` atualizado com orientacoes operacionais do toggle
+- Testes:
+	- unit: novo cenario em `CreateTenantCommandHandlerTests` validando fluxo single-db (`Ready` sem queue)
+	- integracao: factories ajustadas para novo construtor de `TenantDbContextFactory`
+	- validacao executada:
+		- `CreateTenantCommandHandlerTests`: 11/11 passando
+		- `RbacIntegrationTests` + `PlayerIntegrationTests` (filtro): 24/24 passando
+
 ### Added — Infra: Deploy manual com Docker (sem CD)
 
 - Estrutura de deploy manual adicionada:
