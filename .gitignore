@@ -3,3 +3,4 @@
 coverage/
 storage/
 deploy/docker/.env.manual
+*.lscache

@@ -69,7 +69,7 @@ public class CreateCheckinCommandHandlerTests
 
         _playerRepository
             .Setup(x => x.GetByIdAsync(command.PlayerId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Player.Create(Guid.NewGuid(), "Ronaldo", null, null, null));
+            .ReturnsAsync(Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Ronaldo", null, null, null));
 
         var result = await _handler.HandleAsync(command);
 
@@ -207,5 +207,5 @@ public class CreateCheckinCommandHandlerTests
     }
 
     private static Player BuildOwnedPlayer(CreateCheckinCommand command)
-        => Player.Create(Guid.Parse(command.RequestedByUserId), "Ronaldo", null, null, null);
+        => Player.Create(Guid.NewGuid(), Guid.Parse(command.RequestedByUserId), "Ronaldo", null, null, null);
 }

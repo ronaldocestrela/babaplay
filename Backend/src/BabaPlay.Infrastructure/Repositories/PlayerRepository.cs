@@ -1,5 +1,6 @@
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Domain.Entities;
+using BabaPlay.Domain.Exceptions;
 using BabaPlay.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,7 +28,7 @@ public sealed class PlayerRepository : IPlayerRepository
         return await db.Players
             .Include(p => p.Positions)
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == id, ct);
+            .FirstOrDefaultAsync(p => p.Id == id && p.TenantId == _tenantContext.TenantId, ct);
     }
 
     /// <inheritdoc />
@@ -37,7 +38,7 @@ public sealed class PlayerRepository : IPlayerRepository
         return await db.Players
             .Include(p => p.Positions)
             .AsNoTracking()
-            .Where(p => p.IsActive)
+            .Where(p => p.TenantId == _tenantContext.TenantId && p.IsActive)
             .OrderBy(p => p.Name)
             .ToListAsync(ct);
     }
@@ -46,7 +47,7 @@ public sealed class PlayerRepository : IPlayerRepository
     public async Task<bool> ExistsByUserIdAsync(Guid userId, CancellationToken ct = default)
     {
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
-        return await db.Players.AnyAsync(p => p.UserId == userId, ct);
+        return await db.Players.AnyAsync(p => p.TenantId == _tenantContext.TenantId && p.UserId == userId, ct);
     }
 
     /// <inheritdoc />
@@ -59,13 +60,16 @@ public sealed class PlayerRepository : IPlayerRepository
         return await db.Players
             .Include(p => p.Positions)
             .AsNoTracking()
-            .Where(p => ids.Contains(p.Id))
+            .Where(p => p.TenantId == _tenantContext.TenantId && ids.Contains(p.Id))
             .ToListAsync(ct);
     }
 
     /// <inheritdoc />
     public async Task AddAsync(Player player, CancellationToken ct = default)
     {
+        if (player.TenantId != _tenantContext.TenantId)
+            throw new ValidationException("TenantId", "Player tenant does not match request tenant context.");
+
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
         db.Players.Add(player);
         await db.SaveChangesAsync(ct);
@@ -78,7 +82,7 @@ public sealed class PlayerRepository : IPlayerRepository
 
         var existing = await db.Players
             .Include(p => p.Positions)
-            .FirstOrDefaultAsync(p => p.Id == player.Id, ct);
+            .FirstOrDefaultAsync(p => p.Id == player.Id && p.TenantId == _tenantContext.TenantId, ct);
 
         if (existing is null)
         {

@@ -15,13 +15,16 @@ public sealed class CreatePlayerCommandHandler
 {
     private readonly IPlayerRepository _playerRepository;
     private readonly IUserRepository _userRepository;
+    private readonly ITenantContext _tenantContext;
 
     public CreatePlayerCommandHandler(
         IPlayerRepository playerRepository,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        ITenantContext tenantContext)
     {
         _playerRepository = playerRepository;
         _userRepository = userRepository;
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc />
@@ -41,7 +44,7 @@ public sealed class CreatePlayerCommandHandler
                 "PLAYER_ALREADY_EXISTS",
                 $"A player for user '{cmd.UserId}' already exists in this tenant.");
 
-        var player = Player.Create(cmd.UserId, cmd.Name, cmd.Nickname, cmd.Phone, cmd.DateOfBirth);
+        var player = Player.Create(_tenantContext.TenantId, cmd.UserId, cmd.Name, cmd.Nickname, cmd.Phone, cmd.DateOfBirth);
         await _playerRepository.AddAsync(player, ct);
         await _playerRepository.SaveChangesAsync(ct);
 

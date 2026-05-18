@@ -12,13 +12,15 @@ public class PlayerTests
     public void Create_ValidData_ReturnsActivePlayer()
     {
         // Arrange
+        var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
 
         // Act
-        var player = Player.Create(userId, "João Silva", "Jão", "11999999999", new DateOnly(1990, 5, 15));
+        var player = Player.Create(tenantId, userId, "João Silva", "Jão", "11999999999", new DateOnly(1990, 5, 15));
 
         // Assert
         player.Id.Should().NotBeEmpty();
+        player.TenantId.Should().Be(tenantId);
         player.UserId.Should().Be(userId);
         player.Name.Should().Be("João Silva");
         player.Nickname.Should().Be("Jão");
@@ -33,7 +35,7 @@ public class PlayerTests
     public void Create_NullableFieldsOmitted_ReturnsPlayer()
     {
         // Act
-        var player = Player.Create(Guid.NewGuid(), "Carlos", null, null, null);
+        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Carlos", null, null, null);
 
         // Assert
         player.Name.Should().Be("Carlos");
@@ -46,7 +48,7 @@ public class PlayerTests
     public void Create_WhitespaceName_ThrowsValidationException()
     {
         // Act
-        var act = () => Player.Create(Guid.NewGuid(), "   ", null, null, null);
+        var act = () => Player.Create(Guid.NewGuid(), Guid.NewGuid(), "   ", null, null, null);
 
         // Assert
         act.Should().Throw<ValidationException>();
@@ -56,7 +58,7 @@ public class PlayerTests
     public void Create_EmptyName_ThrowsValidationException()
     {
         // Act
-        var act = () => Player.Create(Guid.NewGuid(), "", null, null, null);
+        var act = () => Player.Create(Guid.NewGuid(), Guid.NewGuid(), "", null, null, null);
 
         // Assert
         act.Should().Throw<ValidationException>();
@@ -66,7 +68,17 @@ public class PlayerTests
     public void Create_EmptyGuidUserId_ThrowsValidationException()
     {
         // Act
-        var act = () => Player.Create(Guid.Empty, "Valid Name", null, null, null);
+        var act = () => Player.Create(Guid.NewGuid(), Guid.Empty, "Valid Name", null, null, null);
+
+        // Assert
+        act.Should().Throw<ValidationException>();
+    }
+
+    [Fact]
+    public void Create_EmptyGuidTenantId_ThrowsValidationException()
+    {
+        // Act
+        var act = () => Player.Create(Guid.Empty, Guid.NewGuid(), "Valid Name", null, null, null);
 
         // Assert
         act.Should().Throw<ValidationException>();
@@ -76,7 +88,7 @@ public class PlayerTests
     public void Create_TrimsNameAndNickname()
     {
         // Act
-        var player = Player.Create(Guid.NewGuid(), "  João  ", "  Jão  ", null, null);
+        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "  João  ", "  Jão  ", null, null);
 
         // Assert
         player.Name.Should().Be("João");
@@ -89,7 +101,7 @@ public class PlayerTests
     public void Update_ValidData_ChangesProperties()
     {
         // Arrange
-        var player = Player.Create(Guid.NewGuid(), "Old Name", null, null, null);
+        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Old Name", null, null, null);
 
         // Act
         player.Update("New Name", "Nick", "11988888888", new DateOnly(1985, 3, 10));
@@ -106,7 +118,7 @@ public class PlayerTests
     public void Update_EmptyName_ThrowsValidationException()
     {
         // Arrange
-        var player = Player.Create(Guid.NewGuid(), "Valid Name", null, null, null);
+        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Valid Name", null, null, null);
 
         // Act
         var act = () => player.Update("", null, null, null);
@@ -121,7 +133,7 @@ public class PlayerTests
     public void Deactivate_SetsIsActiveFalse()
     {
         // Arrange
-        var player = Player.Create(Guid.NewGuid(), "Player", null, null, null);
+        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Player", null, null, null);
 
         // Act
         player.Deactivate();
@@ -135,7 +147,7 @@ public class PlayerTests
     public void Deactivate_AlreadyInactive_IsIdempotent()
     {
         // Arrange
-        var player = Player.Create(Guid.NewGuid(), "Player", null, null, null);
+        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Player", null, null, null);
         player.Deactivate();
 
         // Act — second deactivation
@@ -151,7 +163,7 @@ public class PlayerTests
     [Fact]
     public void SetPositions_UpToThreePositions_ShouldReplacePlayerPositions()
     {
-        var player = Player.Create(Guid.NewGuid(), "Player", null, null, null);
+        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Player", null, null, null);
         var positionIds = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
 
         player.SetPositions(positionIds);
@@ -162,7 +174,7 @@ public class PlayerTests
     [Fact]
     public void SetPositions_AboveThreePositions_ShouldThrowValidationException()
     {
-        var player = Player.Create(Guid.NewGuid(), "Player", null, null, null);
+        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Player", null, null, null);
         var positionIds = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
 
         var act = () => player.SetPositions(positionIds);
@@ -173,7 +185,7 @@ public class PlayerTests
     [Fact]
     public void SetPositions_WithDuplicateIds_ShouldThrowValidationException()
     {
-        var player = Player.Create(Guid.NewGuid(), "Player", null, null, null);
+        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Player", null, null, null);
         var sameId = Guid.NewGuid();
 
         var act = () => player.SetPositions([sameId, sameId]);
@@ -184,7 +196,7 @@ public class PlayerTests
     [Fact]
     public void SetPositions_Null_ShouldClearPositions()
     {
-        var player = Player.Create(Guid.NewGuid(), "Player", null, null, null);
+        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Player", null, null, null);
         player.SetPositions([Guid.NewGuid(), Guid.NewGuid()]);
 
         player.SetPositions(null);

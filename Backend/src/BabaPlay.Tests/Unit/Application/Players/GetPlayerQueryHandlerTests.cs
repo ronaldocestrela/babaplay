@@ -20,7 +20,7 @@ public class GetPlayerQueryHandlerTests
     public async Task Handle_ExistingPlayer_ShouldReturnPlayerResponse()
     {
         // Arrange
-        var player = Player.Create(Guid.NewGuid(), "Carlos Drummond", "Dru", "11977777777", new DateOnly(1985, 3, 10));
+        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Carlos Drummond", "Dru", "11977777777", new DateOnly(1985, 3, 10));
         _playerRepo
             .Setup(r => r.GetByIdAsync(player.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(player);
@@ -60,7 +60,7 @@ public class GetPlayerQueryHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var dob = new DateOnly(1992, 8, 20);
-        var player = Player.Create(userId, "Ana Lima", null, null, dob);
+        var player = Player.Create(Guid.NewGuid(), userId, "Ana Lima", null, null, dob);
         _playerRepo
             .Setup(r => r.GetByIdAsync(player.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(player);

@@ -10,6 +10,9 @@ public sealed class Player : EntityBase
 {
     private readonly List<PlayerPosition> _positions = [];
 
+    /// <summary>Logical tenant discriminator for single-database multi-tenancy.</summary>
+    public Guid TenantId { get; private set; }
+
     /// <summary>Reference to the ApplicationUser in the Master database (no FK — cross-DB).</summary>
     public Guid UserId { get; private set; }
 
@@ -39,15 +42,20 @@ public sealed class Player : EntityBase
 
     /// <summary>
     /// Creates a new active player. Throws <see cref="ValidationException"/> if
-    /// <paramref name="userId"/> is empty or <paramref name="name"/> is null/whitespace.
+    /// <paramref name="tenantId"/> or <paramref name="userId"/> is empty,
+    /// or <paramref name="name"/> is null/whitespace.
     /// </summary>
     public static Player Create(
+        Guid tenantId,
         Guid userId,
         string name,
         string? nickname,
         string? phone,
         DateOnly? dateOfBirth)
     {
+        if (tenantId == Guid.Empty)
+            throw new ValidationException("TenantId", "TenantId is required.");
+
         if (userId == Guid.Empty)
             throw new ValidationException("UserId", "UserId is required.");
 
@@ -56,6 +64,7 @@ public sealed class Player : EntityBase
 
         return new Player
         {
+            TenantId = tenantId,
             UserId = userId,
             Name = name.Trim(),
             Nickname = nickname?.Trim(),

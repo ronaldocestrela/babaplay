@@ -74,7 +74,7 @@ public class CreateMatchEventCommandHandlerTests
 
         _playerRepository
             .Setup(x => x.GetByIdAsync(playerId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Player.Create(Guid.NewGuid(), "Player", null, null, null));
+            .ReturnsAsync(Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Player", null, null, null));
 
         var result = await _handler.HandleAsync(new CreateMatchEventCommand(
             matchId, teamId, playerId, typeId, 20, "goal"));
@@ -110,7 +110,7 @@ public class CreateMatchEventCommandHandlerTests
 
         _playerRepository
             .Setup(x => x.GetByIdAsync(playerId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Player.Create(Guid.NewGuid(), "Player", null, null, null));
+            .ReturnsAsync(Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Player", null, null, null));
 
         var result = await _handler.HandleAsync(new CreateMatchEventCommand(
             matchId, teamId, playerId, typeId, 20, null));

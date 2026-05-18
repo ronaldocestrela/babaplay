@@ -22,8 +22,8 @@ public class GetPlayersQueryHandlerTests
         // Arrange
         var players = new List<Player>
         {
-            Player.Create(Guid.NewGuid(), "Player One", null, null, null),
-            Player.Create(Guid.NewGuid(), "Player Two", "P2", null, null),
+            Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Player One", null, null, null),
+            Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Player Two", "P2", null, null),
         };
         _playerRepo
             .Setup(r => r.GetAllActiveAsync(It.IsAny<CancellationToken>()))
@@ -59,7 +59,7 @@ public class GetPlayersQueryHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var player = Player.Create(userId, "Lucas Freitas", "Luca", "11966666666", new DateOnly(1995, 1, 1));
+        var player = Player.Create(Guid.NewGuid(), userId, "Lucas Freitas", "Luca", "11966666666", new DateOnly(1995, 1, 1));
         _playerRepo
             .Setup(r => r.GetAllActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Player> { player });

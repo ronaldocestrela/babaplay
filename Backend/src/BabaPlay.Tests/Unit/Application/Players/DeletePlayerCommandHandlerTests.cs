@@ -38,7 +38,7 @@ public class DeletePlayerCommandHandlerTests
     public async Task Handle_ActivePlayer_ShouldDeactivateAndReturnSuccess()
     {
         // Arrange
-        var player = Player.Create(Guid.NewGuid(), "Marcos Vinicius", null, null, null);
+        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Marcos Vinicius", null, null, null);
         _playerRepo
             .Setup(r => r.GetByIdAsync(player.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(player);
@@ -57,7 +57,7 @@ public class DeletePlayerCommandHandlerTests
     public async Task Handle_AlreadyDeactivatedPlayer_ShouldStillSucceed()
     {
         // Arrange
-        var player = Player.Create(Guid.NewGuid(), "Inactive Player", null, null, null);
+        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Inactive Player", null, null, null);
         player.Deactivate();
         _playerRepo
             .Setup(r => r.GetByIdAsync(player.Id, It.IsAny<CancellationToken>()))

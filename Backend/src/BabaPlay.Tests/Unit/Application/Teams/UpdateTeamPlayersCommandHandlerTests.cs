@@ -47,7 +47,7 @@ public class UpdateTeamPlayersCommandHandlerTests
     public async Task Handle_NoGoalkeeper_ShouldReturnGoalkeeperRequired()
     {
         var team = Team.Create(Guid.NewGuid(), "Blue", 3);
-        var player = Player.Create(Guid.NewGuid(), "Player 1", null, null, null);
+        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Player 1", null, null, null);
         var position = Position.Create(Guid.NewGuid(), "ATA", "Atacante", null);
         player.SetPositions([position.Id]);
 
@@ -67,7 +67,7 @@ public class UpdateTeamPlayersCommandHandlerTests
     public async Task Handle_ValidRosterWithGoalkeeper_ShouldUpdateTeam()
     {
         var team = Team.Create(Guid.NewGuid(), "Blue", 3);
-        var goalkeeper = Player.Create(Guid.NewGuid(), "Goalkeeper", null, null, null);
+        var goalkeeper = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Goalkeeper", null, null, null);
         var goalkeeperPosition = Position.Create(Guid.NewGuid(), "GOLEIRO", "Goleiro", null);
         goalkeeper.SetPositions([goalkeeperPosition.Id]);
 

@@ -39,7 +39,7 @@ public class UpdatePlayerCommandHandlerTests
     public async Task Handle_EmptyName_ShouldReturnInvalidName()
     {
         // Arrange
-        var player = Player.Create(Guid.NewGuid(), "Original", null, null, null);
+        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Original", null, null, null);
         _playerRepo
             .Setup(r => r.GetByIdAsync(player.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(player);
@@ -58,7 +58,7 @@ public class UpdatePlayerCommandHandlerTests
     public async Task Handle_ValidCommand_ShouldUpdateAndReturnResponse()
     {
         // Arrange
-        var player = Player.Create(Guid.NewGuid(), "Old Name", null, null, null);
+        var player = Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Old Name", null, null, null);
         _playerRepo
             .Setup(r => r.GetByIdAsync(player.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(player);
@@ -84,7 +84,7 @@ public class UpdatePlayerCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var player = Player.Create(userId, "Original", null, null, null);
+        var player = Player.Create(Guid.NewGuid(), userId, "Original", null, null, null);
         _playerRepo
             .Setup(r => r.GetByIdAsync(player.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(player);

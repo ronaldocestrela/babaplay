@@ -37,10 +37,11 @@ public sealed class TenantDbContext : DbContext
         builder.Entity<Player>(e =>
         {
             e.HasKey(p => p.Id);
+            e.Property(p => p.TenantId).IsRequired();
             e.Property(p => p.Name).IsRequired().HasMaxLength(100);
             e.Property(p => p.Nickname).HasMaxLength(50);
             e.Property(p => p.Phone).HasMaxLength(20);
-            e.HasIndex(p => p.UserId).IsUnique();
+            e.HasIndex(p => new { p.TenantId, p.UserId }).IsUnique();
         });
 
         builder.Entity<GameDay>(e =>

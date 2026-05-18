@@ -11,15 +11,18 @@ public class CreatePlayerCommandHandlerTests
 {
     private readonly Mock<IPlayerRepository> _playerRepo = new();
     private readonly Mock<IUserRepository> _userRepo = new();
+    private readonly Mock<ITenantContext> _tenantContext = new();
     private readonly CreatePlayerCommandHandler _handler;
 
+    private static readonly Guid TenantId = Guid.NewGuid();
     private static readonly Guid ValidUserId = Guid.NewGuid();
     private const string ValidName = "João Silva";
     private static readonly UserAuthDto ValidUser = new(ValidUserId.ToString(), "test@babaplay.com", true);
 
     public CreatePlayerCommandHandlerTests()
     {
-        _handler = new CreatePlayerCommandHandler(_playerRepo.Object, _userRepo.Object);
+        _tenantContext.SetupGet(x => x.TenantId).Returns(TenantId);
+        _handler = new CreatePlayerCommandHandler(_playerRepo.Object, _userRepo.Object, _tenantContext.Object);
     }
 
     [Fact]

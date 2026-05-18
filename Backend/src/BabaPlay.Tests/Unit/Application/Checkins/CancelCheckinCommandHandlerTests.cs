@@ -49,7 +49,7 @@ public class CancelCheckinCommandHandlerTests
 
         _playerRepository
             .Setup(x => x.GetByIdAsync(checkin.PlayerId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Player.Create(Guid.NewGuid(), "Ronaldo", null, null, null));
+            .ReturnsAsync(Player.Create(Guid.NewGuid(), Guid.NewGuid(), "Ronaldo", null, null, null));
 
         var result = await _handler.HandleAsync(new CancelCheckinCommand(checkin.Id, Guid.NewGuid().ToString()));
 
@@ -77,7 +77,7 @@ public class CancelCheckinCommandHandlerTests
         var ownerUserId = Guid.NewGuid();
         _playerRepository
             .Setup(x => x.GetByIdAsync(checkin.PlayerId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Player.Create(ownerUserId, "Ronaldo", null, null, null));
+            .ReturnsAsync(Player.Create(Guid.NewGuid(), ownerUserId, "Ronaldo", null, null, null));
 
         var result = await _handler.HandleAsync(new CancelCheckinCommand(checkin.Id, ownerUserId.ToString()));
 
@@ -105,7 +105,7 @@ public class CancelCheckinCommandHandlerTests
         var ownerUserId = Guid.NewGuid();
         _playerRepository
             .Setup(x => x.GetByIdAsync(checkin.PlayerId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Player.Create(ownerUserId, "Ronaldo", null, null, null));
+            .ReturnsAsync(Player.Create(Guid.NewGuid(), ownerUserId, "Ronaldo", null, null, null));
 
         _checkinRepository
             .Setup(x => x.CountActiveByGameDayAsync(checkin.GameDayId, It.IsAny<CancellationToken>()))
