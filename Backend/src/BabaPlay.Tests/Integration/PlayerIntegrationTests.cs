@@ -180,6 +180,55 @@ public sealed class PlayerIntegrationTests : IClassFixture<PlayerWebApplicationF
         problem.GetProperty("title").GetString().Should().Be("PLAYER_NOT_FOUND");
     }
 
+    [Fact]
+    public async Task GetById_PlayerFromAnotherTenant_ShouldReturn404()
+    {
+        // Arrange: create player in tenant A (default header)
+        var created = await CreateValidPlayerAsync(
+            PlayerWebApplicationFactory.TestUserIds[14],
+            "Tenant A Player");
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/v1/player/{created.Id}");
+        request.Headers.Authorization = new("Bearer", "test-token");
+        request.Headers.Add("X-Tenant-Slug", PlayerWebApplicationFactory.TestTenantBSlug);
+        request.Headers.Add(TestAuthHandler.UserIdHeader, PlayerWebApplicationFactory.TestUserIds[0].ToString());
+        request.Headers.Add(TestAuthHandler.UserEmailHeader, "player-test-1@babaplay.com");
+
+        // Act: read from tenant B with same authenticated user (member in both tenants)
+        var response = await _client.SendAsync(request);
+
+        // Assert: tenant filter prevents cross-tenant read
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        problem.GetProperty("title").GetString().Should().Be("PLAYER_NOT_FOUND");
+    }
+
+    [Fact]
+    public async Task GetAll_ShouldNotLeakPlayersFromAnotherTenant()
+    {
+        // Arrange: create player in tenant A (default header)
+        var created = await CreateValidPlayerAsync(
+            PlayerWebApplicationFactory.TestUserIds[13],
+            "Tenant A List Leak Guard");
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/player");
+        request.Headers.Authorization = new("Bearer", "test-token");
+        request.Headers.Add("X-Tenant-Slug", PlayerWebApplicationFactory.TestTenantBSlug);
+        request.Headers.Add(TestAuthHandler.UserIdHeader, PlayerWebApplicationFactory.TestUserIds[0].ToString());
+        request.Headers.Add(TestAuthHandler.UserEmailHeader, "player-test-1@babaplay.com");
+
+        // Act: list players in tenant B
+        var response = await _client.SendAsync(request);
+
+        // Assert: tenant B list must not include tenant A player
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var body = await response.Content.ReadFromJsonAsync<List<PlayerResponse>>(JsonOptions);
+        body.Should().NotBeNull();
+        body!.Select(p => p.Id).Should().NotContain(created.Id);
+    }
+
     // ── PUT /api/v1/player/{id} ──────────────────────────────────────────────
 
     [Fact]

@@ -303,7 +303,7 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
                 .UseSqlite(_connection)
                 .Options;
 
-            return Task.FromResult(new TenantDbContext(options));
+            return Task.FromResult(new TenantDbContext(options, tenantId));
         }
     }
 

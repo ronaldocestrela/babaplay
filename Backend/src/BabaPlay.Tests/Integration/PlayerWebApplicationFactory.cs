@@ -51,6 +51,8 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
     public const string TestUserPassword = "PlayerTest@123456";
     public const string TestTenantSlug = "test-tenant-player";
     public static readonly Guid TestTenantId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-000000000001");
+    public const string TestTenantBSlug = "test-tenant-player-b";
+    public static readonly Guid TestTenantBId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-000000000002");
 
     private readonly SqliteConnection _masterConnection = new("Data Source=:memory:");
     private readonly SqliteConnection _tenantConnection = new("Data Source=:memory:");
@@ -187,6 +189,26 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
             await db.SaveChangesAsync();
         }
 
+        var tenantB = await db.Tenants.FirstOrDefaultAsync(t => t.Slug == TestTenantBSlug);
+        if (tenantB is null)
+        {
+            tenantB = new Tenant
+            {
+                Id = TestTenantBId,
+                Name = "Test Tenant Player B",
+                Slug = TestTenantBSlug,
+                AssociationLatitude = -23.5505,
+                AssociationLongitude = -46.6333,
+                CheckinRadiusMeters = 300,
+                IsActive = true,
+                ProvisioningStatus = ProvisioningStatus.Ready,
+                ConnectionString = "placeholder-overridden-by-test-factory",
+            };
+
+            db.Tenants.Add(tenantB);
+            await db.SaveChangesAsync();
+        }
+
         foreach (var testUserId in TestUserIds)
         {
             var userId = testUserId.ToString();
@@ -201,6 +223,20 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
                     IsOwner = testUserId == TestUserIds[0],
                 });
             }
+        }
+
+        var firstUserId = TestUserIds[0].ToString();
+        var hasMembershipInTenantB = await db.UserTenants.AnyAsync(
+            ut => ut.UserId == firstUserId && ut.TenantId == tenantB.Id);
+
+        if (!hasMembershipInTenantB)
+        {
+            db.UserTenants.Add(new UserTenant
+            {
+                UserId = firstUserId,
+                TenantId = tenantB.Id,
+                IsOwner = true,
+            });
         }
 
         await db.SaveChangesAsync();
@@ -286,7 +322,7 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
                 .UseSqlite(_connection)
                 .Options;
 
-            return Task.FromResult(new TenantDbContext(options));
+            return Task.FromResult(new TenantDbContext(options, tenantId));
         }
     }
 
