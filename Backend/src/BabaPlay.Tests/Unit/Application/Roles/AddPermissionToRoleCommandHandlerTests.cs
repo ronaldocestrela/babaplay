@@ -10,11 +10,14 @@ public class AddPermissionToRoleCommandHandlerTests
 {
     private readonly Mock<IRoleRepository> _roleRepo = new();
     private readonly Mock<IPermissionRepository> _permissionRepo = new();
+    private readonly Mock<ITenantContext> _tenantContext = new();
     private readonly AddPermissionToRoleCommandHandler _handler;
+    private static readonly Guid TenantId = Guid.NewGuid();
 
     public AddPermissionToRoleCommandHandlerTests()
     {
-        _handler = new AddPermissionToRoleCommandHandler(_roleRepo.Object, _permissionRepo.Object);
+        _tenantContext.SetupGet(x => x.TenantId).Returns(TenantId);
+        _handler = new AddPermissionToRoleCommandHandler(_roleRepo.Object, _permissionRepo.Object, _tenantContext.Object);
     }
 
     [Fact]
@@ -49,7 +52,7 @@ public class AddPermissionToRoleCommandHandlerTests
     public async Task Handle_ExistingPermission_ShouldNotCreateTwice()
     {
         var role = Role.Create(Guid.NewGuid(), "Admin", null);
-        var permission = Permission.Create("player.read", null);
+        var permission = Permission.Create(TenantId, "player.read", null);
 
         _roleRepo.Setup(x => x.GetByIdAsync(role.Id, It.IsAny<CancellationToken>())).ReturnsAsync(role);
         _permissionRepo.Setup(x => x.GetByNormalizedCodeAsync("PLAYER.READ", It.IsAny<CancellationToken>()))

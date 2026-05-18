@@ -218,10 +218,11 @@ public sealed class TenantDbContext : DbContext
         builder.Entity<Permission>(e =>
         {
             e.HasKey(p => p.Id);
+            e.Property(p => p.TenantId).IsRequired();
             e.Property(p => p.Code).IsRequired().HasMaxLength(120);
             e.Property(p => p.NormalizedCode).IsRequired().HasMaxLength(120);
             e.Property(p => p.Description).HasMaxLength(300);
-            e.HasIndex(p => p.NormalizedCode).IsUnique();
+            e.HasIndex(p => new { p.TenantId, p.NormalizedCode }).IsUnique();
         });
 
         builder.Entity<RolePermission>(e =>

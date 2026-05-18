@@ -137,7 +137,7 @@ public sealed class TenantProvisioningWorker : BackgroundService
             if (permissionByNormalized.ContainsKey(normalizedCode))
                 continue;
 
-            var permission = Permission.Create(permissionCode, $"Default permission: {permissionCode}");
+            var permission = Permission.Create(tenantId, permissionCode, $"Default permission: {permissionCode}");
             tenantCtx.Permissions.Add(permission);
             permissionByNormalized[normalizedCode] = permission;
         }

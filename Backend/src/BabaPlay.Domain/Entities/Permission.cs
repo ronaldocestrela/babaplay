@@ -7,6 +7,7 @@ namespace BabaPlay.Domain.Entities;
 /// </summary>
 public sealed class Permission : EntityBase
 {
+    public Guid TenantId { get; private set; }
     public string Code { get; private set; } = string.Empty;
     public string NormalizedCode { get; private set; } = string.Empty;
     public string? Description { get; private set; }
@@ -14,8 +15,11 @@ public sealed class Permission : EntityBase
 
     private Permission() { }
 
-    public static Permission Create(string code, string? description, bool isSystem = true)
+    public static Permission Create(Guid tenantId, string code, string? description, bool isSystem = true)
     {
+        if (tenantId == Guid.Empty)
+            throw new ValidationException("TenantId", "TenantId is required.");
+
         if (string.IsNullOrWhiteSpace(code))
             throw new ValidationException("Code", "Permission code is required.");
 
@@ -23,6 +27,7 @@ public sealed class Permission : EntityBase
 
         return new Permission
         {
+            TenantId = tenantId,
             Code = trimmedCode,
             NormalizedCode = NormalizeCode(trimmedCode),
             Description = description?.Trim(),

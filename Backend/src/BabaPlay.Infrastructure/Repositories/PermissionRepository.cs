@@ -1,5 +1,6 @@
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Domain.Entities;
+using BabaPlay.Domain.Exceptions;
 using BabaPlay.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,11 +23,16 @@ public sealed class PermissionRepository : IPermissionRepository
     public async Task<Permission?> GetByNormalizedCodeAsync(string normalizedCode, CancellationToken ct = default)
     {
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
-        return await db.Permissions.FirstOrDefaultAsync(p => p.NormalizedCode == normalizedCode, ct);
+        return await db.Permissions.FirstOrDefaultAsync(
+            p => p.TenantId == _tenantContext.TenantId && p.NormalizedCode == normalizedCode,
+            ct);
     }
 
     public async Task AddAsync(Permission permission, CancellationToken ct = default)
     {
+        if (permission.TenantId != _tenantContext.TenantId)
+            throw new ValidationException("TenantId", "Permission tenant does not match request tenant context.");
+
         await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
         db.Permissions.Add(permission);
         await db.SaveChangesAsync(ct);

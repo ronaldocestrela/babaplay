@@ -204,7 +204,7 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
         var roleReadPermission = await db.Permissions.FirstOrDefaultAsync(p => p.NormalizedCode == RbacCatalog.Permissions.RbacRolesRead.ToUpperInvariant());
         if (roleReadPermission is null)
         {
-            roleReadPermission = Permission.Create(RbacCatalog.Permissions.RbacRolesRead, "Read tenant roles");
+            roleReadPermission = Permission.Create(TenantAId, RbacCatalog.Permissions.RbacRolesRead, "Read tenant roles");
             db.Permissions.Add(roleReadPermission);
             await db.SaveChangesAsync();
         }
@@ -212,7 +212,7 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
         var rankingReadPermission = await db.Permissions.FirstOrDefaultAsync(p => p.NormalizedCode == RbacCatalog.Permissions.RankingRead.ToUpperInvariant());
         if (rankingReadPermission is null)
         {
-            rankingReadPermission = Permission.Create(RbacCatalog.Permissions.RankingRead, "Read ranking");
+            rankingReadPermission = Permission.Create(TenantAId, RbacCatalog.Permissions.RankingRead, "Read ranking");
             db.Permissions.Add(rankingReadPermission);
             await db.SaveChangesAsync();
         }
@@ -220,7 +220,7 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
         var rankingWritePermission = await db.Permissions.FirstOrDefaultAsync(p => p.NormalizedCode == RbacCatalog.Permissions.RankingWrite.ToUpperInvariant());
         if (rankingWritePermission is null)
         {
-            rankingWritePermission = Permission.Create(RbacCatalog.Permissions.RankingWrite, "Write ranking");
+            rankingWritePermission = Permission.Create(TenantAId, RbacCatalog.Permissions.RankingWrite, "Write ranking");
             db.Permissions.Add(rankingWritePermission);
             await db.SaveChangesAsync();
         }
@@ -228,7 +228,7 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
         var financialReadPermission = await db.Permissions.FirstOrDefaultAsync(p => p.NormalizedCode == RbacCatalog.Permissions.FinancialRead.ToUpperInvariant());
         if (financialReadPermission is null)
         {
-            financialReadPermission = Permission.Create(RbacCatalog.Permissions.FinancialRead, "Read financial data");
+            financialReadPermission = Permission.Create(TenantAId, RbacCatalog.Permissions.FinancialRead, "Read financial data");
             db.Permissions.Add(financialReadPermission);
             await db.SaveChangesAsync();
         }
@@ -236,7 +236,7 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
         var financialWritePermission = await db.Permissions.FirstOrDefaultAsync(p => p.NormalizedCode == RbacCatalog.Permissions.FinancialWrite.ToUpperInvariant());
         if (financialWritePermission is null)
         {
-            financialWritePermission = Permission.Create(RbacCatalog.Permissions.FinancialWrite, "Write financial data");
+            financialWritePermission = Permission.Create(TenantAId, RbacCatalog.Permissions.FinancialWrite, "Write financial data");
             db.Permissions.Add(financialWritePermission);
             await db.SaveChangesAsync();
         }
@@ -244,7 +244,7 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
         var financialApprovePermission = await db.Permissions.FirstOrDefaultAsync(p => p.NormalizedCode == RbacCatalog.Permissions.FinancialApprove.ToUpperInvariant());
         if (financialApprovePermission is null)
         {
-            financialApprovePermission = Permission.Create(RbacCatalog.Permissions.FinancialApprove, "Approve financial operations");
+            financialApprovePermission = Permission.Create(TenantAId, RbacCatalog.Permissions.FinancialApprove, "Approve financial operations");
             db.Permissions.Add(financialApprovePermission);
             await db.SaveChangesAsync();
         }

@@ -223,7 +223,7 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
             if (permissionByNormalized.ContainsKey(normalizedCode))
                 continue;
 
-            var permission = Permission.Create(permissionCode, $"Test permission: {permissionCode}");
+            var permission = Permission.Create(TestTenantId, permissionCode, $"Test permission: {permissionCode}");
             db.Permissions.Add(permission);
             permissionByNormalized[normalizedCode] = permission;
         }

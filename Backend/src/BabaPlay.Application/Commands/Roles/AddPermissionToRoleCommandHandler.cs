@@ -10,11 +10,16 @@ public sealed class AddPermissionToRoleCommandHandler
 {
     private readonly IRoleRepository _roleRepository;
     private readonly IPermissionRepository _permissionRepository;
+    private readonly ITenantContext _tenantContext;
 
-    public AddPermissionToRoleCommandHandler(IRoleRepository roleRepository, IPermissionRepository permissionRepository)
+    public AddPermissionToRoleCommandHandler(
+        IRoleRepository roleRepository,
+        IPermissionRepository permissionRepository,
+        ITenantContext tenantContext)
     {
         _roleRepository = roleRepository;
         _permissionRepository = permissionRepository;
+        _tenantContext = tenantContext;
     }
 
     public async Task<Result<RoleResponse>> HandleAsync(AddPermissionToRoleCommand cmd, CancellationToken ct = default)
@@ -34,7 +39,7 @@ public sealed class AddPermissionToRoleCommandHandler
 
         if (permission is null)
         {
-            permission = Permission.Create(cmd.PermissionCode, cmd.PermissionDescription, cmd.IsSystemPermission);
+            permission = Permission.Create(_tenantContext.TenantId, cmd.PermissionCode, cmd.PermissionDescription, cmd.IsSystemPermission);
             await _permissionRepository.AddAsync(permission, ct);
             await _permissionRepository.SaveChangesAsync(ct);
         }
