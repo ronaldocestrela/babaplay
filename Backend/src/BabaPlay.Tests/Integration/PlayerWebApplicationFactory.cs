@@ -312,9 +312,10 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
     private sealed class TestTenantDbContextFactory : TenantDbContextFactory
     {
         private readonly SqliteConnection _connection;
+        private static readonly ITenantProvisioningMode LegacyMode = new TestTenantProvisioningMode();
 
         public TestTenantDbContextFactory(SqliteConnection connection)
-            : base(null!) => _connection = connection;
+            : base(null!, LegacyMode) => _connection = connection;
 
         public override Task<TenantDbContext> CreateAsync(Guid tenantId, CancellationToken ct = default)
         {
@@ -324,6 +325,11 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
 
             return Task.FromResult(new TenantDbContext(options, tenantId));
         }
+    }
+
+    private sealed class TestTenantProvisioningMode : ITenantProvisioningMode
+    {
+        public bool UseTenantDatabaseProvisioning => true;
     }
 
     private sealed class NoOpProvisioningQueue : ITenantProvisioningQueue

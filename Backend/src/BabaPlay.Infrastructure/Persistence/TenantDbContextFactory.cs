@@ -1,4 +1,5 @@
 using BabaPlay.Domain.Exceptions;
+using BabaPlay.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace BabaPlay.Infrastructure.Persistence;
@@ -10,8 +11,13 @@ namespace BabaPlay.Infrastructure.Persistence;
 public class TenantDbContextFactory
 {
     private readonly MasterDbContext _masterDb;
+    private readonly ITenantProvisioningMode _tenantProvisioningMode;
 
-    public TenantDbContextFactory(MasterDbContext masterDb) => _masterDb = masterDb;
+    public TenantDbContextFactory(MasterDbContext masterDb, ITenantProvisioningMode tenantProvisioningMode)
+    {
+        _masterDb = masterDb;
+        _tenantProvisioningMode = tenantProvisioningMode;
+    }
 
     /// <summary>
     /// Returns a <see cref="TenantDbContext"/> configured with the connection string
@@ -27,13 +33,22 @@ public class TenantDbContextFactory
         if (tenant is null)
             throw new NotFoundException("TENANT_NOT_FOUND", $"Tenant '{tenantId}' was not found.");
 
-        if (string.IsNullOrWhiteSpace(tenant.ConnectionString))
+        var connectionString = tenant.ConnectionString;
+
+        if (!_tenantProvisioningMode.UseTenantDatabaseProvisioning)
+        {
+            connectionString = _masterDb.Database.GetConnectionString()
+                ?? throw new InvalidOperationException("Master connection string is unavailable.");
+        }
+        else if (string.IsNullOrWhiteSpace(connectionString))
+        {
             throw new NotFoundException(
                 "TENANT_NOT_PROVISIONED",
                 $"Tenant '{tenant.Slug}' database has not been provisioned yet.");
+        }
 
         var options = new DbContextOptionsBuilder<TenantDbContext>()
-            .UseSqlServer(tenant.ConnectionString)
+            .UseSqlServer(connectionString)
             .Options;
 
         return new TenantDbContext(options, tenantId);

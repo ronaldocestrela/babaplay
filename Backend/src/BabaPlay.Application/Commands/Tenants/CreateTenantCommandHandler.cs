@@ -22,17 +22,20 @@ public sealed class CreateTenantCommandHandler
 
     private readonly ITenantRepository _tenantRepository;
     private readonly ITenantProvisioningQueue _provisioningQueue;
+    private readonly ITenantProvisioningMode _tenantProvisioningMode;
     private readonly ITenantOwnerProvisioningService _tenantOwnerProvisioningService;
     private readonly ITenantLogoStorageService _tenantLogoStorageService;
 
     public CreateTenantCommandHandler(
         ITenantRepository tenantRepository,
         ITenantProvisioningQueue provisioningQueue,
+        ITenantProvisioningMode tenantProvisioningMode,
         ITenantOwnerProvisioningService tenantOwnerProvisioningService,
         ITenantLogoStorageService tenantLogoStorageService)
     {
         _tenantRepository = tenantRepository;
         _provisioningQueue = provisioningQueue;
+        _tenantProvisioningMode = tenantProvisioningMode;
         _tenantOwnerProvisioningService = tenantOwnerProvisioningService;
         _tenantLogoStorageService = tenantLogoStorageService;
     }
@@ -131,13 +134,23 @@ public sealed class CreateTenantCommandHandler
         if (!membershipResult.IsSuccess)
             return Result<TenantResponse>.Fail(membershipResult.ErrorCode!, membershipResult.ErrorMessage!);
 
-        await _provisioningQueue.EnqueueAsync(tenantId, ct);
+        var provisioningStatus = "Pending";
+
+        if (_tenantProvisioningMode.UseTenantDatabaseProvisioning)
+        {
+            await _provisioningQueue.EnqueueAsync(tenantId, ct);
+        }
+        else
+        {
+            await _tenantRepository.UpdateProvisioningAsync(tenantId, Domain.Enums.ProvisioningStatus.Ready, string.Empty, ct);
+            provisioningStatus = "Ready";
+        }
 
         return Result<TenantResponse>.Ok(new TenantResponse(
             tenantId,
             cmd.Name.Trim(),
             slugNormalised,
-            "Pending",
+            provisioningStatus,
             11,
             logoStored.StoragePath,
             cmd.Street.Trim(),

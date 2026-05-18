@@ -315,9 +315,10 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
     private sealed class TestTenantDbContextFactory : TenantDbContextFactory
     {
         private readonly SqliteConnection _connection;
+        private static readonly ITenantProvisioningMode LegacyMode = new TestTenantProvisioningMode();
 
         public TestTenantDbContextFactory(SqliteConnection connection)
-            : base(null!)
+            : base(null!, LegacyMode)
         {
             _connection = connection;
         }
@@ -330,6 +331,11 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
 
             return Task.FromResult(new TenantDbContext(options, tenantId));
         }
+    }
+
+    private sealed class TestTenantProvisioningMode : ITenantProvisioningMode
+    {
+        public bool UseTenantDatabaseProvisioning => true;
     }
 
     private sealed class NoOpProvisioningQueue : ITenantProvisioningQueue
