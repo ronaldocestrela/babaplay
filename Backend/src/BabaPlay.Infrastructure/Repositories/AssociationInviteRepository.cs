@@ -8,9 +8,9 @@ namespace BabaPlay.Infrastructure.Repositories;
 
 public sealed class AssociationInviteRepository : IAssociationInviteRepository
 {
-    private readonly MasterDbContext _context;
+    private readonly AppDbContext _context;
 
-    public AssociationInviteRepository(MasterDbContext context) => _context = context;
+    public AssociationInviteRepository(AppDbContext context) => _context = context;
 
     public async Task<AssociationInviteData?> GetByTokenHashAsync(string tokenHash, CancellationToken ct = default)
     {

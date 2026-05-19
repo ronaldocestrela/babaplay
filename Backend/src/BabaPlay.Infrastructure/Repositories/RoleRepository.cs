@@ -11,18 +11,18 @@ namespace BabaPlay.Infrastructure.Repositories;
 /// </summary>
 public sealed class RoleRepository : IRoleRepository
 {
-    private readonly TenantDbContextFactory _factory;
+    private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
 
-    public RoleRepository(TenantDbContextFactory factory, ITenantContext tenantContext)
+    public RoleRepository(AppDbContext db, ITenantContext tenantContext)
     {
-        _factory = factory;
+        _db = db;
         _tenantContext = tenantContext;
     }
 
     public async Task<Role?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.Roles
             .Include(r => r.Permissions)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
@@ -30,7 +30,7 @@ public sealed class RoleRepository : IRoleRepository
 
     public async Task<IReadOnlyList<Role>> GetAllActiveAsync(CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.Roles
             .AsNoTracking()
             .Include(r => r.Permissions)
@@ -41,7 +41,7 @@ public sealed class RoleRepository : IRoleRepository
 
     public async Task<bool> ExistsByNormalizedNameAsync(string normalizedName, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.Roles.AnyAsync(r => r.NormalizedName == normalizedName, ct);
     }
 
@@ -50,7 +50,7 @@ public sealed class RoleRepository : IRoleRepository
         if (role.TenantId != _tenantContext.TenantId)
             throw new ValidationException("TenantId", "Role tenant does not match request tenant context.");
 
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.Roles.Add(role);
         await db.SaveChangesAsync(ct);
     }
@@ -60,7 +60,7 @@ public sealed class RoleRepository : IRoleRepository
         if (role.TenantId != _tenantContext.TenantId)
             throw new ValidationException("TenantId", "Role tenant does not match request tenant context.");
 
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.Roles.Update(role);
         await db.SaveChangesAsync(ct);
     }

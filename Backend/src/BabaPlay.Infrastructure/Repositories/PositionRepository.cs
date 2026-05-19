@@ -11,18 +11,18 @@ namespace BabaPlay.Infrastructure.Repositories;
 /// </summary>
 public sealed class PositionRepository : IPositionRepository
 {
-    private readonly TenantDbContextFactory _factory;
+    private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
 
-    public PositionRepository(TenantDbContextFactory factory, ITenantContext tenantContext)
+    public PositionRepository(AppDbContext db, ITenantContext tenantContext)
     {
-        _factory = factory;
+        _db = db;
         _tenantContext = tenantContext;
     }
 
     public async Task<Position?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.Positions
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == id, ct);
@@ -30,7 +30,7 @@ public sealed class PositionRepository : IPositionRepository
 
     public async Task<IReadOnlyList<Position>> GetAllActiveAsync(CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.Positions
             .AsNoTracking()
             .Where(p => p.IsActive)
@@ -40,13 +40,13 @@ public sealed class PositionRepository : IPositionRepository
 
     public async Task<bool> ExistsByNormalizedCodeAsync(string normalizedCode, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.Positions.AnyAsync(p => p.NormalizedCode == normalizedCode, ct);
     }
 
     public async Task<bool> IsInUseAsync(Guid positionId, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.PlayerPositions.AnyAsync(pp => pp.PositionId == positionId, ct);
     }
 
@@ -55,7 +55,7 @@ public sealed class PositionRepository : IPositionRepository
         if (ids.Count == 0)
             return [];
 
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.Positions
             .AsNoTracking()
             .Where(p => ids.Contains(p.Id))
@@ -67,7 +67,7 @@ public sealed class PositionRepository : IPositionRepository
         if (position.TenantId != _tenantContext.TenantId)
             throw new ValidationException("TenantId", "Position tenant does not match request tenant context.");
 
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.Positions.Add(position);
         await db.SaveChangesAsync(ct);
     }
@@ -77,7 +77,7 @@ public sealed class PositionRepository : IPositionRepository
         if (position.TenantId != _tenantContext.TenantId)
             throw new ValidationException("TenantId", "Position tenant does not match request tenant context.");
 
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.Positions.Update(position);
         await db.SaveChangesAsync(ct);
     }

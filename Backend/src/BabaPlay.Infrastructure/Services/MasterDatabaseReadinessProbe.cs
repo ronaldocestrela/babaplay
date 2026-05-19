@@ -6,9 +6,9 @@ namespace BabaPlay.Infrastructure.Services;
 
 public sealed class MasterDatabaseReadinessProbe : IApiReadinessProbe
 {
-    private readonly MasterDbContext _masterDbContext;
+    private readonly AppDbContext _masterDbContext;
 
-    public MasterDatabaseReadinessProbe(MasterDbContext masterDbContext)
+    public MasterDatabaseReadinessProbe(AppDbContext masterDbContext)
     {
         _masterDbContext = masterDbContext;
     }

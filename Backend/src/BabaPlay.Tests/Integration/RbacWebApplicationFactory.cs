@@ -30,8 +30,7 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
     public const string StrangerUserId = "rbac-stranger-user";
     public const string CrossTenantUserId = "rbac-cross-user";
 
-    private readonly SqliteConnection _masterConnection = new("Data Source=:memory:");
-    private readonly SqliteConnection _tenantConnection = new("Data Source=:memory:");
+    private readonly SqliteConnection _connection = new("Data Source=:memory:");
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -54,12 +53,12 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
         {
             var toRemove = services
                 .Where(d =>
-                    d.ServiceType == typeof(DbContextOptions<MasterDbContext>) ||
-                    d.ServiceType == typeof(MasterDbContext) ||
+                    d.ServiceType == typeof(DbContextOptions<AppDbContext>) ||
+                    d.ServiceType == typeof(AppDbContext) ||
                     (d.ServiceType.IsGenericType &&
                      d.ServiceType.GetGenericTypeDefinition().FullName ==
                          "Microsoft.EntityFrameworkCore.Infrastructure.IDbContextOptionsConfiguration`1" &&
-                     d.ServiceType.GenericTypeArguments.FirstOrDefault() == typeof(MasterDbContext)) ||
+                     d.ServiceType.GenericTypeArguments.FirstOrDefault() == typeof(AppDbContext)) ||
                     (d.ImplementationType?.Assembly.GetName().Name?
                         .Contains("SqlServer", StringComparison.OrdinalIgnoreCase) == true) ||
                     (d.ImplementationInstance?.GetType().Assembly.GetName().Name?
@@ -69,15 +68,8 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
             foreach (var descriptor in toRemove)
                 services.Remove(descriptor);
 
-            _masterConnection.Open();
-            services.AddDbContext<MasterDbContext>(o => o.UseSqlite(_masterConnection));
-
-            var factoryDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(TenantDbContextFactory));
-            if (factoryDescriptor is not null)
-                services.Remove(factoryDescriptor);
-
-            _tenantConnection.Open();
-            services.AddScoped<TenantDbContextFactory>(_ => new TestTenantDbContextFactory(_tenantConnection));
+            _connection.Open();
+            services.AddDbContext<AppDbContext>(o => o.UseSqlite(_connection));
 
             services.AddAuthentication(options =>
             {
@@ -89,14 +81,13 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
             using var sp = services.BuildServiceProvider();
             using var scope = sp.CreateScope();
 
-            var masterDb = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+            var masterDb = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
             masterDb.Database.EnsureCreated();
             SeedMasterAsync(masterDb, userManager).GetAwaiter().GetResult();
 
-            var tenantFactory = scope.ServiceProvider.GetRequiredService<TenantDbContextFactory>();
-            SeedTenantAsync(tenantFactory).GetAwaiter().GetResult();
+            SeedTenantAsync(masterDb).GetAwaiter().GetResult();
         });
     }
 
@@ -105,12 +96,11 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
         base.Dispose(disposing);
         if (disposing)
         {
-            _masterConnection.Dispose();
-            _tenantConnection.Dispose();
+            _connection.Dispose();
         }
     }
 
-    private static async Task SeedMasterAsync(MasterDbContext db, UserManager<ApplicationUser> userManager)
+    private static async Task SeedMasterAsync(AppDbContext db, UserManager<ApplicationUser> userManager)
     {
         var users = new[]
         {
@@ -207,9 +197,8 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
         await db.SaveChangesAsync();
     }
 
-    private static async Task SeedTenantAsync(TenantDbContextFactory factory)
+    private static async Task SeedTenantAsync(AppDbContext db)
     {
-        await using var db = await factory.CreateAsync(TenantAId);
         await db.Database.EnsureCreatedAsync();
 
         var roleReadPermission = await db.Permissions.FirstOrDefaultAsync(p => p.NormalizedCode == RbacCatalog.Permissions.RbacRolesRead.ToUpperInvariant());
@@ -301,23 +290,4 @@ public sealed class RbacWebApplicationFactory : WebApplicationFactory<Program>
         await db.SaveChangesAsync();
     }
 
-    private sealed class TestTenantDbContextFactory : TenantDbContextFactory
-    {
-        private readonly SqliteConnection _connection;
-
-        public TestTenantDbContextFactory(SqliteConnection connection)
-            : base(null!)
-        {
-            _connection = connection;
-        }
-
-        public override Task<TenantDbContext> CreateAsync(Guid tenantId, CancellationToken ct = default)
-        {
-            var options = new DbContextOptionsBuilder<TenantDbContext>()
-                .UseSqlite(_connection)
-                .Options;
-
-            return Task.FromResult(new TenantDbContext(options, tenantId));
-        }
-    }
 }

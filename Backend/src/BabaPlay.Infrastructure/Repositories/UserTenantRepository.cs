@@ -8,9 +8,9 @@ namespace BabaPlay.Infrastructure.Repositories;
 /// <summary>Validates user–tenant membership in the Master database.</summary>
 public sealed class UserTenantRepository : IUserTenantRepository
 {
-    private readonly MasterDbContext _context;
+    private readonly AppDbContext _context;
 
-    public UserTenantRepository(MasterDbContext context) => _context = context;
+    public UserTenantRepository(AppDbContext context) => _context = context;
 
     /// <inheritdoc />
     public async Task<bool> IsMemberAsync(string userId, Guid tenantId, CancellationToken ct = default)

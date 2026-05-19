@@ -7,24 +7,23 @@ using Microsoft.EntityFrameworkCore;
 namespace BabaPlay.Infrastructure.Repositories;
 
 /// <summary>
-/// Player repository backed by the per-tenant isolated database.
-/// A fresh <see cref="TenantDbContext"/> is created per operation via the factory.
+/// Player repository backed by the unified app database with tenant query filters.
 /// </summary>
 public sealed class PlayerRepository : IPlayerRepository
 {
-    private readonly TenantDbContextFactory _factory;
+    private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
 
-    public PlayerRepository(TenantDbContextFactory factory, ITenantContext tenantContext)
+    public PlayerRepository(AppDbContext db, ITenantContext tenantContext)
     {
-        _factory = factory;
+        _db = db;
         _tenantContext = tenantContext;
     }
 
     /// <inheritdoc />
     public async Task<Player?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.Players
             .Include(p => p.Positions)
             .AsNoTracking()
@@ -34,7 +33,7 @@ public sealed class PlayerRepository : IPlayerRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<Player>> GetAllActiveAsync(CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.Players
             .Include(p => p.Positions)
             .AsNoTracking()
@@ -46,7 +45,7 @@ public sealed class PlayerRepository : IPlayerRepository
     /// <inheritdoc />
     public async Task<bool> ExistsByUserIdAsync(Guid userId, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.Players.AnyAsync(p => p.UserId == userId, ct);
     }
 
@@ -56,7 +55,7 @@ public sealed class PlayerRepository : IPlayerRepository
         if (ids.Count == 0)
             return [];
 
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.Players
             .Include(p => p.Positions)
             .AsNoTracking()
@@ -70,7 +69,7 @@ public sealed class PlayerRepository : IPlayerRepository
         if (player.TenantId != _tenantContext.TenantId)
             throw new ValidationException("TenantId", "Player tenant does not match request tenant context.");
 
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.Players.Add(player);
         await db.SaveChangesAsync(ct);
     }
@@ -78,7 +77,7 @@ public sealed class PlayerRepository : IPlayerRepository
     /// <inheritdoc />
     public async Task UpdateAsync(Player player, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
 
         var existing = await db.Players
             .Include(p => p.Positions)

@@ -107,9 +107,12 @@ Resultado esperado:
 - `200 OK` com `{"status":"healthy",...}` quando banco master estiver acessivel.
 - `503 Service Unavailable` com `{"status":"unhealthy",...}` quando banco master estiver indisponivel.
 
-## 5) Migrations (master DB)
+## 5) Migrations (single-db: master + tenant)
 
-A API executa `masterDb.Database.Migrate()` no startup (exceto em ambiente Testing).
+A API executa migrations automaticamente no startup (exceto em ambiente Testing), em ambos os contextos:
+
+- `MasterDbContext`
+- `TenantDbContext`
 
 Implicacao operacional:
 
@@ -177,3 +180,6 @@ Sem `down -v`, os dados persistem entre reinicios.
 3. SQL Server unhealthy:
    - aguarde mais tempo no primeiro startup
    - verifique logs: `docker compose -f deploy/docker/docker-compose.manual.yml logs sqlserver`
+4. Erro ao criar tenant com `TENANT_OWNER_RBAC_BOOTSTRAP_FAILED` e `Invalid column name 'TenantId'`:
+  - indica schema tenant desatualizado em relacao ao codigo
+  - reinicie a API com `Database:RunMigrationsOnStartup=true` para aplicar migrations pendentes

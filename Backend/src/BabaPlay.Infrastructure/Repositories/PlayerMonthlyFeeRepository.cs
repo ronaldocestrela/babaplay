@@ -7,24 +7,24 @@ namespace BabaPlay.Infrastructure.Repositories;
 
 public sealed class PlayerMonthlyFeeRepository : IPlayerMonthlyFeeRepository
 {
-    private readonly TenantDbContextFactory _factory;
+    private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
 
-    public PlayerMonthlyFeeRepository(TenantDbContextFactory factory, ITenantContext tenantContext)
+    public PlayerMonthlyFeeRepository(AppDbContext db, ITenantContext tenantContext)
     {
-        _factory = factory;
+        _db = db;
         _tenantContext = tenantContext;
     }
 
     public async Task<PlayerMonthlyFee?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.PlayerMonthlyFees.FirstOrDefaultAsync(x => x.Id == id && x.IsActive, ct);
     }
 
     public async Task<IReadOnlyList<PlayerMonthlyFee>> GetOverdueAsync(DateTime referenceUtc, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
 
         return await db.PlayerMonthlyFees
             .AsNoTracking()
@@ -35,7 +35,7 @@ public sealed class PlayerMonthlyFeeRepository : IPlayerMonthlyFeeRepository
 
     public async Task<IReadOnlyList<PlayerMonthlyFee>> GetByCompetenceAsync(int year, int month, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
 
         return await db.PlayerMonthlyFees
             .AsNoTracking()
@@ -50,7 +50,7 @@ public sealed class PlayerMonthlyFeeRepository : IPlayerMonthlyFeeRepository
         DateTime toUtc,
         CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
 
         return await db.PlayerMonthlyFees
             .AsNoTracking()
@@ -66,7 +66,7 @@ public sealed class PlayerMonthlyFeeRepository : IPlayerMonthlyFeeRepository
         int month,
         CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.PlayerMonthlyFees.AnyAsync(
             x => x.IsActive
                 && x.TenantId == tenantId
@@ -78,14 +78,14 @@ public sealed class PlayerMonthlyFeeRepository : IPlayerMonthlyFeeRepository
 
     public async Task AddAsync(PlayerMonthlyFee monthlyFee, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.PlayerMonthlyFees.Add(monthlyFee);
         await db.SaveChangesAsync(ct);
     }
 
     public async Task UpdateAsync(PlayerMonthlyFee monthlyFee, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.PlayerMonthlyFees.Update(monthlyFee);
         await db.SaveChangesAsync(ct);
     }

@@ -11,18 +11,18 @@ namespace BabaPlay.Infrastructure.Repositories;
 /// </summary>
 public sealed class PermissionRepository : IPermissionRepository
 {
-    private readonly TenantDbContextFactory _factory;
+    private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
 
-    public PermissionRepository(TenantDbContextFactory factory, ITenantContext tenantContext)
+    public PermissionRepository(AppDbContext db, ITenantContext tenantContext)
     {
-        _factory = factory;
+        _db = db;
         _tenantContext = tenantContext;
     }
 
     public async Task<Permission?> GetByNormalizedCodeAsync(string normalizedCode, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.Permissions.FirstOrDefaultAsync(
             p => p.TenantId == _tenantContext.TenantId && p.NormalizedCode == normalizedCode,
             ct);
@@ -33,7 +33,7 @@ public sealed class PermissionRepository : IPermissionRepository
         if (permission.TenantId != _tenantContext.TenantId)
             throw new ValidationException("TenantId", "Permission tenant does not match request tenant context.");
 
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.Permissions.Add(permission);
         await db.SaveChangesAsync(ct);
     }

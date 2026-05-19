@@ -9,9 +9,9 @@ namespace BabaPlay.Infrastructure.Repositories;
 /// <summary>Tenant metadata repository backed by the Master database.</summary>
 public sealed class TenantRepository : ITenantRepository
 {
-    private readonly MasterDbContext _context;
+    private readonly AppDbContext _context;
 
-    public TenantRepository(MasterDbContext context) => _context = context;
+    public TenantRepository(AppDbContext context) => _context = context;
 
     /// <inheritdoc />
     public async Task<TenantInfoDto?> GetBySlugAsync(string slug, CancellationToken ct = default)
@@ -69,6 +69,18 @@ public sealed class TenantRepository : ITenantRepository
             AssociationLongitude = associationLongitude,
         });
         await _context.SaveChangesAsync(ct);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        var entity = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == id, ct);
+        if (entity is null)
+            return false;
+
+        _context.Tenants.Remove(entity);
+        await _context.SaveChangesAsync(ct);
+        return true;
     }
 
     /// <inheritdoc />

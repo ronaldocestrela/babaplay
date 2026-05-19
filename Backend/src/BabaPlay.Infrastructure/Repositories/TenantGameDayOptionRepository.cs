@@ -7,9 +7,9 @@ namespace BabaPlay.Infrastructure.Repositories;
 
 public sealed class TenantGameDayOptionRepository : ITenantGameDayOptionRepository
 {
-    private readonly MasterDbContext _context;
+    private readonly AppDbContext _context;
 
-    public TenantGameDayOptionRepository(MasterDbContext context)
+    public TenantGameDayOptionRepository(AppDbContext context)
     {
         _context = context;
     }

@@ -23,8 +23,7 @@ public sealed class TenantWebApplicationFactory : WebApplicationFactory<Program>
     public const string TestUserEmail = "tenant-integration@babaplay.com";
     public const string TestUserPassword = "Integration@123456";
 
-    private readonly SqliteConnection _masterConnection = new("Data Source=:memory:");
-    private readonly SqliteConnection _tenantConnection = new("Data Source=:memory:");
+    private readonly SqliteConnection _connection = new("Data Source=:memory:");
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -53,12 +52,12 @@ public sealed class TenantWebApplicationFactory : WebApplicationFactory<Program>
             // --- Replace SQL Server with SQLite ---
             var toRemove = services
                 .Where(d =>
-                    d.ServiceType == typeof(DbContextOptions<MasterDbContext>) ||
-                    d.ServiceType == typeof(MasterDbContext) ||
+                    d.ServiceType == typeof(DbContextOptions<AppDbContext>) ||
+                    d.ServiceType == typeof(AppDbContext) ||
                     (d.ServiceType.IsGenericType &&
                      d.ServiceType.GetGenericTypeDefinition().FullName ==
                          "Microsoft.EntityFrameworkCore.Infrastructure.IDbContextOptionsConfiguration`1" &&
-                     d.ServiceType.GenericTypeArguments.FirstOrDefault() == typeof(MasterDbContext)) ||
+                     d.ServiceType.GenericTypeArguments.FirstOrDefault() == typeof(AppDbContext)) ||
                     (d.ImplementationType?.Assembly.GetName().Name?
                         .Contains("SqlServer", StringComparison.OrdinalIgnoreCase) == true) ||
                     (d.ImplementationInstance?.GetType().Assembly.GetName().Name?
@@ -66,15 +65,8 @@ public sealed class TenantWebApplicationFactory : WebApplicationFactory<Program>
                 .ToList();
             foreach (var d in toRemove) services.Remove(d);
 
-            _masterConnection.Open();
-            services.AddDbContext<MasterDbContext>(o => o.UseSqlite(_masterConnection));
-
-            var tenantFactoryDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(TenantDbContextFactory));
-            if (tenantFactoryDescriptor is not null)
-                services.Remove(tenantFactoryDescriptor);
-
-            _tenantConnection.Open();
-            services.AddScoped<TenantDbContextFactory>(_ => new TestTenantDbContextFactory(_tenantConnection));
+            _connection.Open();
+            services.AddDbContext<AppDbContext>(o => o.UseSqlite(_connection));
 
             // --- Replace cloudinary uploader with deterministic fake ---
             services.RemoveAll<ICloudinaryImageUploader>();
@@ -95,12 +87,11 @@ public sealed class TenantWebApplicationFactory : WebApplicationFactory<Program>
             // --- Seed test data ---
             using var sp = services.BuildServiceProvider();
             using var scope = sp.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-            var tenantFactory = scope.ServiceProvider.GetRequiredService<TenantDbContextFactory>();
             db.Database.EnsureCreated();
             SeedAsync(db, userManager).GetAwaiter().GetResult();
-            SeedTenantAsync(tenantFactory).GetAwaiter().GetResult();
+            SeedTenantAsync(db).GetAwaiter().GetResult();
         });
     }
 
@@ -109,12 +100,11 @@ public sealed class TenantWebApplicationFactory : WebApplicationFactory<Program>
         base.Dispose(disposing);
         if (disposing)
         {
-            _masterConnection.Dispose();
-            _tenantConnection.Dispose();
+            _connection.Dispose();
         }
     }
 
-    private static async Task SeedAsync(MasterDbContext db, UserManager<ApplicationUser> userManager)
+    private static async Task SeedAsync(AppDbContext db, UserManager<ApplicationUser> userManager)
     {
         if (await userManager.FindByIdAsync(TestAuthHandler.TestUserId) is not null)
             return;
@@ -135,9 +125,8 @@ public sealed class TenantWebApplicationFactory : WebApplicationFactory<Program>
         await db.SaveChangesAsync();
     }
 
-    private static async Task SeedTenantAsync(TenantDbContextFactory tenantFactory)
+    private static async Task SeedTenantAsync(AppDbContext db)
     {
-        await using var db = await tenantFactory.CreateAsync(Guid.NewGuid());
         await db.Database.EnsureCreatedAsync();
     }
 
@@ -174,23 +163,4 @@ public sealed class TenantWebApplicationFactory : WebApplicationFactory<Program>
         }
     }
 
-    private sealed class TestTenantDbContextFactory : TenantDbContextFactory
-    {
-        private readonly SqliteConnection _connection;
-
-        public TestTenantDbContextFactory(SqliteConnection connection)
-            : base(null!)
-        {
-            _connection = connection;
-        }
-
-        public override Task<TenantDbContext> CreateAsync(Guid tenantId, CancellationToken ct = default)
-        {
-            var options = new DbContextOptionsBuilder<TenantDbContext>()
-                .UseSqlite(_connection)
-                .Options;
-
-            return Task.FromResult(new TenantDbContext(options, tenantId));
-        }
-    }
 }

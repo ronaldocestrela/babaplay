@@ -32,6 +32,9 @@ public interface ITenantRepository
         double associationLongitude,
         CancellationToken ct = default);
 
+    /// <summary>Deletes a tenant record by id from the Master database.</summary>
+    Task<bool> DeleteAsync(Guid id, CancellationToken ct = default);
+
     /// <summary>Updates tenant association metadata fields.</summary>
     Task<bool> UpdateAssociationSettingsAsync(
         Guid id,

@@ -240,6 +240,9 @@ public class CreateTenantCommandHandlerTests
         _tenantRepo
             .Setup(r => r.ExistsAsync("myclob", It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
+        _tenantRepo
+            .Setup(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         _ownerRbacBootstrap
             .Setup(x => x.EnsureOwnerAdminAccessAsync(
@@ -254,6 +257,62 @@ public class CreateTenantCommandHandlerTests
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.ErrorCode.Should().Be("TENANT_OWNER_RBAC_BOOTSTRAP_FAILED");
+        _tenantRepo.Verify(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_OwnerMembershipFailure_ShouldRollbackTenantAndReturnFailure()
+    {
+        // Arrange
+        _tenantRepo
+            .Setup(r => r.ExistsAsync("myclob", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        _ownerProvisioning
+            .Setup(x => x.EnsureOwnerMembershipAsync(
+                It.IsAny<string>(),
+                It.IsAny<Guid>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Fail("TENANT_OWNER_MEMBERSHIP_FAILED", "membership failed"));
+
+        _tenantRepo
+            .Setup(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await _handler.HandleAsync(CreateValidCommand());
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorCode.Should().Be("TENANT_OWNER_MEMBERSHIP_FAILED");
+        _tenantRepo.Verify(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_RbacBootstrapFailureAndRollbackFailure_ShouldReturnRollbackFailure()
+    {
+        // Arrange
+        _tenantRepo
+            .Setup(r => r.ExistsAsync("myclob", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        _ownerRbacBootstrap
+            .Setup(x => x.EnsureOwnerAdminAccessAsync(
+                It.IsAny<string>(),
+                It.IsAny<Guid>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Fail("TENANT_OWNER_RBAC_BOOTSTRAP_FAILED", "Failed to assign owner admin role."));
+
+        _tenantRepo
+            .Setup(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        // Act
+        var result = await _handler.HandleAsync(CreateValidCommand());
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorCode.Should().Be("TENANT_CREATE_ROLLBACK_FAILED");
     }
 
     [Fact]

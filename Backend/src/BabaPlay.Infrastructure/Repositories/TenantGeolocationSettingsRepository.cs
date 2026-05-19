@@ -7,9 +7,9 @@ namespace BabaPlay.Infrastructure.Repositories;
 
 public sealed class TenantGeolocationSettingsRepository : ITenantGeolocationSettingsRepository
 {
-    private readonly MasterDbContext _masterDbContext;
+    private readonly AppDbContext _masterDbContext;
 
-    public TenantGeolocationSettingsRepository(MasterDbContext masterDbContext)
+    public TenantGeolocationSettingsRepository(AppDbContext masterDbContext)
     {
         _masterDbContext = masterDbContext;
     }

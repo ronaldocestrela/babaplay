@@ -7,31 +7,31 @@ namespace BabaPlay.Infrastructure.Repositories;
 
 public sealed class MonthlyFeePaymentRepository : IMonthlyFeePaymentRepository
 {
-    private readonly TenantDbContextFactory _factory;
+    private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
 
-    public MonthlyFeePaymentRepository(TenantDbContextFactory factory, ITenantContext tenantContext)
+    public MonthlyFeePaymentRepository(AppDbContext db, ITenantContext tenantContext)
     {
-        _factory = factory;
+        _db = db;
         _tenantContext = tenantContext;
     }
 
     public async Task AddAsync(MonthlyFeePayment payment, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.MonthlyFeePayments.Add(payment);
         await db.SaveChangesAsync(ct);
     }
 
     public async Task<MonthlyFeePayment?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.MonthlyFeePayments.FirstOrDefaultAsync(x => x.Id == id && x.IsActive, ct);
     }
 
     public async Task UpdateAsync(MonthlyFeePayment payment, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.MonthlyFeePayments.Update(payment);
         await db.SaveChangesAsync(ct);
     }

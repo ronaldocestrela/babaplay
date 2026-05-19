@@ -44,14 +44,20 @@ public static class ServiceRegistration
         var tenantLogoStorageSection = configuration.GetSection(TenantLogoStorageSettings.SectionName);
         services.Configure<TenantLogoStorageSettings>(tenantLogoStorageSection);
 
-        // --- Master Database ---
-        services.AddDbContext<MasterDbContext>(options =>
+        // --- Database ---
+
+        services.AddDbContext<AppDbContext>(options =>
             options.UseSqlServer(
                 configuration.GetConnectionString("MasterDb")
-                ?? throw new InvalidOperationException("'ConnectionStrings:MasterDb' is missing.")));
+                ?? throw new InvalidOperationException("'ConnectionStrings:MasterDb' is missing."),
+                sqlOptions =>
+                {
+                    sqlOptions.CommandTimeout(180);
+                    sqlOptions.EnableRetryOnFailure();
+                }));
 
         // --- ASP.NET Identity ---
-        services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+        var identityBuilder = services.AddIdentity<ApplicationUser, IdentityRole>(options =>
         {
             options.Password.RequiredLength = 8;
             options.Password.RequireDigit = true;
@@ -61,8 +67,9 @@ public static class ServiceRegistration
             options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
             options.User.RequireUniqueEmail = true;
         })
-        .AddEntityFrameworkStores<MasterDbContext>()
         .AddDefaultTokenProviders();
+
+        identityBuilder.AddEntityFrameworkStores<AppDbContext>();
 
         // --- JWT Bearer Authentication ---
         services.AddAuthentication(options =>
@@ -206,7 +213,7 @@ public static class ServiceRegistration
         services.AddScoped<ITenantGameDayOptionRepository, TenantGameDayOptionRepository>();
         services.AddScoped<ITenantOwnerProvisioningService, TenantOwnerProvisioningService>();
         services.AddScoped<ITenantOwnerRbacBootstrapService, TenantOwnerRbacBootstrapService>();
-        services.AddScoped<TenantDbContextFactory>();
+        services.AddScoped<DatabaseMigrationRunner>();
 
         // --- Tenant-scoped repositories (Fase 3) ---
         services.AddScoped<IPlayerRepository, PlayerRepository>();

@@ -18,9 +18,7 @@ namespace BabaPlay.Tests.Integration;
 /// WebApplicationFactory for Player endpoint integration tests.
 ///
 /// Provisions:
-/// - SQLite in-memory for the Master DB (users + tenant seeded)
-/// - SQLite in-memory for the Tenant DB (Players schema created)
-/// - <see cref="TestTenantDbContextFactory"/> that always resolves to the tenant SQLite DB
+/// - SQLite in-memory for the unified App DB (users + tenant data seeded)
 /// - Test authentication handler (always authenticates)
 /// </summary>
 public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
@@ -52,8 +50,7 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
     public const string TestTenantBSlug = "test-tenant-player-b";
     public static readonly Guid TestTenantBId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-000000000002");
 
-    private readonly SqliteConnection _masterConnection = new("Data Source=:memory:");
-    private readonly SqliteConnection _tenantConnection = new("Data Source=:memory:");
+    private readonly SqliteConnection _connection = new("Data Source=:memory:");
     private readonly string _storageRoot = Path.Combine(Path.GetTempPath(), $"babaplay-match-summary-tests-{Guid.NewGuid():N}");
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -76,15 +73,15 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices(services =>
         {
-            // --- Replace SQL Server MasterDbContext with SQLite ---
+            // --- Replace SQL Server AppDbContext with SQLite ---
             var toRemove = services
                 .Where(d =>
-                    d.ServiceType == typeof(DbContextOptions<MasterDbContext>) ||
-                    d.ServiceType == typeof(MasterDbContext) ||
+                    d.ServiceType == typeof(DbContextOptions<AppDbContext>) ||
+                    d.ServiceType == typeof(AppDbContext) ||
                     (d.ServiceType.IsGenericType &&
                      d.ServiceType.GetGenericTypeDefinition().FullName ==
                          "Microsoft.EntityFrameworkCore.Infrastructure.IDbContextOptionsConfiguration`1" &&
-                     d.ServiceType.GenericTypeArguments.FirstOrDefault() == typeof(MasterDbContext)) ||
+                     d.ServiceType.GenericTypeArguments.FirstOrDefault() == typeof(AppDbContext)) ||
                     (d.ImplementationType?.Assembly.GetName().Name?
                         .Contains("SqlServer", StringComparison.OrdinalIgnoreCase) == true) ||
                     (d.ImplementationInstance?.GetType().Assembly.GetName().Name?
@@ -92,17 +89,8 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
                 .ToList();
             foreach (var d in toRemove) services.Remove(d);
 
-            _masterConnection.Open();
-            services.AddDbContext<MasterDbContext>(o => o.UseSqlite(_masterConnection));
-
-            // --- Replace TenantDbContextFactory with SQLite-backed test version ---
-            var factoryDescriptor = services.SingleOrDefault(d =>
-                d.ServiceType == typeof(TenantDbContextFactory));
-            if (factoryDescriptor is not null) services.Remove(factoryDescriptor);
-
-            _tenantConnection.Open();
-            services.AddScoped<TenantDbContextFactory>(_ =>
-                new TestTenantDbContextFactory(_tenantConnection));
+            _connection.Open();
+            services.AddDbContext<AppDbContext>(o => o.UseSqlite(_connection));
 
             // --- Replace JWT auth with test auth handler ---
             services.AddAuthentication(options =>
@@ -116,13 +104,12 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
             using var sp = services.BuildServiceProvider();
             using var scope = sp.CreateScope();
 
-            var masterDb = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+            var masterDb = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             masterDb.Database.EnsureCreated();
             SeedMasterAsync(masterDb, userManager).GetAwaiter().GetResult();
 
-            var tenantFactory = scope.ServiceProvider.GetRequiredService<TenantDbContextFactory>();
-            SeedTenantAsync(tenantFactory).GetAwaiter().GetResult();
+            SeedTenantAsync(masterDb).GetAwaiter().GetResult();
         });
     }
 
@@ -131,15 +118,14 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
         base.Dispose(disposing);
         if (disposing)
         {
-            _masterConnection.Dispose();
-            _tenantConnection.Dispose();
+            _connection.Dispose();
 
             if (Directory.Exists(_storageRoot))
                 Directory.Delete(_storageRoot, recursive: true);
         }
     }
 
-    private static async Task SeedMasterAsync(MasterDbContext db, UserManager<ApplicationUser> userManager)
+    private static async Task SeedMasterAsync(AppDbContext db, UserManager<ApplicationUser> userManager)
     {
         for (int i = 0; i < TestUserIds.Length; i++)
         {
@@ -230,12 +216,8 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
         await db.SaveChangesAsync();
     }
 
-    private static async Task SeedTenantAsync(TenantDbContextFactory factory)
+    private static async Task SeedTenantAsync(AppDbContext db)
     {
-        // Resolve tenantId from master DB is not straightforward here, so we
-        // create a context directly using the factory's shared SQLite connection.
-        // The TestTenantDbContextFactory ignores tenantId.
-        await using var db = await factory.CreateAsync(Guid.Empty);
         await db.Database.EnsureCreatedAsync();
 
         var permissionByNormalized = await db.Permissions
@@ -295,22 +277,4 @@ public sealed class PlayerWebApplicationFactory : WebApplicationFactory<Program>
         await db.SaveChangesAsync();
     }
 
-    // ---- Inner classes ----
-
-    private sealed class TestTenantDbContextFactory : TenantDbContextFactory
-    {
-        private readonly SqliteConnection _connection;
-
-        public TestTenantDbContextFactory(SqliteConnection connection)
-            : base(null!) => _connection = connection;
-
-        public override Task<TenantDbContext> CreateAsync(Guid tenantId, CancellationToken ct = default)
-        {
-            var options = new DbContextOptionsBuilder<TenantDbContext>()
-                .UseSqlite(_connection)
-                .Options;
-
-            return Task.FromResult(new TenantDbContext(options, tenantId));
-        }
-    }
 }

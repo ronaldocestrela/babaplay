@@ -182,8 +182,7 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
 
         using (var scope = _factory.Services.CreateScope())
         {
-            var masterDb = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
-            var tenantFactory = scope.ServiceProvider.GetRequiredService<TenantDbContextFactory>();
+            var masterDb = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
             var membership = await masterDb.UserTenants
                 .AsNoTracking()
@@ -192,7 +191,7 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
             membership.Should().NotBeNull();
             membership!.IsOwner.Should().BeTrue();
 
-            await using var tenantDb = await tenantFactory.CreateAsync(created.Id);
+            var tenantDb = masterDb;
 
             var adminRole = await tenantDb.Roles
                 .AsNoTracking()
@@ -322,7 +321,7 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
         var nonOwnerId = "member-user-id";
         using (var scope = _factory.Services.CreateScope())
         {
-            var db = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
             if (await userManager.FindByIdAsync(nonOwnerId) is null)
@@ -493,7 +492,7 @@ public class TenantIntegrationTests : IClassFixture<TenantWebApplicationFactory>
         var nonOwnerId = "member-user-id-2";
         using (var scope = _factory.Services.CreateScope())
         {
-            var db = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
             if (await userManager.FindByIdAsync(nonOwnerId) is null)

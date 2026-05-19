@@ -7,25 +7,25 @@ namespace BabaPlay.Infrastructure.Repositories;
 
 public sealed class CashTransactionRepository : ICashTransactionRepository
 {
-    private readonly TenantDbContextFactory _factory;
+    private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
 
-    public CashTransactionRepository(TenantDbContextFactory factory, ITenantContext tenantContext)
+    public CashTransactionRepository(AppDbContext db, ITenantContext tenantContext)
     {
-        _factory = factory;
+        _db = db;
         _tenantContext = tenantContext;
     }
 
     public async Task AddAsync(CashTransaction transaction, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.CashTransactions.Add(transaction);
         await db.SaveChangesAsync(ct);
     }
 
     public async Task<IReadOnlyList<CashTransaction>> GetByPeriodAsync(DateTime fromUtc, DateTime toUtc, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
 
         return await db.CashTransactions
             .AsNoTracking()

@@ -7,9 +7,9 @@ namespace BabaPlay.Infrastructure.Services;
 
 public sealed class UserTenantMembershipService : IUserTenantMembershipService
 {
-    private readonly MasterDbContext _masterDbContext;
+    private readonly AppDbContext _masterDbContext;
 
-    public UserTenantMembershipService(MasterDbContext masterDbContext)
+    public UserTenantMembershipService(AppDbContext masterDbContext)
     {
         _masterDbContext = masterDbContext;
     }

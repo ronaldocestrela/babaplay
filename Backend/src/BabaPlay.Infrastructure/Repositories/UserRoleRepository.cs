@@ -11,18 +11,18 @@ namespace BabaPlay.Infrastructure.Repositories;
 /// </summary>
 public sealed class UserRoleRepository : IUserRoleRepository
 {
-    private readonly TenantDbContextFactory _factory;
+    private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
 
-    public UserRoleRepository(TenantDbContextFactory factory, ITenantContext tenantContext)
+    public UserRoleRepository(AppDbContext db, ITenantContext tenantContext)
     {
-        _factory = factory;
+        _db = db;
         _tenantContext = tenantContext;
     }
 
     public async Task<bool> ExistsAsync(string userId, Guid roleId, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await (
             from userRole in db.UserRoles
             join role in db.Roles on userRole.RoleId equals role.Id
@@ -34,7 +34,7 @@ public sealed class UserRoleRepository : IUserRoleRepository
 
     public async Task AddAsync(UserRole userRole, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
 
         var roleTenantId = await db.Roles
             .Where(r => r.Id == userRole.RoleId)
@@ -50,7 +50,7 @@ public sealed class UserRoleRepository : IUserRoleRepository
 
     public async Task<bool> HasPermissionAsync(string userId, string normalizedPermissionCode, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
 
         return await (
             from userRole in db.UserRoles

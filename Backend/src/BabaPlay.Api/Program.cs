@@ -4,6 +4,7 @@ using BabaPlay.Application;
 using BabaPlay.Infrastructure;
 using BabaPlay.Infrastructure.Hubs;
 using BabaPlay.Infrastructure.Persistence;
+using BabaPlay.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.OpenApi.Models;
@@ -92,12 +93,14 @@ builder.Services.AddSwaggerGen(options =>
 // --- Pipeline ---
 var app = builder.Build();
 
-// Applies pending EF Core migrations for the master database on startup.
-if (!app.Environment.IsEnvironment("Testing"))
+// Applies pending EF Core migrations for the shared single database on startup.
+// In single-db mode, both master and tenant-context migrations must be applied.
+var runMigrationsOnStartup = builder.Configuration.GetValue<bool?>("Database:RunMigrationsOnStartup") ?? true;
+if (!app.Environment.IsEnvironment("Testing") && runMigrationsOnStartup)
 {
     using var scope = app.Services.CreateScope();
-    var masterDb = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
-    masterDb.Database.Migrate();
+    var migrationRunner = scope.ServiceProvider.GetRequiredService<DatabaseMigrationRunner>();
+    await migrationRunner.RunAsync();
 }
 
 app.UseExceptionHandler();

@@ -1,19 +1,37 @@
+using BabaPlay.Application.Interfaces;
 using BabaPlay.Domain.Entities;
+using BabaPlay.Infrastructure.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace BabaPlay.Infrastructure.Persistence;
 
 /// <summary>
-/// Per-tenant isolated database context.
-/// Connection string is resolved dynamically per request via TenantDbContextFactory.
+/// Unified single-db context that contains both global (identity/master) and tenant-scoped entities.
+/// Tenant isolation remains logical via global query filters on tenant-scoped aggregates.
 /// </summary>
-public sealed class TenantDbContext : DbContext
+public sealed class AppDbContext : IdentityDbContext<ApplicationUser>
 {
-    private readonly Guid _tenantId;
+    private readonly ITenantContext? _tenantContext;
 
-    public TenantDbContext(DbContextOptions<TenantDbContext> options, Guid tenantId = default) : base(options)
-        => _tenantId = tenantId;
+    private Guid CurrentTenantId => _tenantContext?.TenantId ?? Guid.Empty;
 
+    public AppDbContext(DbContextOptions<AppDbContext> options, ITenantContext? tenantContext = null)
+        : base(options)
+    {
+        _tenantContext = tenantContext;
+    }
+
+    // Master/global tables
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<Tenant> Tenants => Set<Tenant>();
+    public DbSet<UserTenant> UserTenants => Set<UserTenant>();
+    public DbSet<Subscription> Subscriptions => Set<Subscription>();
+    public DbSet<Plan> Plans => Set<Plan>();
+    public DbSet<AssociationInvite> AssociationInvites => Set<AssociationInvite>();
+    public DbSet<TenantGameDayOption> TenantGameDayOptions => Set<TenantGameDayOption>();
+
+    // Tenant-scoped tables
     public DbSet<Player> Players => Set<Player>();
     public DbSet<GameDay> GameDays => Set<GameDay>();
     public DbSet<Match> Matches => Set<Match>();
@@ -25,10 +43,10 @@ public sealed class TenantDbContext : DbContext
     public DbSet<PlayerPosition> PlayerPositions => Set<PlayerPosition>();
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<TeamPlayer> TeamPlayers => Set<TeamPlayer>();
-    public DbSet<Role> Roles => Set<Role>();
+    public new DbSet<Role> Roles => Set<Role>();
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
-    public DbSet<UserRole> UserRoles => Set<UserRole>();
+    public new DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<PlayerScore> PlayerScores => Set<PlayerScore>();
     public DbSet<PlayerScoreSourceEvent> PlayerScoreSourceEvents => Set<PlayerScoreSourceEvent>();
     public DbSet<CashTransaction> CashTransactions => Set<CashTransaction>();
@@ -37,6 +55,86 @@ public sealed class TenantDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
+        base.OnModelCreating(builder);
+
+        builder.Entity<RefreshToken>(e =>
+        {
+            e.HasKey(r => r.Id);
+            e.HasIndex(r => r.Token).IsUnique();
+            e.Ignore(r => r.IsRevoked);
+            e.HasOne(r => r.User)
+             .WithMany()
+             .HasForeignKey(r => r.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Tenant>(e =>
+        {
+            e.HasKey(t => t.Id);
+            e.HasIndex(t => t.Slug).IsUnique();
+            e.Property(t => t.LogoPath).HasMaxLength(1024);
+            e.Property(t => t.Street).HasMaxLength(160);
+            e.Property(t => t.Number).HasMaxLength(30);
+            e.Property(t => t.Neighborhood).HasMaxLength(120);
+            e.Property(t => t.City).HasMaxLength(100);
+            e.Property(t => t.State).HasMaxLength(100);
+            e.Property(t => t.ZipCode).HasMaxLength(20);
+            e.Property(t => t.PlayersPerTeam).HasDefaultValue(11);
+            e.Property(t => t.AssociationLatitude);
+            e.Property(t => t.AssociationLongitude);
+            e.Property(t => t.CheckinRadiusMeters);
+        });
+
+        builder.Entity<TenantGameDayOption>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.TenantId).IsRequired();
+            e.Property(x => x.DayOfWeek).IsRequired();
+            e.Property(x => x.LocalStartTime).IsRequired();
+            e.Property(x => x.IsActive).IsRequired();
+            e.HasIndex(x => new { x.TenantId, x.DayOfWeek, x.LocalStartTime, x.IsActive }).IsUnique();
+
+            e.HasOne<Tenant>()
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<UserTenant>(e =>
+        {
+            e.HasKey(ut => new { ut.UserId, ut.TenantId });
+            e.HasOne(ut => ut.User).WithMany().HasForeignKey(ut => ut.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(ut => ut.Tenant).WithMany(t => t.UserTenants).HasForeignKey(ut => ut.TenantId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Plan>(e =>
+        {
+            e.HasKey(p => p.Id);
+            e.Property(p => p.Price).HasColumnType("decimal(18,2)");
+        });
+
+        builder.Entity<Subscription>(e =>
+        {
+            e.HasKey(s => s.Id);
+            e.HasOne(s => s.Tenant).WithMany(t => t.Subscriptions).HasForeignKey(s => s.TenantId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(s => s.Plan).WithMany(p => p.Subscriptions).HasForeignKey(s => s.PlanId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<AssociationInvite>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => x.TokenHash).IsUnique();
+            e.HasIndex(x => new { x.TenantId, x.NormalizedEmail });
+            e.Property(x => x.Email).HasMaxLength(320);
+            e.Property(x => x.NormalizedEmail).HasMaxLength(320);
+            e.Property(x => x.TokenHash).HasMaxLength(128);
+
+            e.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         builder.Entity<Player>(e =>
         {
             e.HasKey(p => p.Id);
@@ -363,23 +461,21 @@ public sealed class TenantDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
-        builder.Entity<Player>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
-        builder.Entity<GameDay>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
-        builder.Entity<Match>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
-        builder.Entity<MatchSummary>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
-        builder.Entity<MatchEventType>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
-        builder.Entity<MatchEvent>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
-        builder.Entity<Checkin>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
-        builder.Entity<Position>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
-        builder.Entity<Team>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
-        builder.Entity<Role>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
-        builder.Entity<Permission>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
-        builder.Entity<PlayerScore>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
-        builder.Entity<PlayerScoreSourceEvent>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
-        builder.Entity<CashTransaction>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
-        builder.Entity<PlayerMonthlyFee>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
-        builder.Entity<MonthlyFeePayment>().HasQueryFilter(e => _tenantId == Guid.Empty || e.TenantId == _tenantId);
-
-        base.OnModelCreating(builder);
+        builder.Entity<Player>().HasQueryFilter(e => CurrentTenantId == Guid.Empty || e.TenantId == CurrentTenantId);
+        builder.Entity<GameDay>().HasQueryFilter(e => CurrentTenantId == Guid.Empty || e.TenantId == CurrentTenantId);
+        builder.Entity<Match>().HasQueryFilter(e => CurrentTenantId == Guid.Empty || e.TenantId == CurrentTenantId);
+        builder.Entity<MatchSummary>().HasQueryFilter(e => CurrentTenantId == Guid.Empty || e.TenantId == CurrentTenantId);
+        builder.Entity<MatchEventType>().HasQueryFilter(e => CurrentTenantId == Guid.Empty || e.TenantId == CurrentTenantId);
+        builder.Entity<MatchEvent>().HasQueryFilter(e => CurrentTenantId == Guid.Empty || e.TenantId == CurrentTenantId);
+        builder.Entity<Checkin>().HasQueryFilter(e => CurrentTenantId == Guid.Empty || e.TenantId == CurrentTenantId);
+        builder.Entity<Position>().HasQueryFilter(e => CurrentTenantId == Guid.Empty || e.TenantId == CurrentTenantId);
+        builder.Entity<Team>().HasQueryFilter(e => CurrentTenantId == Guid.Empty || e.TenantId == CurrentTenantId);
+        builder.Entity<Role>().HasQueryFilter(e => CurrentTenantId == Guid.Empty || e.TenantId == CurrentTenantId);
+        builder.Entity<Permission>().HasQueryFilter(e => CurrentTenantId == Guid.Empty || e.TenantId == CurrentTenantId);
+        builder.Entity<PlayerScore>().HasQueryFilter(e => CurrentTenantId == Guid.Empty || e.TenantId == CurrentTenantId);
+        builder.Entity<PlayerScoreSourceEvent>().HasQueryFilter(e => CurrentTenantId == Guid.Empty || e.TenantId == CurrentTenantId);
+        builder.Entity<CashTransaction>().HasQueryFilter(e => CurrentTenantId == Guid.Empty || e.TenantId == CurrentTenantId);
+        builder.Entity<PlayerMonthlyFee>().HasQueryFilter(e => CurrentTenantId == Guid.Empty || e.TenantId == CurrentTenantId);
+        builder.Entity<MonthlyFeePayment>().HasQueryFilter(e => CurrentTenantId == Guid.Empty || e.TenantId == CurrentTenantId);
     }
 }

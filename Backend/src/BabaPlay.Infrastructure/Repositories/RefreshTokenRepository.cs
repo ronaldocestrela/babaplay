@@ -8,9 +8,9 @@ namespace BabaPlay.Infrastructure.Repositories;
 
 public sealed class RefreshTokenRepository : IRefreshTokenRepository
 {
-    private readonly MasterDbContext _context;
+    private readonly AppDbContext _context;
 
-    public RefreshTokenRepository(MasterDbContext context) => _context = context;
+    public RefreshTokenRepository(AppDbContext context) => _context = context;
 
     public async Task AddAsync(string token, string userId, DateTime expiresAt, CancellationToken cancellationToken = default)
     {

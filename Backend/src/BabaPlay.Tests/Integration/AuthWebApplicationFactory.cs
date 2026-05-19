@@ -54,13 +54,13 @@ public sealed class AuthWebApplicationFactory : WebApplicationFactory<Program>
             // SqlServer assembly. We target all three removal vectors.
             var toRemove = services
                 .Where(d =>
-                    d.ServiceType == typeof(DbContextOptions<MasterDbContext>) ||
-                    d.ServiceType == typeof(MasterDbContext) ||
-                    // IDbContextOptionsConfiguration<MasterDbContext>
+                    d.ServiceType == typeof(DbContextOptions<AppDbContext>) ||
+                    d.ServiceType == typeof(AppDbContext) ||
+                    // IDbContextOptionsConfiguration<AppDbContext>
                     (d.ServiceType.IsGenericType &&
                      d.ServiceType.GetGenericTypeDefinition().FullName ==
                          "Microsoft.EntityFrameworkCore.Infrastructure.IDbContextOptionsConfiguration`1" &&
-                     d.ServiceType.GenericTypeArguments.FirstOrDefault() == typeof(MasterDbContext)) ||
+                     d.ServiceType.GenericTypeArguments.FirstOrDefault() == typeof(AppDbContext)) ||
                     // Any service whose concrete type lives in the SqlServer EF assembly
                     (d.ImplementationType?.Assembly.GetName().Name?.Contains("SqlServer", StringComparison.OrdinalIgnoreCase) == true) ||
                     (d.ImplementationInstance?.GetType().Assembly.GetName().Name?.Contains("SqlServer", StringComparison.OrdinalIgnoreCase) == true))
@@ -68,12 +68,12 @@ public sealed class AuthWebApplicationFactory : WebApplicationFactory<Program>
             foreach (var d in toRemove) services.Remove(d);
 
             _connection.Open();
-            services.AddDbContext<MasterDbContext>(options => options.UseSqlite(_connection));
+            services.AddDbContext<AppDbContext>(options => options.UseSqlite(_connection));
 
             // Seed the in-memory DB once, using a temporary scope
             using var sp = services.BuildServiceProvider();
             using var scope = sp.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
             db.Database.EnsureCreated();
@@ -87,7 +87,7 @@ public sealed class AuthWebApplicationFactory : WebApplicationFactory<Program>
         if (disposing) _connection.Dispose();
     }
 
-    private static async Task SeedAsync(MasterDbContext db, UserManager<ApplicationUser> userManager)
+    private static async Task SeedAsync(AppDbContext db, UserManager<ApplicationUser> userManager)
     {
         var createdUser = await userManager.FindByEmailAsync(TestUserEmail);
 

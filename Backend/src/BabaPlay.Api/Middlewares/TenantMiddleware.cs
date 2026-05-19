@@ -64,21 +64,7 @@ public sealed class TenantMiddleware
             return true;
         }
 
-        if (!HttpMethods.IsGet(request.Method))
-            return false;
-
-        var segments = request.Path.Value?
-            .Trim('/')
-            .Split('/', StringSplitOptions.RemoveEmptyEntries);
-
-        if (segments is null || segments.Length != 5)
-            return false;
-
-        return segments[0].Equals("api", StringComparison.OrdinalIgnoreCase)
-            && segments[1].Equals("v1", StringComparison.OrdinalIgnoreCase)
-            && segments[2].Equals("tenant", StringComparison.OrdinalIgnoreCase)
-            && Guid.TryParse(segments[3], out _)
-            && segments[4].Equals("status", StringComparison.OrdinalIgnoreCase);
+        return false;
     }
 }
 

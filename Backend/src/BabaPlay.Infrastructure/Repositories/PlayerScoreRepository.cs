@@ -8,18 +8,18 @@ namespace BabaPlay.Infrastructure.Repositories;
 
 public sealed class PlayerScoreRepository : IPlayerScoreRepository
 {
-    private readonly TenantDbContextFactory _factory;
+    private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
 
-    public PlayerScoreRepository(TenantDbContextFactory factory, ITenantContext tenantContext)
+    public PlayerScoreRepository(AppDbContext db, ITenantContext tenantContext)
     {
-        _factory = factory;
+        _db = db;
         _tenantContext = tenantContext;
     }
 
     public async Task<PlayerScore?> GetByPlayerIdAsync(Guid playerId, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
 
         return await db.PlayerScores
             .AsNoTracking()
@@ -28,7 +28,7 @@ public sealed class PlayerScoreRepository : IPlayerScoreRepository
 
     public async Task<IReadOnlyList<PlayerScore>> GetRankingAsync(RankingPeriod? period, int skip, int take, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
 
         var query = ApplyPeriodFilter(db.PlayerScores.AsNoTracking().Where(ps => ps.IsActive), period)
             .OrderByDescending(ps => ps.ScoreTotal)
@@ -43,7 +43,7 @@ public sealed class PlayerScoreRepository : IPlayerScoreRepository
 
     public async Task<IReadOnlyList<PlayerScore>> GetTopScorersAsync(RankingPeriod? period, int skip, int take, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
 
         var query = ApplyPeriodFilter(db.PlayerScores.AsNoTracking().Where(ps => ps.IsActive), period)
             .OrderByDescending(ps => ps.Goals)
@@ -58,7 +58,7 @@ public sealed class PlayerScoreRepository : IPlayerScoreRepository
 
     public async Task<IReadOnlyList<PlayerScore>> GetAttendanceRankingAsync(RankingPeriod? period, int skip, int take, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
 
         var query = ApplyPeriodFilter(db.PlayerScores.AsNoTracking().Where(ps => ps.IsActive), period)
             .OrderByDescending(ps => ps.AttendanceCount)
@@ -73,7 +73,7 @@ public sealed class PlayerScoreRepository : IPlayerScoreRepository
 
     public async Task<IReadOnlyList<PlayerScore>> GetAllActiveForRebuildAsync(RankingPeriod? period, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
 
         var query = ApplyPeriodFilter(db.PlayerScores.AsNoTracking().Where(ps => ps.IsActive), period)
             .OrderBy(ps => ps.PlayerId);
@@ -83,7 +83,7 @@ public sealed class PlayerScoreRepository : IPlayerScoreRepository
 
     public async Task<bool> HasProcessedSourceEventAsync(Guid sourceEventId, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
 
         return await db.PlayerScoreSourceEvents
             .AsNoTracking()
@@ -92,21 +92,21 @@ public sealed class PlayerScoreRepository : IPlayerScoreRepository
 
     public async Task AddProcessedSourceEventAsync(PlayerScoreSourceEvent sourceEvent, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.PlayerScoreSourceEvents.Add(sourceEvent);
         await db.SaveChangesAsync(ct);
     }
 
     public async Task AddAsync(PlayerScore playerScore, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.PlayerScores.Add(playerScore);
         await db.SaveChangesAsync(ct);
     }
 
     public async Task UpdateAsync(PlayerScore playerScore, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.PlayerScores.Update(playerScore);
         await db.SaveChangesAsync(ct);
     }

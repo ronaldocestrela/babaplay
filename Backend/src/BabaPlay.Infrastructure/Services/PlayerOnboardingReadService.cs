@@ -6,11 +6,11 @@ namespace BabaPlay.Infrastructure.Services;
 
 public sealed class PlayerOnboardingReadService : IPlayerOnboardingReadService
 {
-    private readonly TenantDbContextFactory _tenantDbContextFactory;
+    private readonly AppDbContext _db;
 
-    public PlayerOnboardingReadService(TenantDbContextFactory tenantDbContextFactory)
+    public PlayerOnboardingReadService(AppDbContext db)
     {
-        _tenantDbContextFactory = tenantDbContextFactory;
+        _db = db;
     }
 
     public async Task<bool> HasActivePlayerProfileAsync(Guid tenantId, string userId, CancellationToken ct = default)
@@ -18,10 +18,9 @@ public sealed class PlayerOnboardingReadService : IPlayerOnboardingReadService
         if (!Guid.TryParse(userId, out var userGuid))
             return false;
 
-        await using var db = await _tenantDbContextFactory.CreateAsync(tenantId, ct);
-
-        return await db.Players
+        return await _db.Players
+            .IgnoreQueryFilters()
             .AsNoTracking()
-            .AnyAsync(p => p.UserId == userGuid && p.IsActive, ct);
+            .AnyAsync(p => p.TenantId == tenantId && p.UserId == userGuid && p.IsActive, ct);
     }
 }

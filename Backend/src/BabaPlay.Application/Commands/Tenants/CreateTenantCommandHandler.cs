@@ -5,8 +5,8 @@ using BabaPlay.Application.Interfaces;
 namespace BabaPlay.Application.Commands.Tenants;
 
 /// <summary>
-/// Handles tenant creation: validates slug uniqueness, persists tenant record
-/// with Pending status, and enqueues the database provisioning job.
+/// Handles tenant creation in single-db mode: validates input,
+/// persists tenant metadata, ensures owner membership, and bootstraps RBAC.
 /// </summary>
 public sealed class CreateTenantCommandHandler
     : ICommandHandler<CreateTenantCommand, Result<TenantResponse>>
@@ -129,7 +129,13 @@ public sealed class CreateTenantCommandHandler
             ct);
 
         if (!membershipResult.IsSuccess)
+        {
+            var rollbackResult = await TryRollbackTenantAsync(tenantId, ct);
+            if (!rollbackResult.IsSuccess)
+                return Result<TenantResponse>.Fail(rollbackResult.ErrorCode!, rollbackResult.ErrorMessage!);
+
             return Result<TenantResponse>.Fail(membershipResult.ErrorCode!, membershipResult.ErrorMessage!);
+        }
 
         var ownerRbacResult = await _tenantOwnerRbacBootstrapService.EnsureOwnerAdminAccessAsync(
             ownerResult.Value!,
@@ -137,7 +143,13 @@ public sealed class CreateTenantCommandHandler
             ct);
 
         if (!ownerRbacResult.IsSuccess)
+        {
+            var rollbackResult = await TryRollbackTenantAsync(tenantId, ct);
+            if (!rollbackResult.IsSuccess)
+                return Result<TenantResponse>.Fail(rollbackResult.ErrorCode!, rollbackResult.ErrorMessage!);
+
             return Result<TenantResponse>.Fail(ownerRbacResult.ErrorCode!, ownerRbacResult.ErrorMessage!);
+        }
 
         return Result<TenantResponse>.Ok(new TenantResponse(
             tenantId,
@@ -153,5 +165,16 @@ public sealed class CreateTenantCommandHandler
             cmd.ZipCode.Trim(),
             cmd.AssociationLatitude,
             cmd.AssociationLongitude));
+    }
+
+    private async Task<Result> TryRollbackTenantAsync(Guid tenantId, CancellationToken ct)
+    {
+        var deleted = await _tenantRepository.DeleteAsync(tenantId, ct);
+        if (deleted)
+            return Result.Ok();
+
+        return Result.Fail(
+            "TENANT_CREATE_ROLLBACK_FAILED",
+            $"Failed to rollback tenant '{tenantId}' after bootstrap failure.");
     }
 }

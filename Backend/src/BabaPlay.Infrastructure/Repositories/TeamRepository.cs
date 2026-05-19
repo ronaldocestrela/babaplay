@@ -11,18 +11,18 @@ namespace BabaPlay.Infrastructure.Repositories;
 /// </summary>
 public sealed class TeamRepository : ITeamRepository
 {
-    private readonly TenantDbContextFactory _factory;
+    private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
 
-    public TeamRepository(TenantDbContextFactory factory, ITenantContext tenantContext)
+    public TeamRepository(AppDbContext db, ITenantContext tenantContext)
     {
-        _factory = factory;
+        _db = db;
         _tenantContext = tenantContext;
     }
 
     public async Task<Team?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.Teams
             .Include(t => t.Players)
             .AsNoTracking()
@@ -31,7 +31,7 @@ public sealed class TeamRepository : ITeamRepository
 
     public async Task<IReadOnlyList<Team>> GetAllActiveAsync(CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.Teams
             .Include(t => t.Players)
             .AsNoTracking()
@@ -42,7 +42,7 @@ public sealed class TeamRepository : ITeamRepository
 
     public async Task<bool> ExistsByNormalizedNameAsync(string normalizedName, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.Teams.AnyAsync(t => t.NormalizedName == normalizedName, ct);
     }
 
@@ -51,7 +51,7 @@ public sealed class TeamRepository : ITeamRepository
         if (team.TenantId != _tenantContext.TenantId)
             throw new ValidationException("TenantId", "Team tenant does not match request tenant context.");
 
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.Teams.Add(team);
         await db.SaveChangesAsync(ct);
     }
@@ -61,7 +61,7 @@ public sealed class TeamRepository : ITeamRepository
         if (team.TenantId != _tenantContext.TenantId)
             throw new ValidationException("TenantId", "Team tenant does not match request tenant context.");
 
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
 
         var existing = await db.Teams
             .Include(t => t.Players)

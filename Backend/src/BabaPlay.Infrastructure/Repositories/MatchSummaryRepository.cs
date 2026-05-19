@@ -7,37 +7,37 @@ namespace BabaPlay.Infrastructure.Repositories;
 
 public sealed class MatchSummaryRepository : IMatchSummaryRepository
 {
-    private readonly TenantDbContextFactory _factory;
+    private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
 
-    public MatchSummaryRepository(TenantDbContextFactory factory, ITenantContext tenantContext)
+    public MatchSummaryRepository(AppDbContext db, ITenantContext tenantContext)
     {
-        _factory = factory;
+        _db = db;
         _tenantContext = tenantContext;
     }
 
     public async Task<MatchSummary?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.MatchSummaries.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id && x.IsActive, ct);
     }
 
     public async Task<MatchSummary?> GetByMatchIdAsync(Guid matchId, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.MatchSummaries.AsNoTracking().FirstOrDefaultAsync(x => x.MatchId == matchId && x.IsActive, ct);
     }
 
     public async Task AddAsync(MatchSummary summary, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.MatchSummaries.Add(summary);
         await db.SaveChangesAsync(ct);
     }
 
     public async Task UpdateAsync(MatchSummary summary, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.MatchSummaries.Update(summary);
         await db.SaveChangesAsync(ct);
     }

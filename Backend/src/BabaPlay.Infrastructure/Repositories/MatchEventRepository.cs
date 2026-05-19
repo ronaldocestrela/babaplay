@@ -7,24 +7,24 @@ namespace BabaPlay.Infrastructure.Repositories;
 
 public sealed class MatchEventRepository : IMatchEventRepository
 {
-    private readonly TenantDbContextFactory _factory;
+    private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
 
-    public MatchEventRepository(TenantDbContextFactory factory, ITenantContext tenantContext)
+    public MatchEventRepository(AppDbContext db, ITenantContext tenantContext)
     {
-        _factory = factory;
+        _db = db;
         _tenantContext = tenantContext;
     }
 
     public async Task<MatchEvent?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.MatchEvents.FirstOrDefaultAsync(x => x.Id == id && x.IsActive, ct);
     }
 
     public async Task<IReadOnlyList<MatchEvent>> GetActiveByMatchAsync(Guid matchId, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.MatchEvents
             .AsNoTracking()
             .Where(x => x.IsActive && x.MatchId == matchId)
@@ -35,7 +35,7 @@ public sealed class MatchEventRepository : IMatchEventRepository
 
     public async Task<IReadOnlyList<MatchEvent>> GetActiveByPlayerAsync(Guid playerId, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         return await db.MatchEvents
             .AsNoTracking()
             .Where(x => x.IsActive && x.PlayerId == playerId)
@@ -45,14 +45,14 @@ public sealed class MatchEventRepository : IMatchEventRepository
 
     public async Task AddAsync(MatchEvent matchEvent, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.MatchEvents.Add(matchEvent);
         await db.SaveChangesAsync(ct);
     }
 
     public async Task UpdateAsync(MatchEvent matchEvent, CancellationToken ct = default)
     {
-        await using var db = await _factory.CreateAsync(_tenantContext.TenantId, ct);
+        var db = _db;
         db.MatchEvents.Update(matchEvent);
         await db.SaveChangesAsync(ct);
     }

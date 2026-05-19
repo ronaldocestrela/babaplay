@@ -9,10 +9,10 @@ namespace BabaPlay.Infrastructure.Services;
 
 public sealed class TenantOwnerProvisioningService : ITenantOwnerProvisioningService
 {
-    private readonly MasterDbContext _masterDb;
+    private readonly AppDbContext _masterDb;
     private readonly UserManager<ApplicationUser> _userManager;
 
-    public TenantOwnerProvisioningService(MasterDbContext masterDb, UserManager<ApplicationUser> userManager)
+    public TenantOwnerProvisioningService(AppDbContext masterDb, UserManager<ApplicationUser> userManager)
     {
         _masterDb = masterDb;
         _userManager = userManager;
