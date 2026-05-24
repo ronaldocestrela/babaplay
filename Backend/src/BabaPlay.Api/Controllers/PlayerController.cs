@@ -19,6 +19,7 @@ namespace BabaPlay.Api.Controllers;
 public sealed class PlayerController : ControllerBase
 {
     private readonly ICommandHandler<CreatePlayerCommand, Result<PlayerResponse>> _createHandler;
+    private readonly ICommandHandler<RegisterManualPlayerCommand, Result<PlayerResponse>> _registerManualHandler;
     private readonly IQueryHandler<GetPlayerQuery, Result<PlayerResponse>> _getHandler;
     private readonly IQueryHandler<GetPlayersQuery, Result<IReadOnlyList<PlayerResponse>>> _listHandler;
     private readonly ICommandHandler<UpdatePlayerCommand, Result<PlayerResponse>> _updateHandler;
@@ -27,6 +28,7 @@ public sealed class PlayerController : ControllerBase
 
     public PlayerController(
         ICommandHandler<CreatePlayerCommand, Result<PlayerResponse>> createHandler,
+        ICommandHandler<RegisterManualPlayerCommand, Result<PlayerResponse>> registerManualHandler,
         IQueryHandler<GetPlayerQuery, Result<PlayerResponse>> getHandler,
         IQueryHandler<GetPlayersQuery, Result<IReadOnlyList<PlayerResponse>>> listHandler,
         ICommandHandler<UpdatePlayerCommand, Result<PlayerResponse>> updateHandler,
@@ -34,6 +36,7 @@ public sealed class PlayerController : ControllerBase
         ICommandHandler<DeletePlayerCommand, Result> deleteHandler)
     {
         _createHandler = createHandler;
+        _registerManualHandler = registerManualHandler;
         _getHandler = getHandler;
         _listHandler = listHandler;
         _updateHandler = updateHandler;
@@ -62,6 +65,52 @@ public sealed class PlayerController : ControllerBase
             var statusCode = result.ErrorCode switch
             {
                 "USER_NOT_FOUND" => StatusCodes.Status404NotFound,
+                "PLAYER_ALREADY_EXISTS" => StatusCodes.Status409Conflict,
+                _ => StatusCodes.Status422UnprocessableEntity,
+            };
+
+            return StatusCode(statusCode, new ProblemDetails
+            {
+                Status = statusCode,
+                Title = result.ErrorCode,
+                Detail = result.ErrorMessage,
+            });
+        }
+
+        return CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value);
+    }
+
+    /// <summary>
+    /// Manually creates a player by creating a user account, linking it to this tenant, and creating the player profile.
+    /// Owner-only operation.
+    /// </summary>
+    /// <response code="201">Player created successfully.</response>
+    /// <response code="403">Only tenant owners can perform this action.</response>
+    /// <response code="409">Email already registered or player already exists.</response>
+    /// <response code="422">Validation error on request fields.</response>
+    [HttpPost("manual")]
+    [Authorize(Policy = AuthorizationPolicyNames.TenantOwner)]
+    [ProducesResponseType(typeof(PlayerResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> RegisterManual([FromBody] RegisterManualPlayerRequest request, CancellationToken ct)
+    {
+        var result = await _registerManualHandler.HandleAsync(
+            new RegisterManualPlayerCommand(
+                request.Email,
+                request.Password,
+                request.Name,
+                request.Nickname,
+                request.Phone,
+                request.DateOfBirth),
+            ct);
+
+        if (!result.IsSuccess)
+        {
+            var statusCode = result.ErrorCode switch
+            {
+                "ASSOCIATION_INVITE_EMAIL_ALREADY_REGISTERED" => StatusCodes.Status409Conflict,
                 "PLAYER_ALREADY_EXISTS" => StatusCodes.Status409Conflict,
                 _ => StatusCodes.Status422UnprocessableEntity,
             };
@@ -200,6 +249,15 @@ public sealed class PlayerController : ControllerBase
 /// <summary>Request body for player creation.</summary>
 public sealed record CreatePlayerRequest(
     Guid UserId,
+    string Name,
+    string? Nickname,
+    string? Phone,
+    DateOnly? DateOfBirth);
+
+/// <summary>Request body for manual player registration by tenant owner.</summary>
+public sealed record RegisterManualPlayerRequest(
+    string Email,
+    string Password,
     string Name,
     string? Nickname,
     string? Phone,

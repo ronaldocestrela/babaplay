@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getErrorCode } from '@/core/utils/getErrorCode'
 import { playerService } from '../services/playerService'
 import type {
+  CreateManualPlayerRequest,
   CreatePlayerRequest,
   UpdatePlayerPositionsRequest,
   UpdatePlayerRequest,
@@ -50,6 +51,25 @@ export function useCreatePlayer() {
 
   return {
     createPlayer,
+    isPending,
+    isError,
+    error,
+    errorCode: getErrorCode(error),
+  }
+}
+
+export function useCreateManualPlayer() {
+  const queryClient = useQueryClient()
+
+  const { mutate: createManualPlayer, isPending, error, isError } = useMutation({
+    mutationFn: (payload: CreateManualPlayerRequest) => playerService.createManualPlayer(payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: PLAYERS_QUERY_KEY })
+    },
+  })
+
+  return {
+    createManualPlayer,
     isPending,
     isError,
     error,

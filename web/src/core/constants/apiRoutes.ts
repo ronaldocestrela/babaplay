@@ -20,6 +20,7 @@ export const API_ROUTES = {
   },
   PLAYER: {
     LIST: '/api/v1/player',
+    MANUAL: '/api/v1/player/manual',
     BY_ID: (id: string) => `/api/v1/player/${id}`,
     UPDATE_POSITIONS: (id: string) => `/api/v1/player/${id}/positions`,
   },

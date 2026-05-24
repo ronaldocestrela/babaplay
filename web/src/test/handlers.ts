@@ -796,6 +796,57 @@ export const handlers = [
     )
   }),
 
+  // POST /api/v1/player/manual
+  http.post(`${BASE_URL}/api/v1/player/manual`, async ({ request }) => {
+    const body = (await request.json()) as {
+      email: string
+      password: string
+      name: string
+      nickname?: string | null
+      phone?: string | null
+      dateOfBirth?: string | null
+    }
+
+    if (!body.email || body.email.trim().length === 0) {
+      return HttpResponse.json(
+        { title: 'MANUAL_PLAYER_EMAIL_REQUIRED', detail: 'Email is required', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (!body.email.includes('@')) {
+      return HttpResponse.json(
+        { title: 'MANUAL_PLAYER_EMAIL_INVALID', detail: 'Invalid email', status: 422 },
+        { status: 422 },
+      )
+    }
+
+    if (body.email.toLowerCase() === 'player-test-3@babaplay.com') {
+      return HttpResponse.json(
+        {
+          title: 'ASSOCIATION_INVITE_EMAIL_ALREADY_REGISTERED',
+          detail: 'Email already registered',
+          status: 409,
+        },
+        { status: 409 },
+      )
+    }
+
+    return HttpResponse.json(
+      {
+        id: 'player-manual-new',
+        userId: 'user-manual-new',
+        name: body.name,
+        nickname: body.nickname ?? null,
+        phone: body.phone ?? null,
+        dateOfBirth: body.dateOfBirth ?? null,
+        isActive: true,
+        createdAt: '2026-05-24T13:00:00.000Z',
+      },
+      { status: 201 },
+    )
+  }),
+
   // PUT /api/v1/player/:id
   http.put(`${BASE_URL}/api/v1/player/:id`, async ({ params, request }) => {
     if (params.id === 'player-missing') {

@@ -99,6 +99,7 @@ public static class ServiceRegistration
 
         // Players — Fase 3
         services.AddScoped<ICommandHandler<CreatePlayerCommand, Result<PlayerResponse>>, CreatePlayerCommandHandler>();
+        services.AddScoped<ICommandHandler<RegisterManualPlayerCommand, Result<PlayerResponse>>, RegisterManualPlayerCommandHandler>();
         services.AddScoped<IQueryHandler<GetPlayerQuery, Result<PlayerResponse>>, GetPlayerQueryHandler>();
         services.AddScoped<IQueryHandler<GetPlayersQuery, Result<IReadOnlyList<PlayerResponse>>>, GetPlayersQueryHandler>();
         services.AddScoped<ICommandHandler<UpdatePlayerCommand, Result<PlayerResponse>>, UpdatePlayerCommandHandler>();

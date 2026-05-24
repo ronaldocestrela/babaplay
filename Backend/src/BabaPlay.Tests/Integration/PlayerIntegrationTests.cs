@@ -49,6 +49,26 @@ public sealed class PlayerIntegrationTests : IClassFixture<PlayerWebApplicationF
         return JsonContent.Create(obj);
     }
 
+    private static HttpContent CreateManualPlayerBody(
+        string email = "manual-player@babaplay.com",
+        string password = "Temp1234",
+        string name = "Manual Player",
+        string? nickname = null,
+        string? phone = null,
+        string? dateOfBirth = null)
+    {
+        var obj = new
+        {
+            email,
+            password,
+            name,
+            nickname,
+            phone,
+            dateOfBirth,
+        };
+        return JsonContent.Create(obj);
+    }
+
     private async Task<PlayerResponse> CreateValidPlayerAsync(Guid userId, string name = "Integration Player")
     {
         var response = await _client.PostAsync("/api/v1/player",
@@ -136,6 +156,82 @@ public sealed class PlayerIntegrationTests : IClassFixture<PlayerWebApplicationF
 
         var problem = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
         problem.GetProperty("title").GetString().Should().Be("INVALID_NAME");
+    }
+
+    [Fact]
+    public async Task PostManual_ValidRequest_ShouldReturn201WithPlayerResponse()
+    {
+        var response = await _client.PostAsync(
+            "/api/v1/player/manual",
+            CreateManualPlayerBody(
+                email: "manual-valid@babaplay.com",
+                password: "Temp1234",
+                name: "Manual Valid",
+                nickname: "MV",
+                phone: "11988887777",
+                dateOfBirth: "1994-03-10"));
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var body = await response.Content.ReadFromJsonAsync<PlayerResponse>(JsonOptions);
+        body.Should().NotBeNull();
+        body!.Name.Should().Be("Manual Valid");
+        body.Nickname.Should().Be("MV");
+        body.Phone.Should().Be("11988887777");
+        body.UserId.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task PostManual_NonOwner_ShouldReturn403()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/player/manual")
+        {
+            Content = CreateManualPlayerBody(
+                email: "manual-non-owner@babaplay.com",
+                password: "Temp1234",
+                name: "Manual Non Owner"),
+        };
+
+        request.Headers.Authorization = new("Bearer", "test-token");
+        request.Headers.Add("X-Tenant-Slug", PlayerWebApplicationFactory.TestTenantSlug);
+        request.Headers.Add(TestAuthHandler.UserIdHeader, PlayerWebApplicationFactory.TestUserIds[1].ToString());
+        request.Headers.Add(TestAuthHandler.UserEmailHeader, "player-test-2@babaplay.com");
+
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task PostManual_DuplicateEmail_ShouldReturn409()
+    {
+        var response = await _client.PostAsync(
+            "/api/v1/player/manual",
+            CreateManualPlayerBody(
+                email: "player-test-3@babaplay.com",
+                password: "Temp1234",
+                name: "Manual Duplicate"));
+
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        problem.GetProperty("title").GetString().Should().Be("ASSOCIATION_INVITE_EMAIL_ALREADY_REGISTERED");
+    }
+
+    [Fact]
+    public async Task PostManual_InvalidEmail_ShouldReturn422()
+    {
+        var response = await _client.PostAsync(
+            "/api/v1/player/manual",
+            CreateManualPlayerBody(
+                email: "invalid-email",
+                password: "Temp1234",
+                name: "Manual Invalid"));
+
+        response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        problem.GetProperty("title").GetString().Should().Be("MANUAL_PLAYER_EMAIL_INVALID");
     }
 
     // ── GET /api/v1/player ───────────────────────────────────────────────────

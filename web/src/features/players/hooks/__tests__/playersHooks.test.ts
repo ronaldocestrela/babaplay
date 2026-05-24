@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { createWrapper } from '@/test/utils'
 import {
   useCreatePlayer,
+  useCreateManualPlayer,
   useDeletePlayer,
   usePlayer,
   usePlayers,
@@ -74,6 +75,42 @@ describe('players hooks', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect(result.current.errorCode).toBe('PLAYER_ALREADY_EXISTS')
+  })
+
+  it('deve criar jogador manual com useCreateManualPlayer', async () => {
+    const { result } = renderHook(() => useCreateManualPlayer(), { wrapper: createWrapper() })
+
+    act(() => {
+      result.current.createManualPlayer({
+        email: 'manual-hook@club.com',
+        password: 'Temp1234',
+        name: 'Manual Hook',
+        nickname: 'MH',
+        phone: '11999998888',
+        dateOfBirth: '1994-02-20',
+      })
+    })
+
+    await waitFor(() => expect(result.current.isPending).toBe(false))
+    expect(result.current.isError).toBe(false)
+  })
+
+  it('deve expor erro de e-mail em cadastro manual', async () => {
+    const { result } = renderHook(() => useCreateManualPlayer(), { wrapper: createWrapper() })
+
+    act(() => {
+      result.current.createManualPlayer({
+        email: 'invalid-email',
+        password: 'Temp1234',
+        name: 'Manual Hook Invalid',
+        nickname: null,
+        phone: null,
+        dateOfBirth: null,
+      })
+    })
+
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    expect(result.current.errorCode).toBe('MANUAL_PLAYER_EMAIL_INVALID')
   })
 
   it('deve atualizar jogador com useUpdatePlayer', async () => {

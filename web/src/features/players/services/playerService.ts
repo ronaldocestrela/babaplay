@@ -2,6 +2,7 @@ import { apiClient } from '@/core/api/client'
 import { API_ROUTES } from '@/core/constants/apiRoutes'
 import type {
   CreatePlayerRequest,
+  CreateManualPlayerRequest,
   Player,
   PlayerPositionsResponse,
   Position,
@@ -18,6 +19,9 @@ export const playerService = {
 
   createPlayer: (payload: CreatePlayerRequest): Promise<Player> =>
     apiClient.post<Player>(API_ROUTES.PLAYER.LIST, payload).then((res) => res.data),
+
+  createManualPlayer: (payload: CreateManualPlayerRequest): Promise<Player> =>
+    apiClient.post<Player>(API_ROUTES.PLAYER.MANUAL, payload).then((res) => res.data),
 
   updatePlayer: (id: string, payload: UpdatePlayerRequest): Promise<Player> =>
     apiClient.put<Player>(API_ROUTES.PLAYER.BY_ID(id), payload).then((res) => res.data),

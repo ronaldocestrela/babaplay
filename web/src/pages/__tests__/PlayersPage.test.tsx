@@ -10,6 +10,7 @@ vi.mock('@/features/players/hooks', () => ({
   usePlayers: vi.fn(),
   usePositions: vi.fn(),
   useCreatePlayer: vi.fn(),
+  useCreateManualPlayer: vi.fn(),
   useUpdatePlayer: vi.fn(),
   useDeletePlayer: vi.fn(),
   useUpdatePlayerPositions: vi.fn(),
@@ -23,6 +24,7 @@ vi.mock('@/features/tenant-invitations/services/invitationService', () => ({
 
 import {
   useCreatePlayer,
+  useCreateManualPlayer,
   useDeletePlayer,
   usePlayers,
   usePositions,
@@ -31,6 +33,7 @@ import {
 } from '@/features/players/hooks'
 
 const createPlayer = vi.fn()
+const createManualPlayer = vi.fn()
 const updatePlayer = vi.fn()
 const deletePlayer = vi.fn()
 const updatePlayerPositions = vi.fn()
@@ -84,6 +87,14 @@ describe('PlayersPage', () => {
 
     vi.mocked(useCreatePlayer).mockReturnValue({
       createPlayer,
+      isPending: false,
+      isError: false,
+      error: null,
+      errorCode: null,
+    })
+
+    vi.mocked(useCreateManualPlayer).mockReturnValue({
+      createManualPlayer,
       isPending: false,
       isError: false,
       error: null,
@@ -194,6 +205,85 @@ describe('PlayersPage', () => {
       expect(invitationService.send).toHaveBeenCalled()
       expect(vi.mocked(invitationService.send).mock.calls[0]?.[0]).toBe('invitee@club.com')
     })
+  })
+
+  it('deve abrir modal de cadastro manual e enviar payload', async () => {
+    vi.mocked(usePlayers).mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as unknown as ReturnType<typeof usePlayers>)
+
+    renderPlayersPage()
+
+    createManualPlayer.mockImplementation((_, options) => {
+      options?.onSuccess?.({
+        id: 'player-manual-created',
+        userId: 'user-manual-created',
+        name: 'Manual Player',
+        nickname: 'MP',
+        phone: '11999998888',
+        dateOfBirth: '1995-05-20',
+        positionIds: [],
+        isActive: true,
+        createdAt: '2026-05-24T10:00:00.000Z',
+      })
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: /cadastro manual/i }))
+    expect(screen.getByRole('heading', { name: /cadastro manual de jogador/i })).toBeInTheDocument()
+
+    await userEvent.type(screen.getByLabelText(/^e-mail$/i), 'manual@club.com')
+    await userEvent.type(screen.getByLabelText(/senha temporária/i), 'Temp1234')
+    await userEvent.type(screen.getByLabelText(/^nome$/i), 'Manual Player')
+    await userEvent.type(screen.getByLabelText(/^apelido$/i), 'MP')
+    await userEvent.type(screen.getByLabelText(/^telefone$/i), '11999998888')
+    const positionCheckbox = screen.getByLabelText(/GK\s*-\s*Goleiro/i)
+    await userEvent.click(positionCheckbox)
+    expect(positionCheckbox).toBeChecked()
+
+    await userEvent.click(screen.getByRole('button', { name: /cadastrar jogador/i }))
+
+    await waitFor(() => {
+      expect(createManualPlayer).toHaveBeenCalledTimes(1)
+      expect(createManualPlayer).toHaveBeenCalledWith(
+        {
+          email: 'manual@club.com',
+          password: 'Temp1234',
+          name: 'Manual Player',
+          nickname: 'MP',
+          phone: '11999998888',
+          dateOfBirth: null,
+        },
+        expect.any(Object),
+      )
+
+      expect(updatePlayerPositions).toHaveBeenCalledWith(
+        {
+          id: 'player-manual-created',
+          payload: { positionIds: ['11111111-1111-1111-1111-111111111111'] },
+        },
+        expect.any(Object),
+      )
+    })
+  })
+
+  it('deve desabilitar envio no cadastro manual com email inválido', async () => {
+    vi.mocked(usePlayers).mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as unknown as ReturnType<typeof usePlayers>)
+
+    renderPlayersPage()
+
+    await userEvent.click(screen.getByRole('button', { name: /cadastro manual/i }))
+    await userEvent.type(screen.getByLabelText(/^e-mail$/i), 'invalid-email')
+
+    expect(screen.getByText(/informe um e-mail válido/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /cadastrar jogador/i })).toBeDisabled()
   })
 
   it('deve abrir edição e permitir exclusão', async () => {

@@ -6,12 +6,17 @@ import { getErrorCode } from '@/core/utils/getErrorCode'
 import { ERROR_CODES } from '@/core/constants/errorCodes'
 import {
   useCreatePlayer,
+  useCreateManualPlayer,
   useDeletePlayer,
   usePlayers,
   usePositions,
   useUpdatePlayer,
   useUpdatePlayerPositions,
 } from '@/features/players/hooks'
+import {
+  manualPlayerFormSchema,
+  type ManualPlayerFormValues,
+} from '@/features/players/schemas/manualPlayerFormSchema'
 import { playerFormSchema, type PlayerFormValues } from '@/features/players/schemas/playerFormSchema'
 import { usePlayerStore } from '@/features/players/store/playerStore'
 import { invitationService } from '@/features/tenant-invitations/services/invitationService'
@@ -26,6 +31,10 @@ const ERROR_MESSAGES: Record<string, string> = {
   [ERROR_CODES.DUPLICATE_POSITIONS]: 'Posições duplicadas não são permitidas.',
   [ERROR_CODES.INVALID_POSITION_ID]: 'Uma ou mais posições são inválidas.',
   [ERROR_CODES.FORBIDDEN]: 'Somente administradores podem enviar convites.',
+  [ERROR_CODES.MANUAL_PLAYER_EMAIL_REQUIRED]: 'E-mail é obrigatório.',
+  [ERROR_CODES.MANUAL_PLAYER_EMAIL_INVALID]: 'Informe um e-mail válido.',
+  [ERROR_CODES.MANUAL_PLAYER_PASSWORD_REQUIRED]: 'Senha temporária é obrigatória.',
+  [ERROR_CODES.ASSOCIATION_INVITE_EMAIL_ALREADY_REGISTERED]: 'Este e-mail já possui cadastro.',
 }
 
 function toNullable(value: string | undefined): string | null {
@@ -38,6 +47,7 @@ export function PlayersPage() {
   const { data: players = [], isLoading, isError, error } = usePlayers()
   const { data: positions = [] } = usePositions()
   const create = useCreatePlayer()
+  const createManual = useCreateManualPlayer()
   const update = useUpdatePlayer()
   const remove = useDeletePlayer()
   const updatePositions = useUpdatePlayerPositions()
@@ -57,6 +67,7 @@ export function PlayersPage() {
   })
 
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteSuccessMessage, setInviteSuccessMessage] = useState<string | null>(null)
 
@@ -82,13 +93,33 @@ export function PlayersPage() {
 
   const {
     register,
-    handleSubmit,
+    handleSubmit: handlePlayerSubmit,
     reset,
     formState: { errors },
   } = useForm<PlayerFormValues>({
     resolver: zodResolver(playerFormSchema),
     defaultValues: {
       userId: '',
+      name: '',
+      nickname: '',
+      phone: '',
+      dateOfBirth: '',
+      positionIds: [],
+    },
+  })
+
+  const {
+    register: registerManual,
+    handleSubmit: handleManualSubmit,
+    reset: resetManual,
+    watch: watchManual,
+    formState: { errors: manualErrors },
+  } = useForm<ManualPlayerFormValues>({
+    resolver: zodResolver(manualPlayerFormSchema),
+    mode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: '',
       name: '',
       nickname: '',
       phone: '',
@@ -137,12 +168,18 @@ export function PlayersPage() {
   const isSubmitting = create.isPending || update.isPending || updatePositions.isPending
   const isDeleting = remove.isPending
   const isSendingInvite = sendInvite.isPending
+  const isSubmittingManual = createManual.isPending
+  const manualErrorCode = createManual.errorCode
 
   const apiErrorCode = getErrorCode(error)
   const inviteErrorCode = getErrorCode(sendInvite.error)
+  const manualEmailValue = watchManual('email') ?? ''
+  const manualPositionIds = watchManual('positionIds') ?? []
 
   const isInviteEmailInvalid =
     inviteEmail.trim().length > 0 && !inviteEmail.includes('@')
+  const isManualEmailInvalid =
+    manualEmailValue.trim().length > 0 && !manualEmailValue.includes('@')
 
   const handleOpenInviteModal = () => {
     setInviteSuccessMessage(null)
@@ -153,6 +190,24 @@ export function PlayersPage() {
   const handleCloseInviteModal = () => {
     if (isSendingInvite) return
     setIsInviteModalOpen(false)
+  }
+
+  const handleOpenManualModal = () => {
+    resetManual({
+      email: '',
+      password: '',
+      name: '',
+      nickname: '',
+      phone: '',
+      dateOfBirth: '',
+      positionIds: [],
+    })
+    setIsManualModalOpen(true)
+  }
+
+  const handleCloseManualModal = () => {
+    if (isSubmittingManual) return
+    setIsManualModalOpen(false)
   }
 
   const handleSendInvite = () => {
@@ -236,6 +291,38 @@ export function PlayersPage() {
     )
   }
 
+  const onSubmitManual = (values: ManualPlayerFormValues) => {
+    if (!values.positionIds || values.positionIds.length === 0) {
+      return
+    }
+
+    createManual.createManualPlayer(
+      {
+        email: values.email.trim(),
+        password: values.password,
+        name: values.name,
+        nickname: toNullable(values.nickname),
+        phone: toNullable(values.phone),
+        dateOfBirth: toNullable(values.dateOfBirth),
+      },
+      {
+        onSuccess: (created) => {
+          updatePositions.updatePlayerPositions(
+            {
+              id: created.id,
+                payload: { positionIds: values.positionIds },
+            },
+            {
+              onSuccess: () => {
+                handleCloseManualModal()
+              },
+            },
+          )
+        },
+      },
+    )
+  }
+
   const handleDelete = (playerId: string) => {
     if (isDeleting) {
       return
@@ -277,14 +364,25 @@ export function PlayersPage() {
           <p className="text-sm text-on-surface-variant">Gestão de cadastro e posições</p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenInviteModal}
-          disabled={isSubmitting || isDeleting || isSendingInvite}
-          className="h-10 px-4 rounded-lg border border-primary bg-primary text-white text-sm"
-        >
-          Enviar convite por e-mail
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleOpenManualModal}
+            disabled={isSubmitting || isDeleting || isSubmittingManual}
+            className="h-10 px-4 rounded-lg border border-outline-variant text-sm text-on-surface"
+          >
+            Cadastro manual
+          </button>
+
+          <button
+            type="button"
+            onClick={handleOpenInviteModal}
+            disabled={isSubmitting || isDeleting || isSendingInvite}
+            className="h-10 px-4 rounded-lg border border-primary bg-primary text-white text-sm"
+          >
+            Enviar convite por e-mail
+          </button>
+        </div>
       </header>
 
       {inviteErrorCode ? (
@@ -389,7 +487,7 @@ export function PlayersPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4" noValidate>
+            <form onSubmit={handlePlayerSubmit(onSubmit)} className="p-6 space-y-4" noValidate>
               {modalMode === 'create' ? (
                 <div className="space-y-1">
                   <label htmlFor="userId" className="text-sm text-on-surface">
@@ -588,6 +686,179 @@ export function PlayersPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isManualModalOpen ? (
+        <div className="fixed inset-0 bg-black/40 p-4 flex items-center justify-center z-50">
+          <div className="w-full max-w-md bg-white rounded-xl shadow-xl border border-outline-variant">
+            <div className="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-on-surface">Cadastro manual de jogador</h2>
+              <button
+                type="button"
+                onClick={handleCloseManualModal}
+                disabled={isSubmittingManual}
+                className="text-on-surface-variant hover:text-on-surface"
+              >
+                Fechar
+              </button>
+            </div>
+
+            <form onSubmit={handleManualSubmit(onSubmitManual)} className="p-6 space-y-4" noValidate>
+              <div className="space-y-1">
+                <label htmlFor="manual-email" className="text-sm text-on-surface">
+                  E-mail
+                </label>
+                <input
+                  id="manual-email"
+                  type="email"
+                  {...registerManual('email')}
+                  className="w-full h-10 px-3 rounded-lg border border-outline-variant bg-surface"
+                />
+                {isManualEmailInvalid ? (
+                  <p role="alert" className="text-xs text-error">
+                    Informe um e-mail válido.
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="manual-password" className="text-sm text-on-surface">
+                  Senha temporária
+                </label>
+                <input
+                  id="manual-password"
+                  type="password"
+                  {...registerManual('password')}
+                  className="w-full h-10 px-3 rounded-lg border border-outline-variant bg-surface"
+                />
+                {manualErrors.password ? (
+                  <p role="alert" className="text-xs text-error">
+                    {manualErrors.password.message}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="manual-name" className="text-sm text-on-surface">
+                  Nome
+                </label>
+                <input
+                  id="manual-name"
+                  type="text"
+                  {...registerManual('name')}
+                  className="w-full h-10 px-3 rounded-lg border border-outline-variant bg-surface"
+                />
+                {manualErrors.name ? (
+                  <p role="alert" className="text-xs text-error">
+                    {manualErrors.name.message}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label htmlFor="manual-nickname" className="text-sm text-on-surface">
+                    Apelido
+                  </label>
+                  <input
+                    id="manual-nickname"
+                    type="text"
+                    {...registerManual('nickname')}
+                    className="w-full h-10 px-3 rounded-lg border border-outline-variant bg-surface"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label htmlFor="manual-phone" className="text-sm text-on-surface">
+                    Telefone
+                  </label>
+                  <input
+                    id="manual-phone"
+                    type="text"
+                    {...registerManual('phone')}
+                    className="w-full h-10 px-3 rounded-lg border border-outline-variant bg-surface"
+                  />
+                </div>
+
+                <div className="space-y-1 md:col-span-2">
+                  <label htmlFor="manual-date-of-birth" className="text-sm text-on-surface">
+                    Data de nascimento
+                  </label>
+                  <input
+                    id="manual-date-of-birth"
+                    type="date"
+                    {...registerManual('dateOfBirth')}
+                    className="w-full h-10 px-3 rounded-lg border border-outline-variant bg-surface"
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <p className="text-sm text-on-surface">Posições (máximo 3)</p>
+                  {positions.length === 0 ? (
+                    <p className="text-xs text-on-surface-variant">
+                      Nenhuma posição ativa cadastrada no momento.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {positions.map((position) => (
+                        <label
+                          key={position.id}
+                          className="flex items-center gap-2 text-sm text-on-surface-variant"
+                        >
+                          <input
+                            type="checkbox"
+                            value={position.id}
+                            {...registerManual('positionIds')}
+                          />
+                          {position.code} - {position.name}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                      {manualPositionIds.length === 0 ? (
+                        <p role="alert" className="text-xs text-error">
+                          Selecione ao menos uma posição.
+                        </p>
+                      ) : null}
+                  {manualErrors.positionIds ? (
+                    <p role="alert" className="text-xs text-error">
+                      {manualErrors.positionIds.message}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+
+              {manualErrorCode ? (
+                <p role="alert" className="text-sm text-error" aria-live="polite">
+                  {ERROR_MESSAGES[manualErrorCode] ?? 'Não foi possível cadastrar jogador manualmente.'}
+                </p>
+              ) : null}
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={handleCloseManualModal}
+                  disabled={isSubmittingManual}
+                  className="h-10 px-4 rounded-lg border border-outline-variant"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={
+                    isSubmittingManual ||
+                    !manualEmailValue.trim() ||
+                    isManualEmailInvalid ||
+                    manualPositionIds.length === 0
+                  }
+                  className="h-10 px-4 rounded-lg border border-primary bg-primary text-white"
+                >
+                  {isSubmittingManual ? 'Cadastrando...' : 'Cadastrar jogador'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       ) : null}

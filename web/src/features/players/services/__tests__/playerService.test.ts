@@ -60,4 +60,18 @@ describe('playerService', () => {
     expect(response.playerId).toBe('player-1')
     expect(response.positionIds).toHaveLength(2)
   })
+
+  it('deve cadastrar jogador manualmente', async () => {
+    const created = await playerService.createManualPlayer({
+      email: 'manual-service@club.com',
+      password: 'Temp1234',
+      name: 'Manual Service',
+      nickname: 'MS',
+      phone: '11988887777',
+      dateOfBirth: '1992-07-11',
+    })
+
+    expect(created.id).toBeDefined()
+    expect(created.name).toBe('Manual Service')
+  })
 })

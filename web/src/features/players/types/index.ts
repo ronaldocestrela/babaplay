@@ -34,6 +34,15 @@ export interface CreatePlayerRequest {
   dateOfBirth?: string | null
 }
 
+export interface CreateManualPlayerRequest {
+  email: string
+  password: string
+  name: string
+  nickname?: string | null
+  phone?: string | null
+  dateOfBirth?: string | null
+}
+
 export interface UpdatePlayerRequest {
   name: string
   nickname?: string | null
