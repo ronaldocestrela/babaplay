@@ -1,0 +1,9 @@
+{
+  "appName": "BabaPlay",
+  "loginTitle": "Entrar",
+  "email": "Email",
+  "password": "Senha",
+  "signIn": "Entrar",
+  "loginSuccess": "Login realizado com sucesso.",
+  "sessionActive": "Sessao ativa."
+}
