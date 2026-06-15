@@ -5,6 +5,8 @@ export const API_ROUTES = {
     REFRESH_TOKEN: '/api/v1/auth/refresh-token',
     LOGOUT: '/api/v1/auth/logout',
     ME: '/api/v1/auth/me',
+    FORGOT_PASSWORD: '/api/v1/auth/forgot-password',
+    RESET_PASSWORD: '/api/v1/auth/reset-password',
   },
   TENANT: {
     CREATE: '/api/v1/tenant',

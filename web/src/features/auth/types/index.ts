@@ -67,3 +67,15 @@ export interface CreateTenantRequest {
   adminEmail: string
   adminPassword: string
 }
+
+export interface ForgotPasswordRequest {
+  email: string
+  resetLinkBaseUrl?: string
+}
+
+export interface ResetPasswordRequest {
+  email: string
+  token: string
+  password: string
+}
+

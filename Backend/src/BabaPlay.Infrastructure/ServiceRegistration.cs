@@ -199,6 +199,7 @@ public static class ServiceRegistration
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IApiReadinessProbe, MasterDatabaseReadinessProbe>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IPasswordResetService, PasswordResetService>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IPlayerOnboardingReadService, PlayerOnboardingReadService>();
         services.AddScoped<IUserInvitationAccountService, UserInvitationAccountService>();

@@ -17,17 +17,23 @@ public sealed class AuthController : ControllerBase
     private readonly ICommandHandler<RefreshTokenCommand, Result<AuthResponse>> _refreshTokenHandler;
     private readonly IUserRepository _userRepository;
     private readonly IUserTenantRepository _userTenantRepository;
+    private readonly ICommandHandler<ForgotPasswordCommand, Result> _forgotPasswordHandler;
+    private readonly ICommandHandler<ResetPasswordCommand, Result> _resetPasswordHandler;
 
     public AuthController(
         ICommandHandler<LoginCommand, Result<AuthResponse>> loginHandler,
         ICommandHandler<RefreshTokenCommand, Result<AuthResponse>> refreshTokenHandler,
         IUserRepository userRepository,
-        IUserTenantRepository userTenantRepository)
+        IUserTenantRepository userTenantRepository,
+        ICommandHandler<ForgotPasswordCommand, Result> forgotPasswordHandler,
+        ICommandHandler<ResetPasswordCommand, Result> resetPasswordHandler)
     {
         _loginHandler = loginHandler;
         _refreshTokenHandler = refreshTokenHandler;
         _userRepository = userRepository;
         _userTenantRepository = userTenantRepository;
+        _forgotPasswordHandler = forgotPasswordHandler;
+        _resetPasswordHandler = resetPasswordHandler;
     }
 
     /// <summary>
@@ -124,7 +130,57 @@ public sealed class AuthController : ControllerBase
             memberships.FirstOrDefault(),
             memberships));
     }
+
+    /// <summary>
+    /// Generates a password reset token and queues a recovery email.
+    /// </summary>
+    [HttpPost("forgot-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _forgotPasswordHandler.HandleAsync(
+            new ForgotPasswordCommand(request.Email, request.ResetLinkBaseUrl), cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = result.ErrorCode,
+                Detail = result.ErrorMessage
+            });
+        }
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Verifies the password reset token and updates the user's password.
+    /// </summary>
+    [HttpPost("reset-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _resetPasswordHandler.HandleAsync(
+            new ResetPasswordCommand(request.Email, request.Token, request.Password), cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = result.ErrorCode,
+                Detail = result.ErrorMessage
+            });
+        }
+
+        return Ok();
+    }
 }
 
 public record LoginRequest(string Email, string Password);
 public record RefreshTokenRequest(string RefreshToken);
+public record ForgotPasswordRequest(string Email, string ResetLinkBaseUrl);
+public record ResetPasswordRequest(string Email, string Token, string Password);

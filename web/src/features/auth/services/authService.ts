@@ -1,6 +1,6 @@
 import { apiClient } from '@/core/api/client'
 import { API_ROUTES } from '@/core/constants/apiRoutes'
-import type { LoginRequest, AuthResponse, UserProfile } from '../types'
+import type { LoginRequest, AuthResponse, UserProfile, ForgotPasswordRequest, ResetPasswordRequest } from '../types'
 
 export const authService = {
   login: (data: LoginRequest): Promise<AuthResponse> =>
@@ -22,4 +22,14 @@ export const authService = {
     apiClient
       .get<UserProfile>(API_ROUTES.AUTH.ME)
       .then((res) => res.data),
+
+  forgotPassword: (data: ForgotPasswordRequest): Promise<void> =>
+    apiClient
+      .post(API_ROUTES.AUTH.FORGOT_PASSWORD, data)
+      .then(() => undefined),
+
+  resetPassword: (data: ResetPasswordRequest): Promise<void> =>
+    apiClient
+      .post(API_ROUTES.AUTH.RESET_PASSWORD, data)
+      .then(() => undefined),
 }

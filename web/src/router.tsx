@@ -20,6 +20,8 @@ import { RegisterAssociationPage } from '@/pages/RegisterAssociationPage'
 import { AcceptAssociationInvitePage } from '@/pages/AcceptAssociationInvitePage'
 import { CompletePlayerProfilePage } from '@/pages/CompletePlayerProfilePage'
 import { SelectTenantPage } from '@/pages/SelectTenantPage'
+import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage'
+import { ResetPasswordPage } from '@/pages/ResetPasswordPage'
 
 // ── Root ─────────────────────────────────────────────────────────────────────
 const rootRoute = createRootRoute({
@@ -54,6 +56,28 @@ const acceptAssociationInviteRoute = createRoute({
   getParentRoute: () => publicRoute,
   path: '/invite/accept',
   component: AcceptAssociationInvitePage,
+})
+
+const forgotPasswordRoute = createRoute({
+  getParentRoute: () => publicRoute,
+  path: '/forgot-password',
+  beforeLoad: () => {
+    if (useAuthStore.getState().isAuthenticated) {
+      throw redirect({ to: '/' })
+    }
+  },
+  component: ForgotPasswordPage,
+})
+
+const resetPasswordRoute = createRoute({
+  getParentRoute: () => publicRoute,
+  path: '/reset-password',
+  beforeLoad: () => {
+    if (useAuthStore.getState().isAuthenticated) {
+      throw redirect({ to: '/' })
+    }
+  },
+  component: ResetPasswordPage,
 })
 
 // ── Protected routes ──────────────────────────────────────────────────────────
@@ -148,6 +172,8 @@ const routeTree = rootRoute.addChildren([
     loginRoute,
     registerAssociationRoute,
     acceptAssociationInviteRoute,
+    forgotPasswordRoute,
+    resetPasswordRoute,
   ]),
   protectedRoute.addChildren([
     selectTenantRoute,

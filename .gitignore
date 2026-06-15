@@ -5,3 +5,4 @@ storage/
 deploy/docker/.env.manual
 *.lscache
 appsettings.Development.json
+.env

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Link } from '@tanstack/react-router'
 import { loginSchema, type LoginFormValues } from '../schemas/loginSchema'
 import { ERROR_CODES } from '@/core/constants/errorCodes'
 
@@ -12,7 +13,7 @@ interface LoginFormProps {
 
 const ERROR_MESSAGES: Record<string, string> = {
   [ERROR_CODES.INVALID_CREDENTIALS]: 'Email ou senha inválidos.',
-  [ERROR_CODES.USER_INACTIVE]: 'Usuário inativo. Entre em contato com o administrador.',
+  [ERROR_CODES.USER_INACTIVE]: 'Usuário inativo. Entre com contato com o administrador.',
 }
 
 export function LoginForm({ onSubmit, isLoading, errorCode }: LoginFormProps) {
@@ -61,12 +62,12 @@ export function LoginForm({ onSubmit, isLoading, errorCode }: LoginFormProps) {
             <span className="material-symbols-outlined text-[18px]">lock</span>
             Senha
           </label>
-          <a
-            href="#"
+          <Link
+            to="/forgot-password"
             className="text-xs font-semibold text-primary hover:text-on-primary-container transition-colors"
           >
             Esqueceu a senha?
-          </a>
+          </Link>
         </div>
         <div className="relative">
           <input
