@@ -152,7 +152,7 @@ export function CompletePlayerProfilePage() {
           {positions.length === 0 ? (
             <p className="text-xs text-gray-600">Nenhuma posição ativa cadastrada no momento.</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-2">
               {positions.map((position) => {
                 const checked = positionIds.includes(position.id)
 
