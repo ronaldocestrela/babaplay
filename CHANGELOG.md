@@ -8,7 +8,22 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F13 (Algoritmo e Tela de Sorteio de Times - Coletes)
+
+- **[F13] Algoritmo e Tela de Sorteio de Times (Coletes)**:
+  - `Pages/Teams/TeamDraw.razor`: Tela interativa de sorteio e divisão de coletes (`/teams/draw` e `/matches/{gameDayId}/draw`) com controle de número de equipes (2, 3 ou 4 times) e suporte a ajuste manual.
+  - `Components/Teams/TeamColumn.razor`: Coluna visual do time exibindo total de atletas, cor do coleira e média de estrelas/rating calculada em tempo real ao mover atletas.
+  - `Components/Teams/PlayerBadge.razor`: Card visual de jogador sorteado exibindo foto, nome, posição, rating (estrelas ⭐) e botões de ação para movimentação entre colunas.
+  - `Services/Http/ITeamApiService.cs` & `TeamApiService.cs`: Serviço HTTP consumindo os endpoints REST de `api/v1/team`.
+- **Backend CQRS Command & Controller**:
+  - `GenerateBalancedTeamsCommand.cs` & `GenerateBalancedTeamsCommandHandler.cs`: Algoritmo de sorteio que distribui primeiramente os goleiros e aplica *snake draft* baseado em estrelas/posições para equalizar a força dos times.
+  - `TeamController.cs`: Novo endpoint `POST /api/v1/team/draw` para disparo do sorteio.
+- **Suíte de Testes TDD (bUnit & xUnit)**:
+  - `PlayerBadgeTests.cs`, `TeamColumnTests.cs`, `TeamDrawPageTests.cs`, `GenerateBalancedTeamsCommandHandlerTests.cs`.
+  - Total da suíte do projeto: **593/593 testes passando (100% de sucesso)**.
+
 ### Added — Blazor (.NET 10) Frontend: Fase F12 (Sistema de RSVP / Check-in de Presença)
+
 
 - **[F12] Sistema de RSVP / Check-in de Presença**:
   - `Pages/Matches/MatchCheckin.razor`: Tela de confirmação de presença e check-in presencial (`/rsvp` e `/matches/{gameDayId}/rsvp`).

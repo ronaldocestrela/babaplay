@@ -1,0 +1,47 @@
+@namespace BabaPlay.Web.Components.Teams
+@using BabaPlay.Web.Models
+
+<div class="team-column card card-custom h-100 p-3 shadow-sm" data-testid="team-column-@Team.TeamId">
+    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <div>
+            <h3 class="h6 font-weight-bold mb-0 text-dark" data-testid="team-name">
+                @Team.Name
+            </h3>
+            <div class="text-muted small" data-testid="team-count">
+                @Team.Players.Count atletas escalados
+            </div>
+        </div>
+        <div class="text-end">
+            <span class="badge @Team.BadgeClass mb-1">
+                ⭐ @Team.AverageRating.ToString("F1")
+            </span>
+        </div>
+    </div>
+
+    <div class="players-list flex-grow-1 overflow-auto pe-1">
+        @if (Team.Players.Count == 0)
+        {
+            <div class="text-center py-4 text-muted small" data-testid="empty-team">
+                Nenhum jogador neste time.
+            </div>
+        }
+        else
+        {
+            @foreach (var player in Team.Players)
+            {
+                <PlayerBadge Player="player"
+                             CanMoveLeft="CanMoveLeft"
+                             CanMoveRight="CanMoveRight"
+                             OnMoveLeft="() => OnMovePlayer.InvokeAsync((player, -1))"
+                             OnMoveRight="() => OnMovePlayer.InvokeAsync((player, 1))" />
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public DrawnTeamDto Team { get; set; } = null!;
+    [Parameter] public bool CanMoveLeft { get; set; }
+    [Parameter] public bool CanMoveRight { get; set; }
+    [Parameter] public EventCallback<(DrawnPlayerDto Player, int Direction)> OnMovePlayer { get; set; }
+}

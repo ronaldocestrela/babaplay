@@ -228,17 +228,16 @@ flowchart TD
 * **Testes bUnit:** `RsvpStatusWidgetTests.cs`, `CheckinListWidgetTests.cs`, `MatchCheckinPageTests.cs`.
 
 
-#### **[F13] Algoritmo e Tela de Sorteio de Times (Coletes)**
+#### **[F13] Algoritmo e Tela de Sorteio de Times (Coletes)** ✅ CONCLUÍDO
 * **Objetivo:** Interface interativa para acionar o algoritmo de balanceamento de times (com base no rating dos jogadores confirmados) e permitir ajustes manuais (drag-and-drop ou botões de troca).
 * **Componentes / Páginas:** 
   * `Pages/Teams/TeamDraw.razor`
   * `Components/Teams/TeamColumn.razor`
   * `Components/Teams/PlayerBadge.razor`
-* **Services & DTOs:** `ITeamApiService`, `GenerateBalancedTeamsDto`, `DrawResultDto`
-* **Endpoints API Consumidos:** `POST /api/v1/matches/{id}/draw-teams` (`GenerateBalancedTeamsCommand`)
-* **Testes bUnit:**
-  * Testar o disparo do comando de geração de times.
-  * Testar a movimentação de um jogador do Time Amarelo para o Time Azul e recalculo da média de estrelas da equipe.
+* **Services & DTOs:** `ITeamApiService`, `TeamApiService`, `GenerateBalancedTeamsDto`, `DrawResultDto`, `DrawnTeamDto`, `DrawnPlayerDto`
+* **Endpoints API Consumidos:** `POST /api/v1/team/draw` (`GenerateBalancedTeamsCommand`), `GET /api/v1/team`
+* **Testes bUnit/xUnit:** `PlayerBadgeTests.cs`, `TeamColumnTests.cs`, `TeamDrawPageTests.cs`, `GenerateBalancedTeamsCommandHandlerTests.cs`.
+
 
 #### **[F14] Prancheta Tática e Escalação Visual**
 * **Objetivo:** Exibição gráfica do campo de futebol com a posição dos jogadores escalados em cada time.

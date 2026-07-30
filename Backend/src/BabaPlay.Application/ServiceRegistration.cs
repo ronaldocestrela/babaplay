@@ -132,13 +132,15 @@ public static class ServiceRegistration
         services.AddScoped<IQueryHandler<GetCheckinsByGameDayQuery, Result<IReadOnlyList<CheckinResponse>>>, GetCheckinsByGameDayQueryHandler>();
         services.AddScoped<IQueryHandler<GetCheckinsByPlayerQuery, Result<IReadOnlyList<CheckinResponse>>>, GetCheckinsByPlayerQueryHandler>();
 
-        // Teams — Fase 8
+        // Teams — Fase 8 e Fase F13
         services.AddScoped<ICommandHandler<CreateTeamCommand, Result<TeamResponse>>, CreateTeamCommandHandler>();
+        services.AddScoped<ICommandHandler<GenerateBalancedTeamsCommand, Result<DrawResultApplicationDto>>, GenerateBalancedTeamsCommandHandler>();
         services.AddScoped<IQueryHandler<GetTeamQuery, Result<TeamResponse>>, GetTeamQueryHandler>();
         services.AddScoped<IQueryHandler<GetTeamsQuery, Result<IReadOnlyList<TeamResponse>>>, GetTeamsQueryHandler>();
         services.AddScoped<ICommandHandler<UpdateTeamCommand, Result<TeamResponse>>, UpdateTeamCommandHandler>();
         services.AddScoped<ICommandHandler<UpdateTeamPlayersCommand, Result<TeamPlayersResponse>>, UpdateTeamPlayersCommandHandler>();
         services.AddScoped<ICommandHandler<DeleteTeamCommand, Result>, DeleteTeamCommandHandler>();
+
 
         // Scores/Ranking — Fase 12 (Slice 2)
         services.AddScoped<IQueryHandler<GetRankingQuery, Result<IReadOnlyList<RankingEntryResponse>>>, GetRankingQueryHandler>();

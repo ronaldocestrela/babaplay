@@ -1,0 +1,58 @@
+@namespace BabaPlay.Web.Components.Teams
+@using BabaPlay.Web.Models
+
+<div class="player-badge card p-2 mb-2 shadow-sm bg-white border-light" data-testid="player-badge-@Player.PlayerId">
+    <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <div class="avatar-sm bg-dark text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.75rem;">
+                @GetInitials(Player.Name)
+            </div>
+            <div>
+                <div class="fw-bold text-dark small leading-tight" data-testid="player-name">@Player.Name</div>
+                <div class="d-flex align-items-center gap-1">
+                    <span class="badge bg-secondary style-xs" data-testid="player-position">@Player.PositionName</span>
+                    <span class="text-warning style-xs" data-testid="player-stars" title="@($"{Player.RatingStars} estrelas")">
+                        @RenderStars(Player.RatingStars)
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-group btn-group-sm">
+            @if (CanMoveLeft)
+            {
+                <button class="btn btn-sm btn-outline-secondary p-0 px-1 btn-move-left" @onclick="() => OnMoveLeft.InvokeAsync(Player)" title="Mover para time anterior" data-testid="btn-move-left">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+            }
+            @if (CanMoveRight)
+            {
+                <button class="btn btn-sm btn-outline-secondary p-0 px-1 btn-move-right" @onclick="() => OnMoveRight.InvokeAsync(Player)" title="Mover para próximo time" data-testid="btn-move-right">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public DrawnPlayerDto Player { get; set; } = null!;
+    [Parameter] public bool CanMoveLeft { get; set; }
+    [Parameter] public bool CanMoveRight { get; set; }
+    [Parameter] public EventCallback<DrawnPlayerDto> OnMoveLeft { get; set; }
+    [Parameter] public EventCallback<DrawnPlayerDto> OnMoveRight { get; set; }
+
+    private static string RenderStars(int count)
+    {
+        count = Math.Max(1, Math.Min(5, count));
+        return new string('★', count);
+    }
+
+    private static string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "A";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][..1].ToUpperInvariant();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+    }
+}

@@ -20,6 +20,7 @@ public sealed class TeamController : ControllerBase
     private readonly ICommandHandler<UpdateTeamCommand, Result<TeamResponse>> _updateHandler;
     private readonly ICommandHandler<UpdateTeamPlayersCommand, Result<TeamPlayersResponse>> _updatePlayersHandler;
     private readonly ICommandHandler<DeleteTeamCommand, Result> _deleteHandler;
+    private readonly ICommandHandler<GenerateBalancedTeamsCommand, Result<DrawResultApplicationDto>> _drawHandler;
 
     public TeamController(
         ICommandHandler<CreateTeamCommand, Result<TeamResponse>> createHandler,
@@ -27,7 +28,8 @@ public sealed class TeamController : ControllerBase
         IQueryHandler<GetTeamsQuery, Result<IReadOnlyList<TeamResponse>>> listHandler,
         ICommandHandler<UpdateTeamCommand, Result<TeamResponse>> updateHandler,
         ICommandHandler<UpdateTeamPlayersCommand, Result<TeamPlayersResponse>> updatePlayersHandler,
-        ICommandHandler<DeleteTeamCommand, Result> deleteHandler)
+        ICommandHandler<DeleteTeamCommand, Result> deleteHandler,
+        ICommandHandler<GenerateBalancedTeamsCommand, Result<DrawResultApplicationDto>> drawHandler)
     {
         _createHandler = createHandler;
         _getHandler = getHandler;
@@ -35,6 +37,30 @@ public sealed class TeamController : ControllerBase
         _updateHandler = updateHandler;
         _updatePlayersHandler = updatePlayersHandler;
         _deleteHandler = deleteHandler;
+        _drawHandler = drawHandler;
+    }
+
+    /// <summary>Generates balanced teams for a game day.</summary>
+    [HttpPost("draw")]
+    [ProducesResponseType(typeof(DrawResultApplicationDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> DrawTeams([FromBody] GenerateBalancedTeamsRequest request, CancellationToken ct)
+    {
+        var result = await _drawHandler.HandleAsync(
+            new GenerateBalancedTeamsCommand(request.GameDayId, request.NumberOfTeams, request.BalanceByPosition),
+            ct);
+
+        if (!result.IsSuccess)
+        {
+            return UnprocessableEntity(new ProblemDetails
+            {
+                Status = StatusCodes.Status422UnprocessableEntity,
+                Title = result.ErrorCode,
+                Detail = result.ErrorMessage,
+            });
+        }
+
+        return Ok(result.Value);
     }
 
     /// <summary>Creates a team in the current tenant.</summary>
@@ -43,6 +69,7 @@ public sealed class TeamController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Create([FromBody] CreateTeamRequest request, CancellationToken ct)
+
     {
         var result = await _createHandler.HandleAsync(new CreateTeamCommand(request.Name, request.MaxPlayers), ct);
 
@@ -175,3 +202,5 @@ public sealed record CreateTeamRequest(string Name, int MaxPlayers);
 public sealed record UpdateTeamRequest(string Name, int MaxPlayers);
 
 public sealed record UpdateTeamPlayersRequest(IReadOnlyList<Guid> PlayerIds);
+
+public sealed record GenerateBalancedTeamsRequest(Guid GameDayId, int NumberOfTeams = 2, bool BalanceByPosition = true);
