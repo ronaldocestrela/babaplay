@@ -42,6 +42,10 @@ Ao gerar, alterar ou sugerir código, você deve obrigatoriamente seguir as segu
 *   Sempre garanta que as consultas e comandos validem ou incluam o `TenantId` correspondente ao contexto atual do usuário.
 *   O isolamento de dados é prioridade máxima de segurança.
 
+### 6. Documentação Viva e Atualização Contínua (Obrigatória)
+*   **Documentação é Viva:** A documentação do projeto (`roadmap.md`, `blazor_functions_guide.md`, `functions.md`, `CHANGELOG.md`, `architecture.md`) é um artefato vivo e **deve ser obrigatoriamente atualizada a cada nova funcionalidade implementada, alteração de contrato ou refatoração**.
+*   **Critério de Aceite:** Nenhuma funcionalidade ou fase deve ser considerada concluída sem que os guias de implementação, o mapa de funções, o roadmap e o changelog estejam totalmente sincronizados com o código e os testes.
+
 ## Regras de Estilo e Código Limpo
 *   Use as funcionalidades mais recentes e idiomáticas do C# e .NET 10.
 *   Mantenha as classes pequenas e focadas no Princípio da Responsabilidade Única (SRP).

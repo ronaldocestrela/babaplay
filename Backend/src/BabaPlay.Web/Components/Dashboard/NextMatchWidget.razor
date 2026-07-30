@@ -1,0 +1,97 @@
+@namespace BabaPlay.Web.Components.Dashboard
+@using BabaPlay.Web.Models
+
+<div class="next-match-widget card p-4 mb-4" data-testid="next-match-widget">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="h5 mb-0 font-weight-bold">
+            <span class="mr-2">⚽</span> Próxima Partida
+        </h3>
+        @if (NextMatch != null)
+        {
+            <span class="badge @(NextMatch.IsOpenForRsvp ? "badge-success" : "badge-secondary")">
+                @(NextMatch.IsOpenForRsvp ? "RSVP Aberto" : "RSVP Encerrado")
+            </span>
+        }
+    </div>
+
+    @if (NextMatch == null)
+    {
+        <div class="text-center py-4 text-muted" data-testid="no-upcoming-match">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📅</div>
+            <p class="mb-2 font-weight-medium">Nenhum baba agendado no momento</p>
+            <small class="d-block text-secondary">Fique atento aos comunicados da diretoria para os próximos horários.</small>
+        </div>
+    }
+    else
+    {
+        <div class="match-info mb-3">
+            <h4 class="h6 font-weight-bold mb-1">@NextMatch.Title</h4>
+            <div class="d-flex flex-wrap text-muted small gap-3">
+                <div>🗓️ @NextMatch.Date.ToString("dd/MM/yyyy HH:mm")</div>
+                <div>📍 @NextMatch.Location</div>
+            </div>
+        </div>
+
+        <div class="attendance-progress mb-3">
+            <div class="d-flex justify-content-between small mb-1">
+                <span>Confirmados</span>
+                <span class="font-weight-bold">@NextMatch.ConfirmedCount / @NextMatch.MaxPlayers vagas</span>
+            </div>
+            <div class="progress" style="height: 8px; border-radius: 4px; background-color: var(--bg-secondary, #e9ecef);">
+                <div class="progress-bar bg-success"
+                     role="progressbar"
+                     style="width: @(CalculatePercentage())%;"
+                     aria-valuenow="@NextMatch.ConfirmedCount"
+                     aria-valuemin="0"
+                     aria-valuemax="@NextMatch.MaxPlayers">
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+            <div class="rsvp-status small">
+                Status:
+                @if (NextMatch.UserRsvpStatus == "Confirmed")
+                {
+                    <span class="badge badge-success text-white ml-1" data-testid="user-rsvp-badge">Vou jogar! ✅</span>
+                }
+                else if (NextMatch.UserRsvpStatus == "Declined")
+                {
+                    <span class="badge badge-danger text-white ml-1" data-testid="user-rsvp-badge">Não vou ❌</span>
+                }
+                else if (NextMatch.UserRsvpStatus == "Waitlist")
+                {
+                    <span class="badge badge-warning text-dark ml-1" data-testid="user-rsvp-badge">Lista de Espera ⏳</span>
+                }
+                else
+                {
+                    <span class="badge badge-light text-dark ml-1" data-testid="user-rsvp-badge">Não respondido</span>
+                }
+            </div>
+
+            @if (NextMatch.IsOpenForRsvp)
+            {
+                <div class="rsvp-actions">
+                    <button class="btn btn-sm btn-outline-success mr-2" @onclick="() => OnRsvpStatusChanged.InvokeAsync(true)">
+                        Confirmar
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" @onclick="() => OnRsvpStatusChanged.InvokeAsync(false)">
+                        Ausente
+                    </button>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public NextMatchWidgetDto? NextMatch { get; set; }
+    [Parameter] public EventCallback<bool> OnRsvpStatusChanged { get; set; }
+
+    private int CalculatePercentage()
+    {
+        if (NextMatch == null || NextMatch.MaxPlayers <= 0) return 0;
+        var pct = (int)Math.Round((double)NextMatch.ConfirmedCount / NextMatch.MaxPlayers * 100);
+        return Math.Min(100, Math.Max(0, pct));
+    }
+}

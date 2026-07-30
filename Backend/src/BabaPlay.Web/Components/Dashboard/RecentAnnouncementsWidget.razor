@@ -1,0 +1,32 @@
+@namespace BabaPlay.Web.Components.Dashboard
+@using BabaPlay.Web.Models
+
+<div class="recent-announcements-widget card p-4 mb-4" data-testid="recent-announcements-widget">
+    <h3 class="h5 mb-3 font-weight-bold">📢 Comunicados Recentes</h3>
+
+    @if (Announcements == null || Announcements.Count == 0)
+    {
+        <p class="text-muted small mb-0" data-testid="no-announcements">Nenhum comunicado recente publicado.</p>
+    }
+    else
+    {
+        <div class="announcements-list">
+            @foreach (var item in Announcements)
+            {
+                <div class="announcement-item pb-3 mb-3 border-bottom" key="@item.Id">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="badge badge-info small">@item.Category</span>
+                        <small class="text-muted">@item.PublishedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                    </div>
+                    <h4 class="h6 font-weight-bold mb-1">@item.Title</h4>
+                    <p class="small text-secondary mb-1">@item.Summary</p>
+                    <small class="text-muted italic">Por: @item.AuthorName</small>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<RecentAnnouncementDto> Announcements { get; set; } = new List<RecentAnnouncementDto>();
+}

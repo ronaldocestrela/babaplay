@@ -1,0 +1,17 @@
+@namespace BabaPlay.Web.Components.Dashboard
+@using BabaPlay.Web.Components.Common
+@using BabaPlay.Web.Models
+
+<div class="quick-stats-widget mb-4" data-testid="quick-stats-widget">
+    <h3 class="h5 mb-3 font-weight-bold">📊 Métricas Rápida</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <StatCard Title="Atletas Ativos" Value="@Stats.ActivePlayersCount.ToString()" Icon="👥" Subtitle="Cadastrados no Tenant" />
+        <StatCard Title="Jogos no Mês" Value="@Stats.MatchesThisMonth.ToString()" Icon="🏆" Subtitle="Partidas realizadas" />
+        <StatCard Title="Gols na Temporada" Value="@Stats.TotalSeasonGoals.ToString()" Icon="⚽" Subtitle="Artilharia geral" />
+        <StatCard Title="Mensalidades em Dia" Value="@($"{Stats.PaidInvoicesPercentage:F1}%")" Icon="💳" Subtitle="Adimplência da liga" />
+    </div>
+</div>
+
+@code {
+    [Parameter] public QuickStatsDto Stats { get; set; } = new(0, 0, 0, 0m);
+}

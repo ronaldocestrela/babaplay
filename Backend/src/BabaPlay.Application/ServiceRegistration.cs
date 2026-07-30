@@ -31,6 +31,7 @@ using BabaPlay.Application.Queries.Scores;
 using BabaPlay.Application.Queries.Teams;
 using BabaPlay.Application.Queries.TenantGameDayOptions;
 using BabaPlay.Application.Queries.Tenants;
+using BabaPlay.Application.Queries.Dashboard;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BabaPlay.Application;
@@ -41,9 +42,13 @@ public static class ServiceRegistration
     {
         services.AddScoped<IScoreComputationService, ScoreComputationService>();
 
+        // Dashboard — Fase F10
+        services.AddScoped<IQueryHandler<GetDashboardSummaryQuery, Result<DashboardSummaryApplicationDto>>, GetDashboardSummaryQueryHandler>();
+
         // Ping
         services.AddScoped<ICommandHandler<PingCommand, Result<string>>, PingCommandHandler>();
         services.AddScoped<IQueryHandler<PingQuery, Result<PingStatusDto>>, PingQueryHandler>();
+
 
         // Auth — Fase 1
         services.AddScoped<ICommandHandler<LoginCommand, Result<AuthResponse>>, LoginCommandHandler>();

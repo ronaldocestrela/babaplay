@@ -8,7 +8,23 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F10 (Dashboard Principal do Tenant)
+
+- **[F10] Dashboard Principal do Tenant**:
+  - `Pages/Dashboard/Dashboard.razor`: Página do painel de controle (`/dashboard` e `/`) desacoplada, integrando widgets com loading spinner e tratamento de erros HTTP.
+  - `Components/Dashboard/NextMatchWidget.razor`: Widget de próximo jogo com detalhes da partida, barra de progresso visual de presença, badge de status de RSVP do usuário e botões de ação rápida.
+  - `Components/Dashboard/QuickStatsWidget.razor`: Widget de estatísticas rápidas (Atletas Ativos, Jogos no Mês, Gols na Temporada, Adimplência).
+  - `Components/Dashboard/RecentAnnouncementsWidget.razor`: Widget de mural com a lista dos últimos comunicados publicados.
+  - `Services/Http/IDashboardApiService.cs` & `DashboardApiService.cs`: Serviço HTTP cliente Blazor consumindo `GET /api/v1/dashboard/summary`.
+- **Backend (CQRS Query Handler & Controller)**:
+  - `GetDashboardSummaryQuery.cs` & `GetDashboardSummaryQueryHandler.cs`: Query e Handler MediatR consolidando métricas da associação via repositórios.
+  - `DashboardController.cs`: Endpoint `GET /api/v1/dashboard/summary` decorado com `[Authorize]` e despachando via CQRS.
+- **Suíte de Testes TDD (bUnit & xUnit)**:
+  - Testes bUnit (`NextMatchWidgetTests`, `QuickStatsWidgetTests`, `DashboardPageTests`) e xUnit (`GetDashboardSummaryQueryHandlerTests`).
+  - Total da suíte do projeto: **577/577 testes passando (100% de sucesso)**.
+
 ### Added — Blazor (.NET 10) Frontend: Fase 2 (Gestão de Atletas, Posições e Carteirinha Digital)
+
 
 - **[F07] Lista e Gestão de Atletas (Membros da Associação)**:
   - `Pages/Players/PlayerList.razor`: Página com busca textual em tempo real, filtragem por posição e status (Ativos/Inativos), ordenação dinâmica e alternador de visão Grid/Tabela.

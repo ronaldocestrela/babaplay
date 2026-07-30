@@ -194,15 +194,17 @@ flowchart TD
 
 ### Fase 3: Logística Esportiva, Sorteio e Partidas (`BabaPlay.Sports`)
 
-#### **[F10] Dashboard Principal do Tenant**
+#### **[F10] Dashboard Principal do Tenant** ✅ CONCLUÍDO
 * **Objetivo:** Painel de controle da associação exibindo métricas rápidas (próximo jogo, contagem de confirmados, últimos comunicados, estatísticas da temporada).
 * **Componentes / Páginas:** 
   * `Pages/Dashboard/Dashboard.razor`
   * `Components/Dashboard/NextMatchWidget.razor`
   * `Components/Dashboard/QuickStatsWidget.razor`
-* **Services & DTOs:** `IDashboardApiService`, `DashboardSummaryDto`
+  * `Components/Dashboard/RecentAnnouncementsWidget.razor`
+* **Services & DTOs:** `IDashboardApiService`, `DashboardApiService`, `DashboardSummaryDto`, `NextMatchWidgetDto`, `QuickStatsDto`, `RecentAnnouncementDto`
 * **Endpoints API Consumidos:** `GET /api/v1/dashboard/summary`
-* **Testes bUnit:** Renderização dos widgets de acordo com a resposta do DTO e tratamento de estados vazios (ex: sem jogos agendados).
+* **Testes bUnit/xUnit:** `NextMatchWidgetTests.cs`, `QuickStatsWidgetTests.cs`, `DashboardPageTests.cs`, `GetDashboardSummaryQueryHandlerTests.cs`.
+
 
 #### **[F11] Agendamento e Calendário de Partidas/Treinos**
 * **Objetivo:** Criar, editar e visualizar o calendário de eventos esportivos (local, data/hora, limite de vagas, valor por atleta se houver).

@@ -34,6 +34,8 @@ builder.Services.AddScoped<BabaPlay.Web.Services.Http.IAuthApiService, BabaPlay.
 builder.Services.AddScoped<BabaPlay.Web.Services.Http.ITenantApiService, BabaPlay.Web.Services.Http.TenantApiService>();
 builder.Services.AddScoped<BabaPlay.Web.Services.Http.IPlayerApiService, BabaPlay.Web.Services.Http.PlayerApiService>();
 builder.Services.AddScoped<BabaPlay.Web.Services.Http.IPositionApiService, BabaPlay.Web.Services.Http.PositionApiService>();
+builder.Services.AddScoped<BabaPlay.Web.Services.Http.IDashboardApiService, BabaPlay.Web.Services.Http.DashboardApiService>();
+
 
 
 await builder.Build().RunAsync();
