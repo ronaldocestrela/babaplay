@@ -8,6 +8,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F22 (Prestação de Contas Pública / Balancete para Sócios)
+
+- **[F22] Prestação de Contas Pública (Balancete para Sócios)**:
+  - `Pages/Financial/FinancialStatement.razor`: Página pública de transparência financeira (`/financial/statement`) com seletor de competência ano/mês, filtro por tipo (Receitas vs Despesas) e opção de impressão.
+  - `Components/Financial/FinancialStatementSummaryCard.razor`: Componente de balancete sintético exibindo total arrecadado (verde), total gasto (vermelho) e saldo transparente com badge de superávit ou déficit.
+  - `Services/Http/IFinancialApiService.cs` & `FinancialApiService.cs`: Adicionado método `GetFinancialStatementAsync`.
+  - `Components/Layout/NavMenu.razor`: Adicionado link de atalho direto para Balancete (`/financial/statement`).
+- **Backend CQRS Query & Controller Endpoint**:
+  - `GetFinancialStatementQuery.cs` & `GetFinancialStatementQueryHandler.cs`: Query Handler para cálculo de receitas, despesas, saldo resultante e categorização inteligente dos lançamentos.
+  - `FinancialStatementItemResponse.cs` e `FinancialStatementResponse.cs`: DTOs de resposta do balancete.
+  - `FinancialController.cs`: Adicionado endpoint `GET /api/v1/financial/statement`.
+- **Suíte de Testes TDD (bUnit & xUnit)**:
+  - `FinancialStatementSummaryCardTests.cs`, `FinancialStatementPageTests.cs`, `GetFinancialStatementQueryHandlerTests.cs`.
+  - Total da suíte do projeto: **649/649 testes passando (100% de sucesso)**.
+
 ### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F21 (Controle de Inadimplência)
 
 - **[F21] Controle de Inadimplência**:

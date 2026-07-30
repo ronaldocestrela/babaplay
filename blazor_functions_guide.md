@@ -324,12 +324,14 @@ flowchart TD
 * **Endpoints API Consumidos:** `GET /api/v1/financial/defaulters` (`GetDefaultersListQuery`), `POST /api/v1/financial/defaulters/{playerId}/remind` (`SendPaymentReminderCommand`)
 * **Testes bUnit/xUnit:** `DefaulterRowWidgetTests.cs`, `DefaultersReportPageTests.cs`, `GetDefaultersListQueryHandlerTests.cs`, `SendPaymentReminderCommandHandlerTests.cs`.
 
-#### **[F22] Prestação de Contas Pública (Balancete para Sócios)**
-* **Objetivo:** Transparência financeira exibindo comprovantes de receitas e despesas registradas pela diretoria para todos os membros da associação.
-* **Componentes / Páginas:** `Pages/Financial/FinancialStatement.razor`
-* **Services & DTOs:** `IFinancialApiService`, `FinancialStatementDto`
+#### **[F22] Prestação de Contas Pública (Balancete para Sócios)** ✅ CONCLUÍDO
+* **Objetivo:** Transparência financeira pública exibindo o balancete discriminado de receitas e despesas com saldo líquido do período para todos os membros da associação.
+* **Componentes / Páginas:** 
+  * `Pages/Financial/FinancialStatement.razor`
+  * `Components/Financial/FinancialStatementSummaryCard.razor`
+* **Services & DTOs:** `IFinancialApiService`, `FinancialApiService`, `FinancialStatementItemDto`, `FinancialStatementDto`, `FinancialStatementItemResponse`, `FinancialStatementResponse`
 * **Endpoints API Consumidos:** `GET /api/v1/financial/statement` (`GetFinancialStatementQuery`)
-* **Testes bUnit:** Exibição da lista de despesas e cálculo total do saldo transparente.
+* **Testes bUnit/xUnit:** `FinancialStatementSummaryCardTests.cs`, `FinancialStatementPageTests.cs`, `GetFinancialStatementQueryHandlerTests.cs`.
 
 #### **[F23] Caixinha do Time (Vaquinhas de Eventos)**
 * **Objetivo:** Arrecadação colaborativa para eventos extras (ex: churrasco de fim de ano, compra de novos coletes), mostrando meta e progresso da arrecadação.

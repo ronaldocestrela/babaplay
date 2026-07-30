@@ -21,4 +21,6 @@ public interface IFinancialApiService
     Task<DefaultersListDto?> GetDefaultersAsync(DateTime? referenceUtc = null, CancellationToken cancellationToken = default);
 
     Task<bool> SendPaymentReminderAsync(Guid playerId, CancellationToken cancellationToken = default);
+
+    Task<FinancialStatementDto?> GetFinancialStatementAsync(int? year = null, int? month = null, CancellationToken cancellationToken = default);
 }

@@ -1,0 +1,51 @@
+@namespace BabaPlay.Web.Components.Financial
+
+<div class="row g-3 mb-4" data-testid="statement-summary-cards">
+    <div class="col-12 col-md-4">
+        <div class="card p-3 shadow-sm" style="border-radius: 10px; border-left: 4px solid #10b981;" data-testid="card-total-incomes">
+            <div class="text-muted font-weight-bold text-uppercase" style="font-size: 0.75rem;">🟢 Total Arrecadado (Receitas)</div>
+            <div class="h3 font-weight-bold text-success mb-0" data-testid="val-total-incomes">
+                @FormatCurrency(TotalIncomes)
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Mensalidades e receitas do período</div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <div class="card p-3 shadow-sm" style="border-radius: 10px; border-left: 4px solid #ef4444;" data-testid="card-total-expenses">
+            <div class="text-muted font-weight-bold text-uppercase" style="font-size: 0.75rem;">🔴 Total Gasto (Despesas)</div>
+            <div class="h3 font-weight-bold text-danger mb-0" data-testid="val-total-expenses">
+                @FormatCurrency(TotalExpenses)
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Aluguel de quadras e equipamentos</div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <div class="card p-3 shadow-sm" style="border-radius: 10px; border-left: 4px solid @(NetBalance >= 0 ? "#3b82f6" : "#dc2626");" data-testid="card-net-balance">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="text-muted font-weight-bold text-uppercase" style="font-size: 0.75rem;">⚖️ Saldo Transparente</span>
+                @if (NetBalance >= 0)
+                {
+                    <span class="badge bg-success" style="font-size: 0.65rem;" data-testid="badge-superavit">✓ Superávit</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger" style="font-size: 0.65rem;" data-testid="badge-deficit">⚠️ Déficit</span>
+                }
+            </div>
+            <div class="h3 font-weight-bold mb-0" style="color: @(NetBalance >= 0 ? "#10b981" : "#ef4444");" data-testid="val-net-balance">
+                @FormatCurrency(NetBalance)
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Resultado líquido do caixa</div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public decimal TotalIncomes { get; set; }
+    [Parameter] public decimal TotalExpenses { get; set; }
+    [Parameter] public decimal NetBalance { get; set; }
+
+    private static string FormatCurrency(decimal val) => val.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
+}

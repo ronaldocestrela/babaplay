@@ -1,0 +1,226 @@
+@page "/financial/statement"
+@using BabaPlay.Web.Models
+@using BabaPlay.Web.Services.Http
+@using BabaPlay.Web.Components.Financial
+@using BabaPlay.Web.Components.Common
+@inject IFinancialApiService FinancialApiService
+@inject IJSRuntime JSRuntime
+
+<div class="container-fluid p-4" data-testid="financial-statement-page">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="font-weight-bold mb-1" style="color: var(--text-main);">
+                📋 Balancete & Prestação de Contas
+            </h3>
+            <p class="text-muted mb-0" style="font-size: 0.9rem;">
+                Transparência financeira pública para sócios e atletas da associação
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary font-weight-bold" @onclick="PrintStatementAsync" data-testid="btn-print-statement">
+                🖨️ Imprimir Balancete
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Bar for Period -->
+    <div class="card p-3 mb-4 shadow-sm" style="border-radius: 10px;" data-testid="statement-period-filter-bar">
+        <div class="row g-2 align-items-center">
+            <div class="col-12 col-md-4">
+                <label class="form-label font-weight-bold mb-1" style="font-size: 0.8rem;">Mês da Competência:</label>
+                <select class="form-select form-select-sm" value="@SelectedMonth" @onchange="OnMonthChanged" data-testid="select-statement-month">
+                    <option value="1">Janeiro</option>
+                    <option value="2">Fevereiro</option>
+                    <option value="3">Março</option>
+                    <option value="4">Abril</option>
+                    <option value="5">Maio</option>
+                    <option value="6">Junho</option>
+                    <option value="7">Julho</option>
+                    <option value="8">Agosto</option>
+                    <option value="9">Setembro</option>
+                    <option value="10">Outubro</option>
+                    <option value="11">Novembro</option>
+                    <option value="12">Dezembro</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <label class="form-label font-weight-bold mb-1" style="font-size: 0.8rem;">Ano:</label>
+                <select class="form-select form-select-sm" value="@SelectedYear" @onchange="OnYearChanged" data-testid="select-statement-year">
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                    <option value="2027">2027</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <label class="form-label font-weight-bold mb-1" style="font-size: 0.8rem;">Filtrar Tipo:</label>
+                <select class="form-select form-select-sm" value="@TypeFilter" @onchange="OnTypeFilterChanged" data-testid="select-type-filter">
+                    <option value="all">Todos os Lançamentos</option>
+                    <option value="income">🟢 Somente Receitas</option>
+                    <option value="expense">🔴 Somente Despesas</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger mb-4" data-testid="statement-error-alert">
+            @ErrorMessage
+        </div>
+    }
+
+    @if (IsLoading)
+    {
+        <div class="py-5" data-testid="statement-loading">
+            <LoadingSpinner Message="Carregando balancete de prestação de contas..." />
+        </div>
+    }
+    else if (StatementData != null)
+    {
+        <!-- Summary Cards -->
+        <FinancialStatementSummaryCard TotalIncomes="StatementData.TotalIncomes"
+                                        TotalExpenses="StatementData.TotalExpenses"
+                                        NetBalance="StatementData.NetBalance" />
+
+        <!-- Transactions List -->
+        @if (FilteredItems.Count == 0)
+        {
+            <div class="card p-5 text-center shadow-sm" style="border-radius: 12px; background: var(--bg-surface, #ffffff);" data-testid="empty-statement">
+                <div style="font-size: 3rem; color: #94a3b8;">🧾</div>
+                <h5 class="font-weight-bold mt-2" style="color: var(--text-main);">Nenhum lançamento no período</h5>
+                <p class="text-muted mb-0" style="font-size: 0.875rem;">Não foram registradas movimentações para o mês selecionado.</p>
+            </div>
+        }
+        else
+        {
+            <div class="card shadow-sm" style="border-radius: 12px; overflow: hidden; border: none;">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0" style="background: var(--bg-surface, #ffffff);">
+                        <thead style="background: var(--bg-muted, #f8fafc); border-bottom: 2px solid var(--border-color, #e2e8f0); font-size: 0.75rem;" class="text-uppercase font-weight-bold text-muted">
+                            <tr>
+                                <th style="padding: 0.75rem 1rem;">Data</th>
+                                <th style="padding: 0.75rem 1rem;">Categoria</th>
+                                <th style="padding: 0.75rem 1rem;">Descrição / Origem</th>
+                                <th style="padding: 0.75rem 1rem;">Membro / Fornecedor</th>
+                                <th style="padding: 0.75rem 1rem; text-align: right;">Valor R$</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in FilteredItems)
+                            {
+                                var isIncome = item.Type == 0;
+                                <tr style="border-bottom: 1px solid var(--border-color, #f1f5f9);" data-testid="statement-row">
+                                    <td style="padding: 0.75rem 1rem; font-size: 0.875rem; color: var(--text-muted);">
+                                        @item.OccurredOnUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                    </td>
+                                    <td style="padding: 0.75rem 1rem;">
+                                        <span class="badge" style="font-size: 0.75rem; background-color: #e2e8f0; color: #334155;" data-testid="item-category">
+                                            @item.Category
+                                        </span>
+                                    </td>
+                                    <td style="padding: 0.75rem 1rem; font-weight: 600; color: var(--text-main);" data-testid="item-description">
+                                        @item.Description
+                                    </td>
+                                    <td style="padding: 0.75rem 1rem; font-size: 0.875rem; color: var(--text-muted);">
+                                        @(string.IsNullOrEmpty(item.PlayerName) ? "Diretoria / Associação" : item.PlayerName)
+                                    </td>
+                                    <td style="padding: 0.75rem 1rem; text-align: right; font-weight: 700; color: @(isIncome ? "#10b981" : "#ef4444");" data-testid="item-amount">
+                                        @(isIncome ? "+" : "-") @FormatCurrency(item.Amount)
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private FinancialStatementDto? StatementData { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private string? ErrorMessage { get; set; }
+
+    private int SelectedMonth { get; set; } = DateTime.UtcNow.Month;
+    private int SelectedYear { get; set; } = DateTime.UtcNow.Year;
+    private string TypeFilter { get; set; } = "all";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStatementAsync();
+    }
+
+    private async Task LoadStatementAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            StatementData = await FinancialApiService.GetFinancialStatementAsync(SelectedYear, SelectedMonth);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao carregar prestação de contas: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private List<FinancialStatementItemDto> FilteredItems
+    {
+        get
+        {
+            if (StatementData?.Items == null) return new List<FinancialStatementItemDto>();
+
+            if (TypeFilter == "income")
+                return StatementData.Items.Where(x => x.Type == 0).ToList();
+            if (TypeFilter == "expense")
+                return StatementData.Items.Where(x => x.Type == 1).ToList();
+
+            return StatementData.Items;
+        }
+    }
+
+    private async Task OnMonthChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int month))
+        {
+            SelectedMonth = month;
+            await LoadStatementAsync();
+        }
+    }
+
+    private async Task OnYearChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int year))
+        {
+            SelectedYear = year;
+            await LoadStatementAsync();
+        }
+    }
+
+    private void OnTypeFilterChanged(ChangeEventArgs e)
+    {
+        TypeFilter = e.Value?.ToString() ?? "all";
+    }
+
+    private async Task PrintStatementAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("window.print");
+        }
+        catch
+        {
+            // Fallback for non-interactive test environments
+        }
+    }
+
+    private static string FormatCurrency(decimal val) => val.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
+}

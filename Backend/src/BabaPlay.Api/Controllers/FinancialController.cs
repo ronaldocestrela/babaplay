@@ -28,6 +28,7 @@ public sealed class FinancialController : ControllerBase
     private readonly ICommandHandler<ConfirmPixPaymentCommand, Result<MonthlyFeePaymentResponse>> _confirmPixHandler;
     private readonly IQueryHandler<GetDefaultersListQuery, Result<DefaultersListResponse>> _getDefaultersHandler;
     private readonly ICommandHandler<SendPaymentReminderCommand, Result> _sendReminderHandler;
+    private readonly IQueryHandler<GetFinancialStatementQuery, Result<FinancialStatementResponse>> _getFinancialStatementHandler;
 
     public FinancialController(
         ICommandHandler<CreateCashTransactionCommand, Result<CashTransactionResponse>> createCashTransactionHandler,
@@ -43,7 +44,8 @@ public sealed class FinancialController : ControllerBase
         ICommandHandler<GeneratePixPaymentCommand, Result<PixPaymentDetailsResponse>> generatePixHandler,
         ICommandHandler<ConfirmPixPaymentCommand, Result<MonthlyFeePaymentResponse>> confirmPixHandler,
         IQueryHandler<GetDefaultersListQuery, Result<DefaultersListResponse>> getDefaultersHandler,
-        ICommandHandler<SendPaymentReminderCommand, Result> sendReminderHandler)
+        ICommandHandler<SendPaymentReminderCommand, Result> sendReminderHandler,
+        IQueryHandler<GetFinancialStatementQuery, Result<FinancialStatementResponse>> getFinancialStatementHandler)
     {
         _createCashTransactionHandler = createCashTransactionHandler;
         _createMonthlyFeeHandler = createMonthlyFeeHandler;
@@ -59,6 +61,7 @@ public sealed class FinancialController : ControllerBase
         _confirmPixHandler = confirmPixHandler;
         _getDefaultersHandler = getDefaultersHandler;
         _sendReminderHandler = sendReminderHandler;
+        _getFinancialStatementHandler = getFinancialStatementHandler;
     }
 
     [HttpPost("cash-transaction")]
@@ -308,6 +311,19 @@ public sealed class FinancialController : ControllerBase
         }
 
         return Ok();
+    }
+
+    [HttpGet("statement")]
+    [Authorize(Policy = AuthorizationPolicyNames.FinancialRead)]
+    [ProducesResponseType(typeof(FinancialStatementResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> GetStatement([FromQuery] int? year, [FromQuery] int? month, CancellationToken ct)
+    {
+        var result = await _getFinancialStatementHandler.HandleAsync(new GetFinancialStatementQuery(year, month), ct);
+        if (!result.IsSuccess)
+            return UnprocessableEntity(ToProblem(StatusCodes.Status422UnprocessableEntity, result));
+
+        return Ok(result.Value);
     }
 
     private static ProblemDetails ToProblem<T>(int statusCode, Result<T> result)

@@ -131,4 +131,29 @@ public sealed class FinancialApiService : IFinancialApiService
         var response = await _httpClient.PostAsync($"api/v1/financial/defaulters/{playerId}/remind", null, cancellationToken);
         return response.IsSuccessStatusCode;
     }
+
+    public async Task<FinancialStatementDto?> GetFinancialStatementAsync(int? year = null, int? month = null, CancellationToken cancellationToken = default)
+    {
+        var url = "api/v1/financial/statement";
+        if (year.HasValue && month.HasValue)
+        {
+            url += $"?year={year.Value}&month={month.Value}";
+        }
+        else if (year.HasValue)
+        {
+            url += $"?year={year.Value}";
+        }
+        else if (month.HasValue)
+        {
+            url += $"?month={month.Value}";
+        }
+
+        var response = await _httpClient.GetAsync(url, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<FinancialStatementDto>(cancellationToken: cancellationToken);
+    }
 }
