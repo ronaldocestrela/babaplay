@@ -1,0 +1,175 @@
+@using BabaPlay.Web.Models
+
+@if (IsOpen)
+{
+    <div class="modal-backdrop fade show" style="display: block; background-color: rgba(0,0,0,0.5);"></div>
+    <div class="modal fade show" tabindex="-1" style="display: block;" data-testid="edit-player-modal">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person-gear me-2"></i>Editar Atleta: @Player?.Name
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="Close" disabled="@IsSubmitting"></button>
+                </div>
+                <EditForm Model="Model" OnValidSubmit="HandleValidSubmit">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        <ValidationSummary class="text-danger mb-3" />
+
+                        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                        {
+                            <div class="alert alert-danger mb-3" role="alert">
+                                @ErrorMessage
+                            </div>
+                        }
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label font-weight-bold">Nome Completo *</label>
+                                <InputText class="form-control" @bind-Value="Model.Name" placeholder="Ex: João da Silva" />
+                                <ValidationMessage For="@(() => Model.Name)" class="text-danger" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Apelido</label>
+                                <InputText class="form-control" @bind-Value="Model.Nickname" placeholder="Ex: Jota" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Telefone / WhatsApp</label>
+                                <InputText class="form-control" @bind-Value="Model.Phone" placeholder="(71) 99999-9999" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Data de Nascimento</label>
+                                <InputDate class="form-control" @bind-Value="Model.DateOfBirth" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Pé Preferido</label>
+                                <InputSelect class="form-select" @bind-Value="Model.PreferredFoot">
+                                    <option value="Right">Direito</option>
+                                    <option value="Left">Esquerdo</option>
+                                    <option value="Both">Ambidestro</option>
+                                </InputSelect>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Posição Principal</label>
+                                <InputSelect class="form-select" @bind-Value="Model.PrimaryPositionId">
+                                    <option value="">Selecione a Posição...</option>
+                                    @foreach (var pos in Positions)
+                                    {
+                                        <option value="@pos.Id">@pos.Name (@pos.Abbreviation)</option>
+                                    }
+                                </InputSelect>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Número da Camisa</label>
+                                <InputNumber class="form-control" @bind-Value="Model.JerseyNumber" placeholder="Ex: 10" />
+                                <ValidationMessage For="@(() => Model.JerseyNumber)" class="text-danger" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Função / Perfil (RBAC)</label>
+                                <InputSelect class="form-select" @bind-Value="Model.RoleId">
+                                    <option value="">Selecione a Função...</option>
+                                    @foreach (var role in Roles)
+                                    {
+                                        <option value="@role.Id">@role.Name</option>
+                                    }
+                                </InputSelect>
+                            </div>
+
+                            <div class="col-12 mt-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="isActiveSwitch" @bind="Model.IsActive" />
+                                    <label class="form-check-label" for="isActiveSwitch">
+                                        Atleta Ativo na Associação
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" @onclick="Close" disabled="@IsSubmitting">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">
+                            @if (IsSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Salvando...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-check-lg me-1"></i>
+                                <span>Salvar Alterações</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public PlayerDto? Player { get; set; }
+    [Parameter] public IReadOnlyList<PositionDto> Positions { get; set; } = new List<PositionDto>();
+    [Parameter] public IReadOnlyList<RoleDto> Roles { get; set; } = new List<RoleDto>();
+    [Parameter] public EventCallback<UpdatePlayerAdminDto> OnSave { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private UpdatePlayerAdminDto Model { get; set; } = new();
+    private bool IsSubmitting { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Player is not null)
+        {
+            Model = new UpdatePlayerAdminDto
+            {
+                Name = Player.Name,
+                Nickname = Player.Nickname,
+                Phone = Player.Phone,
+                DateOfBirth = Player.DateOfBirth,
+                PreferredFoot = Player.PreferredFoot ?? "Right",
+                PrimaryPositionId = Player.PrimaryPositionId,
+                JerseyNumber = Player.JerseyNumber,
+                RoleId = Player.RoleId,
+                IsActive = Player.IsActive
+            };
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        IsSubmitting = true;
+        ErrorMessage = null;
+        try
+        {
+            await OnSave.InvokeAsync(Model);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao salvar alterações: {ex.Message}";
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+
+    private async Task Close()
+    {
+        if (!IsSubmitting)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+}

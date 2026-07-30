@@ -34,7 +34,53 @@ public record PlayerProfileResponseDto(
     int? JerseyNumber,
     string? PhotoUrl);
 
+public record PlayerDto(
+    Guid Id,
+    Guid UserId,
+    string Name,
+    string? Nickname,
+    string? Phone,
+    DateTime? DateOfBirth,
+    string? PreferredFoot,
+    Guid? PrimaryPositionId,
+    string? PrimaryPositionName,
+    int? JerseyNumber,
+    string? PhotoUrl,
+    Guid? RoleId,
+    string? RoleName,
+    bool IsActive,
+    DateTime CreatedAt);
+
+public record RoleDto(
+    Guid Id,
+    string Name,
+    string? Description);
+
+public record UpdatePlayerAdminDto
+{
+    [Required(ErrorMessage = "O nome é obrigatório.")]
+    public string Name { get; set; } = string.Empty;
+
+    public string? Nickname { get; set; }
+
+    public string? Phone { get; set; }
+
+    public DateTime? DateOfBirth { get; set; }
+
+    public string PreferredFoot { get; set; } = "Right";
+
+    public Guid? PrimaryPositionId { get; set; }
+
+    [Range(1, 99, ErrorMessage = "O número da camisa deve ser entre 1 e 99.")]
+    public int? JerseyNumber { get; set; }
+
+    public Guid? RoleId { get; set; }
+
+    public bool IsActive { get; set; } = true;
+}
+
 public record PositionDto(
     Guid Id,
     string Name,
     string Abbreviation);
+

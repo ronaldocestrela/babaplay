@@ -64,4 +64,58 @@ public sealed class PlayerApiService : IPlayerApiService
         return await response.Content.ReadFromJsonAsync<IReadOnlyList<PositionDto>>(cancellationToken: cancellationToken)
             ?? new List<PositionDto>();
     }
+
+    public async Task<IReadOnlyList<PlayerDto>> GetPlayersAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.GetAsync("api/v1/player", cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return new List<PlayerDto>();
+        }
+
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<PlayerDto>>(cancellationToken: cancellationToken)
+            ?? new List<PlayerDto>();
+    }
+
+    public async Task<PlayerDto?> GetPlayerByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.GetAsync($"api/v1/player/{id}", cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<PlayerDto>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<bool> UpdatePlayerAdminAsync(Guid id, UpdatePlayerAdminDto dto, CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.PutAsJsonAsync($"api/v1/player/{id}", dto, cancellationToken);
+        return response.IsSuccessStatusCode;
+    }
+
+    public async Task<bool> UpdatePlayerRoleAsync(Guid userId, Guid roleId, CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.PostAsync($"api/v1/role/{roleId}/users/{userId}", null, cancellationToken);
+        return response.IsSuccessStatusCode;
+    }
+
+    public async Task<IReadOnlyList<RoleDto>> GetRolesAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.GetAsync("api/v1/role", cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return new List<RoleDto>();
+        }
+
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<RoleDto>>(cancellationToken: cancellationToken)
+            ?? new List<RoleDto>();
+    }
+
+    public async Task<bool> DeletePlayerAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.DeleteAsync($"api/v1/player/{id}", cancellationToken);
+        return response.IsSuccessStatusCode;
+    }
 }
+

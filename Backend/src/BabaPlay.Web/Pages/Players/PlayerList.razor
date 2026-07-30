@@ -1,0 +1,335 @@
+@page "/players"
+@using BabaPlay.Web.Models
+@using BabaPlay.Web.Services.Http
+@using BabaPlay.Web.Components.Common
+@using BabaPlay.Web.Components.Players
+@inject IPlayerApiService PlayerApiService
+
+<PageTitle>Atletas & Membros - Baba Play</PageTitle>
+
+<div class="container-fluid py-4" data-testid="player-list-page">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+        <div>
+            <h1 class="h3 mb-1 font-weight-bold text-gradient">Gestão de Atletas e Membros</h1>
+            <p class="text-muted mb-0">Gerencie a lista de associados, posições esportivas e funções administrativas do time.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @onclick="LoadDataAsync" disabled="@IsLoading">
+                <i class="bi bi-arrow-clockwise me-1"></i> Atualizar
+            </button>
+        </div>
+    </div>
+
+    @if (HasError)
+    {
+        <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+            <div>
+                <strong>Erro ao carregar dados:</strong> @ErrorMessage
+                <button class="btn btn-sm btn-outline-danger ms-3" @onclick="LoadDataAsync">Tentar Novamente</button>
+            </div>
+        </div>
+    }
+
+    <!-- Filter & Toolbar -->
+    <div class="card card-custom mb-4 shadow-sm">
+        <div class="card-body">
+            <div class="row g-3 align-items-center">
+                <!-- Search Input -->
+                <div class="col-12 col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Buscar por nome ou apelido..." 
+                               @bind="SearchTerm" @bind:event="oninput" data-testid="search-input" />
+                        @if (!string.IsNullOrWhiteSpace(SearchTerm))
+                        {
+                            <button class="btn btn-outline-secondary" type="button" @onclick="() => SearchTerm = string.Empty">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- Position Filter -->
+                <div class="col-12 col-sm-6 col-md-3">
+                    <select class="form-select" @bind="SelectedPositionId" data-testid="position-filter">
+                        <option value="">Todas as Posições</option>
+                        @foreach (var pos in Positions)
+                        {
+                            <option value="@pos.Id">@pos.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="col-12 col-sm-6 col-md-2">
+                    <select class="form-select" @bind="SelectedStatus" data-testid="status-filter">
+                        <option value="All">Todos Status</option>
+                        <option value="Active">Somente Ativos</option>
+                        <option value="Inactive">Somente Inativos</option>
+                    </select>
+                </div>
+
+                <!-- Sort By -->
+                <div class="col-12 col-sm-6 col-md-2">
+                    <select class="form-select" @bind="SortBy">
+                        <option value="Name">Nome (A-Z)</option>
+                        <option value="JerseyNumber">Camisa (#)</option>
+                        <option value="Position">Posição</option>
+                    </select>
+                </div>
+
+                <!-- View Mode Toggle -->
+                <div class="col-12 col-sm-6 col-md-1 text-end">
+                    <div class="btn-group w-100" role="group">
+                        <button type="button" class="btn @(ViewMode == "grid" ? "btn-primary" : "btn-outline-secondary")" 
+                                @onclick='() => ViewMode = "grid"' title="Visualização em Grid">
+                            <i class="bi bi-grid-fill"></i>
+                        </button>
+                        <button type="button" class="btn @(ViewMode == "table" ? "btn-primary" : "btn-outline-secondary")" 
+                                @onclick='() => ViewMode = "table"' title="Visualização em Tabela">
+                            <i class="bi bi-list-ul"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Area -->
+    @if (IsLoading)
+    {
+        <div class="d-flex justify-content-center py-5">
+            <LoadingSpinner Message="Carregando atletas da associação..." />
+        </div>
+    }
+    else if (FilteredPlayers.Count == 0)
+    {
+        <div class="card card-custom py-5 text-center my-4" data-testid="empty-state">
+            <div class="card-body">
+                <i class="bi bi-person-x display-4 text-muted mb-3 d-block"></i>
+                <h4 class="h5 font-weight-bold">Nenhum atleta encontrado</h4>
+                <p class="text-muted">Tente ajustar os filtros ou a busca acima para encontrar o atleta desejado.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="mb-3 text-muted small">
+            Exibindo <strong>@FilteredPlayers.Count</strong> de <strong>@Players.Count</strong> atletas.
+        </div>
+
+        @if (ViewMode == "grid")
+        {
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4">
+                @foreach (var player in FilteredPlayers)
+                {
+                    <div class="col">
+                        <PlayerCard Player="player" OnEdit="OpenEditModal" />
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="card card-custom shadow-sm overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" data-testid="player-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>Atleta</th>
+                                <th>Posição</th>
+                                <th>Telefone</th>
+                                <th>Perfil</th>
+                                <th>Status</th>
+                                <th class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var player in FilteredPlayers)
+                            {
+                                <tr>
+                                    <td class="font-weight-bold">
+                                        @(player.JerseyNumber.HasValue ? $"#{player.JerseyNumber}" : "-")
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm me-2 rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width:36px; height:36px;">
+                                                @GetInitials(player.Name)
+                                            </div>
+                                            <div>
+                                                <div class="font-weight-bold">@player.Name</div>
+                                                @if (!string.IsNullOrWhiteSpace(player.Nickname))
+                                                {
+                                                    <small class="text-muted">"@player.Nickname"</small>
+                                                }
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">
+                                            @(string.IsNullOrWhiteSpace(player.PrimaryPositionName) ? "Não definida" : player.PrimaryPositionName)
+                                        </span>
+                                    </td>
+                                    <td>@(string.IsNullOrWhiteSpace(player.Phone) ? "-" : player.Phone)</td>
+                                    <td>
+                                        <span class="badge @(player.RoleName?.ToLower() == "admin" ? "bg-purple" : "bg-info")">
+                                            @(string.IsNullOrWhiteSpace(player.RoleName) ? "Atleta" : player.RoleName)
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge @(player.IsActive ? "bg-success" : "bg-secondary")">
+                                            @(player.IsActive ? "Ativo" : "Inativo")
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-primary" @onclick="() => OpenEditModal(player)">
+                                            <i class="bi bi-pencil me-1"></i> Editar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<EditPlayerModal IsOpen="IsEditModalOpen" 
+                 Player="SelectedPlayer" 
+                 Positions="Positions" 
+                 Roles="Roles"
+                 OnSave="SavePlayerAsync" 
+                 OnClose="CloseEditModal" />
+
+@code {
+    private List<PlayerDto> Players { get; set; } = new();
+    private List<PositionDto> Positions { get; set; } = new();
+    private List<RoleDto> Roles { get; set; } = new();
+
+    private bool IsLoading { get; set; } = true;
+    private bool HasError { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    private string SearchTerm { get; set; } = string.Empty;
+    private string SelectedPositionId { get; set; } = string.Empty;
+    private string SelectedStatus { get; set; } = "All";
+    private string SortBy { get; set; } = "Name";
+    private string ViewMode { get; set; } = "grid";
+
+    private bool IsEditModalOpen { get; set; }
+    private PlayerDto? SelectedPlayer { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        IsLoading = true;
+        HasError = false;
+        ErrorMessage = null;
+        try
+        {
+            var playersTask = PlayerApiService.GetPlayersAsync();
+            var positionsTask = PlayerApiService.GetPositionsAsync();
+            var rolesTask = PlayerApiService.GetRolesAsync();
+
+            await Task.WhenAll(playersTask, positionsTask, rolesTask);
+
+            Players = (await playersTask).ToList();
+            Positions = (await positionsTask).ToList();
+            Roles = (await rolesTask).ToList();
+        }
+        catch (Exception ex)
+        {
+            HasError = true;
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private List<PlayerDto> FilteredPlayers
+    {
+        get
+        {
+            IEnumerable<PlayerDto> result = Players;
+
+            if (!string.IsNullOrWhiteSpace(SearchTerm))
+            {
+                var term = SearchTerm.Trim();
+                result = result.Where(p => 
+                    p.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    (!string.IsNullOrWhiteSpace(p.Nickname) && p.Nickname.Contains(term, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(SelectedPositionId) && Guid.TryParse(SelectedPositionId, out var posGuid))
+            {
+                result = result.Where(p => p.PrimaryPositionId == posGuid);
+            }
+
+            if (SelectedStatus == "Active")
+            {
+                result = result.Where(p => p.IsActive);
+            }
+            else if (SelectedStatus == "Inactive")
+            {
+                result = result.Where(p => !p.IsActive);
+            }
+
+            result = SortBy switch
+            {
+                "JerseyNumber" => result.OrderBy(p => p.JerseyNumber ?? int.MaxValue).ThenBy(p => p.Name),
+                "Position" => result.OrderBy(p => p.PrimaryPositionName ?? "ZZZ").ThenBy(p => p.Name),
+                _ => result.OrderBy(p => p.Name)
+            };
+
+            return result.ToList();
+        }
+    }
+
+    private void OpenEditModal(PlayerDto player)
+    {
+        SelectedPlayer = player;
+        IsEditModalOpen = true;
+    }
+
+    private void CloseEditModal()
+    {
+        IsEditModalOpen = false;
+        SelectedPlayer = null;
+    }
+
+    private async Task SavePlayerAsync(UpdatePlayerAdminDto dto)
+    {
+        if (SelectedPlayer is null) return;
+
+        var success = await PlayerApiService.UpdatePlayerAdminAsync(SelectedPlayer.Id, dto);
+        
+        if (dto.RoleId.HasValue && dto.RoleId != SelectedPlayer.RoleId)
+        {
+            await PlayerApiService.UpdatePlayerRoleAsync(SelectedPlayer.UserId, dto.RoleId.Value);
+        }
+
+        if (success)
+        {
+            CloseEditModal();
+            await LoadDataAsync();
+        }
+    }
+
+    private string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "AP";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][0].ToString().ToUpper();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpper();
+    }
+}
