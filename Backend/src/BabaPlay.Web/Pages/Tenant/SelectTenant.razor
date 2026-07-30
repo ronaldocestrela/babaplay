@@ -1,0 +1,95 @@
+@page "/select-tenant"
+@attribute [Authorize]
+@inject ITenantApiService TenantApiService
+@inject TenantState TenantState
+@inject NavigationManager NavigationManager
+
+<PageTitle>Selecionar Associação - Baba Play</PageTitle>
+
+<div class="min-h-screen bg-slate-900 text-white p-6 md:p-12">
+    <div class="max-w-4xl mx-auto space-y-8">
+        <div class="text-center md:text-left border-b border-slate-800 pb-6">
+            <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200">
+                Sehas Associações
+            </h1>
+            <p class="mt-2 text-slate-400">
+                Selecione qual liga/associação você deseja acessar no momento.
+            </p>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="flex items-center justify-center py-16">
+                <svg class="animate-spin h-10 w-10 text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+        }
+        else if (memberships == null || memberships.Count == 0)
+        {
+            <div class="text-center py-12 bg-slate-800/50 rounded-xl border border-slate-700/60 p-8">
+                <p class="text-slate-300 mb-4">Você ainda não faz parte de nenhuma associação.</p>
+                <a href="/tenant/register" id="create-first-tenant-btn" class="inline-flex items-center gap-2 px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-lg transition-colors">
+                    Criar Minha Associação
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="tenant-cards-grid">
+                @foreach (var tenant in memberships)
+                {
+                    <div @onclick="() => ChooseTenant(tenant)" class="group cursor-pointer bg-slate-800/80 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500/50 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/10 flex flex-col justify-between">
+                        <div class="flex items-center gap-4">
+                            @if (!string.IsNullOrEmpty(tenant.LogoUrl))
+                            {
+                                <img src="@tenant.LogoUrl" alt="@tenant.Name" class="w-14 h-14 rounded-full object-cover border border-slate-600" />
+                            }
+                            else
+                            {
+                                <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center font-bold text-xl text-slate-950">
+                                    @tenant.Name.Substring(0, Math.Min(2, tenant.Name.Length)).ToUpper()
+                                </div>
+                            }
+                            <div>
+                                <h3 class="font-bold text-lg text-slate-100 group-hover:text-emerald-400 transition-colors">@tenant.Name</h3>
+                                <span class="inline-block mt-1 text-xs px-2.5 py-0.5 rounded-full bg-slate-700 text-slate-300 font-medium">@tenant.Role</span>
+                            </div>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-700/50 flex items-center justify-between text-xs text-emerald-400 font-semibold">
+                            <span>Acessar painel</span>
+                            <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private IReadOnlyList<TenantSummaryDto>? memberships;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        try
+        {
+            memberships = await TenantApiService.GetMyMembershipsAsync();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ChooseTenant(TenantSummaryDto tenant)
+    {
+        TenantState.SetTenant(tenant.Id, tenant.Name, tenant.Slug);
+        NavigationManager.NavigateTo("/");
+    }
+}

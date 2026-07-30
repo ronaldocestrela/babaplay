@@ -29,4 +29,9 @@ builder.Services.AddHttpClient("BabaPlayApi", client =>
 
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("BabaPlayApi"));
 
+// API Services
+builder.Services.AddScoped<BabaPlay.Web.Services.Http.IAuthApiService, BabaPlay.Web.Services.Http.AuthApiService>();
+builder.Services.AddScoped<BabaPlay.Web.Services.Http.ITenantApiService, BabaPlay.Web.Services.Http.TenantApiService>();
+builder.Services.AddScoped<BabaPlay.Web.Services.Http.IPlayerApiService, BabaPlay.Web.Services.Http.PlayerApiService>();
+
 await builder.Build().RunAsync();

@@ -1,0 +1,130 @@
+@page "/tenant/accept-invite"
+@layout PublicLayout
+@inject ITenantApiService TenantApiService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Aceitar Convite - Baba Play</PageTitle>
+
+<div class="min-h-screen bg-slate-900 text-white flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-slate-800/80 p-8 rounded-2xl border border-slate-700 shadow-2xl backdrop-blur-md text-center space-y-6">
+        @if (isValidating)
+        {
+            <div class="py-12 space-y-4">
+                <svg class="animate-spin h-10 w-10 text-emerald-400 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="text-slate-400 text-sm">Validando seu convite...</p>
+            </div>
+        }
+        else if (inviteInfo != null && inviteInfo.IsValid)
+        {
+            <div class="space-y-4">
+                <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-2xl font-bold border border-emerald-500/30">
+                    ✉️
+                </div>
+                <h1 class="text-2xl font-bold text-slate-100">Você foi convidado!</h1>
+                <p class="text-slate-300 text-sm">
+                    Você recebeu um convite para fazer parte da associação <strong class="text-emerald-400">@inviteInfo.TenantName</strong> como <strong>@inviteInfo.Role</strong>.
+                </p>
+                <p class="text-slate-400 text-xs">Convite destinado ao e-mail: @inviteInfo.Email</p>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div id="accept-error-alert" class="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+                        @errorMessage
+                    </div>
+                }
+
+                <button @onclick="HandleAcceptInviteAsync" disabled="@isSubmitting" id="accept-invite-submit" class="w-full py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold rounded-lg shadow-lg hover:shadow-emerald-500/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                    @if (isSubmitting)
+                    {
+                        <span>Aceitando...</span>
+                    }
+                    else
+                    {
+                        <span>Aceitar Convite e Entrar</span>
+                    }
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="space-y-4 py-6">
+                <div class="w-16 h-16 bg-rose-500/20 text-rose-400 rounded-full flex items-center justify-center mx-auto text-2xl font-bold border border-rose-500/30">
+                    ⚠️
+                </div>
+                <h2 class="text-xl font-bold text-slate-100">Convite Inválido ou Expirado</h2>
+                <p class="text-slate-400 text-sm">
+                    @(inviteInfo?.ErrorMessage ?? "Este convite não está mais ativo ou o link fornecido é incorreto.")
+                </p>
+                <a href="/auth/login" class="inline-block mt-4 px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-100 font-semibold rounded-lg text-sm transition-colors">
+                    Ir para o Login
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? Token { get; set; }
+
+    private InviteValidationDto? inviteInfo;
+    private bool isValidating = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(Token))
+        {
+            isValidating = false;
+            inviteInfo = new InviteValidationDto(false, "", "", "", "Nenhum token fornecido na URL.");
+            return;
+        }
+
+        try
+        {
+            inviteInfo = await TenantApiService.ValidateInviteAsync(Token);
+        }
+        catch (Exception)
+        {
+            inviteInfo = new InviteValidationDto(false, "", "", "", "Falha ao validar o convite com o servidor.");
+        }
+        finally
+        {
+            isValidating = false;
+        }
+    }
+
+    private async Task HandleAcceptInviteAsync()
+    {
+        if (string.IsNullOrEmpty(Token)) return;
+
+        isSubmitting = true;
+        errorMessage = null;
+
+        try
+        {
+            var success = await TenantApiService.AcceptInviteAsync(new AcceptInviteDto { Token = Token });
+            if (success)
+            {
+                NavigationManager.NavigateTo("/complete-profile");
+            }
+            else
+            {
+                errorMessage = "Não foi possível aceitar o convite. Verifique se você já aceitou anteriormente.";
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "Erro inesperado ao aceitar o convite.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}
