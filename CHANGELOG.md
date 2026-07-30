@@ -8,6 +8,22 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F21 (Controle de Inadimplência)
+
+- **[F21] Controle de Inadimplência**:
+  - `Pages/Financial/DefaultersReport.razor`: Relatório gerencial gerencial de inadimplência (`/financial/defaulters`) com estatísticas sumarizadas (KPIs de contagem, montante em aberto e média de dias de atraso), filtros por gravidade (Leve <=30d, Médio 31-60d, Crítico >60d) e busca por atleta.
+  - `Components/Financial/DefaulterRowWidget.razor`: Componente de linha para exibição de dados do atleta inadimplente, badges coloridos de nível de risco e botão "Enviar Lembrete 🔔".
+  - `Services/Http/IFinancialApiService.cs` & `FinancialApiService.cs`: Adicionados métodos `GetDefaultersAsync` e `SendPaymentReminderAsync`.
+  - `Components/Layout/NavMenu.razor`: Adicionado link de atalho direto para Inadimplência (`/financial/defaulters`).
+- **Backend CQRS Query/Command & Controller Endpoints**:
+  - `GetDefaultersListQuery.cs` & `GetDefaultersListQueryHandler.cs`: Query Handler para agrupamento por atleta, cálculo de montante e dias de atraso.
+  - `SendPaymentReminderCommand.cs` & `SendPaymentReminderCommandHandler.cs`: Command Handler para notificação e lembrete de cobrança.
+  - `DefaulterMemberResponse.cs` e `DefaultersListResponse.cs`: DTOs de resposta do backend.
+  - `FinancialController.cs`: Adicionados endpoints `GET /api/v1/financial/defaulters` e `POST /api/v1/financial/defaulters/{playerId}/remind`.
+- **Suíte de Testes TDD (bUnit & xUnit)**:
+  - `DefaulterRowWidgetTests.cs`, `DefaultersReportPageTests.cs`, `GetDefaultersListQueryHandlerTests.cs`, `SendPaymentReminderCommandHandlerTests.cs`.
+  - Total da suíte do projeto: **650/650 testes passando (100% de sucesso)**.
+
 ### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F20 (Pagamento via Pix e Cartão de Crédito)
 
 - **[F20] Pagamento via Pix e Cartão de Crédito**:

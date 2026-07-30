@@ -108,4 +108,27 @@ public sealed class FinancialApiService : IFinancialApiService
         var response = await _httpClient.PostAsJsonAsync($"api/v1/financial/invoices/{invoiceId}/confirm-pix", payload, cancellationToken);
         return response.IsSuccessStatusCode;
     }
+
+    public async Task<DefaultersListDto?> GetDefaultersAsync(DateTime? referenceUtc = null, CancellationToken cancellationToken = default)
+    {
+        var url = "api/v1/financial/defaulters";
+        if (referenceUtc.HasValue)
+        {
+            url += $"?referenceUtc={Uri.EscapeDataString(referenceUtc.Value.ToString("o"))}";
+        }
+
+        var response = await _httpClient.GetAsync(url, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<DefaultersListDto>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<bool> SendPaymentReminderAsync(Guid playerId, CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.PostAsync($"api/v1/financial/defaulters/{playerId}/remind", null, cancellationToken);
+        return response.IsSuccessStatusCode;
+    }
 }

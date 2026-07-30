@@ -1,0 +1,87 @@
+@namespace BabaPlay.Web.Components.Financial
+@using BabaPlay.Web.Models
+
+@if (Member != null)
+{
+    <tr style="border-bottom: 1px solid var(--border-color, #f1f5f9);" data-testid="defaulter-row">
+        <td style="padding: 0.75rem 1rem; font-weight: 600; color: var(--text-main);" data-testid="defaulter-name">
+            @Member.PlayerName
+        </td>
+
+        <td style="padding: 0.75rem 1rem; text-align: center;">
+            <span class="badge bg-secondary" style="font-size: 0.75rem;" data-testid="overdue-count-badge">
+                @Member.OverdueInvoicesCount @(Member.OverdueInvoicesCount == 1 ? "fatura" : "faturas")
+            </span>
+            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">
+                @string.Join(", ", Member.OverdueCompetences)
+            </div>
+        </td>
+
+        <td style="padding: 0.75rem 1rem; text-align: right; font-weight: 700; color: #ef4444;" data-testid="defaulter-amount">
+            @Member.TotalOverdueAmount.ToString("C2", new System.Globalization.CultureInfo("pt-BR"))
+        </td>
+
+        <td style="padding: 0.75rem 1rem; text-align: center;">
+            @if (Member.MaxDaysOverdue <= 30)
+            {
+                <span class="badge bg-warning text-dark" style="font-size: 0.75rem;" data-testid="risk-badge-leve">
+                    ⚠️ Leve (@Member.MaxDaysOverdue d)
+                </span>
+            }
+            else if (Member.MaxDaysOverdue <= 60)
+            {
+                <span class="badge bg-warning text-dark font-weight-bold" style="font-size: 0.75rem; background-color: #f59e0b !important; color: white !important;" data-testid="risk-badge-medio">
+                    📙 Médio (@Member.MaxDaysOverdue d)
+                </span>
+            }
+            else
+            {
+                <span class="badge bg-danger text-white" style="font-size: 0.75rem;" data-testid="risk-badge-critico">
+                    🚨 Crítico (@Member.MaxDaysOverdue d)
+                </span>
+            }
+        </td>
+
+        <td style="padding: 0.75rem 1rem; text-align: center;">
+            <button class="btn btn-outline-primary btn-sm font-weight-bold"
+                    @onclick="SendReminderAsync"
+                    disabled="@IsSending"
+                    data-testid="btn-send-reminder">
+                @if (IsSending)
+                {
+                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    <span>Enviando...</span>
+                }
+                else
+                {
+                    <span>🔔 Enviar Lembrete</span>
+                }
+            </button>
+        </td>
+    </tr>
+}
+
+@code {
+    [Parameter] public DefaulterMemberDto Member { get; set; } = default!;
+    [Parameter] public EventCallback<Guid> OnSendReminder { get; set; }
+
+    private bool IsSending { get; set; }
+
+    private async Task SendReminderAsync()
+    {
+        if (Member == null) return;
+
+        IsSending = true;
+        try
+        {
+            if (OnSendReminder.HasDelegate)
+            {
+                await OnSendReminder.InvokeAsync(Member.PlayerId);
+            }
+        }
+        finally
+        {
+            IsSending = false;
+        }
+    }
+}

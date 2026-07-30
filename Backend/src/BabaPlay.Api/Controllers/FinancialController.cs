@@ -26,6 +26,8 @@ public sealed class FinancialController : ControllerBase
     private readonly IQueryHandler<GetInvoicesQuery, Result<IReadOnlyList<InvoiceResponse>>> _getInvoicesHandler;
     private readonly ICommandHandler<GeneratePixPaymentCommand, Result<PixPaymentDetailsResponse>> _generatePixHandler;
     private readonly ICommandHandler<ConfirmPixPaymentCommand, Result<MonthlyFeePaymentResponse>> _confirmPixHandler;
+    private readonly IQueryHandler<GetDefaultersListQuery, Result<DefaultersListResponse>> _getDefaultersHandler;
+    private readonly ICommandHandler<SendPaymentReminderCommand, Result> _sendReminderHandler;
 
     public FinancialController(
         ICommandHandler<CreateCashTransactionCommand, Result<CashTransactionResponse>> createCashTransactionHandler,
@@ -39,7 +41,9 @@ public sealed class FinancialController : ControllerBase
         IQueryHandler<GetFinancialOverviewQuery, Result<FinancialOverviewResponse>> getFinancialOverviewHandler,
         IQueryHandler<GetInvoicesQuery, Result<IReadOnlyList<InvoiceResponse>>> getInvoicesHandler,
         ICommandHandler<GeneratePixPaymentCommand, Result<PixPaymentDetailsResponse>> generatePixHandler,
-        ICommandHandler<ConfirmPixPaymentCommand, Result<MonthlyFeePaymentResponse>> confirmPixHandler)
+        ICommandHandler<ConfirmPixPaymentCommand, Result<MonthlyFeePaymentResponse>> confirmPixHandler,
+        IQueryHandler<GetDefaultersListQuery, Result<DefaultersListResponse>> getDefaultersHandler,
+        ICommandHandler<SendPaymentReminderCommand, Result> sendReminderHandler)
     {
         _createCashTransactionHandler = createCashTransactionHandler;
         _createMonthlyFeeHandler = createMonthlyFeeHandler;
@@ -53,6 +57,8 @@ public sealed class FinancialController : ControllerBase
         _getInvoicesHandler = getInvoicesHandler;
         _generatePixHandler = generatePixHandler;
         _confirmPixHandler = confirmPixHandler;
+        _getDefaultersHandler = getDefaultersHandler;
+        _sendReminderHandler = sendReminderHandler;
     }
 
     [HttpPost("cash-transaction")]
@@ -274,7 +280,45 @@ public sealed class FinancialController : ControllerBase
         return Ok(result.Value);
     }
 
+    [HttpGet("defaulters")]
+    [Authorize(Policy = AuthorizationPolicyNames.FinancialRead)]
+    [ProducesResponseType(typeof(DefaultersListResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> GetDefaulters([FromQuery] DateTime? referenceUtc, CancellationToken ct)
+    {
+        var result = await _getDefaultersHandler.HandleAsync(new GetDefaultersListQuery(referenceUtc), ct);
+        if (!result.IsSuccess)
+            return UnprocessableEntity(ToProblem(StatusCodes.Status422UnprocessableEntity, result));
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("defaulters/{playerId:guid}/remind")]
+    [Authorize(Policy = AuthorizationPolicyNames.FinancialWrite)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> SendReminder(Guid playerId, CancellationToken ct)
+    {
+        var result = await _sendReminderHandler.HandleAsync(new SendPaymentReminderCommand(playerId), ct);
+        if (!result.IsSuccess)
+        {
+            var statusCode = result.ErrorCode == "PLAYER_NOT_FOUND" ? StatusCodes.Status404NotFound : StatusCodes.Status422UnprocessableEntity;
+            return StatusCode(statusCode, ToProblem(statusCode, result));
+        }
+
+        return Ok();
+    }
+
     private static ProblemDetails ToProblem<T>(int statusCode, Result<T> result)
+        => new()
+        {
+            Status = statusCode,
+            Title = result.ErrorCode,
+            Detail = result.ErrorMessage,
+        };
+
+    private static ProblemDetails ToProblem(int statusCode, Result result)
         => new()
         {
             Status = statusCode,

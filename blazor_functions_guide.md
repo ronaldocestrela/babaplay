@@ -315,12 +315,14 @@ flowchart TD
 * **Endpoints API Consumidos:** `POST /api/v1/financial/invoices/{id}/pay-pix` (`GeneratePixPaymentCommand`), `POST /api/v1/financial/invoices/{id}/confirm-pix` (`ConfirmPixPaymentCommand`)
 * **Testes bUnit/xUnit:** `PixPaymentModalTests.cs`, `GeneratePixPaymentCommandHandlerTests.cs`, `ConfirmPixPaymentCommandHandlerTests.cs`.
 
-#### **[F21] Controle de Inadimplência**
-* **Objetivo:** Painel restrito a administradores para listar atletas inadimplentes e disparar lembretes de cobrança.
-* **Componentes / Páginas:** `Pages/Financial/DefaultersReport.razor`
-* **Services & DTOs:** `IFinancialApiService` (`GetDefaultersAsync`), `DefaulterMemberDto`
-* **Endpoints API Consumidos:** `GET /api/v1/financial/defaulters` (`GetDefaultersListQuery`)
-* **Testes bUnit:** Renderização dos dias de atraso e disparo do evento de lembrete.
+#### **[F21] Controle de Inadimplência** ✅ CONCLUÍDO
+* **Objetivo:** Painel gerencial restrito a administradores e tesoureiros para listar atletas inadimplentes, classificar o nível de risco e disparar lembretes de cobrança.
+* **Componentes / Páginas:** 
+  * `Pages/Financial/DefaultersReport.razor`
+  * `Components/Financial/DefaulterRowWidget.razor`
+* **Services & DTOs:** `IFinancialApiService`, `FinancialApiService`, `DefaulterMemberDto`, `DefaultersListDto`, `DefaulterMemberResponse`, `DefaultersListResponse`
+* **Endpoints API Consumidos:** `GET /api/v1/financial/defaulters` (`GetDefaultersListQuery`), `POST /api/v1/financial/defaulters/{playerId}/remind` (`SendPaymentReminderCommand`)
+* **Testes bUnit/xUnit:** `DefaulterRowWidgetTests.cs`, `DefaultersReportPageTests.cs`, `GetDefaultersListQueryHandlerTests.cs`, `SendPaymentReminderCommandHandlerTests.cs`.
 
 #### **[F22] Prestação de Contas Pública (Balancete para Sócios)**
 * **Objetivo:** Transparência financeira exibindo comprovantes de receitas e despesas registradas pela diretoria para todos os membros da associação.

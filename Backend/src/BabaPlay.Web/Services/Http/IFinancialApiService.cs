@@ -17,4 +17,8 @@ public interface IFinancialApiService
     Task<PixPaymentDetailsDto?> GetPixPaymentAsync(Guid invoiceId, CancellationToken cancellationToken = default);
 
     Task<bool> ConfirmPixPaymentAsync(Guid invoiceId, string? txId = null, CancellationToken cancellationToken = default);
+
+    Task<DefaultersListDto?> GetDefaultersAsync(DateTime? referenceUtc = null, CancellationToken cancellationToken = default);
+
+    Task<bool> SendPaymentReminderAsync(Guid playerId, CancellationToken cancellationToken = default);
 }

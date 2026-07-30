@@ -167,6 +167,8 @@ public static class ServiceRegistration
         services.AddScoped<IQueryHandler<GetInvoicesQuery, Result<IReadOnlyList<InvoiceResponse>>>, GetInvoicesQueryHandler>();
         services.AddScoped<ICommandHandler<GeneratePixPaymentCommand, Result<PixPaymentDetailsResponse>>, GeneratePixPaymentCommandHandler>();
         services.AddScoped<ICommandHandler<ConfirmPixPaymentCommand, Result<MonthlyFeePaymentResponse>>, ConfirmPixPaymentCommandHandler>();
+        services.AddScoped<IQueryHandler<GetDefaultersListQuery, Result<DefaultersListResponse>>, GetDefaultersListQueryHandler>();
+        services.AddScoped<ICommandHandler<SendPaymentReminderCommand, Result>, SendPaymentReminderCommandHandler>();
 
         return services;
     }
