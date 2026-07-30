@@ -1,0 +1,80 @@
+@namespace BabaPlay.Web.Components.Reports
+@using BabaPlay.Web.Models
+
+<div class="top-scorers-widget card card-custom p-4 mb-4 shadow-sm" data-testid="top-scorers-widget">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="h5 font-weight-bold mb-0 text-dark" data-testid="scorers-title">
+            ⚽ Artilharia & Assistências da Temporada
+        </h3>
+        <span class="badge bg-primary">@Scorers.Count Atletas</span>
+    </div>
+
+    @if (Scorers.Count == 0)
+    {
+        <div class="text-center py-4 text-muted" data-testid="empty-scorers">
+            Nenhuma estatística de gols/assistências registrada até o momento.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" data-testid="scorers-table">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Atleta</th>
+                        <th class="text-center">Jogos</th>
+                        <th class="text-center">Gols ⚽</th>
+                        <th class="text-center">Assist. 👟</th>
+                        <th class="text-center">Média/Jogo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ int pos = 1; }
+                    @foreach (var player in Scorers)
+                    {
+                        <tr data-testid="scorer-row-@player.PlayerId">
+                            <td class="fw-bold">
+                                @if (pos == 1) { <span>🥇</span> }
+                                else if (pos == 2) { <span>🥈</span> }
+                                else if (pos == 3) { <span>🥉</span> }
+                                else { <span class="text-muted">@pos</span> }
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle bg-dark text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                        @GetInitials(player.PlayerName)
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark" data-testid="scorer-name">@player.PlayerName</div>
+                                        @if (!string.IsNullOrWhiteSpace(player.Nickname))
+                                        {
+                                            <small class="text-muted italic">"@player.Nickname"</small>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">@player.MatchesPlayed</td>
+                            <td class="text-center fw-bold text-success" data-testid="scorer-goals">@player.Goals</td>
+                            <td class="text-center fw-bold text-primary" data-testid="scorer-assists">@player.Assists</td>
+                            <td class="text-center small text-muted">@player.GoalsPerMatch.ToString("F2")</td>
+                        </tr>
+                        pos++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<TopScorerEntryDto> Scorers { get; set; } = new List<TopScorerEntryDto>();
+
+    private static string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "A";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][..1].ToUpperInvariant();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+    }
+}

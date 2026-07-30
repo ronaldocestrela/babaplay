@@ -271,12 +271,16 @@ flowchart TD
 * **Testes bUnit/xUnit:** `MvpCandidateCardTests.cs`, `MvpLeaderboardWidgetTests.cs`, `MvpVotingPageTests.cs`, `SubmitMvpVoteCommandHandlerTests.cs`.
 
 
-#### **[F17] Rankings da Temporada e Histórico**
+#### **[F17] Rankings da Temporada e Histórico** ✅ CONCLUÍDO
 * **Objetivo:** Tabelas e gráficos com a classificação geral da temporada: Artilharia, Líderes de Assistência, Cartões, Assiduidade (Frequência) e Avaliação Média.
-* **Componentes / Páginas:** `Pages/Reports/SeasonRankings.razor`
-* **Services & DTOs:** `IReportApiService`, `SeasonRankingDto`
-* **Endpoints API Consumidos:** `GET /api/v1/reports/rankings` (`GetSeasonRankingQuery`)
-* **Testes bUnit:** Alternância entre abas de "Gols", "Assistências" e "Frequência", ordenando os dados corretamente.
+* **Componentes / Páginas:** 
+  * `Pages/Reports/SeasonRankings.razor`
+  * `Components/Reports/TopScorersWidget.razor`
+  * `Components/Reports/AttendanceWidget.razor`
+* **Services & DTOs:** `IRankingApiService`, `RankingApiService`, `RankingEntryDto`, `TopScorerEntryDto`, `AttendanceEntryDto`
+* **Endpoints API Consumidos:** `GET /api/v1/ranking`, `GET /api/v1/ranking/top-scorers`, `GET /api/v1/ranking/attendance`, `POST /api/v1/ranking/rebuild`
+* **Testes bUnit:** `TopScorersWidgetTests.cs`, `AttendanceWidgetTests.cs`, `SeasonRankingsPageTests.cs`.
+
 
 ---
 

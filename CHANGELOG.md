@@ -8,7 +8,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend & Service Layer: Fase F17 (Rankings da Temporada e Histórico)
+
+- **[F17] Rankings da Temporada e Histórico**:
+  - `Pages/Reports/SeasonRankings.razor`: Tela principal dos Rankings da Temporada (`/reports/rankings` e `/rankings`) com navegação por abas ("Ranking Geral ⭐", "Artilharia ⚽", "Assistências 👟", "Assiduidade 📅"), busca textual por atletas e recálculo da liga.
+  - `Components/Reports/TopScorersWidget.razor`: Tabela/Widget da artilharia e garçons da temporada com medalhamento no Top 3 (🥇 Ouro, 🥈 Prata, 🥉 Bronze) e estatísticas de gols por jogo.
+  - `Components/Reports/AttendanceWidget.razor`: Tabela de assiduidade com indicador visual de progresso da frequência de check-in (%).
+  - `Services/Http/IRankingApiService.cs` & `RankingApiService.cs`: Cliente de API consumindo `GET api/v1/ranking`, `GET api/v1/ranking/top-scorers`, `GET api/v1/ranking/attendance` e `POST api/v1/ranking/rebuild`.
+- **Suíte de Testes TDD (bUnit)**:
+  - `TopScorersWidgetTests.cs`, `AttendanceWidgetTests.cs`, `SeasonRankingsPageTests.cs`.
+  - Total da suíte do projeto: **610/610 testes passando (100% de sucesso)**.
+
 ### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F16 (Votação do Craque do Jogo - MVP)
+
 
 - **[F16] Votação do Craque do Jogo (MVP)**:
   - `Pages/Matches/MvpVoting.razor`: Tela completa de votação do Craque do Jogo (`/matches/mvp` e `/matches/{matchId}/mvp`) com computação de votos e desabilitação em tempo real.

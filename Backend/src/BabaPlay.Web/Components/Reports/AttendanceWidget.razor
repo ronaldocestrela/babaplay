@@ -1,0 +1,79 @@
+@namespace BabaPlay.Web.Components.Reports
+@using BabaPlay.Web.Models
+
+<div class="attendance-widget card card-custom p-4 mb-4 shadow-sm" data-testid="attendance-widget">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="h5 font-weight-bold mb-0 text-dark" data-testid="attendance-title">
+            📅 Ranking de Assiduidade & Frequência
+        </h3>
+        <span class="badge bg-secondary">@AttendanceList.Count Atletas</span>
+    </div>
+
+    @if (AttendanceList.Count == 0)
+    {
+        <div class="text-center py-4 text-muted" data-testid="empty-attendance">
+            Nenhum histórico de presença registrado na associação.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" data-testid="attendance-table">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Atleta</th>
+                        <th class="text-center">Presenças</th>
+                        <th class="text-center">Total Babas</th>
+                        <th style="width: 30%;">Frequência (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ int pos = 1; }
+                    @foreach (var player in AttendanceList)
+                    {
+                        <tr data-testid="attendance-row-@player.PlayerId">
+                            <td class="fw-bold">
+                                @if (pos == 1) { <span>🥇</span> }
+                                else if (pos == 2) { <span>🥈</span> }
+                                else if (pos == 3) { <span>🥉</span> }
+                                else { <span class="text-muted">@pos</span> }
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle bg-dark text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                        @GetInitials(player.PlayerName)
+                                    </div>
+                                    <div class="fw-bold text-dark" data-testid="attendance-name">@player.PlayerName</div>
+                                </div>
+                            </td>
+                            <td class="text-center fw-bold text-primary">@player.TotalCheckins</td>
+                            <td class="text-center text-muted">@player.TotalGameDays</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height: 10px;">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: @(player.AttendancePercentage)%;" aria-valuenow="@player.AttendancePercentage" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <span class="small fw-bold text-dark" data-testid="attendance-percentage">@player.AttendancePercentage.ToString("F0")%</span>
+                                </div>
+                            </td>
+                        </tr>
+                        pos++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<AttendanceEntryDto> AttendanceList { get; set; } = new List<AttendanceEntryDto>();
+
+    private static string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "A";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][..1].ToUpperInvariant();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+    }
+}
