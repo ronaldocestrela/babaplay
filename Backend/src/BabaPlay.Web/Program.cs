@@ -33,5 +33,7 @@ builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().Cre
 builder.Services.AddScoped<BabaPlay.Web.Services.Http.IAuthApiService, BabaPlay.Web.Services.Http.AuthApiService>();
 builder.Services.AddScoped<BabaPlay.Web.Services.Http.ITenantApiService, BabaPlay.Web.Services.Http.TenantApiService>();
 builder.Services.AddScoped<BabaPlay.Web.Services.Http.IPlayerApiService, BabaPlay.Web.Services.Http.PlayerApiService>();
+builder.Services.AddScoped<BabaPlay.Web.Services.Http.IPositionApiService, BabaPlay.Web.Services.Http.PositionApiService>();
+
 
 await builder.Build().RunAsync();

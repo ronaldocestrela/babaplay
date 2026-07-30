@@ -1,0 +1,153 @@
+@using BabaPlay.Web.Models
+
+@if (IsOpen)
+{
+    <div class="modal-backdrop fade show" style="display: block; background-color: rgba(0,0,0,0.5);"></div>
+    <div class="modal fade show" tabindex="-1" style="display: block;" data-testid="position-modal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-shield-plus me-2"></i>@(IsEditing ? "Editar Posição" : "Nova Posição Esportiva")
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CloseAsync" disabled="@IsSubmitting"></button>
+                </div>
+                <EditForm Model="Model" OnValidSubmit="HandleValidSubmitAsync">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        <ValidationSummary class="text-danger mb-3" />
+
+                        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                        {
+                            <div class="alert alert-danger mb-3" role="alert">
+                                @ErrorMessage
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold">Sigla / Código *</label>
+                            <InputText class="form-control" @bind-Value="Model.Code" placeholder="Ex: GOL, ZAG, MEI, ATA" data-testid="position-code-input" />
+                            <small class="form-text text-muted">Abreviatura usada nos relatórios e cartões do time.</small>
+                            <ValidationMessage For="@(() => Model.Code)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold">Nome da Posição *</label>
+                            <InputText class="form-control" @bind-Value="Model.Name" placeholder="Ex: Atacante, Goleiro, Fixo" data-testid="position-name-input" />
+                            <ValidationMessage For="@(() => Model.Name)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Descrição (opcional)</label>
+                            <InputTextArea class="form-control" @bind-Value="Model.Description" rows="3" placeholder="Descrição das atribuições desta posição no baba..." />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CloseAsync" disabled="@IsSubmitting">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary" disabled="@IsSubmitting" data-testid="position-save-button">
+                            @if (IsSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Salvando...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-check-lg me-1"></i>
+                                <span>@(IsEditing ? "Salvar Alterações" : "Cadastrar Posição")</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public PositionDto? Position { get; set; }
+    [Parameter] public EventCallback<CreatePositionDto> OnCreate { get; set; }
+    [Parameter] public EventCallback<UpdatePositionDto> OnUpdate { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private FormModel Model { get; set; } = new();
+    private bool IsSubmitting { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    private bool IsEditing => Position is not null;
+
+    protected override void OnParametersSet()
+    {
+        if (Position is not null)
+        {
+            Model = new FormModel
+            {
+                Code = Position.Code,
+                Name = Position.Name,
+                Description = Position.Description
+            };
+        }
+        else
+        {
+            Model = new FormModel();
+        }
+    }
+
+    private async Task HandleValidSubmitAsync()
+    {
+        IsSubmitting = true;
+        ErrorMessage = null;
+        try
+        {
+            if (IsEditing)
+            {
+                await OnUpdate.InvokeAsync(new UpdatePositionDto
+                {
+                    Code = Model.Code,
+                    Name = Model.Name,
+                    Description = Model.Description
+                });
+            }
+            else
+            {
+                await OnCreate.InvokeAsync(new CreatePositionDto
+                {
+                    Code = Model.Code,
+                    Name = Model.Name,
+                    Description = Model.Description
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        if (!IsSubmitting)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+
+    private class FormModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "A sigla/código é obrigatória.")]
+        [System.ComponentModel.DataAnnotations.StringLength(10, ErrorMessage = "A sigla deve ter no máximo 10 caracteres.")]
+        public string Code { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "O nome da posição é obrigatório.")]
+        [System.ComponentModel.DataAnnotations.StringLength(50, ErrorMessage = "O nome deve ter no máximo 50 caracteres.")]
+        public string Name { get; set; } = string.Empty;
+
+        public string? Description { get; set; }
+    }
+}

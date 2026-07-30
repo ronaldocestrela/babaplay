@@ -81,6 +81,41 @@ public record UpdatePlayerAdminDto
 
 public record PositionDto(
     Guid Id,
+    string Code,
     string Name,
-    string Abbreviation);
+    string? Description = null,
+    bool IsActive = true)
+{
+    public PositionDto(Guid id, string name, string abbreviation)
+        : this(id, abbreviation, name, null, true) { }
+
+    public string Abbreviation => Code;
+}
+
+public record CreatePositionDto
+{
+    [Required(ErrorMessage = "A sigla/código é obrigatória.")]
+    [StringLength(10, ErrorMessage = "A sigla deve ter no máximo 10 caracteres.")]
+    public string Code { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "O nome da posição é obrigatório.")]
+    [StringLength(50, ErrorMessage = "O nome deve ter no máximo 50 caracteres.")]
+    public string Name { get; set; } = string.Empty;
+
+    public string? Description { get; set; }
+}
+
+public record UpdatePositionDto
+{
+    [Required(ErrorMessage = "A sigla/código é obrigatória.")]
+    [StringLength(10, ErrorMessage = "A sigla deve ter no máximo 10 caracteres.")]
+    public string Code { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "O nome da posição é obrigatório.")]
+    [StringLength(50, ErrorMessage = "O nome deve ter no máximo 50 caracteres.")]
+    public string Name { get; set; } = string.Empty;
+
+    public string? Description { get; set; }
+}
+
 
