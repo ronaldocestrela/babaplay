@@ -239,11 +239,15 @@ flowchart TD
 * **Testes bUnit/xUnit:** `PlayerBadgeTests.cs`, `TeamColumnTests.cs`, `TeamDrawPageTests.cs`, `GenerateBalancedTeamsCommandHandlerTests.cs`.
 
 
-#### **[F14] Prancheta Tática e Escalação Visual**
+#### **[F14] Prancheta Tática e Escalação Visual** ✅ CONCLUÍDO
 * **Objetivo:** Exibição gráfica do campo de futebol com a posição dos jogadores escalados em cada time.
-* **Componentes / Páginas:** `Components/Teams/TacticalBoard.razor`
-* **Services & DTOs:** `TacticalFormationDto`
-* **Testes bUnit:** Testar a renderização dos pinos dos jogadores nas coordenadas X/Y do campo.
+* **Componentes / Páginas:** 
+  * `Pages/Teams/TacticalBoardPage.razor`
+  * `Components/Teams/TacticalBoard.razor`
+  * `Components/Teams/PlayerPin.razor`
+* **Services & DTOs:** `TacticalFormationDto`, `PlayerTacticalPositionDto`, `PitchFormationPresetDto`
+* **Testes bUnit:** `PlayerPinTests.cs`, `TacticalBoardTests.cs`, `TacticalBoardPageTests.cs`.
+
 
 #### **[F15] Registro de Súmula Pós-Jogo (Estatísticas em Tempo Real)**
 * **Objetivo:** Tela para o mesário/administrador registrar o placar, gols, assistências, cartões amarelos/vermelhos e minutos jogados.

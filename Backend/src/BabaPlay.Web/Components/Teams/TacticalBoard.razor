@@ -1,0 +1,45 @@
+@namespace BabaPlay.Web.Components.Teams
+@using BabaPlay.Web.Models
+
+<div class="tactical-board-container card card-custom p-3 shadow-sm bg-dark overflow-hidden" data-testid="tactical-board">
+    <div class="pitch-header d-flex justify-content-between align-items-center text-white mb-2">
+        <span class="fw-bold" data-testid="formation-title">📋 Esquema Tático: @(Formation?.FormationName ?? "2-2 (Futsal)")</span>
+        <span class="badge bg-success" data-testid="mode-badge">@(Formation?.Mode ?? "Futsal")</span>
+    </div>
+
+    <!-- Campo de Futebol SVG/CSS -->
+    <div class="soccer-pitch position-relative rounded shadow-inner"
+         style="width: 100%; min-height: 480px; background: radial-gradient(circle, #388e3c 0%, #1b5e20 100%); border: 3px solid #ffffff;"
+         data-testid="soccer-pitch">
+        
+        <!-- Linhas do Campo (SVG Overlay) -->
+        <svg class="position-absolute top-0 start-0 w-100 h-100" style="pointer-events: none; stroke: rgba(255, 255, 255, 0.6); stroke-width: 2; fill: none;">
+            <!-- Linha Central -->
+            <line x1="0" y1="50%" x2="100%" y2="50%" />
+            <!-- Círculo Central -->
+            <circle cx="50%" cy="50%" r="12%" />
+            <!-- Ponto Central -->
+            <circle cx="50%" cy="50%" r="3" fill="#ffffff" />
+            <!-- Grande Área Superior (Goleiro 1) -->
+            <rect x="25%" y="0" width="50%" height="18%" />
+            <rect x="35%" y="0" width="30%" height="8%" />
+            <!-- Grande Área Inferior (Goleiro 2) -->
+            <rect x="25%" y="82%" width="50%" height="18%" />
+            <rect x="35%" y="92%" width="30%" height="8%" />
+        </svg>
+
+        <!-- Pinos dos Jogadores Escalados -->
+        @if (Formation != null)
+        {
+            @foreach (var player in Formation.Positions)
+            {
+                <PlayerPin Player="player" OnClick="() => OnPinClick.InvokeAsync(player)" />
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public TacticalFormationDto? Formation { get; set; }
+    [Parameter] public EventCallback<PlayerTacticalPositionDto> OnPinClick { get; set; }
+}

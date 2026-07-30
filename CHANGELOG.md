@@ -8,7 +8,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend: Fase F14 (Prancheta Tática e Escalação Visual)
+
+- **[F14] Prancheta Tática e Escalação Visual**:
+  - `Pages/Teams/TacticalBoardPage.razor`: Tela interativa da prancheta tática (`/tactical` e `/matches/{gameDayId}/tactical`) com seletores de time, esquemas táticos (Futsal 2-2, 3-1, 1-2-1 / Campo 4-4-2, 4-3-3) e suporte a troca de posições táticas entre jogadores com clique duplo.
+  - `Components/Teams/TacticalBoard.razor`: Componente gráfico do gramado de futebol em SVG/CSS com renderização de grande área, círculo central e gols.
+  - `Components/Teams/PlayerPin.razor`: Componente do pino do atleta posicionado dinamicamente em coordenadas X/Y (%) sobre o gramado, exibindo cor do colete, número da camisa e nome.
+- **Suíte de Testes bUnit**:
+  - `PlayerPinTests.cs`, `TacticalBoardTests.cs`, `TacticalBoardPageTests.cs`.
+  - Total da suíte do projeto: **596/596 testes passando (100% de sucesso)**.
+
 ### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F13 (Algoritmo e Tela de Sorteio de Times - Coletes)
+
 
 - **[F13] Algoritmo e Tela de Sorteio de Times (Coletes)**:
   - `Pages/Teams/TeamDraw.razor`: Tela interativa de sorteio e divisão de coletes (`/teams/draw` e `/matches/{gameDayId}/draw`) com controle de número de equipes (2, 3 ou 4 times) e suporte a ajuste manual.

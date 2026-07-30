@@ -1,0 +1,31 @@
+@namespace BabaPlay.Web.Components.Teams
+@using BabaPlay.Web.Models
+
+<div class="player-pin-container position-absolute translate-middle text-center user-select-none cursor-pointer"
+     style="left: @(Player.XPercent)%; top: @(Player.YPercent)%; z-index: 10;"
+     @onclick="() => OnClick.InvokeAsync(Player)"
+     data-testid="player-pin-@Player.PlayerId">
+    
+    <div class="pin-circle rounded-circle shadow-sm border border-2 border-white d-flex align-items-center justify-content-center mx-auto mb-1 @(Player.IsSelected ? "ring-active" : "")"
+         style="width: 36px; height: 36px; background-color: @Player.ColorHex; color: #fff; font-weight: bold; font-size: 0.85rem;"
+         data-testid="pin-circle">
+        @(Player.JerseyNumber.HasValue ? $"#{Player.JerseyNumber}" : GetInitials(Player.Name))
+    </div>
+
+    <div class="pin-label bg-dark bg-opacity-75 text-white px-2 py-0 rounded style-micro shadow-sm text-nowrap" data-testid="pin-name">
+        @Player.Name
+    </div>
+</div>
+
+@code {
+    [Parameter] public PlayerTacticalPositionDto Player { get; set; } = null!;
+    [Parameter] public EventCallback<PlayerTacticalPositionDto> OnClick { get; set; }
+
+    private static string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "A";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][..1].ToUpperInvariant();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+    }
+}
