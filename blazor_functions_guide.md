@@ -249,12 +249,16 @@ flowchart TD
 * **Testes bUnit:** `PlayerPinTests.cs`, `TacticalBoardTests.cs`, `TacticalBoardPageTests.cs`.
 
 
-#### **[F15] Registro de Súmula Pós-Jogo (Estatísticas em Tempo Real)**
+#### **[F15] Registro de Súmula Pós-Jogo (Estatísticas em Tempo Real)** ✅ CONCLUÍDO
 * **Objetivo:** Tela para o mesário/administrador registrar o placar, gols, assistências, cartões amarelos/vermelhos e minutos jogados.
-* **Componentes / Páginas:** `Pages/Matches/MatchStatsSummary.razor`
-* **Services & DTOs:** `IMatchApiService` (`RegisterMatchStatsAsync`), `MatchStatsDto`
-* **Endpoints API Consumidos:** `POST /api/v1/matches/{id}/stats` (`RegisterMatchStatsCommand`)
-* **Testes bUnit:** Incrementar/decrementar contadores de gols e assistências para um jogador e validar envio da súmula.
+* **Componentes / Páginas:** 
+  * `Pages/Matches/MatchStatsSummary.razor`
+  * `Components/Matches/ScoreboardWidget.razor`
+  * `Components/Matches/PlayerStatsRow.razor`
+* **Services & DTOs:** `IMatchApiService`, `MatchApiService`, `PlayerMatchStatsDto`, `MatchScoreboardDto`, `RegisterMatchStatsDto`
+* **Endpoints API Consumidos:** `POST /api/v1/match/{id}/stats` (`RegisterMatchStatsCommand`), `GET /api/v1/match/{id}/stats`
+* **Testes bUnit/xUnit:** `ScoreboardWidgetTests.cs`, `PlayerStatsRowTests.cs`, `MatchStatsSummaryPageTests.cs`, `RegisterMatchStatsCommandHandlerTests.cs`.
+
 
 #### **[F16] Votação do Craque do Jogo (MVP)**
 * **Objetivo:** Permite que os atletas que jogaram a partida votem no melhor jogador da rodada.

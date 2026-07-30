@@ -8,7 +8,22 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F15 (Registro de Súmula Pós-Jogo - Estatísticas em Tempo Real)
+
+- **[F15] Registro de Súmula Pós-Jogo (Estatísticas em Tempo Real)**:
+  - `Pages/Matches/MatchStatsSummary.razor`: Tela de registro da súmula pós-jogo (`/matches/stats` e `/matches/{matchId}/stats`) dividida entre time mandante e visitante com cálculo em tempo real.
+  - `Components/Matches/ScoreboardWidget.razor`: Placar digital interativo exibindo times, placar acumulado e status da partida.
+  - `Components/Matches/PlayerStatsRow.razor`: Tabela por atleta com botões `+` e `-` para gols ⚽, assistências 👟, cartões amarelos 🟨 e vermelhos 🟥, com alerta automático de expulsão.
+  - `Services/Http/IMatchApiService.cs` & `MatchApiService.cs`: Métodos HTTP `GetMatchStatsAsync` e `RegisterMatchStatsAsync`.
+- **Backend CQRS Command & Controller**:
+  - `RegisterMatchStatsCommand.cs` & `RegisterMatchStatsCommandHandler.cs`: Handler para salvamento oficial das estatísticas da partida.
+  - `MatchController.cs`: Endpoint `POST /api/v1/match/{id}/stats`.
+- **Suíte de Testes TDD (bUnit & xUnit)**:
+  - `ScoreboardWidgetTests.cs`, `PlayerStatsRowTests.cs`, `MatchStatsSummaryPageTests.cs`, `RegisterMatchStatsCommandHandlerTests.cs`.
+  - Total da suíte do projeto: **601/601 testes passando (100% de sucesso)**.
+
 ### Added — Blazor (.NET 10) Frontend: Fase F14 (Prancheta Tática e Escalação Visual)
+
 
 - **[F14] Prancheta Tática e Escalação Visual**:
   - `Pages/Teams/TacticalBoardPage.razor`: Tela interativa da prancheta tática (`/tactical` e `/matches/{gameDayId}/tactical`) com seletores de time, esquemas táticos (Futsal 2-2, 3-1, 1-2-1 / Campo 4-4-2, 4-3-3) e suporte a troca de posições táticas entre jogadores com clique duplo.

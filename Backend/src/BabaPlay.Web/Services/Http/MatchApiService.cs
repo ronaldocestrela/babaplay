@@ -150,6 +150,26 @@ public sealed class MatchApiService : IMatchApiService
         return (false, errorMessage ?? "Falha ao excluir partida.");
     }
 
+    public async Task<RegisterMatchStatsDto?> GetMatchStatsAsync(Guid matchId, CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.GetAsync($"api/v1/match/{matchId}/stats", cancellationToken);
+        if (!response.IsSuccessStatusCode) return null;
+        return await response.Content.ReadFromJsonAsync<RegisterMatchStatsDto>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> RegisterMatchStatsAsync(Guid matchId, RegisterMatchStatsDto dto, CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.PostAsJsonAsync($"api/v1/match/{matchId}/stats", dto, cancellationToken);
+        if (response.IsSuccessStatusCode)
+        {
+            return (true, null);
+        }
+
+        var errorMessage = await ExtractErrorMessageAsync(response, cancellationToken);
+        return (false, errorMessage ?? "Falha ao registrar súmula da partida.");
+    }
+
+
     private static async Task<string?> ExtractErrorMessageAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         try

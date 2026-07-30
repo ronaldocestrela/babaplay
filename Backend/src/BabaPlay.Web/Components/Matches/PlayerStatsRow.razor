@@ -1,0 +1,132 @@
+@namespace BabaPlay.Web.Components.Matches
+@using BabaPlay.Web.Models
+
+<tr data-testid="player-stats-row-@Stats.PlayerId">
+    <td>
+        <div class="d-flex align-items-center">
+            <div class="avatar-sm bg-dark text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                @GetInitials(Stats.PlayerName)
+            </div>
+            <div>
+                <div class="fw-bold text-dark" data-testid="player-name">@Stats.PlayerName</div>
+                @if (IsRedCarded)
+                {
+                    <span class="badge bg-danger text-white style-micro" data-testid="badge-red-card">Expulso 🟥</span>
+                }
+            </div>
+        </div>
+    </td>
+
+    <!-- Gols -->
+    <td class="text-center">
+        <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-danger p-0 px-2 btn-remove-goal" @onclick="DecrementGoal" data-testid="btn-remove-goal">-</button>
+            <span class="btn btn-light fw-bold disabled px-3" data-testid="goals-count">@Stats.Goals ⚽</span>
+            <button class="btn btn-outline-success p-0 px-2 btn-add-goal" @onclick="IncrementGoal" data-testid="btn-add-goal">+</button>
+        </div>
+    </td>
+
+    <!-- Assistências -->
+    <td class="text-center">
+        <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-secondary p-0 px-2 btn-remove-assist" @onclick="DecrementAssist" data-testid="btn-remove-assist">-</button>
+            <span class="btn btn-light fw-bold disabled px-3" data-testid="assists-count">@Stats.Assists 👟</span>
+            <button class="btn btn-outline-primary p-0 px-2 btn-add-assist" @onclick="IncrementAssist" data-testid="btn-add-assist">+</button>
+        </div>
+    </td>
+
+    <!-- Cartão Amarelo -->
+    <td class="text-center">
+        <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-secondary p-0 px-2 btn-remove-yellow" @onclick="DecrementYellow" data-testid="btn-remove-yellow">-</button>
+            <span class="btn btn-light fw-bold disabled px-3 text-warning" data-testid="yellow-count">@Stats.YellowCards 🟨</span>
+            <button class="btn btn-outline-warning p-0 px-2 btn-add-yellow" @onclick="IncrementYellow" data-testid="btn-add-yellow">+</button>
+        </div>
+    </td>
+
+    <!-- Cartão Vermelho -->
+    <td class="text-center">
+        <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-secondary p-0 px-2 btn-remove-red" @onclick="DecrementRed" data-testid="btn-remove-red">-</button>
+            <span class="btn btn-light fw-bold disabled px-3 text-danger" data-testid="red-count">@Stats.RedCards 🟥</span>
+            <button class="btn btn-outline-danger p-0 px-2 btn-add-red" @onclick="IncrementRed" data-testid="btn-add-red">+</button>
+        </div>
+    </td>
+</tr>
+
+@code {
+    [Parameter] public PlayerMatchStatsDto Stats { get; set; } = null!;
+    [Parameter] public EventCallback<PlayerMatchStatsDto> OnStatsChanged { get; set; }
+
+    private bool IsRedCarded => Stats.RedCards > 0 || Stats.YellowCards >= 2;
+
+    private async Task IncrementGoal()
+    {
+        Stats = Stats with { Goals = Stats.Goals + 1 };
+        await OnStatsChanged.InvokeAsync(Stats);
+    }
+
+    private async Task DecrementGoal()
+    {
+        if (Stats.Goals > 0)
+        {
+            Stats = Stats with { Goals = Stats.Goals - 1 };
+            await OnStatsChanged.InvokeAsync(Stats);
+        }
+    }
+
+    private async Task IncrementAssist()
+    {
+        Stats = Stats with { Assists = Stats.Assists + 1 };
+        await OnStatsChanged.InvokeAsync(Stats);
+    }
+
+    private async Task DecrementAssist()
+    {
+        if (Stats.Assists > 0)
+        {
+            Stats = Stats with { Assists = Stats.Assists - 1 };
+            await OnStatsChanged.InvokeAsync(Stats);
+        }
+    }
+
+    private async Task IncrementYellow()
+    {
+        var newYellows = Stats.YellowCards + 1;
+        var newReds = newYellows >= 2 ? Math.Max(1, Stats.RedCards) : Stats.RedCards;
+        Stats = Stats with { YellowCards = newYellows, RedCards = newReds };
+        await OnStatsChanged.InvokeAsync(Stats);
+    }
+
+    private async Task DecrementYellow()
+    {
+        if (Stats.YellowCards > 0)
+        {
+            Stats = Stats with { YellowCards = Stats.YellowCards - 1 };
+            await OnStatsChanged.InvokeAsync(Stats);
+        }
+    }
+
+    private async Task IncrementRed()
+    {
+        Stats = Stats with { RedCards = Stats.RedCards + 1 };
+        await OnStatsChanged.InvokeAsync(Stats);
+    }
+
+    private async Task DecrementRed()
+    {
+        if (Stats.RedCards > 0)
+        {
+            Stats = Stats with { RedCards = Stats.RedCards - 1 };
+            await OnStatsChanged.InvokeAsync(Stats);
+        }
+    }
+
+    private static string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "A";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][..1].ToUpperInvariant();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+    }
+}

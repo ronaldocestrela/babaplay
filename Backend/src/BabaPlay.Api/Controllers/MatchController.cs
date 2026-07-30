@@ -21,6 +21,7 @@ public sealed class MatchController : ControllerBase
     private readonly ICommandHandler<UpdateMatchCommand, Result<MatchResponse>> _updateHandler;
     private readonly ICommandHandler<ChangeMatchStatusCommand, Result<MatchResponse>> _changeStatusHandler;
     private readonly ICommandHandler<DeleteMatchCommand, Result> _deleteHandler;
+    private readonly ICommandHandler<RegisterMatchStatsCommand, Result<RegisterMatchStatsApplicationDto>> _registerStatsHandler;
 
     public MatchController(
         ICommandHandler<CreateMatchCommand, Result<MatchResponse>> createHandler,
@@ -28,7 +29,8 @@ public sealed class MatchController : ControllerBase
         IQueryHandler<GetMatchesQuery, Result<IReadOnlyList<MatchResponse>>> listHandler,
         ICommandHandler<UpdateMatchCommand, Result<MatchResponse>> updateHandler,
         ICommandHandler<ChangeMatchStatusCommand, Result<MatchResponse>> changeStatusHandler,
-        ICommandHandler<DeleteMatchCommand, Result> deleteHandler)
+        ICommandHandler<DeleteMatchCommand, Result> deleteHandler,
+        ICommandHandler<RegisterMatchStatsCommand, Result<RegisterMatchStatsApplicationDto>> registerStatsHandler)
     {
         _createHandler = createHandler;
         _getHandler = getHandler;
@@ -36,7 +38,36 @@ public sealed class MatchController : ControllerBase
         _updateHandler = updateHandler;
         _changeStatusHandler = changeStatusHandler;
         _deleteHandler = deleteHandler;
+        _registerStatsHandler = registerStatsHandler;
     }
+
+    [HttpPost("{id:guid}/stats")]
+    [Authorize(Policy = AuthorizationPolicyNames.MatchesWrite)]
+    [ProducesResponseType(typeof(RegisterMatchStatsApplicationDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> RegisterStats(Guid id, [FromBody] RegisterMatchStatsApplicationDto request, CancellationToken ct)
+    {
+        var command = new RegisterMatchStatsCommand(id, request.HomeScore, request.AwayScore, request.PlayerStats);
+        var result = await _registerStatsHandler.HandleAsync(command, ct);
+
+        if (!result.IsSuccess)
+        {
+            var statusCode = result.ErrorCode == "MATCH_NOT_FOUND"
+                ? StatusCodes.Status404NotFound
+                : StatusCodes.Status422UnprocessableEntity;
+
+            return StatusCode(statusCode, new ProblemDetails
+            {
+                Status = statusCode,
+                Title = result.ErrorCode,
+                Detail = result.ErrorMessage,
+            });
+        }
+
+        return Ok(result.Value);
+    }
+
 
     [HttpPost]
     [Authorize(Policy = AuthorizationPolicyNames.MatchesWrite)]

@@ -20,4 +20,8 @@ public interface IMatchApiService
     Task<(bool Success, string? ErrorMessage)> UpdateMatchAsync(Guid id, UpdateMatchDto dto, CancellationToken cancellationToken = default);
     Task<(bool Success, string? ErrorMessage)> ChangeMatchStatusAsync(Guid id, string status, CancellationToken cancellationToken = default);
     Task<(bool Success, string? ErrorMessage)> DeleteMatchAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<RegisterMatchStatsDto?> GetMatchStatsAsync(Guid matchId, CancellationToken cancellationToken = default);
+    Task<(bool Success, string? ErrorMessage)> RegisterMatchStatsAsync(Guid matchId, RegisterMatchStatsDto dto, CancellationToken cancellationToken = default);
 }
+
