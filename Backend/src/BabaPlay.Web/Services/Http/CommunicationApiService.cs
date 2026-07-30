@@ -58,4 +58,55 @@ public sealed class CommunicationApiService : ICommunicationApiService
 
         return response.IsSuccessStatusCode;
     }
+
+    // ─── Enquetes (F25) ───────────────────────────────────────────────────────
+
+    private const string PollsBaseUrl = "api/v1/communication/polls";
+
+    /// <inheritdoc/>
+    public async Task<List<PollDto>?> GetPollsAsync(bool onlyActive = true, CancellationToken cancellationToken = default)
+    {
+        var url = $"{PollsBaseUrl}?onlyActive={onlyActive.ToString().ToLowerInvariant()}";
+        var response = await _httpClient.GetAsync(url, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        return await response.Content.ReadFromJsonAsync<List<PollDto>>(cancellationToken: cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<PollDto?> CreatePollAsync(CreatePollDto dto, CancellationToken cancellationToken = default)
+    {
+        var payload = new
+        {
+            title = dto.Title,
+            description = dto.Description,
+            expiresAtUtc = dto.ExpiresAtUtc?.ToUniversalTime(),
+            options = dto.Options
+        };
+
+        var response = await _httpClient.PostAsJsonAsync(PollsBaseUrl, payload, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        return await response.Content.ReadFromJsonAsync<PollDto>(cancellationToken: cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<PollDto?> SubmitPollVoteAsync(Guid pollId, SubmitPollVoteDto dto, CancellationToken cancellationToken = default)
+    {
+        var payload = new { optionId = dto.OptionId };
+        var response = await _httpClient.PostAsJsonAsync($"{PollsBaseUrl}/{pollId}/vote", payload, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        return await response.Content.ReadFromJsonAsync<PollDto>(cancellationToken: cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> ClosePollAsync(Guid pollId, CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.PostAsync($"{PollsBaseUrl}/{pollId}/close", content: null, cancellationToken);
+        return response.IsSuccessStatusCode;
+    }
 }

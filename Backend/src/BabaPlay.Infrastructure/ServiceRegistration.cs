@@ -244,6 +244,7 @@ public static class ServiceRegistration
         services.AddScoped<IMonthlyFeePaymentRepository, MonthlyFeePaymentRepository>();
         services.AddScoped<IFundraiserRepository, FundraiserRepository>();
         services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
+        services.AddScoped<IPollRepository, PollRepository>();
         services.AddScoped<ITenantGeolocationSettingsRepository, TenantGeolocationSettingsRepository>();
         services.AddScoped<ICheckinRealtimeNotifier, SignalRCheckinRealtimeNotifier>();
         services.AddScoped<IMatchEventRealtimeNotifier, SignalRMatchEventRealtimeNotifier>();

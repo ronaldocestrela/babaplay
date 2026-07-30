@@ -1,0 +1,228 @@
+@page "/communication/polls"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using BabaPlay.Web.Models
+@using BabaPlay.Web.Services.Http
+@using BabaPlay.Web.Components.Communication
+@using BabaPlay.Web.Components.Common
+@inject ICommunicationApiService CommunicationApiService
+
+<PageTitle>Enquetes Interativas | Baba Play</PageTitle>
+
+<div class="container-fluid p-4" data-testid="polls-page">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="font-weight-bold mb-1" style="color: var(--text-main);">
+                📊 Enquetes Interativas
+                @if (PendingCount > 0)
+                {
+                    <span class="badge bg-warning text-dark ms-2" style="font-size: 0.7rem; border-radius: 20px;" data-testid="pending-badge">
+                        @PendingCount pendente(s)
+                    </span>
+                }
+            </h3>
+            <p class="text-muted mb-0" style="font-size: 0.9rem;">
+                Votações oficiais da associação para decisões em equipe
+            </p>
+        </div>
+
+        <AuthorizeView Policy="CommunicationWrite">
+            <Authorized>
+                <button class="btn btn-success font-weight-bold"
+                        @onclick="OpenCreateModal"
+                        data-testid="btn-new-poll">
+                    + Nova Enquete
+                </button>
+            </Authorized>
+        </AuthorizeView>
+    </div>
+
+    <!-- Alertas -->
+    @if (!string.IsNullOrEmpty(SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" data-testid="success-toast">
+            ✓ @SuccessMessage
+            <button type="button" class="btn-close" @onclick="() => SuccessMessage = null"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger mb-4" role="alert" data-testid="polls-error-alert">
+            ⚠️ @ErrorMessage
+        </div>
+    }
+
+    <!-- Filtros -->
+    <div class="card p-3 mb-4 shadow-sm" style="border-radius: 10px;" data-testid="polls-filter-bar">
+        <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-sm @(StatusFilter == "all" ? "btn-primary" : "btn-outline-secondary") font-weight-bold"
+                    @onclick='() => SetFilter("all")'
+                    data-testid="filter-all">
+                Todas (@(_allPolls?.Count ?? 0))
+            </button>
+            <button class="btn btn-sm @(StatusFilter == "pending" ? "btn-primary" : "btn-outline-secondary") font-weight-bold"
+                    @onclick='() => SetFilter("pending")'
+                    data-testid="filter-pending">
+                ⚡ Pendentes de Voto (@PendingCount)
+            </button>
+            <button class="btn btn-sm @(StatusFilter == "closed" ? "btn-primary" : "btn-outline-secondary") font-weight-bold"
+                    @onclick='() => SetFilter("closed")'
+                    data-testid="filter-closed">
+                🔒 Encerradas (@(_allPolls?.Count(p => p.IsClosed) ?? 0))
+            </button>
+        </div>
+    </div>
+
+    <!-- Lista -->
+    @if (IsLoading)
+    {
+        <div class="py-5" data-testid="polls-loading">
+            <LoadingSpinner Message="Carregando enquetes da associação..." />
+        </div>
+    }
+    else if (FilteredPolls.Count == 0)
+    {
+        <div class="card p-5 text-center shadow-sm" style="border-radius: 12px; background: var(--bg-surface, #ffffff);" data-testid="empty-polls">
+            <div style="font-size: 3rem; color: #94a3b8;">📊</div>
+            <h5 class="font-weight-bold mt-2" style="color: var(--text-main);">Nenhuma enquete por aqui</h5>
+            <p class="text-muted mb-0" style="font-size: 0.875rem;">
+                @(StatusFilter == "pending" ? "Você já votou em todas as enquetes ativas! 🎉" : "A diretoria ainda não criou enquetes.")
+            </p>
+        </div>
+    }
+    else
+    {
+        <div data-testid="polls-list">
+            @foreach (var poll in FilteredPolls)
+            {
+                <PollCard Poll="poll"
+                          OnVoteSubmitted="(optId) => HandleVoteAsync(poll, optId)"
+                          OnPollClosed="() => HandleClosePollAsync(poll)" />
+            }
+        </div>
+    }
+</div>
+
+<!-- Modal de Criação -->
+<CreatePollModal IsOpen="IsCreateModalOpen"
+                 OnClose="CloseCreateModal"
+                 OnCreated="HandlePollCreated" />
+
+@code {
+    private List<PollDto>? _allPolls;
+    private bool IsLoading = true;
+    private string? ErrorMessage;
+    private string? SuccessMessage;
+    private bool IsCreateModalOpen = false;
+    private string StatusFilter = "all";
+
+    private int PendingCount => _allPolls?.Count(p => !p.IsClosed && !p.HasVoted) ?? 0;
+
+    private List<PollDto> FilteredPolls
+    {
+        get
+        {
+            if (_allPolls is null) return [];
+
+            return StatusFilter switch
+            {
+                "pending" => _allPolls.Where(p => !p.IsClosed && !p.HasVoted).ToList(),
+                "closed" => _allPolls.Where(p => p.IsClosed).ToList(),
+                _ => _allPolls,
+            };
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPollsAsync();
+    }
+
+    private async Task LoadPollsAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            _allPolls = await CommunicationApiService.GetPollsAsync(onlyActive: false);
+            if (_allPolls is null)
+                ErrorMessage = "Não foi possível carregar as enquetes. Verifique sua conexão.";
+        }
+        catch
+        {
+            ErrorMessage = "Erro inesperado ao carregar enquetes.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task HandleVoteAsync(PollDto poll, Guid optionId)
+    {
+        try
+        {
+            var updated = await CommunicationApiService.SubmitPollVoteAsync(poll.Id, new SubmitPollVoteDto { OptionId = optionId });
+            if (updated != null && _allPolls != null)
+            {
+                var idx = _allPolls.FindIndex(p => p.Id == poll.Id);
+                if (idx >= 0)
+                {
+                    _allPolls[idx] = updated;
+                }
+                SuccessMessage = "Voto computado com sucesso!";
+                StateHasChanged();
+            }
+            else
+            {
+                ErrorMessage = "Não foi possível registrar o voto.";
+            }
+        }
+        catch
+        {
+            ErrorMessage = "Erro ao registrar voto na enquete.";
+        }
+    }
+
+    private async Task HandleClosePollAsync(PollDto poll)
+    {
+        try
+        {
+            var success = await CommunicationApiService.ClosePollAsync(poll.Id);
+            if (success && _allPolls != null)
+            {
+                var idx = _allPolls.FindIndex(p => p.Id == poll.Id);
+                if (idx >= 0)
+                {
+                    _allPolls[idx] = _allPolls[idx] with { IsClosed = true };
+                }
+                SuccessMessage = $"Enquete \"{poll.Title}\" encerrada.";
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+            ErrorMessage = "Erro ao encerrar enquete.";
+        }
+    }
+
+    private void HandlePollCreated(PollDto created)
+    {
+        _allPolls ??= [];
+        _allPolls.Insert(0, created);
+        SuccessMessage = $"Enquete \"{created.Title}\" criada com sucesso!";
+    }
+
+    private void SetFilter(string filter)
+    {
+        StatusFilter = filter;
+    }
+
+    private void OpenCreateModal() => IsCreateModalOpen = true;
+
+    private void CloseCreateModal() => IsCreateModalOpen = false;
+}

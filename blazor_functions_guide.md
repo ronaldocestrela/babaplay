@@ -358,12 +358,15 @@ flowchart TD
 * **Endpoints API Consumidos:** `GET /api/v1/communication/announcements`, `POST /api/v1/communication/announcements`, `POST /api/v1/communication/announcements/{id}/mark-read`
 * **Testes bUnit/xUnit:** `AnnouncementDomainTests.cs`, `CreateAnnouncementCommandHandlerTests.cs`, `GetAnnouncementsQueryHandlerTests.cs`, `MarkAnnouncementReadCommandHandlerTests.cs`, `AnnouncementCardTests.cs`, `CreateAnnouncementModalTests.cs`, `AnnouncementsPageTests.cs`.
 
-#### **[F25] Enquetes Interativas**
-* **Objetivo:** Votações rápidas promovidas pela associação (ex: escolha do uniforme, definição de dia do jogo).
-* **Componentes / Páginas:** `Pages/Communication/Polls.razor`
-* **Services & DTOs:** `ICommunicationApiService`, `PollDto`, `SubmitPollVoteDto`
-* **Endpoints API Consumidos:** `GET /api/v1/communication/polls`, `POST /api/v1/communication/polls/{id}/vote`
-* **Testes bUnit:** Votação em uma opção e exibição da porcentagem de votos computada.
+#### **[F25] Enquetes Interativas** ✅ CONCLUÍDO
+* **Objetivo:** Votações rápidas promovidas pela associação (ex: escolha do uniforme, definição de dia/local de jogo, churrascos) com cálculo de porcentagens e regras de voto único.
+* **Componentes / Páginas:** 
+  * `Pages/Communication/Polls.razor`
+  * `Components/Communication/PollCard.razor`
+  * `Components/Communication/CreatePollModal.razor`
+* **Services & DTOs:** `ICommunicationApiService`, `CommunicationApiService`, `PollDto`, `PollOptionDto`, `CreatePollDto`, `SubmitPollVoteDto`, `PollResponse`, `PollOptionResponse`
+* **Endpoints API Consumidos:** `GET /api/v1/communication/polls`, `POST /api/v1/communication/polls`, `POST /api/v1/communication/polls/{id}/vote`, `POST /api/v1/communication/polls/{id}/close`
+* **Testes bUnit/xUnit:** `PollDomainTests.cs`, `CreatePollCommandHandlerTests.cs`, `SubmitPollVoteCommandHandlerTests.cs`, `GetPollsQueryHandlerTests.cs`, `PollCardTests.cs`, `CreatePollModalTests.cs`, `PollsPageTests.cs`.
 
 #### **[F26] Hub de Notificações no App**
 * **Objetivo:** Central de alertas do usuário (alteração de horário de jogo, nova cobrança, convocação).

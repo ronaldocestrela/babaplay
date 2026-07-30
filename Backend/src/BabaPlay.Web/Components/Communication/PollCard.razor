@@ -1,0 +1,194 @@
+@namespace BabaPlay.Web.Components.Communication
+@using Microsoft.AspNetCore.Components.Authorization
+@using BabaPlay.Web.Models
+
+@if (Poll != null)
+{
+    <div class="card shadow-sm mb-3 poll-card"
+         style="border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0); background: var(--bg-surface, #ffffff);"
+         data-testid="poll-card"
+         @attributes="AdditionalAttributes">
+
+        <div class="card-body p-4">
+
+            <!-- Badges + Status -->
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    @if (Poll.IsClosed)
+                    {
+                        <span class="badge bg-secondary" style="font-size: 0.7rem;" data-testid="badge-closed">
+                            🔒 Encerrada
+                        </span>
+                    }
+                    else if (Poll.HasVoted)
+                    {
+                        <span class="badge bg-success" style="font-size: 0.7rem;" data-testid="badge-voted">
+                            ✔ Voto Computado
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-primary" style="font-size: 0.7rem;" data-testid="badge-open">
+                            ⚡ Enquete Aberta
+                        </span>
+                    }
+
+                    <span class="badge" style="background-color: #f1f5f9; color: #475569; font-size: 0.7rem;" data-testid="badge-total-votes">
+                        🗳️ @Poll.TotalVotes voto(s)
+                    </span>
+                </div>
+
+                <small class="text-muted" style="font-size: 0.78rem;">
+                    Por: <strong>@Poll.AuthorName</strong>
+                </small>
+            </div>
+
+            <!-- Título & Descrição -->
+            <h5 class="font-weight-bold mb-1" style="color: var(--text-main);" data-testid="poll-title">
+                📊 @Poll.Title
+            </h5>
+
+            @if (!string.IsNullOrWhiteSpace(Poll.Description))
+            {
+                <p class="text-muted mb-3" style="font-size: 0.88rem;" data-testid="poll-description">
+                    @Poll.Description
+                </p>
+            }
+
+            <hr style="border-color: #e2e8f0; margin: 12px 0;" />
+
+            <!-- Opções: Formulário de Voto vs Resultado Visual -->
+            @if (!Poll.HasVoted && !Poll.IsClosed)
+            {
+                <!-- Form de Voto -->
+                <div class="mb-3" data-testid="vote-form">
+                    @foreach (var option in Poll.Options)
+                    {
+                        <div class="form-check p-2 mb-2 rounded border"
+                             style="background: var(--bg-muted, #f8fafc); cursor: pointer;"
+                             @onclick="() => SelectedOptionId = option.Id"
+                             data-testid="option-select-row">
+                            <input class="form-check-input ms-1"
+                                   type="radio"
+                                   name="pollOptions_@Poll.Id"
+                                   id="opt_@option.Id"
+                                   value="@option.Id"
+                                   checked="@(SelectedOptionId == option.Id)"
+                                   @onchange="() => SelectedOptionId = option.Id"
+                                   data-testid="radio-option" />
+                            <label class="form-check-label ms-2 font-weight-bold" for="opt_@option.Id" style="color: var(--text-main); font-size: 0.9rem;">
+                                @option.Text
+                            </label>
+                        </div>
+                    }
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <button class="btn btn-sm btn-primary font-weight-bold px-4"
+                            style="border-radius: 8px;"
+                            disabled="@(SelectedOptionId == null || _isSubmitting)"
+                            @onclick="HandleSubmitVoteAsync"
+                            data-testid="btn-submit-vote">
+                        @if (_isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                            <span>Enviando…</span>
+                        }
+                        else
+                        {
+                            <span>🗳️ Confirmar Voto</span>
+                        }
+                    </button>
+
+                    <AuthorizeView Policy="CommunicationWrite">
+                        <Authorized>
+                            <button class="btn btn-sm btn-outline-danger"
+                                    @onclick="HandleClosePollAsync"
+                                    disabled="@_isClosing"
+                                    data-testid="btn-close-poll">
+                                🔒 Encerrar Enquete
+                            </button>
+                        </Authorized>
+                    </AuthorizeView>
+                </div>
+            }
+            else
+            {
+                <!-- Resultados de Votação com Barras de Progresso -->
+                <div class="mb-3" data-testid="poll-results">
+                    @foreach (var option in Poll.Options)
+                    {
+                        var isMyChoice = Poll.VotedOptionId == option.Id;
+
+                        <div class="mb-3 p-2 rounded" style="background: @(isMyChoice ? "#f0fdf4" : "var(--bg-muted, #f8fafc)"); border: 1px solid @(isMyChoice ? "#86efac" : "transparent");" data-testid="result-row">
+                            <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.88rem;">
+                                <span class="font-weight-bold" style="color: var(--text-main);">
+                                    @option.Text
+                                    @if (isMyChoice)
+                                    {
+                                        <span class="badge bg-success ms-1" style="font-size: 0.65rem;" data-testid="badge-my-choice">Seu voto</span>
+                                    }
+                                </span>
+                                <span class="text-muted font-weight-bold" data-testid="option-percentage">
+                                    @option.Percentage% <small class="fw-normal">(@option.VotesCount)</small>
+                                </span>
+                            </div>
+
+                            <div class="progress" style="height: 10px; border-radius: 6px; background-color: #e2e8f0;">
+                                <div class="progress-bar @(isMyChoice ? "bg-success" : "bg-primary")"
+                                     role="progressbar"
+                                     style="width: @(Math.Min(100, option.Percentage))%; border-radius: 6px;"
+                                     aria-valuenow="@option.Percentage"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <AuthorizeView Policy="CommunicationWrite">
+                    <Authorized>
+                        @if (!Poll.IsClosed)
+                        {
+                            <div class="text-end">
+                                <button class="btn btn-sm btn-outline-danger"
+                                        @onclick="HandleClosePollAsync"
+                                        disabled="@_isClosing"
+                                        data-testid="btn-close-poll">
+                                    🔒 Encerrar Enquete
+                                </button>
+                            </div>
+                        }
+                    </Authorized>
+                </AuthorizeView>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public PollDto Poll { get; set; } = null!;
+    [Parameter] public EventCallback<Guid> OnVoteSubmitted { get; set; }
+    [Parameter] public EventCallback OnPollClosed { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private Guid? SelectedOptionId { get; set; }
+    private bool _isSubmitting = false;
+    private bool _isClosing = false;
+
+    private async Task HandleSubmitVoteAsync()
+    {
+        if (SelectedOptionId is null) return;
+        _isSubmitting = true;
+        await OnVoteSubmitted.InvokeAsync(SelectedOptionId.Value);
+        _isSubmitting = false;
+    }
+
+    private async Task HandleClosePollAsync()
+    {
+        _isClosing = true;
+        await OnPollClosed.InvokeAsync();
+        _isClosing = false;
+    }
+}

@@ -8,6 +8,26 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F25 (Enquetes Interativas)
+
+- **[F25] Enquetes Interativas**:
+  - `Pages/Communication/Polls.razor`: Página principal de enquetes (`/communication/polls`) com contador de votações pendentes, filtros por estado (Todas, Pendentes de Voto, Encerradas) e integração com criação e submissão de votos.
+  - `Components/Communication/PollCard.razor`: Componente dinâmico exibindo formulário de rádio/voto para enquetes abertas não votadas, ou gráficos de barras de progresso (%) com contagem de votos e destaque da escolha do usuário quando votado/encerrado, além de ação de encerramento para diretoria.
+  - `Components/Communication/CreatePollModal.razor`: Modal interativo com `EditForm` + `DataAnnotationsValidator` permitindo adição e remoção dinâmica de 2 a 10 opções de escolha.
+  - `Services/Http/ICommunicationApiService.cs` & `CommunicationApiService.cs`: Adicionados métodos `GetPollsAsync`, `CreatePollAsync`, `SubmitPollVoteAsync` e `ClosePollAsync`.
+  - `Components/Layout/NavMenu.razor`: Adicionado atalho para Enquetes (`/communication/polls`).
+- **Domain Entity, Repository, Migration, CQRS & Controller Endpoints**:
+  - `Poll.cs`, `PollOption.cs` & `PollVote.cs`: Entidades de domínio com factory method, validações, cálculo de votos e regra de voto único por associado via chave composta (`PollId`, `UserId`).
+  - `IPollRepository.cs` & `PollRepository.cs`: Repositório de enquetes integrado ao `AppDbContext` e migration EF Core `20260730230819_AddPollTables`.
+  - `GetPollsQuery.cs` & `GetPollsQueryHandler.cs`: Query Handler para listagem das enquetes do tenant com cálculo de porcentagem de votos e estado do voto do usuário.
+  - `CreatePollCommand.cs` & `CreatePollCommandHandler.cs`: Command Handler para criação de enquetes com mínimo de 2 opções distintas.
+  - `SubmitPollVoteCommand.cs` & `SubmitPollVoteCommandHandler.cs`: Command Handler para registro e recálculo de votos.
+  - `ClosePollCommand.cs` & `ClosePollCommandHandler.cs`: Command Handler para encerramento de enquetes.
+  - `PollController.cs`: Endpoints REST `GET /api/v1/communication/polls`, `POST /api/v1/communication/polls`, `POST /api/v1/communication/polls/{id}/vote` e `POST /api/v1/communication/polls/{id}/close`.
+- **Suíte de Testes TDD (bUnit & xUnit)**:
+  - `PollDomainTests.cs`, `CreatePollCommandHandlerTests.cs`, `SubmitPollVoteCommandHandlerTests.cs`, `GetPollsQueryHandlerTests.cs`, `PollCardTests.cs`, `CreatePollModalTests.cs`, `PollsPageTests.cs`.
+  - Total da suíte do projeto: **718/718 testes passando (100% de sucesso)**.
+
 ### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F24 (Mural de Avisos e Comunicados)
 
 - **[F24] Mural de Avisos e Comunicados**:

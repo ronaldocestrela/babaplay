@@ -1478,7 +1478,7 @@ Construir um sistema SaaS escalável, com:
 - fluxo web de Partidas concluído com CRUD + mudança de status, arquitetura por feature, navegação integrada e cobertura de testes sem regressão.
 
 ### 8. Financeiro — ✅ CONCLUÍDO (F18 a F23 no Blazor .NET 10 & CQRS API)
-### 10. Comunicação — ✅ CONCLUÍDO (F24 Mural de Avisos e Comunicados no Blazor .NET 10 & CQRS API)
+### 10. Comunicação — ✅ CONCLUÍDO (F24 Mural de Avisos & F25 Enquetes Interativas no Blazor .NET 10 & CQRS API)
 
 ### 9. Associações (Onboarding) — 🚧 em andamento
 

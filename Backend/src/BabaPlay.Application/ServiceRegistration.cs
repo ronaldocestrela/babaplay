@@ -34,6 +34,8 @@ using BabaPlay.Application.Queries.Tenants;
 using BabaPlay.Application.Queries.Dashboard;
 using BabaPlay.Application.Commands.Announcements;
 using BabaPlay.Application.Queries.Announcements;
+using BabaPlay.Application.Commands.Polls;
+using BabaPlay.Application.Queries.Polls;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BabaPlay.Application;
@@ -180,6 +182,12 @@ public static class ServiceRegistration
         services.AddScoped<IQueryHandler<GetAnnouncementsQuery, Result<IReadOnlyList<AnnouncementResponse>>>, GetAnnouncementsQueryHandler>();
         services.AddScoped<ICommandHandler<CreateAnnouncementCommand, Result<AnnouncementResponse>>, CreateAnnouncementCommandHandler>();
         services.AddScoped<ICommandHandler<MarkAnnouncementReadCommand, Result>, MarkAnnouncementReadCommandHandler>();
+
+        // Communication — Interactive Polls (F25)
+        services.AddScoped<IQueryHandler<GetPollsQuery, Result<IReadOnlyList<PollResponse>>>, GetPollsQueryHandler>();
+        services.AddScoped<ICommandHandler<CreatePollCommand, Result<PollResponse>>, CreatePollCommandHandler>();
+        services.AddScoped<ICommandHandler<SubmitPollVoteCommand, Result<PollResponse>>, SubmitPollVoteCommandHandler>();
+        services.AddScoped<ICommandHandler<ClosePollCommand, Result>, ClosePollCommandHandler>();
 
         return services;
     }

@@ -54,9 +54,12 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<MonthlyFeePayment> MonthlyFeePayments => Set<MonthlyFeePayment>();
     public DbSet<Fundraiser> Fundraisers => Set<Fundraiser>();
 
-    // Communication module (F24)
+    // Communication module (F24 & F25)
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<AnnouncementRead> AnnouncementReads => Set<AnnouncementRead>();
+    public DbSet<Poll> Polls => Set<Poll>();
+    public DbSet<PollOption> PollOptions => Set<PollOption>();
+    public DbSet<PollVote> PollVotes => Set<PollVote>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -95,6 +98,51 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser>
              .OnDelete(DeleteBehavior.Cascade);
             e.HasIndex(r => new { r.AnnouncementId, r.UserId }).IsUnique();
         });
+
+        // Communication: Interactive Polls (F25)
+        builder.Entity<Poll>(e =>
+        {
+            e.HasKey(p => p.Id);
+            e.Property(p => p.TenantId).IsRequired();
+            e.Property(p => p.AuthorId).IsRequired();
+            e.Property(p => p.Title).IsRequired().HasMaxLength(150);
+            e.Property(p => p.Description).HasMaxLength(1000);
+            e.Property(p => p.IsClosed).IsRequired();
+            e.Property(p => p.IsActive).IsRequired();
+            e.HasIndex(p => new { p.TenantId, p.IsClosed, p.IsActive });
+            e.HasIndex(p => new { p.TenantId, p.CreatedAt });
+        });
+
+        builder.Entity<PollOption>(e =>
+        {
+            e.HasKey(o => o.Id);
+            e.Property(o => o.PollId).IsRequired();
+            e.Property(o => o.Text).IsRequired().HasMaxLength(200);
+            e.Property(o => o.Order).IsRequired();
+            e.Property(o => o.VotesCount).IsRequired();
+            e.HasOne(o => o.Poll)
+             .WithMany(p => p.Options)
+             .HasForeignKey(o => o.PollId)
+             .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<PollVote>(e =>
+        {
+            e.HasKey(v => new { v.PollId, v.UserId });
+            e.Property(v => v.UserId).IsRequired().HasMaxLength(450);
+            e.Property(v => v.OptionId).IsRequired();
+            e.Property(v => v.VotedAtUtc).IsRequired();
+            e.HasOne(v => v.Poll)
+             .WithMany(p => p.Votes)
+             .HasForeignKey(v => v.PollId)
+             .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(v => v.Option)
+             .WithMany()
+             .HasForeignKey(v => v.OptionId)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(v => new { v.PollId, v.UserId }).IsUnique();
+        });
+
 
         builder.Entity<RefreshToken>(e =>
         {
