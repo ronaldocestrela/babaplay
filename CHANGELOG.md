@@ -8,7 +8,25 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend: Fase 2 (Gestão de Atletas, Posições e Carteirinha Digital)
+
+- **[F07] Lista e Gestão de Atletas (Membros da Associação)**:
+  - `Pages/Players/PlayerList.razor`: Página com busca textual em tempo real, filtragem por posição e status (Ativos/Inativos), ordenação dinâmica e alternador de visão Grid/Tabela.
+  - `Components/Players/PlayerCard.razor`: Componente visual de exibição de atleta com photo avatar, initials fallback, badges de posição, camisa e role.
+  - `Components/Players/EditPlayerModal.razor`: Modal com `EditForm`, validação via DataAnnotations, edição de perfil e alteração de role (RBAC).
+- **[F08] Cadastro e Gestão de Posições e Categorias**:
+  - `Services/Http/IPositionApiService.cs` & `PositionApiService.cs`: Serviço HTTP para CRUD completo de posições (`api/v1/position`) com tratamento de erro `POSITION_IN_USE` (HTTP 409).
+  - `Pages/Settings/PositionsManagement.razor`: Tela administrativa de posições esportivas com tabela e ações.
+  - `Components/Settings/PositionModal.razor`: Modal de criação e edição de posições (Sigla/Código, Nome, Descrição).
+- **[F09] Carteirinha Digital do Associado**:
+  - `Services/Helpers/QrCodeSvgHelper.cs`: Gerador nativo em C# para renderização de QR Code em formato SVG.
+  - `Components/Players/DigitalIdCardWidget.razor`: Componente visual de cartão com efeito *flip* 3D (Frente: Foto, Nome, Posição, Validade, Status; Verso: QR Code e Matrícula).
+  - `Pages/Players/DigitalIdCard.razor`: Tela de exibição e impressão da carteirinha virtual.
+- **Suíte de Testes bUnit**:
+  - 7 novos arquivos de teste bUnit (`PlayerCardTests`, `EditPlayerModalTests`, `PlayerListTests`, `PositionModalTests`, `PositionsManagementTests`, `DigitalIdCardWidgetTests`, `DigitalIdCardPageTests`) totalizando **38/38 testes passando (100% de sucesso)**.
+
 ### Changed — Tenancy: single-db only (remoção total do legado)
+
 
 - Backend (Application/Infrastructure/API):
 	- removidos contratos e componentes legados de provisioning por tenant:

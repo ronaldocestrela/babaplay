@@ -1548,7 +1548,33 @@ Construir um sistema SaaS escalável, com:
 
 ---
 
+## ⚡ Front-end Blazor (.NET 10) — Progresso de Migração
+
+### Fase 0 — Infraestrutura Base do Blazor ✅ CONCLUÍDA
+- `Program.cs` com DI de `HttpClient`, `CustomAuthStateProvider`, `TenantState`, `UserSessionState`.
+- `Services/Handlers/AuthorizationHeaderHandler.cs` (Bearer JWT e Slug de Tenant).
+- Layouts Master (`MainLayout.razor`, `PublicLayout.razor`).
+
+### Fase 1 — Módulo Identity (Auth, Onboarding & Tenancy) ✅ CONCLUÍDA
+- `[F01]` Login & Logout (`Login.razor`, `AuthApiService`).
+- `[F02]` Recuperação e Redefinição de Senha (`ForgotPassword.razor`, `ResetPassword.razor`).
+- `[F03]` Seleção de Associação (`SelectTenant.razor`).
+- `[F04]` Onboarding de Associação (`RegisterAssociation.razor`).
+- `[F05]` Aceitar Convite de Associação (`AcceptInvite.razor`).
+- `[F06]` Conclusão de Perfil do Atleta (`CompleteProfile.razor`).
+
+### Fase 2 — Gestão de Atletas, Posições e Carteirinha Digital ✅ CONCLUÍDA
+- `[F07]` Lista e Gestão de Atletas (`PlayerList.razor`, `PlayerCard.razor`, `EditPlayerModal.razor`).
+- `[F08]` Cadastro e Gestão de Posições e Categorias (`PositionsManagement.razor`, `PositionModal.razor`, `IPositionApiService`, `PositionApiService`).
+- `[F09]` Carteirinha Digital do Associado (`DigitalIdCardWidget.razor` com 3D flip card, `DigitalIdCard.razor`, `QrCodeSvgHelper.cs`).
+
+#### Status da Suíte Blazor Web bUnit/xUnit
+- **38/38 testes bUnit passando (100% sucesso)**
+
+---
+
 ## 📱 Fase 17 — Mobile (Flutter)
+
 
 ### Ordem
 

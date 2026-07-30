@@ -158,31 +158,37 @@ flowchart TD
 
 ---
 
-### Fase 2: Gestão de Atletas e Posições (Identity / Sports Base)
+### Fase 2: Gestão de Atletas e Posições (Identity / Sports Base) ✅ CONCLUÍDA
 
-#### **[F07] Lista e Gestão de Atletas (Membros da Associação)**
+#### **[F07] Lista e Gestão de Atletas (Membros da Associação)** ✅ CONCLUÍDO
 * **Objetivo:** Tabela/Grid responsiva de atletas do Tenant, permitindo busca por nome, filtro por posição/status (Ativo/Inativo), alteração de perfil/função (RBAC: Admin, Treinador, Atleta).
 * **Componentes / Páginas:** 
   * `Pages/Players/PlayerList.razor`
   * `Components/Players/PlayerCard.razor`
   * `Components/Players/EditPlayerModal.razor`
-* **Services & DTOs:** `IPlayerApiService`, `PlayerDto`, `UpdatePlayerRoleDto`
-* **Endpoints API Consumidos:** `GET /api/v1/players`, `PUT /api/v1/players/{id}/role`
-* **Testes bUnit:** Testar filtros em tempo real, ordenação e acionamento da modal de edição.
+* **Services & DTOs:** `IPlayerApiService`, `PlayerDto`, `UpdatePlayerAdminDto`, `RoleDto`
+* **Endpoints API Consumidos:** `GET /api/v1/player`, `POST /api/v1/role/{roleId}/users/{userId}`, `PUT /api/v1/player/{id}`
+* **Testes bUnit:** `PlayerCardTests.cs`, `EditPlayerModalTests.cs`, `PlayerListTests.cs`.
 
-#### **[F08] Cadastro e Gestão de Posições e Categorias**
+#### **[F08] Cadastro e Gestão de Posições e Categorias** ✅ CONCLUÍDO
 * **Objetivo:** Cadastro de posições personalizadas do baba (ex: Goleiro, Fixo, Ala, Pivô, Zagueiro, Meia, Atacante) e níveis de habilidade.
-* **Componentes / Páginas:** `Pages/Settings/PositionsManagement.razor`
-* **Services & DTOs:** `IPositionApiService`, `PositionDto`
-* **Endpoints API Consumidos:** `GET /api/v1/positions`, `POST /api/v1/positions`
-* **Testes bUnit:** Adição e remoção de itens na lista.
+* **Componentes / Páginas:** 
+  * `Pages/Settings/PositionsManagement.razor`
+  * `Components/Settings/PositionModal.razor`
+* **Services & DTOs:** `IPositionApiService`, `PositionDto`, `CreatePositionDto`, `UpdatePositionDto`
+* **Endpoints API Consumidos:** `GET /api/v1/position`, `POST /api/v1/position`, `PUT /api/v1/position/{id}`, `DELETE /api/v1/position/{id}`
+* **Testes bUnit:** `PositionModalTests.cs`, `PositionsManagementTests.cs`.
 
-#### **[F09] Carteirinha Digital do Associado**
+#### **[F09] Carteirinha Digital do Associado** ✅ CONCLUÍDO
 * **Objetivo:** Componente visual para renderizar a carteirinha virtual do associado, contendo QR Code para validação de acesso, foto, validade e status.
-* **Componentes / Páginas:** `Pages/Players/DigitalIdCard.razor`
-* **Services & DTOs:** `IPlayerApiService` (`GetDigitalCardQuery`), `DigitalCardDto`
-* **Endpoints API Consumidos:** `GET /api/v1/players/digital-card`
-* **Testes bUnit:** Verificar a correta atribuição de dados do DTO aos elementos DOM da carteirinha e geração do QR Code.
+* **Componentes / Páginas:** 
+  * `Pages/Players/DigitalIdCard.razor`
+  * `Components/Players/DigitalIdCardWidget.razor`
+  * `Services/Helpers/QrCodeSvgHelper.cs`
+* **Services & DTOs:** `IPlayerApiService` (`GetDigitalIdCardAsync`), `DigitalCardDto`
+* **Endpoints API Consumidos:** `GET /api/v1/player/digital-card`
+* **Testes bUnit:** `DigitalIdCardWidgetTests.cs`, `DigitalIdCardPageTests.cs`.
+
 
 ---
 
