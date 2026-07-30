@@ -206,15 +206,16 @@ flowchart TD
 * **Testes bUnit/xUnit:** `NextMatchWidgetTests.cs`, `QuickStatsWidgetTests.cs`, `DashboardPageTests.cs`, `GetDashboardSummaryQueryHandlerTests.cs`.
 
 
-#### **[F11] Agendamento e Calendário de Partidas/Treinos**
+#### **[F11] Agendamento e Calendário de Partidas/Treinos** ✅ CONCLUÍDO
 * **Objetivo:** Criar, editar e visualizar o calendário de eventos esportivos (local, data/hora, limite de vagas, valor por atleta se houver).
 * **Componentes / Páginas:** 
   * `Pages/Matches/MatchList.razor`
-  * `Pages/Matches/CreateMatch.razor`
   * `Components/Matches/MatchCard.razor`
-* **Services & DTOs:** `IMatchApiService`, `ScheduleMatchDto`, `MatchSummaryDto`
-* **Endpoints API Consumidos:** `GET /api/v1/matches`, `POST /api/v1/matches` (`ScheduleMatchCommand`)
-* **Testes bUnit:** Validação de datas passadas no formulário de agendamento e exibição dos detalhes da partida.
+  * `Components/Matches/MatchModal.razor`
+* **Services & DTOs:** `IMatchApiService`, `MatchApiService`, `MatchDto`, `ScheduleGameDayDto`, `GameDayDto`, `CreateMatchDto`, `UpdateMatchDto`
+* **Endpoints API Consumidos:** `GET /api/v1/match`, `POST /api/v1/match`, `PUT /api/v1/match/{id}`, `DELETE /api/v1/match/{id}`, `GET /api/v1/gameday`, `POST /api/v1/gameday`
+* **Testes bUnit:** `MatchCardTests.cs`, `MatchModalTests.cs`, `MatchListTests.cs`.
+
 
 #### **[F12] Sistema de RSVP / Check-in de Presença**
 * **Objetivo:** Atletas confirmam ou recusam presença no próximo baba com um clique. Controle de lista de espera quando o limite de vagas for atingido.

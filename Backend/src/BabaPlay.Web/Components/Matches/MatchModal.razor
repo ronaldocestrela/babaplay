@@ -1,0 +1,102 @@
+@namespace BabaPlay.Web.Components.Matches
+@using BabaPlay.Web.Models
+
+@if (IsOpen)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" data-testid="match-modal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-bold">
+                        @(IsEditing ? "Editar Agendamento de Baba" : "Novo Agendamento de Baba")
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="OnClose" aria-label="Close" data-testid="btn-close-modal"></button>
+                </div>
+                <EditForm Model="Model" OnValidSubmit="HandleSubmit">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                        {
+                            <div class="alert alert-danger p-2 small mb-3" data-testid="modal-error-alert">
+                                @ErrorMessage
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nome do Baba / Evento</label>
+                            <InputText class="form-control" @bind-Value="Model.Name" placeholder="Ex: Baba de Terça à Noite" data-testid="input-match-name" />
+                            <ValidationMessage For="() => Model.Name" class="text-danger small" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Data e Hora da Partida</label>
+                            <input type="datetime-local" class="form-control"
+                                   value="@Model.ScheduledAt.ToString("yyyy-MM-ddTHH:mm")"
+                                   @onchange="OnScheduledAtChanged"
+                                   data-testid="input-match-date" />
+                            <ValidationMessage For="() => Model.ScheduledAt" class="text-danger small" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Local do Jogo / Arena</label>
+                            <InputText class="form-control" @bind-Value="Model.Location" placeholder="Ex: Arena Parque Esportivo - Campo 2" data-testid="input-match-location" />
+                            <ValidationMessage For="() => Model.Location" class="text-danger small" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Vagas / Limite de Atletas</label>
+                                <InputNumber class="form-control" @bind-Value="Model.MaxPlayers" data-testid="input-match-max-players" />
+                                <ValidationMessage For="() => Model.MaxPlayers" class="text-danger small" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Observações / Regras Gerais</label>
+                            <InputTextArea class="form-control" @bind-Value="Model.Description" rows="3" placeholder="Instruções para os atletas (ex: chegar 15min antes)" data-testid="input-match-description" />
+                            <ValidationMessage For="() => Model.Description" class="text-danger small" />
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" @onclick="OnClose" data-testid="btn-cancel-modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" data-testid="btn-save-match">
+                            @(IsEditing ? "Salvar Alterações" : "Agendar Baba")
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public bool IsEditing { get; set; }
+    [Parameter] public ScheduleGameDayDto Model { get; set; } = new();
+    [Parameter] public EventCallback<ScheduleGameDayDto> OnSave { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private string? ErrorMessage { get; set; }
+
+    private void OnScheduledAtChanged(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var parsedDate))
+        {
+            Model.ScheduledAt = parsedDate;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        ErrorMessage = null;
+
+        if (!IsEditing && Model.ScheduledAt <= DateTime.Now)
+        {
+            ErrorMessage = "A data e hora do agendamento devem ser no futuro.";
+            return;
+        }
+
+        await OnSave.InvokeAsync(Model);
+    }
+}

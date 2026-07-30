@@ -8,7 +8,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend: Fase F11 (Agendamento e Calendário de Partidas/Treinos)
+
+- **[F11] Agendamento e Calendário de Partidas/Treinos**:
+  - `Pages/Matches/MatchList.razor`: Página de calendário de babas e partidas (`/matches`) com busca textual, abas de filtro por status (Todos, Agendados, Concluídos, Cancelados) e visualização em grid.
+  - `Components/Matches/MatchCard.razor`: Card visual de partida exibindo data/hora, local, badge de status, confronto entre times ou descrição, número de vagas e botões de ação (Editar, Status, Excluir).
+  - `Components/Matches/MatchModal.razor`: Modal interativo com `EditForm`, validação por DataAnnotations, impedimento de seleção de datas passadas e suporte a criação/edição.
+  - `Services/Http/IMatchApiService.cs` & `MatchApiService.cs`: Serviço HTTP consumindo os endpoints REST de `api/v1/match` e `api/v1/gameday`.
+- **Suíte de Testes bUnit**:
+  - `MatchCardTests.cs`, `MatchModalTests.cs`, `MatchListTests.cs`.
+  - Total da suíte do projeto: **583/583 testes passando (100% de sucesso)**.
+
 ### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F10 (Dashboard Principal do Tenant)
+
 
 - **[F10] Dashboard Principal do Tenant**:
   - `Pages/Dashboard/Dashboard.razor`: Página do painel de controle (`/dashboard` e `/`) desacoplada, integrando widgets com loading spinner e tratamento de erros HTTP.
