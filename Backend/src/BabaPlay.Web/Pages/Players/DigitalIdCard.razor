@@ -1,0 +1,96 @@
+@page "/players/digital-card"
+@page "/players/{PlayerId:guid}/digital-card"
+@using BabaPlay.Web.Models
+@using BabaPlay.Web.Services.Http
+@using BabaPlay.Web.Components.Common
+@using BabaPlay.Web.Components.Players
+@inject IPlayerApiService PlayerApiService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Carteirinha Digital - Baba Play</PageTitle>
+
+<div class="container py-4" data-testid="digital-id-card-page">
+    <div class="text-center mb-4">
+        <h1 class="h3 font-weight-bold text-gradient mb-1">Carteirinha Digital do Associado</h1>
+        <p class="text-muted">Apresente este documento virtual com QR Code para validação de acesso nos babas e eventos.</p>
+    </div>
+
+    @if (IsLoading)
+    {
+        <div class="d-flex justify-content-center py-5">
+            <LoadingSpinner Message="Carregando carteirinha do associado..." />
+        </div>
+    }
+    else if (HasError || Card is null)
+    {
+        <div class="card card-custom py-5 text-center my-4 max-w-md mx-auto" data-testid="error-card-state">
+            <div class="card-body">
+                <i class="bi bi-exclamation-octagon display-4 text-warning mb-3 d-block"></i>
+                <h4 class="h5 font-weight-bold">Carteirinha Não Encontrada</h4>
+                <p class="text-muted mb-4">Não foi possível carregar os dados da carteirinha para este atleta.</p>
+                <button class="btn btn-primary" @onclick="LoadCardAsync">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Tentar Novamente
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex justify-content-center mb-4">
+            <DigitalIdCardWidget Card="Card" />
+        </div>
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <button class="btn btn-outline-secondary" @onclick="PrintCardAsync" data-testid="btn-print-card">
+                <i class="bi bi-printer me-1"></i> Imprimir Carteirinha
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid? PlayerId { get; set; }
+
+    private DigitalCardDto? Card { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private bool HasError { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadCardAsync();
+    }
+
+    private async Task LoadCardAsync()
+    {
+        IsLoading = true;
+        HasError = false;
+        try
+        {
+            Card = await PlayerApiService.GetDigitalIdCardAsync(PlayerId);
+            if (Card is null)
+            {
+                HasError = true;
+            }
+        }
+        catch
+        {
+            HasError = true;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task PrintCardAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("window.print");
+        }
+        catch
+        {
+            // Fallback se print window falhar em JS headless
+        }
+    }
+}

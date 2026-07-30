@@ -117,5 +117,55 @@ public sealed class PlayerApiService : IPlayerApiService
         var response = await _httpClient.DeleteAsync($"api/v1/player/{id}", cancellationToken);
         return response.IsSuccessStatusCode;
     }
+
+    public async Task<DigitalCardDto?> GetDigitalIdCardAsync(Guid? playerId = null, CancellationToken cancellationToken = default)
+    {
+        var url = playerId.HasValue ? $"api/v1/player/{playerId.Value}/digital-card" : "api/v1/player/digital-card";
+        var response = await _httpClient.GetAsync(url, cancellationToken);
+        if (response.IsSuccessStatusCode)
+        {
+            var card = await response.Content.ReadFromJsonAsync<DigitalCardDto>(cancellationToken: cancellationToken);
+            if (card is not null) return card;
+        }
+
+        // Fallback: Sintetiza carteirinha usando dados do jogador caso endpoint ainda nao esteja em producao
+        PlayerDto? targetPlayer = null;
+        if (playerId.HasValue)
+        {
+            targetPlayer = await GetPlayerByIdAsync(playerId.Value, cancellationToken);
+        }
+
+        if (targetPlayer is null)
+        {
+            var players = await GetPlayersAsync(cancellationToken);
+            targetPlayer = players.Count > 0 ? players[0] : null;
+        }
+
+        if (targetPlayer is null)
+        {
+            return null;
+        }
+
+        var cardNumber = $"BP-{(targetPlayer.Id.ToString()[..8]).ToUpper()}";
+        var qrData = $"BABAPLAY:CARD:{targetPlayer.Id}:{targetPlayer.UserId}";
+
+        return new DigitalCardDto(
+            PlayerId: targetPlayer.Id,
+            CardNumber: cardNumber,
+            AssociationName: "Baba Play FC",
+            AssociationLogoUrl: null,
+            PlayerName: targetPlayer.Name,
+            Nickname: targetPlayer.Nickname,
+            PhotoUrl: targetPlayer.PhotoUrl,
+            PrimaryPositionName: targetPlayer.PrimaryPositionName ?? "Atleta",
+            JerseyNumber: targetPlayer.JerseyNumber,
+            RoleName: targetPlayer.RoleName ?? "Atleta",
+            MemberSince: targetPlayer.CreatedAt,
+            ValidUntil: DateTime.UtcNow.AddYears(1),
+            QrCodeData: qrData,
+            IsActive: targetPlayer.IsActive
+        );
+    }
 }
+
 

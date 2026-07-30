@@ -16,5 +16,7 @@ public interface IPlayerApiService
     Task<bool> UpdatePlayerRoleAsync(Guid userId, Guid roleId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<RoleDto>> GetRolesAsync(CancellationToken cancellationToken = default);
     Task<bool> DeletePlayerAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<DigitalCardDto?> GetDigitalIdCardAsync(Guid? playerId = null, CancellationToken cancellationToken = default);
 }
+
 

@@ -1,0 +1,158 @@
+@using BabaPlay.Web.Models
+@using BabaPlay.Web.Services.Helpers
+
+<div class="digital-card-wrapper" data-testid="digital-id-card-widget">
+    <div class="digital-card-container @(IsFlipped ? "flipped" : "")">
+        <!-- Front Face -->
+        <div class="digital-card-face digital-card-front @(Card.IsActive ? "" : "card-inactive") shadow-lg rounded-4 p-4 text-white">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="brand-icon bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center font-weight-bold" style="width: 32px; height: 32px;">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 font-weight-bold text-uppercase tracking-wider">@Card.AssociationName</h6>
+                        <small class="opacity-75" style="font-size: 0.75rem;">Carteirinha Digital Oficial</small>
+                    </div>
+                </div>
+                <span class="badge @(Card.IsActive ? "bg-success" : "bg-danger") rounded-pill px-3 py-2">
+                    <i class="bi @(Card.IsActive ? "bi-check-circle-fill" : "bi-x-circle-fill") me-1"></i>
+                    @(Card.IsActive ? "Válida" : "Inativa")
+                </span>
+            </div>
+
+            <div class="row align-items-center my-3">
+                <div class="col-auto">
+                    <div class="position-relative">
+                        @if (!string.IsNullOrWhiteSpace(Card.PhotoUrl))
+                        {
+                            <img src="@Card.PhotoUrl" alt="@Card.PlayerName" class="rounded-circle border border-3 border-warning shadow" style="width: 80px; height: 80px; object-fit: cover;" />
+                        }
+                        else
+                        {
+                            <div class="rounded-circle bg-gradient-secondary border border-3 border-warning shadow d-flex align-items-center justify-content-center font-weight-bold text-white fs-3" style="width: 80px; height: 80px; background: linear-gradient(135deg, #1e293b, #334155);">
+                                @GetInitials(Card.PlayerName)
+                            </div>
+                        }
+                        @if (Card.JerseyNumber.HasValue)
+                        {
+                            <span class="position-absolute bottom-0 end-0 badge bg-warning text-dark font-weight-bold rounded-circle shadow" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">
+                                #@Card.JerseyNumber.Value
+                            </span>
+                        }
+                    </div>
+                </div>
+                <div class="col">
+                    <h4 class="mb-1 font-weight-bold text-truncate" data-testid="card-player-name">@Card.PlayerName</h4>
+                    @if (!string.IsNullOrWhiteSpace(Card.Nickname))
+                    {
+                        <p class="mb-1 text-warning font-italic opacity-90" style="font-size: 0.9rem;">"@Card.Nickname"</p>
+                    }
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        <span class="badge bg-white text-dark font-weight-bold" data-testid="card-position">
+                            <i class="bi bi-person-fill me-1"></i>@(string.IsNullOrWhiteSpace(Card.PrimaryPositionName) ? "Atleta" : Card.PrimaryPositionName)
+                        </span>
+                        <span class="badge bg-info text-dark font-weight-bold" data-testid="card-role">
+                            <i class="bi bi-star-fill me-1"></i>@Card.RoleName
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-top border-white border-opacity-25 pt-3 mt-3 d-flex justify-content-between align-items-end" style="font-size: 0.85rem;">
+                <div>
+                    <div class="opacity-75">MATRÍCULA</div>
+                    <div class="font-monospace font-weight-bold" data-testid="card-number">@Card.CardNumber</div>
+                </div>
+                <div class="text-end">
+                    <div class="opacity-75">VALIDADE</div>
+                    <div class="font-weight-bold text-warning" data-testid="card-validity">@Card.ValidUntil.ToString("dd/MM/yyyy")</div>
+                </div>
+            </div>
+
+            <div class="mt-3 text-center">
+                <button class="btn btn-sm btn-outline-light rounded-pill px-4 btn-flip-card" @onclick="ToggleFlip" data-testid="btn-flip-front">
+                    <i class="bi bi-qr-code me-1"></i> Ver QR Code (Verso)
+                </button>
+            </div>
+        </div>
+
+        <!-- Back Face -->
+        <div class="digital-card-face digital-card-back shadow-lg rounded-4 p-4 text-dark bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="font-weight-bold text-uppercase text-muted" style="font-size: 0.8rem;">Validação de Acesso</span>
+                <span class="font-monospace text-muted small">@Card.CardNumber</span>
+            </div>
+
+            <div class="text-center py-2">
+                <div class="qr-code-container d-inline-block p-2 bg-light rounded-3 border mb-2" data-testid="card-qr-code">
+                    @((MarkupString)QrCodeSvgHelper.GenerateQrCodeSvg(Card.QrCodeData, 160))
+                </div>
+                <p class="small text-muted mb-1 px-3">Apresente este código ao mesário para check-in e confirmação de presença no baba.</p>
+            </div>
+
+            <div class="border-top pt-2 mt-1 text-center">
+                <button class="btn btn-sm btn-primary rounded-pill px-4 btn-flip-card" @onclick="ToggleFlip" data-testid="btn-flip-back">
+                    <i class="bi bi-arrow-left-right me-1"></i> Voltar para a Frente
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .digital-card-wrapper {
+        perspective: 1000px;
+        width: 100%;
+        max-width: 420px;
+        margin: 0 auto;
+    }
+
+    .digital-card-container {
+        position: relative;
+        width: 100%;
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        transform-style: preserve-3d;
+    }
+
+    .digital-card-container.flipped {
+        transform: rotateY(180deg);
+    }
+
+    .digital-card-face {
+        width: 100%;
+        backface-visibility: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .digital-card-front {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f766e 100%);
+    }
+
+    .digital-card-back {
+        position: absolute;
+        top: 0;
+        left: 0;
+        transform: rotateY(180deg);
+    }
+</style>
+
+@code {
+    [Parameter, EditorRequired]
+    public DigitalCardDto Card { get; set; } = default!;
+
+    private bool IsFlipped { get; set; }
+
+    private void ToggleFlip()
+    {
+        IsFlipped = !IsFlipped;
+    }
+
+    private string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "BP";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][0].ToString().ToUpper();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpper();
+    }
+}

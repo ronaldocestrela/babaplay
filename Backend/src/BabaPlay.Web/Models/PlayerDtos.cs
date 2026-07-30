@@ -118,4 +118,21 @@ public record UpdatePositionDto
     public string? Description { get; set; }
 }
 
+public record DigitalCardDto(
+    Guid PlayerId,
+    string CardNumber,
+    string AssociationName,
+    string? AssociationLogoUrl,
+    string PlayerName,
+    string? Nickname,
+    string? PhotoUrl,
+    string? PrimaryPositionName,
+    int? JerseyNumber,
+    string RoleName,
+    DateTime MemberSince,
+    DateTime ValidUntil,
+    string QrCodeData,
+    bool IsActive);
+
+
 
