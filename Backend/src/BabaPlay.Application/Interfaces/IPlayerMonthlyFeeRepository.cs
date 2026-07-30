@@ -1,4 +1,5 @@
 using BabaPlay.Domain.Entities;
+using BabaPlay.Domain.Enums;
 
 namespace BabaPlay.Application.Interfaces;
 
@@ -9,6 +10,13 @@ public interface IPlayerMonthlyFeeRepository
     Task<IReadOnlyList<PlayerMonthlyFee>> GetOverdueAsync(DateTime referenceUtc, CancellationToken ct = default);
 
     Task<IReadOnlyList<PlayerMonthlyFee>> GetByCompetenceAsync(int year, int month, CancellationToken ct = default);
+
+    Task<IReadOnlyList<PlayerMonthlyFee>> GetInvoicesAsync(
+        int? year,
+        int? month,
+        Guid? playerId,
+        MonthlyFeeStatus? status,
+        CancellationToken ct = default);
 
     Task<IReadOnlyList<PlayerMonthlyFee>> GetByPlayerAndPeriodAsync(
         Guid playerId,

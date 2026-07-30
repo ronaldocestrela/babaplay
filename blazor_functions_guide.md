@@ -296,12 +296,15 @@ flowchart TD
 * **Endpoints API Consumidos:** `GET /api/v1/financial/overview` (`GetFinancialOverviewQuery`)
 * **Testes bUnit/xUnit:** `FinancialKpiCardTests.cs`, `RecentTransactionsWidgetTests.cs`, `FinancialDashboardPageTests.cs`, `GetFinancialOverviewQueryHandlerTests.cs`.
 
-#### **[F19] Gestão de Mensalidades Recorrentes e Faturas**
-* **Objetivo:** Listagem das faturas geradas para o atleta, status de pagamento (Pendente, Pago, Atrasado) e opção de emissão de cobrança.
-* **Componentes / Páginas:** `Pages/Financial/InvoicesList.razor`
-* **Services & DTOs:** `IFinancialApiService`, `InvoiceDto`
-* **Endpoints API Consumidos:** `GET /api/v1/financial/invoices`
-* **Testes bUnit:** Filtros por status de fatura e botão de geração manual de cobrança.
+#### **[F19] Gestão de Mensalidades Recorrentes e Faturas** ✅ CONCLUÍDO
+* **Objetivo:** Listagem das faturas geradas para o atleta, status de pagamento (Pendente, Pago, Atrasado, Cancelado) e opção de emissão manual de cobrança.
+* **Componentes / Páginas:** 
+  * `Pages/Financial/InvoicesList.razor`
+  * `Components/Financial/InvoiceStatusBadge.razor`
+  * `Components/Financial/CreateInvoiceModal.razor`
+* **Services & DTOs:** `IFinancialApiService`, `FinancialApiService`, `InvoiceDto`, `CreateInvoiceDto`, `InvoiceResponse`
+* **Endpoints API Consumidos:** `GET /api/v1/financial/invoices` (`GetInvoicesQuery`), `POST /api/v1/financial/monthly-fee` (`CreatePlayerMonthlyFeeCommand`)
+* **Testes bUnit/xUnit:** `InvoiceStatusBadgeTests.cs`, `CreateInvoiceModalTests.cs`, `InvoicesListPageTests.cs`, `GetInvoicesQueryHandlerTests.cs`.
 
 #### **[F20] Pagamento via Pix e Cartão de Crédito**
 * **Objetivo:** Modal de checkout com exibição do QR Code Pix (Copia e Cola) e status de confirmação em tempo real.

@@ -164,6 +164,7 @@ public static class ServiceRegistration
         services.AddScoped<IQueryHandler<GetMonthlySummaryQuery, Result<MonthlySummaryResponse>>, GetMonthlySummaryQueryHandler>();
         services.AddScoped<IQueryHandler<GetPlayerStatementQuery, Result<PlayerStatementResponse>>, GetPlayerStatementQueryHandler>();
         services.AddScoped<IQueryHandler<GetFinancialOverviewQuery, Result<FinancialOverviewResponse>>, GetFinancialOverviewQueryHandler>();
+        services.AddScoped<IQueryHandler<GetInvoicesQuery, Result<IReadOnlyList<InvoiceResponse>>>, GetInvoicesQueryHandler>();
 
         return services;
     }

@@ -44,6 +44,33 @@ public sealed class PlayerMonthlyFeeRepository : IPlayerMonthlyFeeRepository
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<PlayerMonthlyFee>> GetInvoicesAsync(
+        int? year,
+        int? month,
+        Guid? playerId,
+        BabaPlay.Domain.Enums.MonthlyFeeStatus? status,
+        CancellationToken ct = default)
+    {
+        var db = _db;
+        var query = db.PlayerMonthlyFees.AsNoTracking().Where(x => x.IsActive);
+
+        if (year.HasValue && year.Value > 0)
+            query = query.Where(x => x.Year == year.Value);
+
+        if (month.HasValue && month.Value > 0)
+            query = query.Where(x => x.Month == month.Value);
+
+        if (playerId.HasValue && playerId.Value != Guid.Empty)
+            query = query.Where(x => x.PlayerId == playerId.Value);
+
+        if (status.HasValue)
+            query = query.Where(x => x.Status == status.Value);
+
+        return await query
+            .OrderByDescending(x => x.DueDateUtc)
+            .ToListAsync(ct);
+    }
+
     public async Task<IReadOnlyList<PlayerMonthlyFee>> GetByPlayerAndPeriodAsync(
         Guid playerId,
         DateTime fromUtc,

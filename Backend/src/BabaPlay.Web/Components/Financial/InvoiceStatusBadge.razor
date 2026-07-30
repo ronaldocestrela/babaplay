@@ -1,0 +1,25 @@
+@namespace BabaPlay.Web.Components.Financial
+
+<span class="badge @GetBadgeClass()" style="font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.5rem; border-radius: 4px;" data-testid="invoice-status-badge">
+    @GetStatusLabel()
+</span>
+
+@code {
+    [Parameter] public int Status { get; set; }
+
+    private string GetBadgeClass() => Status switch
+    {
+        1 => "badge-success",
+        2 => "badge-danger",
+        4 => "badge-secondary",
+        _ => "badge-warning"
+    };
+
+    private string GetStatusLabel() => Status switch
+    {
+        1 => "Pago",
+        2 => "Atrasado",
+        4 => "Cancelado",
+        _ => "Pendente"
+    };
+}

@@ -1,0 +1,166 @@
+@namespace BabaPlay.Web.Components.Financial
+@using BabaPlay.Web.Models
+@using BabaPlay.Web.Services.Http
+@inject IFinancialApiService FinancialApiService
+
+@if (IsOpen)
+{
+    <div class="modal-backdrop fade show" style="display: block; background: rgba(0,0,0,0.5);" data-testid="create-invoice-modal-backdrop"></div>
+    <div class="modal fade show" tabindex="-1" style="display: block;" data-testid="create-invoice-modal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+                <div class="modal-header" style="border-bottom: 1px solid var(--border-color, #e2e8f0);">
+                    <h5 class="modal-title font-weight-bold" style="color: var(--text-main);">➕ Emitir Nova Cobrança</h5>
+                    <button type="button" class="btn-close" @onclick="CloseAsync" aria-label="Close"></button>
+                </div>
+                
+                <EditForm Model="FormModel" OnValidSubmit="HandleSubmitAsync">
+                    <DataAnnotationsValidator />
+                    
+                    <div class="modal-body">
+                        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                        {
+                            <div class="alert alert-danger" data-testid="modal-error-alert">
+                                @ErrorMessage
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold">Atleta *</label>
+                            <InputSelect @bind-Value="FormModel.PlayerId" class="form-select" data-testid="select-player">
+                                <option value="@Guid.Empty">-- Selecione o Atleta --</option>
+                                @if (Players != null)
+                                {
+                                    @foreach (var player in Players)
+                                    {
+                                        <option value="@player.Id">
+                                            @player.Name @(!string.IsNullOrEmpty(player.Nickname) ? $"({player.Nickname})" : "")
+                                        </option>
+                                    }
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="() => FormModel.PlayerId" class="text-danger" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label font-weight-bold">Ano Competência *</label>
+                                <InputNumber @bind-Value="FormModel.Year" class="form-content form-control" data-testid="input-year" />
+                                <ValidationMessage For="() => FormModel.Year" class="text-danger" />
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label font-weight-bold">Mês Competência *</label>
+                                <InputNumber @bind-Value="FormModel.Month" class="form-control" data-testid="input-month" />
+                                <ValidationMessage For="() => FormModel.Month" class="text-danger" />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label font-weight-bold">Valor (R$) *</label>
+                                <InputNumber @bind-Value="FormModel.Amount" class="form-control" step="0.01" data-testid="input-amount" />
+                                <ValidationMessage For="() => FormModel.Amount" class="text-danger" />
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label font-weight-bold">Vencimento *</label>
+                                <InputDate @bind-Value="FormModel.DueDateUtc" class="form-control" data-testid="input-due-date" />
+                                <ValidationMessage For="() => FormModel.DueDateUtc" class="text-danger" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold">Descrição / Observações</label>
+                            <InputTextArea @bind-Value="FormModel.Notes" class="form-control" rows="2" placeholder="Ex: Mensalidade de Maio" data-testid="input-notes" />
+                        </div>
+                    </div>
+
+                    <div class="modal-footer" style="border-top: 1px solid var(--border-color, #e2e8f0);">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseAsync">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" disabled="@IsSubmitting" data-testid="btn-submit-invoice">
+                            @if (IsSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                <span>Gerando...</span>
+                            }
+                            else
+                            {
+                                <span>Confirmar Emissão</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<InvoiceDto> OnInvoiceCreated { get; set; }
+    [Parameter] public List<PlayerDto>? Players { get; set; }
+
+    private CreateInvoiceDto FormModel { get; set; } = new();
+    private bool IsSubmitting { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (IsOpen)
+        {
+            FormModel = new CreateInvoiceDto
+            {
+                Year = DateTime.UtcNow.Year,
+                Month = DateTime.UtcNow.Month,
+                Amount = 50.00m,
+                DueDateUtc = DateTime.UtcNow.Date.AddDays(7)
+            };
+            ErrorMessage = null;
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        if (OnClose.HasDelegate)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        if (FormModel.PlayerId == Guid.Empty)
+        {
+            ErrorMessage = "Selecione um atleta válido.";
+            return;
+        }
+
+        IsSubmitting = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var created = await FinancialApiService.CreateInvoiceAsync(FormModel);
+            if (created != null)
+            {
+                if (OnInvoiceCreated.HasDelegate)
+                {
+                    await OnInvoiceCreated.InvokeAsync(created);
+                }
+                await CloseAsync();
+            }
+            else
+            {
+                ErrorMessage = "Não foi possível gerar a cobrança. Verifique se já existe fatura para a competência ou tente novamente.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao gerar cobrança: {ex.Message}";
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+}

@@ -23,6 +23,7 @@ public sealed class FinancialController : ControllerBase
     private readonly IQueryHandler<GetMonthlySummaryQuery, Result<MonthlySummaryResponse>> _getMonthlySummaryHandler;
     private readonly IQueryHandler<GetPlayerStatementQuery, Result<PlayerStatementResponse>> _getPlayerStatementHandler;
     private readonly IQueryHandler<GetFinancialOverviewQuery, Result<FinancialOverviewResponse>> _getFinancialOverviewHandler;
+    private readonly IQueryHandler<GetInvoicesQuery, Result<IReadOnlyList<InvoiceResponse>>> _getInvoicesHandler;
 
     public FinancialController(
         ICommandHandler<CreateCashTransactionCommand, Result<CashTransactionResponse>> createCashTransactionHandler,
@@ -33,7 +34,8 @@ public sealed class FinancialController : ControllerBase
         IQueryHandler<GetDelinquencyQuery, Result<DelinquencyResponse>> getDelinquencyHandler,
         IQueryHandler<GetMonthlySummaryQuery, Result<MonthlySummaryResponse>> getMonthlySummaryHandler,
         IQueryHandler<GetPlayerStatementQuery, Result<PlayerStatementResponse>> getPlayerStatementHandler,
-        IQueryHandler<GetFinancialOverviewQuery, Result<FinancialOverviewResponse>> getFinancialOverviewHandler)
+        IQueryHandler<GetFinancialOverviewQuery, Result<FinancialOverviewResponse>> getFinancialOverviewHandler,
+        IQueryHandler<GetInvoicesQuery, Result<IReadOnlyList<InvoiceResponse>>> getInvoicesHandler)
     {
         _createCashTransactionHandler = createCashTransactionHandler;
         _createMonthlyFeeHandler = createMonthlyFeeHandler;
@@ -44,6 +46,7 @@ public sealed class FinancialController : ControllerBase
         _getMonthlySummaryHandler = getMonthlySummaryHandler;
         _getPlayerStatementHandler = getPlayerStatementHandler;
         _getFinancialOverviewHandler = getFinancialOverviewHandler;
+        _getInvoicesHandler = getInvoicesHandler;
     }
 
     [HttpPost("cash-transaction")]
@@ -207,6 +210,24 @@ public sealed class FinancialController : ControllerBase
     public async Task<IActionResult> GetOverview([FromQuery] int? year, [FromQuery] int? month, CancellationToken ct)
     {
         var result = await _getFinancialOverviewHandler.HandleAsync(new GetFinancialOverviewQuery(year, month), ct);
+        if (!result.IsSuccess)
+            return UnprocessableEntity(ToProblem(StatusCodes.Status422UnprocessableEntity, result));
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("invoices")]
+    [Authorize(Policy = AuthorizationPolicyNames.FinancialRead)]
+    [ProducesResponseType(typeof(IReadOnlyList<InvoiceResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> GetInvoices(
+        [FromQuery] int? year,
+        [FromQuery] int? month,
+        [FromQuery] Guid? playerId,
+        [FromQuery] MonthlyFeeStatus? status,
+        CancellationToken ct)
+    {
+        var result = await _getInvoicesHandler.HandleAsync(new GetInvoicesQuery(year, month, playerId, status), ct);
         if (!result.IsSuccess)
             return UnprocessableEntity(ToProblem(StatusCodes.Status422UnprocessableEntity, result));
 

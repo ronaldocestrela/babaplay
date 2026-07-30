@@ -8,6 +8,22 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F19 (Gestão de Mensalidades Recorrentes e Faturas)
+
+- **[F19] Gestão de Mensalidades Recorrentes e Faturas**:
+  - `Pages/Financial/InvoicesList.razor`: Página principal de gestão de faturas e cobranças (`/financial/invoices`) com barra de filtros (status, competência ano/mês, atleta) e tabela responsiva com valores abertos/pagos.
+  - `Components/Financial/InvoiceStatusBadge.razor`: Componente para renderização visual de status de fatura (Pendente, Pago, Atrasado, Cancelado).
+  - `Components/Financial/CreateInvoiceModal.razor`: Modal interativo (`EditForm` com `DataAnnotationsValidator`) para emissão manual de cobranças/mensalidades com seleção de atleta, vencimento e valor R$.
+  - `Services/Http/IFinancialApiService.cs` & `FinancialApiService.cs`: Adicionados métodos `GetInvoicesAsync` e `CreateInvoiceAsync`.
+- **Backend CQRS Query & Controller Endpoint**:
+  - `GetInvoicesQuery.cs` & `GetInvoicesQueryHandler.cs`: Query CQRS para filtragem dinâmica de faturas por competência, atleta e status de pagamento.
+  - `IPlayerMonthlyFeeRepository.cs` & `PlayerMonthlyFeeRepository.cs`: Adicionado método `GetInvoicesAsync`.
+  - `InvoiceResponse.cs`: DTO de resposta detalhada de faturas no backend.
+  - `FinancialController.cs`: Adicionado endpoint `GET /api/v1/financial/invoices` com parâmetros de consulta.
+- **Suíte de Testes TDD (bUnit & xUnit)**:
+  - `InvoiceStatusBadgeTests.cs`, `CreateInvoiceModalTests.cs`, `InvoicesListPageTests.cs`, `GetInvoicesQueryHandlerTests.cs`.
+  - Total da suíte do projeto: **631/631 testes passando (100% de sucesso)**.
+
 ### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F18 (Dashboard Financeiro do Tenant)
 
 - **[F18] Dashboard Financeiro do Tenant**:
