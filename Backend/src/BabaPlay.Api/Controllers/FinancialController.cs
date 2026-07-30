@@ -22,6 +22,7 @@ public sealed class FinancialController : ControllerBase
     private readonly IQueryHandler<GetDelinquencyQuery, Result<DelinquencyResponse>> _getDelinquencyHandler;
     private readonly IQueryHandler<GetMonthlySummaryQuery, Result<MonthlySummaryResponse>> _getMonthlySummaryHandler;
     private readonly IQueryHandler<GetPlayerStatementQuery, Result<PlayerStatementResponse>> _getPlayerStatementHandler;
+    private readonly IQueryHandler<GetFinancialOverviewQuery, Result<FinancialOverviewResponse>> _getFinancialOverviewHandler;
 
     public FinancialController(
         ICommandHandler<CreateCashTransactionCommand, Result<CashTransactionResponse>> createCashTransactionHandler,
@@ -31,7 +32,8 @@ public sealed class FinancialController : ControllerBase
         IQueryHandler<GetCashFlowQuery, Result<CashFlowResponse>> getCashFlowHandler,
         IQueryHandler<GetDelinquencyQuery, Result<DelinquencyResponse>> getDelinquencyHandler,
         IQueryHandler<GetMonthlySummaryQuery, Result<MonthlySummaryResponse>> getMonthlySummaryHandler,
-        IQueryHandler<GetPlayerStatementQuery, Result<PlayerStatementResponse>> getPlayerStatementHandler)
+        IQueryHandler<GetPlayerStatementQuery, Result<PlayerStatementResponse>> getPlayerStatementHandler,
+        IQueryHandler<GetFinancialOverviewQuery, Result<FinancialOverviewResponse>> getFinancialOverviewHandler)
     {
         _createCashTransactionHandler = createCashTransactionHandler;
         _createMonthlyFeeHandler = createMonthlyFeeHandler;
@@ -41,6 +43,7 @@ public sealed class FinancialController : ControllerBase
         _getDelinquencyHandler = getDelinquencyHandler;
         _getMonthlySummaryHandler = getMonthlySummaryHandler;
         _getPlayerStatementHandler = getPlayerStatementHandler;
+        _getFinancialOverviewHandler = getFinancialOverviewHandler;
     }
 
     [HttpPost("cash-transaction")]
@@ -191,6 +194,19 @@ public sealed class FinancialController : ControllerBase
     public async Task<IActionResult> GetPlayerStatement(Guid playerId, [FromQuery] DateTime fromUtc, [FromQuery] DateTime toUtc, CancellationToken ct)
     {
         var result = await _getPlayerStatementHandler.HandleAsync(new GetPlayerStatementQuery(playerId, fromUtc, toUtc), ct);
+        if (!result.IsSuccess)
+            return UnprocessableEntity(ToProblem(StatusCodes.Status422UnprocessableEntity, result));
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("overview")]
+    [Authorize(Policy = AuthorizationPolicyNames.FinancialRead)]
+    [ProducesResponseType(typeof(FinancialOverviewResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> GetOverview([FromQuery] int? year, [FromQuery] int? month, CancellationToken ct)
+    {
+        var result = await _getFinancialOverviewHandler.HandleAsync(new GetFinancialOverviewQuery(year, month), ct);
         if (!result.IsSuccess)
             return UnprocessableEntity(ToProblem(StatusCodes.Status422UnprocessableEntity, result));
 

@@ -8,6 +8,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F18 (Dashboard Financeiro do Tenant)
+
+- **[F18] Dashboard Financeiro do Tenant**:
+  - `Pages/Financial/FinancialDashboard.razor`: Página principal da Dashboard Financeira (`/financial`) com seletores de competência (ano/mês), KPIs de receitas, despesas, saldo da caixinha e mensalidades pendentes/inadimplência, além de barra visual de taxa de arrecadação.
+  - `Components/Financial/FinancialKpiCard.razor`: Componente reutilizável de métricas financeiras com badges de status (Superávit/Déficit) e paleta temática de cores.
+  - `Components/Financial/RecentTransactionsWidget.razor`: Componente de tabela com histórico das últimas movimentações de caixa (entradas e saídas formatadas).
+  - `Services/Http/IFinancialApiService.cs` & `FinancialApiService.cs`: Cliente de API no Blazor consumindo o novo endpoint `/api/v1/financial/overview`.
+- **Backend CQRS Query & Controller Endpoint**:
+  - `GetFinancialOverviewQuery.cs` & `GetFinancialOverviewQueryHandler.cs`: Query CQRS consolidando receitas, despesas, saldo, mensalidades pendentes, taxa de arrecadação e transações recentes por tenant e competência.
+  - `FinancialOverviewResponse.cs`: DTO de resposta da visão consolidada no backend.
+  - `FinancialController.cs`: Adicionado endpoint `GET /api/v1/financial/overview` protegido pela policy `FinancialRead`.
+- **Suíte de Testes TDD (bUnit & xUnit)**:
+  - `FinancialKpiCardTests.cs`, `RecentTransactionsWidgetTests.cs`, `FinancialDashboardPageTests.cs`, `GetFinancialOverviewQueryHandlerTests.cs`.
+  - Total da suíte do projeto: **619/619 testes passando (100% de sucesso)**.
+
 ### Added — Blazor (.NET 10) Frontend & Service Layer: Fase F17 (Rankings da Temporada e Histórico)
 
 - **[F17] Rankings da Temporada e Histórico**:

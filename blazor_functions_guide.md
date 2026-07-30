@@ -286,12 +286,15 @@ flowchart TD
 
 ### Fase 4: Módulo Financeiro & Arrecadação (`BabaPlay.Financial`)
 
-#### **[F18] Dashboard Financeiro do Tenant**
+#### **[F18] Dashboard Financeiro do Tenant** ✅ CONCLUÍDO
 * **Objetivo:** Visão consolidada de entradas, saídas, pendências de mensalidades e saldo da caixinha.
-* **Componentes / Páginas:** `Pages/Financial/FinancialDashboard.razor`
-* **Services & DTOs:** `IFinancialApiService`, `FinancialOverviewDto`
-* **Endpoints API Consumidos:** `GET /api/v1/financial/overview`
-* **Testes bUnit:** Testar a exibição dos balanços e indicadores visuais de déficit/superávit.
+* **Componentes / Páginas:** 
+  * `Pages/Financial/FinancialDashboard.razor`
+  * `Components/Financial/FinancialKpiCard.razor`
+  * `Components/Financial/RecentTransactionsWidget.razor`
+* **Services & DTOs:** `IFinancialApiService`, `FinancialApiService`, `FinancialOverviewDto`, `RecentTransactionDto`, `FinancialOverviewResponse`
+* **Endpoints API Consumidos:** `GET /api/v1/financial/overview` (`GetFinancialOverviewQuery`)
+* **Testes bUnit/xUnit:** `FinancialKpiCardTests.cs`, `RecentTransactionsWidgetTests.cs`, `FinancialDashboardPageTests.cs`, `GetFinancialOverviewQueryHandlerTests.cs`.
 
 #### **[F19] Gestão de Mensalidades Recorrentes e Faturas**
 * **Objetivo:** Listagem das faturas geradas para o atleta, status de pagamento (Pendente, Pago, Atrasado) e opção de emissão de cobrança.
