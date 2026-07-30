@@ -1,0 +1,152 @@
+@namespace BabaPlay.Web.Components.Communication
+@using BabaPlay.Web.Models
+@using BabaPlay.Web.Services.Http
+@inject ICommunicationApiService CommunicationApiService
+
+@if (IsOpen)
+{
+    <div class="modal-backdrop fade show" style="display: block; background: rgba(0,0,0,0.5);" data-testid="create-announcement-backdrop"></div>
+    <div class="modal fade show" tabindex="-1" style="display: block;" data-testid="create-announcement-modal">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+
+                <div class="modal-header" style="border-bottom: 1px solid var(--border-color, #e2e8f0);">
+                    <h5 class="modal-title font-weight-bold" style="color: var(--text-main);">
+                        📢 Publicar Novo Comunicado
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CloseAsync" aria-label="Fechar" data-testid="btn-close-modal"></button>
+                </div>
+
+                <EditForm Model="Model" OnValidSubmit="HandleSubmitAsync" data-testid="form-create-announcement">
+                    <DataAnnotationsValidator />
+
+                    <div class="modal-body p-4">
+
+                        @if (!string.IsNullOrEmpty(ErrorMessage))
+                        {
+                            <div class="alert alert-danger mb-3" role="alert" data-testid="modal-error-alert">
+                                ⚠️ @ErrorMessage
+                            </div>
+                        }
+
+                        <!-- Título -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Título *</label>
+                            <InputText class="form-control form-control-sm"
+                                       placeholder="Ex: Informativo sobre mudança de horário"
+                                       @bind-Value="Model.Title"
+                                       data-testid="input-announcement-title" />
+                            <ValidationMessage For="() => Model.Title" class="text-danger" style="font-size: 0.75rem;" />
+                        </div>
+
+                        <!-- Conteúdo -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Conteúdo *</label>
+                            <InputTextArea class="form-control"
+                                          rows="5"
+                                          placeholder="Escreva o comunicado completo aqui..."
+                                          @bind-Value="Model.Content"
+                                          data-testid="input-announcement-content" />
+                            <ValidationMessage For="() => Model.Content" class="text-danger" style="font-size: 0.75rem;" />
+                            <small class="text-muted" style="font-size: 0.75rem;">
+                                @(Model.Content?.Length ?? 0) / 5000 caracteres
+                            </small>
+                        </div>
+
+                        <!-- Tags + Expiração -->
+                        <div class="row g-3 mb-2">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Tags (Opcional)</label>
+                                <InputText class="form-control form-control-sm"
+                                           placeholder="Ex: importante, horário, uniforme"
+                                           @bind-Value="Model.Tags"
+                                           data-testid="input-announcement-tags" />
+                                <ValidationMessage For="() => Model.Tags" class="text-danger" style="font-size: 0.75rem;" />
+                                <small class="text-muted" style="font-size: 0.75rem;">Separe com vírgulas</small>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Expira em (Opcional)</label>
+                                <InputDate class="form-control form-control-sm"
+                                           @bind-Value="Model.ExpiresAtUtc"
+                                           data-testid="input-announcement-expiry" />
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer" style="border-top: 1px solid var(--border-color, #e2e8f0);">
+                        <button type="button"
+                                class="btn btn-sm btn-outline-secondary"
+                                @onclick="CloseAsync"
+                                disabled="@_isLoading"
+                                data-testid="btn-cancel">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                                class="btn btn-sm btn-success"
+                                style="border-radius: 8px; min-width: 120px;"
+                                disabled="@_isLoading"
+                                data-testid="btn-submit-announcement">
+                            @if (_isLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                <span>Publicando…</span>
+                            }
+                            else
+                            {
+                                <span>📢 Publicar</span>
+                            }
+                        </button>
+                    </div>
+
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; } = false;
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<AnnouncementDto> OnCreated { get; set; }
+
+    private CreateAnnouncementDto Model { get; set; } = new();
+    private bool _isLoading = false;
+    private string? ErrorMessage;
+
+    private async Task HandleSubmitAsync()
+    {
+        _isLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var result = await CommunicationApiService.CreateAnnouncementAsync(Model);
+            if (result is null)
+            {
+                ErrorMessage = "Não foi possível publicar o comunicado. Verifique sua conexão ou permissões.";
+                return;
+            }
+
+            Model = new();
+            await OnCreated.InvokeAsync(result);
+            await OnClose.InvokeAsync();
+        }
+        catch
+        {
+            ErrorMessage = "Erro inesperado ao publicar o comunicado. Tente novamente.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        Model = new();
+        ErrorMessage = null;
+        await OnClose.InvokeAsync();
+    }
+}

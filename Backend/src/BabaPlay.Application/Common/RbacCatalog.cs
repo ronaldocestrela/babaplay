@@ -34,6 +34,8 @@ public static class RbacCatalog
         public const string FinancialRead = "financial.read";
         public const string FinancialWrite = "financial.write";
         public const string FinancialApprove = "financial.approve";
+        public const string CommunicationRead = "communication.read";
+        public const string CommunicationWrite = "communication.write";
     }
 
     public static readonly IReadOnlyDictionary<string, IReadOnlyList<string>> DefaultRolePermissions =
@@ -59,7 +61,10 @@ public static class RbacCatalog
                 Permissions.FinancialRead,
                 Permissions.FinancialWrite,
                 Permissions.FinancialApprove,
+                Permissions.CommunicationRead,
+                Permissions.CommunicationWrite,
             ],
+
             [Roles.Manager] =
             [
                 Permissions.RbacRolesRead,
@@ -75,7 +80,10 @@ public static class RbacCatalog
                 Permissions.RankingWrite,
                 Permissions.FinancialRead,
                 Permissions.FinancialWrite,
+                Permissions.CommunicationRead,
+                Permissions.CommunicationWrite,
             ],
+
             [Roles.Member] =
             [
                 Permissions.PlayersRead,
@@ -83,7 +91,9 @@ public static class RbacCatalog
                 Permissions.MatchesRead,
                 Permissions.MatchEventsRead,
                 Permissions.RankingRead,
+                Permissions.CommunicationRead,
             ],
+
             [Roles.Viewer] =
             [
                 Permissions.PlayersRead,

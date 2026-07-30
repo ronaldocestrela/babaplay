@@ -22,4 +22,6 @@ public static class AuthorizationPolicyNames
     public const string FinancialRead = "FinancialRead";
     public const string FinancialWrite = "FinancialWrite";
     public const string FinancialApprove = "FinancialApprove";
+    public const string CommunicationRead = "CommunicationRead";
+    public const string CommunicationWrite = "CommunicationWrite";
 }

@@ -54,6 +54,10 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<MonthlyFeePayment> MonthlyFeePayments => Set<MonthlyFeePayment>();
     public DbSet<Fundraiser> Fundraisers => Set<Fundraiser>();
 
+    // Communication module (F24)
+    public DbSet<Announcement> Announcements => Set<Announcement>();
+    public DbSet<AnnouncementRead> AnnouncementReads => Set<AnnouncementRead>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -63,6 +67,33 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser>
             e.HasKey(f => f.Id);
             e.Property(f => f.TargetAmount).HasPrecision(18, 2);
             e.Property(f => f.CollectedAmount).HasPrecision(18, 2);
+        });
+
+        // Communication: Announcements (F24)
+        builder.Entity<Announcement>(e =>
+        {
+            e.HasKey(a => a.Id);
+            e.Property(a => a.TenantId).IsRequired();
+            e.Property(a => a.AuthorId).IsRequired();
+            e.Property(a => a.Title).IsRequired().HasMaxLength(150);
+            e.Property(a => a.Content).IsRequired().HasMaxLength(5000);
+            e.Property(a => a.Tags).HasMaxLength(300);
+            e.Property(a => a.IsPublished).IsRequired();
+            e.Property(a => a.IsActive).IsRequired();
+            e.HasIndex(a => new { a.TenantId, a.IsPublished, a.IsActive });
+            e.HasIndex(a => new { a.TenantId, a.CreatedAt });
+        });
+
+        builder.Entity<AnnouncementRead>(e =>
+        {
+            e.HasKey(r => new { r.AnnouncementId, r.UserId });
+            e.Property(r => r.UserId).IsRequired().HasMaxLength(450);
+            e.Property(r => r.ReadAtUtc).IsRequired();
+            e.HasOne(r => r.Announcement)
+             .WithMany(a => a.Reads)
+             .HasForeignKey(r => r.AnnouncementId)
+             .OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(r => new { r.AnnouncementId, r.UserId }).IsUnique();
         });
 
         builder.Entity<RefreshToken>(e =>

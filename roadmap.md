@@ -1477,8 +1477,8 @@ Construir um sistema SaaS escalável, com:
 #### Fechamento da 16.6
 - fluxo web de Partidas concluído com CRUD + mudança de status, arquitetura por feature, navegação integrada e cobertura de testes sem regressão.
 
-### 7. Ranking — pendente
 ### 8. Financeiro — ✅ CONCLUÍDO (F18 a F23 no Blazor .NET 10 & CQRS API)
+### 10. Comunicação — ✅ CONCLUÍDO (F24 Mural de Avisos e Comunicados no Blazor .NET 10 & CQRS API)
 
 ### 9. Associações (Onboarding) — 🚧 em andamento
 

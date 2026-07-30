@@ -348,14 +348,15 @@ flowchart TD
 
 ### Fase 5: Módulo Comunicação & Real-Time (`BabaPlay.Communication`)
 
-#### **[F24] Mural de Avisos e Comunicados**
-* **Objetivo:** Espaço para a diretoria publicar comunicados oficiais com marcação de leitura pelos sócios.
+#### **[F24] Mural de Avisos e Comunicados** ✅ CONCLUÍDO
+* **Objetivo:** Espaço para a diretoria publicar comunicados oficiais com marcação de leitura por sócio, tags, expiração e filtro de não lidos.
 * **Componentes / Páginas:** 
   * `Pages/Communication/Announcements.razor`
   * `Components/Communication/AnnouncementCard.razor`
-* **Services & DTOs:** `ICommunicationApiService`, `AnnouncementDto`
-* **Endpoints API Consumidos:** `GET /api/v1/communication/announcements`, `POST /api/v1/communication/announcements`
-* **Testes bUnit:** Testar a publicação de um novo aviso e a badge de "Novo".
+  * `Components/Communication/CreateAnnouncementModal.razor`
+* **Services & DTOs:** `ICommunicationApiService`, `CommunicationApiService`, `AnnouncementDto`, `CreateAnnouncementDto`, `AnnouncementResponse`
+* **Endpoints API Consumidos:** `GET /api/v1/communication/announcements`, `POST /api/v1/communication/announcements`, `POST /api/v1/communication/announcements/{id}/mark-read`
+* **Testes bUnit/xUnit:** `AnnouncementDomainTests.cs`, `CreateAnnouncementCommandHandlerTests.cs`, `GetAnnouncementsQueryHandlerTests.cs`, `MarkAnnouncementReadCommandHandlerTests.cs`, `AnnouncementCardTests.cs`, `CreateAnnouncementModalTests.cs`, `AnnouncementsPageTests.cs`.
 
 #### **[F25] Enquetes Interativas**
 * **Objetivo:** Votações rápidas promovidas pela associação (ex: escolha do uniforme, definição de dia do jogo).

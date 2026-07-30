@@ -8,6 +8,26 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F24 (Mural de Avisos e Comunicados)
+
+- **[F24] Mural de Avisos e Comunicados**:
+  - `Pages/Communication/Announcements.razor`: Página principal do mural de avisos (`/communication/announcements`) com contador de comunicados não lidos, filtro por estado (Todos vs Não Lidos), banner de erro e controle de permissões de publicação.
+  - `Components/Communication/AnnouncementCard.razor`: Componente visual com badge de "Novo" (últimas 24h), status "Lido / Não Lido", truncamento de texto longo ("Ver mais / Ver menos"), chips de tags coloridos, data de expiração e ação rápida de marcar leitura sem recarregar a página.
+  - `Components/Communication/CreateAnnouncementModal.razor`: Modal interativo com `EditForm` + `DataAnnotationsValidator` para a diretoria publicar avisos com título, conteúdo, tags e data de expiração.
+  - `Services/Http/ICommunicationApiService.cs` & `CommunicationApiService.cs`: Serviço HTTP cliente registrado no DI Blazor.
+  - `Components/Layout/NavMenu.razor`: Atualizada rota do atalho de Comunicados para `/communication/announcements`.
+- **Domain Entity, Repository, Migration, CQRS & Controller Endpoints**:
+  - `Announcement.cs` & `AnnouncementRead.cs`: Entidades de domínio com factory method, validações, publicação/despublicação, expiração e tabela de junção para rastreamento de leitura individual por usuário.
+  - `IAnnouncementRepository.cs` & `AnnouncementRepository.cs`: Repositório de comunicados integrado ao `AppDbContext` e migration EF Core `20260730203139_AddAnnouncementTables`.
+  - `GetAnnouncementsQuery.cs` & `GetAnnouncementsQueryHandler.cs`: Query Handler para listagem dos comunicados do tenant com anotação do estado de leitura do usuário solicitante.
+  - `CreateAnnouncementCommand.cs` & `CreateAnnouncementCommandHandler.cs`: Command Handler para publicação de novos comunicados.
+  - `MarkAnnouncementReadCommand.cs` & `MarkAnnouncementReadCommandHandler.cs`: Command Handler idempotente para registro de leitura por usuário.
+  - `AnnouncementController.cs`: Controller API REST com endpoints `GET /api/v1/communication/announcements`, `POST /api/v1/communication/announcements` e `POST /api/v1/communication/announcements/{id}/mark-read`.
+  - `AuthorizationPolicyNames.cs` & `RbacCatalog.cs`: Adicionadas permissões `communication.read` e `communication.write` e políticas de autorização correspondentes.
+- **Suíte de Testes TDD (bUnit & xUnit)**:
+  - `AnnouncementDomainTests.cs`, `CreateAnnouncementCommandHandlerTests.cs`, `GetAnnouncementsQueryHandlerTests.cs`, `MarkAnnouncementReadCommandHandlerTests.cs`, `AnnouncementCardTests.cs`, `CreateAnnouncementModalTests.cs`, `AnnouncementsPageTests.cs`.
+  - Total da suíte do projeto: **704/704 testes passando (100% de sucesso)**.
+
 ### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F23 (Caixinha do Time / Vaquinhas de Eventos)
 
 - **[F23] Caixinha do Time (Vaquinhas de Eventos)**:

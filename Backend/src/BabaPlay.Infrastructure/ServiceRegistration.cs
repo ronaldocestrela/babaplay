@@ -189,6 +189,18 @@ public static class ServiceRegistration
                 policy.Requirements.Add(new TenantMemberRequirement());
                 policy.Requirements.Add(new PermissionRequirement(RbacCatalog.Permissions.FinancialApprove));
             });
+
+            options.AddPolicy(AuthorizationPolicyNames.CommunicationRead, policy =>
+            {
+                policy.Requirements.Add(new TenantMemberRequirement());
+                policy.Requirements.Add(new PermissionRequirement(RbacCatalog.Permissions.CommunicationRead));
+            });
+
+            options.AddPolicy(AuthorizationPolicyNames.CommunicationWrite, policy =>
+            {
+                policy.Requirements.Add(new TenantMemberRequirement());
+                policy.Requirements.Add(new PermissionRequirement(RbacCatalog.Permissions.CommunicationWrite));
+            });
         });
 
         services.AddScoped<IAuthorizationHandler, TenantMemberAuthorizationHandler>();
@@ -231,6 +243,7 @@ public static class ServiceRegistration
         services.AddScoped<IPlayerMonthlyFeeRepository, PlayerMonthlyFeeRepository>();
         services.AddScoped<IMonthlyFeePaymentRepository, MonthlyFeePaymentRepository>();
         services.AddScoped<IFundraiserRepository, FundraiserRepository>();
+        services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
         services.AddScoped<ITenantGeolocationSettingsRepository, TenantGeolocationSettingsRepository>();
         services.AddScoped<ICheckinRealtimeNotifier, SignalRCheckinRealtimeNotifier>();
         services.AddScoped<IMatchEventRealtimeNotifier, SignalRMatchEventRealtimeNotifier>();

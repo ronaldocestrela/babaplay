@@ -32,6 +32,8 @@ using BabaPlay.Application.Queries.Teams;
 using BabaPlay.Application.Queries.TenantGameDayOptions;
 using BabaPlay.Application.Queries.Tenants;
 using BabaPlay.Application.Queries.Dashboard;
+using BabaPlay.Application.Commands.Announcements;
+using BabaPlay.Application.Queries.Announcements;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BabaPlay.Application;
@@ -173,6 +175,11 @@ public static class ServiceRegistration
         services.AddScoped<ICommandHandler<CreateFundraiserCommand, Result<FundraiserResponse>>, CreateFundraiserCommandHandler>();
         services.AddScoped<ICommandHandler<ContributeToFundraiserCommand, Result<FundraiserResponse>>, ContributeToFundraiserCommandHandler>();
         services.AddScoped<IQueryHandler<GetFundraisersQuery, Result<IReadOnlyList<FundraiserResponse>>>, GetFundraisersQueryHandler>();
+
+        // Communication — Announcements (F24)
+        services.AddScoped<IQueryHandler<GetAnnouncementsQuery, Result<IReadOnlyList<AnnouncementResponse>>>, GetAnnouncementsQueryHandler>();
+        services.AddScoped<ICommandHandler<CreateAnnouncementCommand, Result<AnnouncementResponse>>, CreateAnnouncementCommandHandler>();
+        services.AddScoped<ICommandHandler<MarkAnnouncementReadCommand, Result>, MarkAnnouncementReadCommandHandler>();
 
         return services;
     }
