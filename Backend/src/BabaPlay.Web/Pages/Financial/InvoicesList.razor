@@ -123,6 +123,7 @@
                             <th style="padding: 0.75rem 1rem; text-align: right;">Valor Pago</th>
                             <th style="padding: 0.75rem 1rem; text-align: right;">Valor Aberto</th>
                             <th style="padding: 0.75rem 1rem; text-align: center;">Status</th>
+                            <th style="padding: 0.75rem 1rem; text-align: center;">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -130,6 +131,7 @@
                         {
                             var player = Players?.FirstOrDefault(p => p.Id == item.PlayerId);
                             var playerName = player?.Name ?? "Atleta";
+                            var canPay = item.Status == 0 || item.Status == 2; // Open or Overdue
                             <tr style="border-bottom: 1px solid var(--border-color, #f1f5f9);" data-testid="invoice-row">
                                 <td style="padding: 0.75rem 1rem; font-weight: 600; color: var(--text-main);">
                                     @playerName
@@ -156,6 +158,18 @@
                                 <td style="padding: 0.75rem 1rem; text-align: center;">
                                     <InvoiceStatusBadge Status="item.Status" />
                                 </td>
+                                <td style="padding: 0.75rem 1rem; text-align: center;">
+                                    @if (canPay)
+                                    {
+                                        <button class="btn btn-outline-success btn-sm font-weight-bold" @onclick="() => OpenPixModal(item)" data-testid="btn-pay-pix">
+                                            💳 Pagar via Pix
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted" style="font-size: 0.75rem;">—</span>
+                                    }
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -169,6 +183,12 @@
                         Players="Players"
                         OnClose="() => IsModalOpen = false"
                         OnInvoiceCreated="HandleInvoiceCreated" />
+
+    <!-- Pix Checkout Payment Modal Component -->
+    <PixPaymentModal IsOpen="IsPixModalOpen"
+                     Invoice="SelectedInvoiceForPix"
+                     OnClose="() => IsPixModalOpen = false"
+                     OnPaymentConfirmed="HandlePixPaymentConfirmed" />
 </div>
 
 @code {
@@ -176,6 +196,8 @@
     private List<PlayerDto>? Players { get; set; }
     private bool IsLoading { get; set; } = true;
     private bool IsModalOpen { get; set; }
+    private bool IsPixModalOpen { get; set; }
+    private InvoiceDto? SelectedInvoiceForPix { get; set; }
     private string? ErrorMessage { get; set; }
 
     private int SelectedStatusFilter { get; set; } = -1;
@@ -267,6 +289,17 @@
     }
 
     private async Task HandleInvoiceCreated(InvoiceDto newInvoice)
+    {
+        await LoadInvoicesAsync();
+    }
+
+    private void OpenPixModal(InvoiceDto item)
+    {
+        SelectedInvoiceForPix = item;
+        IsPixModalOpen = true;
+    }
+
+    private async Task HandlePixPaymentConfirmed()
     {
         await LoadInvoicesAsync();
     }

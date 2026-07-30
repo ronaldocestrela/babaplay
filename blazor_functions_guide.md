@@ -306,12 +306,14 @@ flowchart TD
 * **Endpoints API Consumidos:** `GET /api/v1/financial/invoices` (`GetInvoicesQuery`), `POST /api/v1/financial/monthly-fee` (`CreatePlayerMonthlyFeeCommand`)
 * **Testes bUnit/xUnit:** `InvoiceStatusBadgeTests.cs`, `CreateInvoiceModalTests.cs`, `InvoicesListPageTests.cs`, `GetInvoicesQueryHandlerTests.cs`.
 
-#### **[F20] Pagamento via Pix e Cartão de Crédito**
-* **Objetivo:** Modal de checkout com exibição do QR Code Pix (Copia e Cola) e status de confirmação em tempo real.
-* **Componentes / Páginas:** `Components/Financial/PixPaymentModal.razor`
-* **Services & DTOs:** `IFinancialApiService` (`GetPixPaymentAsync`), `PixPaymentDetailsDto`
-* **Endpoints API Consumidos:** `POST /api/v1/financial/invoices/{id}/pay-pix`
-* **Testes bUnit:** Cópia da chave Pix para a área de transferência via Javascript Interop e escuta de pagamento efetuado.
+#### **[F20] Pagamento via Pix e Cartão de Crédito** ✅ CONCLUÍDO
+* **Objetivo:** Modal de checkout com exibição do QR Code Pix (Copia e Cola), cópia via JS Interop e confirmação de pagamento instantânea.
+* **Componentes / Páginas:** 
+  * `Components/Financial/PixPaymentModal.razor`
+  * `Pages/Financial/InvoicesList.razor` (Integração do botão "Pagar via Pix 💳")
+* **Services & DTOs:** `IFinancialApiService`, `FinancialApiService`, `PixPaymentDetailsDto`, `PixPaymentDetailsResponse`, `MonthlyFeePaymentResponse`
+* **Endpoints API Consumidos:** `POST /api/v1/financial/invoices/{id}/pay-pix` (`GeneratePixPaymentCommand`), `POST /api/v1/financial/invoices/{id}/confirm-pix` (`ConfirmPixPaymentCommand`)
+* **Testes bUnit/xUnit:** `PixPaymentModalTests.cs`, `GeneratePixPaymentCommandHandlerTests.cs`, `ConfirmPixPaymentCommandHandlerTests.cs`.
 
 #### **[F21] Controle de Inadimplência**
 * **Objetivo:** Painel restrito a administradores para listar atletas inadimplentes e disparar lembretes de cobrança.

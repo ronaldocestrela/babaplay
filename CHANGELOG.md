@@ -8,6 +8,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F20 (Pagamento via Pix e Cartão de Crédito)
+
+- **[F20] Pagamento via Pix e Cartão de Crédito**:
+  - `Components/Financial/PixPaymentModal.razor`: Modal de Checkout Pix com exibição de valor, QR Code, cópia do código Pix "Copia e Cola" via `IJSRuntime` (`navigator.clipboard.writeText`) com feedback visual de transferência e confirmação instantânea.
+  - `Pages/Financial/InvoicesList.razor`: Integrado o botão "Pagar via Pix 💳" nas faturas pendentes ou atrasadas.
+  - `Services/Http/IFinancialApiService.cs` & `FinancialApiService.cs`: Adicionados métodos `GetPixPaymentAsync` e `ConfirmPixPaymentAsync`.
+- **Backend CQRS Commands & Controller Endpoints**:
+  - `GeneratePixPaymentCommand.cs` & `GeneratePixPaymentCommandHandler.cs`: Handler para geração do payload Pix EMV e tempo de expiração de 30 minutos.
+  - `ConfirmPixPaymentCommand.cs` & `ConfirmPixPaymentCommandHandler.cs`: Handler para baixa imediata da fatura e lançamento atômico no fluxo de caixa (`CashTransaction`).
+  - `PixPaymentDetailsResponse.cs`: DTO de resposta de detalhes do checkout Pix.
+  - `FinancialController.cs`: Adicionados endpoints `POST /api/v1/financial/invoices/{id}/pay-pix` e `POST /api/v1/financial/invoices/{id}/confirm-pix`.
+- **Suíte de Testes TDD (bUnit & xUnit)**:
+  - `PixPaymentModalTests.cs`, `GeneratePixPaymentCommandHandlerTests.cs`, `ConfirmPixPaymentCommandHandlerTests.cs`.
+  - Total da suíte do projeto: **640/640 testes passando (100% de sucesso)**.
+
 ### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F19 (Gestão de Mensalidades Recorrentes e Faturas)
 
 - **[F19] Gestão de Mensalidades Recorrentes e Faturas**:

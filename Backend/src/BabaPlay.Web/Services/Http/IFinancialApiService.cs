@@ -13,4 +13,8 @@ public interface IFinancialApiService
     Task<List<InvoiceDto>?> GetInvoicesAsync(int? year = null, int? month = null, Guid? playerId = null, int? status = null, CancellationToken cancellationToken = default);
 
     Task<InvoiceDto?> CreateInvoiceAsync(CreateInvoiceDto dto, CancellationToken cancellationToken = default);
+
+    Task<PixPaymentDetailsDto?> GetPixPaymentAsync(Guid invoiceId, CancellationToken cancellationToken = default);
+
+    Task<bool> ConfirmPixPaymentAsync(Guid invoiceId, string? txId = null, CancellationToken cancellationToken = default);
 }

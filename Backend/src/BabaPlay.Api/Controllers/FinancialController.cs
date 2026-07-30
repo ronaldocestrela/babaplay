@@ -24,6 +24,8 @@ public sealed class FinancialController : ControllerBase
     private readonly IQueryHandler<GetPlayerStatementQuery, Result<PlayerStatementResponse>> _getPlayerStatementHandler;
     private readonly IQueryHandler<GetFinancialOverviewQuery, Result<FinancialOverviewResponse>> _getFinancialOverviewHandler;
     private readonly IQueryHandler<GetInvoicesQuery, Result<IReadOnlyList<InvoiceResponse>>> _getInvoicesHandler;
+    private readonly ICommandHandler<GeneratePixPaymentCommand, Result<PixPaymentDetailsResponse>> _generatePixHandler;
+    private readonly ICommandHandler<ConfirmPixPaymentCommand, Result<MonthlyFeePaymentResponse>> _confirmPixHandler;
 
     public FinancialController(
         ICommandHandler<CreateCashTransactionCommand, Result<CashTransactionResponse>> createCashTransactionHandler,
@@ -35,7 +37,9 @@ public sealed class FinancialController : ControllerBase
         IQueryHandler<GetMonthlySummaryQuery, Result<MonthlySummaryResponse>> getMonthlySummaryHandler,
         IQueryHandler<GetPlayerStatementQuery, Result<PlayerStatementResponse>> getPlayerStatementHandler,
         IQueryHandler<GetFinancialOverviewQuery, Result<FinancialOverviewResponse>> getFinancialOverviewHandler,
-        IQueryHandler<GetInvoicesQuery, Result<IReadOnlyList<InvoiceResponse>>> getInvoicesHandler)
+        IQueryHandler<GetInvoicesQuery, Result<IReadOnlyList<InvoiceResponse>>> getInvoicesHandler,
+        ICommandHandler<GeneratePixPaymentCommand, Result<PixPaymentDetailsResponse>> generatePixHandler,
+        ICommandHandler<ConfirmPixPaymentCommand, Result<MonthlyFeePaymentResponse>> confirmPixHandler)
     {
         _createCashTransactionHandler = createCashTransactionHandler;
         _createMonthlyFeeHandler = createMonthlyFeeHandler;
@@ -47,6 +51,8 @@ public sealed class FinancialController : ControllerBase
         _getPlayerStatementHandler = getPlayerStatementHandler;
         _getFinancialOverviewHandler = getFinancialOverviewHandler;
         _getInvoicesHandler = getInvoicesHandler;
+        _generatePixHandler = generatePixHandler;
+        _confirmPixHandler = confirmPixHandler;
     }
 
     [HttpPost("cash-transaction")]
@@ -234,6 +240,40 @@ public sealed class FinancialController : ControllerBase
         return Ok(result.Value);
     }
 
+    [HttpPost("invoices/{id:guid}/pay-pix")]
+    [Authorize(Policy = AuthorizationPolicyNames.FinancialRead)]
+    [ProducesResponseType(typeof(PixPaymentDetailsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> GeneratePix(Guid id, CancellationToken ct)
+    {
+        var result = await _generatePixHandler.HandleAsync(new GeneratePixPaymentCommand(id), ct);
+        if (!result.IsSuccess)
+        {
+            var statusCode = result.ErrorCode == "MONTHLY_FEE_NOT_FOUND" ? StatusCodes.Status404NotFound : StatusCodes.Status422UnprocessableEntity;
+            return StatusCode(statusCode, ToProblem(statusCode, result));
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("invoices/{id:guid}/confirm-pix")]
+    [Authorize(Policy = AuthorizationPolicyNames.FinancialWrite)]
+    [ProducesResponseType(typeof(MonthlyFeePaymentResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ConfirmPix(Guid id, [FromBody] ConfirmPixRequest? request, CancellationToken ct)
+    {
+        var result = await _confirmPixHandler.HandleAsync(new ConfirmPixPaymentCommand(id, request?.TxId), ct);
+        if (!result.IsSuccess)
+        {
+            var statusCode = result.ErrorCode == "MONTHLY_FEE_NOT_FOUND" ? StatusCodes.Status404NotFound : StatusCodes.Status422UnprocessableEntity;
+            return StatusCode(statusCode, ToProblem(statusCode, result));
+        }
+
+        return Ok(result.Value);
+    }
+
     private static ProblemDetails ToProblem<T>(int statusCode, Result<T> result)
         => new()
         {
@@ -265,3 +305,5 @@ public sealed record RegisterMonthlyFeePaymentRequest(
     string? Notes);
 
 public sealed record ReverseMonthlyFeePaymentRequest(DateTime ReversedAtUtc);
+
+public sealed record ConfirmPixRequest(string? TxId);

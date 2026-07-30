@@ -90,4 +90,22 @@ public sealed class FinancialApiService : IFinancialApiService
 
         return await response.Content.ReadFromJsonAsync<InvoiceDto>(cancellationToken: cancellationToken);
     }
+
+    public async Task<PixPaymentDetailsDto?> GetPixPaymentAsync(Guid invoiceId, CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.PostAsync($"api/v1/financial/invoices/{invoiceId}/pay-pix", null, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<PixPaymentDetailsDto>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<bool> ConfirmPixPaymentAsync(Guid invoiceId, string? txId = null, CancellationToken cancellationToken = default)
+    {
+        var payload = new { txId };
+        var response = await _httpClient.PostAsJsonAsync($"api/v1/financial/invoices/{invoiceId}/confirm-pix", payload, cancellationToken);
+        return response.IsSuccessStatusCode;
+    }
 }
