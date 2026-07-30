@@ -1,0 +1,117 @@
+@namespace BabaPlay.Web.Components.Matches
+@using BabaPlay.Web.Models
+
+<div class="checkin-list-widget card card-custom p-4 mb-4 shadow-sm" data-testid="checkin-list-widget">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="h5 font-weight-bold mb-0">👥 Lista de Presença do Baba</h3>
+        <span class="badge bg-primary text-white">@RsvpList.Count Registros</span>
+    </div>
+
+    <!-- Abas de Filtro de Lista -->
+    <div class="nav nav-tabs mb-3" data-testid="rsvp-list-tabs">
+        <button class="nav-link @(ActiveTab == "Confirmed" ? "active" : "")" @onclick="SelectConfirmedTab">
+            Confirmados (@ConfirmedPlayers.Count)
+        </button>
+        <button class="nav-link @(ActiveTab == "Waitlist" ? "active" : "")" @onclick="SelectWaitlistTab">
+            Lista de Espera (@WaitlistPlayers.Count)
+        </button>
+        <button class="nav-link @(ActiveTab == "Declined" ? "active" : "")" @onclick="SelectDeclinedTab">
+            Ausentes (@DeclinedPlayers.Count)
+        </button>
+    </div>
+
+    @if (DisplayedPlayers.Count == 0)
+    {
+        <div class="text-center py-4 text-muted" data-testid="empty-rsvp-list">
+            <p class="mb-0">Nenhum atleta nesta categoria no momento.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" data-testid="rsvp-table">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Atleta</th>
+                        <th>Posição</th>
+                        <th>Camisa</th>
+                        <th>Horário</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int index = 1;
+                    }
+                    @foreach (var player in DisplayedPlayers)
+                    {
+                        <tr data-testid="rsvp-row-@player.PlayerId">
+                            <td class="fw-bold text-muted">@(player.WaitlistOrder ?? index)</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle bg-dark text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                        @GetInitials(player.PlayerName)
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">@player.PlayerName</div>
+                                        @if (!string.IsNullOrWhiteSpace(player.Nickname))
+                                        {
+                                            <small class="text-muted italic">"@player.Nickname"</small>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">@(player.PrimaryPositionName ?? "Atleta")</span>
+                            </td>
+                            <td>
+                                @(player.JerseyNumber.HasValue ? $"#{player.JerseyNumber}" : "-")
+                            </td>
+                            <td class="small text-muted">
+                                @player.ConfirmedAt.ToString("HH:mm")
+                            </td>
+                        </tr>
+                        index++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<PlayerRsvpDetailDto> RsvpList { get; set; } = new List<PlayerRsvpDetailDto>();
+
+    private string ActiveTab { get; set; } = "Confirmed";
+
+    private IReadOnlyList<PlayerRsvpDetailDto> ConfirmedPlayers => RsvpList
+        .Where(p => string.Equals(p.Status, "Confirmed", StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    private IReadOnlyList<PlayerRsvpDetailDto> WaitlistPlayers => RsvpList
+        .Where(p => string.Equals(p.Status, "Waitlist", StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    private IReadOnlyList<PlayerRsvpDetailDto> DeclinedPlayers => RsvpList
+        .Where(p => string.Equals(p.Status, "Declined", StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    private IReadOnlyList<PlayerRsvpDetailDto> DisplayedPlayers => ActiveTab switch
+    {
+        "Waitlist" => WaitlistPlayers,
+        "Declined" => DeclinedPlayers,
+        _ => ConfirmedPlayers
+    };
+
+    private void SelectConfirmedTab() => ActiveTab = "Confirmed";
+    private void SelectWaitlistTab() => ActiveTab = "Waitlist";
+    private void SelectDeclinedTab() => ActiveTab = "Declined";
+
+    private static string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "A";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][..1].ToUpperInvariant();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+    }
+}

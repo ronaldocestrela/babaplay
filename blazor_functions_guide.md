@@ -217,14 +217,16 @@ flowchart TD
 * **Testes bUnit:** `MatchCardTests.cs`, `MatchModalTests.cs`, `MatchListTests.cs`.
 
 
-#### **[F12] Sistema de RSVP / Check-in de Presença**
+#### **[F12] Sistema de RSVP / Check-in de Presença** ✅ CONCLUÍDO
 * **Objetivo:** Atletas confirmam ou recusam presença no próximo baba com um clique. Controle de lista de espera quando o limite de vagas for atingido.
-* **Componentes / Páginas:** `Pages/Matches/MatchCheckin.razor`
-* **Services & DTOs:** `IMatchApiService` (`SubmitRsvpAsync`), `RsvpSubmissionDto`, `MatchRsvpListDto`
-* **Endpoints API Consumidos:** `POST /api/v1/matches/{id}/rsvp` (`SubmitRsvpCommand`), `GET /api/v1/matches/{id}/rsvp`
-* **Testes bUnit:**
-  * Alteração do botão de "Vou" para "Não Vou" atualizando o estado do componente instantaneamente.
-  * Exibição do indicador de "Lista de Espera" quando as vagas estourarem.
+* **Componentes / Páginas:** 
+  * `Pages/Matches/MatchCheckin.razor`
+  * `Components/Matches/RsvpStatusWidget.razor`
+  * `Components/Matches/CheckinListWidget.razor`
+* **Services & DTOs:** `ICheckinApiService`, `CheckinApiService`, `RsvpSubmissionDto`, `GameDayRsvpSummaryDto`, `PlayerRsvpDetailDto`, `CheckinDto`, `CreateCheckinDto`
+* **Endpoints API Consumidos:** `POST /api/v1/checkin`, `GET /api/v1/checkin/gameday/{gameDayId}`, `GET /api/v1/checkin/player/{playerId}`, `DELETE /api/v1/checkin/{id}`
+* **Testes bUnit:** `RsvpStatusWidgetTests.cs`, `CheckinListWidgetTests.cs`, `MatchCheckinPageTests.cs`.
+
 
 #### **[F13] Algoritmo e Tela de Sorteio de Times (Coletes)**
 * **Objetivo:** Interface interativa para acionar o algoritmo de balanceamento de times (com base no rating dos jogadores confirmados) e permitir ajustes manuais (drag-and-drop ou botões de troca).

@@ -36,6 +36,8 @@ builder.Services.AddScoped<BabaPlay.Web.Services.Http.IPlayerApiService, BabaPla
 builder.Services.AddScoped<BabaPlay.Web.Services.Http.IPositionApiService, BabaPlay.Web.Services.Http.PositionApiService>();
 builder.Services.AddScoped<BabaPlay.Web.Services.Http.IDashboardApiService, BabaPlay.Web.Services.Http.DashboardApiService>();
 builder.Services.AddScoped<BabaPlay.Web.Services.Http.IMatchApiService, BabaPlay.Web.Services.Http.MatchApiService>();
+builder.Services.AddScoped<BabaPlay.Web.Services.Http.ICheckinApiService, BabaPlay.Web.Services.Http.CheckinApiService>();
+
 
 
 

@@ -1,0 +1,92 @@
+@namespace BabaPlay.Web.Components.Matches
+@using BabaPlay.Web.Models
+
+<div class="rsvp-status-widget card card-custom p-4 mb-4 shadow-sm" data-testid="rsvp-status-widget">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="h5 font-weight-bold mb-1" data-testid="gameday-title">
+                @(Summary?.GameDayName ?? "Baba Esportivo")
+            </h3>
+            <div class="text-muted small">
+                📅 @(Summary?.ScheduledAt.ToString("dd/MM/yyyy HH:mm") ?? "-") &bull; 📍 @(Summary?.Location ?? "Arena Principal")
+            </div>
+        </div>
+        <span class="badge @GetStatusBadgeClass()" data-testid="user-status-badge">
+            @GetStatusBadgeText()
+        </span>
+    </div>
+
+    @if (Summary != null)
+    {
+        <div class="attendance-info bg-light p-3 rounded mb-3">
+            <div class="d-flex justify-content-between small fw-bold mb-1">
+                <span>Vagas Preenchidas</span>
+                <span>@Summary.ConfirmedCount / @Summary.MaxPlayers confirmados</span>
+            </div>
+            <div class="progress" style="height: 10px; border-radius: 5px;">
+                <div class="progress-bar @(Summary.ConfirmedCount >= Summary.MaxPlayers ? "bg-warning" : "bg-success")"
+                     role="progressbar"
+                     style="width: @(CalculatePercentage())%;"
+                     aria-valuenow="@Summary.ConfirmedCount"
+                     aria-valuemin="0"
+                     aria-valuemax="@Summary.MaxPlayers">
+                </div>
+            </div>
+
+            @if (Summary.WaitlistCount > 0)
+            {
+                <div class="mt-2 text-warning small font-weight-bold" data-testid="waitlist-indicator">
+                    ⏳ Lista de Espera: @Summary.WaitlistCount atleta(s) aguardando vaga
+                </div>
+            }
+        </div>
+
+        @if (Summary.UserRsvpStatus == "Waitlist")
+        {
+            <div class="alert alert-warning p-2 small mb-3" data-testid="waitlist-position-alert">
+                <i class="bi bi-clock-history me-1"></i> Você está na <strong>Lista de Espera (Posição #@(Summary.UserWaitlistPosition ?? 1))</strong>. Caso ocorra alguma desistência, sua vaga será confirmada automaticamente.
+            </div>
+        }
+
+        <div class="rsvp-actions d-flex gap-2">
+            <button class="btn btn-success flex-grow-1 font-weight-bold btn-confirm-rsvp"
+                    @onclick="() => OnRsvpSubmitted.InvokeAsync(true)"
+                    data-testid="btn-confirm-rsvp">
+                <i class="bi bi-check-circle-fill me-1"></i> Vou Jogar!
+            </button>
+            <button class="btn btn-outline-danger flex-grow-1 font-weight-bold btn-decline-rsvp"
+                    @onclick="() => OnRsvpSubmitted.InvokeAsync(false)"
+                    data-testid="btn-decline-rsvp">
+                <i class="bi bi-x-circle-fill me-1"></i> Não Vou
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public GameDayRsvpSummaryDto? Summary { get; set; }
+    [Parameter] public EventCallback<bool> OnRsvpSubmitted { get; set; }
+
+    private int CalculatePercentage()
+    {
+        if (Summary == null || Summary.MaxPlayers <= 0) return 0;
+        var pct = (int)Math.Round((double)Summary.ConfirmedCount / Summary.MaxPlayers * 100);
+        return Math.Min(100, Math.Max(0, pct));
+    }
+
+    private string GetStatusBadgeClass() => Summary?.UserRsvpStatus switch
+    {
+        "Confirmed" => "bg-success text-white",
+        "Waitlist" => "bg-warning text-dark",
+        "Declined" => "bg-danger text-white",
+        _ => "bg-secondary text-white"
+    };
+
+    private string GetStatusBadgeText() => Summary?.UserRsvpStatus switch
+    {
+        "Confirmed" => "Presença Confirmada ✅",
+        "Waitlist" => "Lista de Espera ⏳",
+        "Declined" => "Ausência Declarada ❌",
+        _ => "Não Respondido"
+    };
+}

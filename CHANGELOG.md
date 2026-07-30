@@ -8,7 +8,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend: Fase F12 (Sistema de RSVP / Check-in de Presença)
+
+- **[F12] Sistema de RSVP / Check-in de Presença**:
+  - `Pages/Matches/MatchCheckin.razor`: Tela de confirmação de presença e check-in presencial (`/rsvp` e `/matches/{gameDayId}/rsvp`).
+  - `Components/Matches/RsvpStatusWidget.razor`: Widget com botões de alternância instantânea ("Vou Jogar ✅" / "Não Vou ❌"), barra de progresso de vagas e alerta dinâmico de Lista de Espera ⏳ com posição do atleta.
+  - `Components/Matches/CheckinListWidget.razor`: Widget com abas para visualização da lista de atletas ("Confirmados", "Lista de Espera" e "Ausentes") com foto, posição, camisa e horário de confirmação.
+  - `Services/Http/ICheckinApiService.cs` & `CheckinApiService.cs`: Serviço HTTP consumindo os endpoints REST de `api/v1/checkin`.
+- **Suíte de Testes bUnit**:
+  - `RsvpStatusWidgetTests.cs`, `CheckinListWidgetTests.cs`, `MatchCheckinPageTests.cs`.
+  - Total da suíte do projeto: **589/589 testes passando (100% de sucesso)**.
+
 ### Added — Blazor (.NET 10) Frontend: Fase F11 (Agendamento e Calendário de Partidas/Treinos)
+
 
 - **[F11] Agendamento e Calendário de Partidas/Treinos**:
   - `Pages/Matches/MatchList.razor`: Página de calendário de babas e partidas (`/matches`) com busca textual, abas de filtro por status (Todos, Agendados, Concluídos, Cancelados) e visualização em grid.
