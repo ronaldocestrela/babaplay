@@ -1,0 +1,52 @@
+@namespace BabaPlay.Web.Components.Layout
+@inject TenantState TenantState
+@inject UserSessionState UserSessionState
+@inject AuthenticationStateProvider AuthStateProvider
+
+<header class="header">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <span style="font-weight: 600; color: var(--text-muted);">Associação:</span>
+        <span class="badge badge-primary" style="font-size: 0.9rem;">
+            @(TenantState.CurrentTenantName ?? "Nenhuma selecionada")
+        </span>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 1.5rem;">
+        <AuthorizeView>
+            <Authorized>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.9rem; font-weight: 600;">@(UserSessionState.FullName ?? context.User.Identity?.Name ?? "Usuário")</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">@(UserSessionState.Email)</div>
+                </div>
+                <button class="badge badge-danger" style="border: none; cursor: pointer;" @onclick="HandleLogout">
+                    Sair
+                </button>
+            </Authorized>
+            <NotAuthorized>
+                <a href="login" class="badge badge-primary" style="text-decoration: none;">Entrar</a>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</header>
+
+@code {
+    protected override void OnInitialized()
+    {
+        TenantState.OnChange += StateHasChanged;
+        UserSessionState.OnChange += StateHasChanged;
+    }
+
+    private void HandleLogout()
+    {
+        if (AuthStateProvider is CustomAuthStateProvider customProvider)
+        {
+            customProvider.NotifyUserLogout();
+        }
+    }
+
+    public void Dispose()
+    {
+        TenantState.OnChange -= StateHasChanged;
+        UserSessionState.OnChange -= StateHasChanged;
+    }
+}

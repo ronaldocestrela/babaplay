@@ -26,6 +26,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="bunit" Version="1.38.5" />
+    <PackageReference Include="bunit.web" Version="1.38.5" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,6 +35,7 @@
     <ProjectReference Include="..\BabaPlay.Application\BabaPlay.Application.csproj" />
     <ProjectReference Include="..\BabaPlay.Infrastructure\BabaPlay.Infrastructure.csproj" />
     <ProjectReference Include="..\BabaPlay.Api\BabaPlay.Api.csproj" />
+    <ProjectReference Include="..\BabaPlay.Web\BabaPlay.Web.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,18 @@
+@namespace BabaPlay.Web.Components.Common
+
+<span class="badge @CssClass">
+    @ChildContent
+</span>
+
+@code {
+    [Parameter] public string Variant { get; set; } = "primary";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string CssClass => Variant.ToLower() switch
+    {
+        "success" => "badge-success",
+        "warning" => "badge-warning",
+        "danger" => "badge-danger",
+        _ => "badge-primary"
+    };
+}

@@ -1,0 +1,32 @@
+using System;
+using System.Net.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using BabaPlay.Web;
+using BabaPlay.Web.Services.Handlers;
+using BabaPlay.Web.Services.State;
+
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
+
+// State Providers (Scoped)
+builder.Services.AddScoped<TenantState>();
+builder.Services.AddScoped<UserSessionState>();
+builder.Services.AddScoped<CustomAuthStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<CustomAuthStateProvider>());
+builder.Services.AddAuthorizationCore();
+
+// HTTP Handler & Client
+builder.Services.AddTransient<AuthorizationHeaderHandler>();
+
+builder.Services.AddHttpClient("BabaPlayApi", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? builder.HostEnvironment.BaseAddress);
+}).AddHttpMessageHandler<AuthorizationHeaderHandler>();
+
+builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("BabaPlayApi"));
+
+await builder.Build().RunAsync();

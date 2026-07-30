@@ -1,0 +1,14 @@
+@inherits LayoutComponentBase
+@namespace BabaPlay.Web.Components.Layout
+
+<CascadingAuthenticationState>
+    <div class="app-container">
+        <NavMenu />
+        <div class="main-content">
+            <Header />
+            <main class="content-body">
+                @Body
+            </main>
+        </div>
+    </div>
+</CascadingAuthenticationState>

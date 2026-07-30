@@ -1,0 +1,31 @@
+@namespace BabaPlay.Web.Components.Common
+
+@if (IsOpen)
+{
+    <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; max-width: 400px; width: 90%;">
+            <h3 style="margin-bottom: 0.5rem; color: var(--text-main);">@Title</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">@Message</p>
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button style="padding: 0.5rem 1rem; border: 1px solid var(--border-color); background: transparent; color: var(--text-main); border-radius: 6px; cursor: pointer;" @onclick="Cancel">
+                    @CancelText
+                </button>
+                <button style="padding: 0.5rem 1rem; border: none; background: var(--primary-color); color: white; border-radius: 6px; cursor: pointer;" @onclick="Confirm">
+                    @ConfirmText
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public string Title { get; set; } = "Confirmação";
+    [Parameter] public string Message { get; set; } = "Tem certeza que deseja continuar?";
+    [Parameter] public string ConfirmText { get; set; } = "Confirmar";
+    [Parameter] public string CancelText { get; set; } = "Cancelar";
+    [Parameter] public EventCallback<bool> OnClose { get; set; }
+
+    private Task Cancel() => OnClose.InvokeAsync(false);
+    private Task Confirm() => OnClose.InvokeAsync(true);
+}

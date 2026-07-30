@@ -4,6 +4,7 @@
     <Project Path="src/BabaPlay.Application/BabaPlay.Application.csproj" />
     <Project Path="src/BabaPlay.Domain/BabaPlay.Domain.csproj" />
     <Project Path="src/BabaPlay.Infrastructure/BabaPlay.Infrastructure.csproj" />
+    <Project Path="src/BabaPlay.Web/BabaPlay.Web.csproj" />
     <Project Path="src/BabaPlay.Tests/BabaPlay.Tests.csproj" />
   </Folder>
 </Solution>
