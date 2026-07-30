@@ -22,6 +22,8 @@ public sealed class MatchController : ControllerBase
     private readonly ICommandHandler<ChangeMatchStatusCommand, Result<MatchResponse>> _changeStatusHandler;
     private readonly ICommandHandler<DeleteMatchCommand, Result> _deleteHandler;
     private readonly ICommandHandler<RegisterMatchStatsCommand, Result<RegisterMatchStatsApplicationDto>> _registerStatsHandler;
+    private readonly ICommandHandler<SubmitMvpVoteCommand, Result> _submitMvpVoteHandler;
+    private readonly IQueryHandler<GetMvpResultsQuery, Result<MvpResultApplicationDto>> _getMvpResultsHandler;
 
     public MatchController(
         ICommandHandler<CreateMatchCommand, Result<MatchResponse>> createHandler,
@@ -30,7 +32,9 @@ public sealed class MatchController : ControllerBase
         ICommandHandler<UpdateMatchCommand, Result<MatchResponse>> updateHandler,
         ICommandHandler<ChangeMatchStatusCommand, Result<MatchResponse>> changeStatusHandler,
         ICommandHandler<DeleteMatchCommand, Result> deleteHandler,
-        ICommandHandler<RegisterMatchStatsCommand, Result<RegisterMatchStatsApplicationDto>> registerStatsHandler)
+        ICommandHandler<RegisterMatchStatsCommand, Result<RegisterMatchStatsApplicationDto>> registerStatsHandler,
+        ICommandHandler<SubmitMvpVoteCommand, Result> submitMvpVoteHandler,
+        IQueryHandler<GetMvpResultsQuery, Result<MvpResultApplicationDto>> getMvpResultsHandler)
     {
         _createHandler = createHandler;
         _getHandler = getHandler;
@@ -39,7 +43,40 @@ public sealed class MatchController : ControllerBase
         _changeStatusHandler = changeStatusHandler;
         _deleteHandler = deleteHandler;
         _registerStatsHandler = registerStatsHandler;
+        _submitMvpVoteHandler = submitMvpVoteHandler;
+        _getMvpResultsHandler = getMvpResultsHandler;
     }
+
+    [HttpPost("{id:guid}/mvp-vote")]
+    [Authorize(Policy = AuthorizationPolicyNames.MatchesWrite)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> SubmitMvpVote(Guid id, [FromBody] SubmitMvpVoteRequest request, CancellationToken ct)
+    {
+        var result = await _submitMvpVoteHandler.HandleAsync(new SubmitMvpVoteCommand(id, request.VoterPlayerId, request.CandidatePlayerId), ct);
+
+        if (!result.IsSuccess)
+        {
+            return UnprocessableEntity(new ProblemDetails
+            {
+                Status = StatusCodes.Status422UnprocessableEntity,
+                Title = result.ErrorCode,
+                Detail = result.ErrorMessage,
+            });
+        }
+
+        return Ok();
+    }
+
+    [HttpGet("{id:guid}/mvp-results")]
+    [Authorize(Policy = AuthorizationPolicyNames.MatchesRead)]
+    [ProducesResponseType(typeof(MvpResultApplicationDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMvpResults(Guid id, CancellationToken ct)
+    {
+        var result = await _getMvpResultsHandler.HandleAsync(new GetMvpResultsQuery(id), ct);
+        return Ok(result.Value);
+    }
+
 
     [HttpPost("{id:guid}/stats")]
     [Authorize(Policy = AuthorizationPolicyNames.MatchesWrite)]
@@ -220,3 +257,5 @@ public sealed record UpdateMatchRequest(
     string? Description);
 
 public sealed record ChangeMatchStatusRequest(MatchStatus Status);
+
+public sealed record SubmitMvpVoteRequest(Guid VoterPlayerId, Guid CandidatePlayerId);

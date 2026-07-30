@@ -260,12 +260,16 @@ flowchart TD
 * **Testes bUnit/xUnit:** `ScoreboardWidgetTests.cs`, `PlayerStatsRowTests.cs`, `MatchStatsSummaryPageTests.cs`, `RegisterMatchStatsCommandHandlerTests.cs`.
 
 
-#### **[F16] Votação do Craque do Jogo (MVP)**
+#### **[F16] Votação do Craque do Jogo (MVP)** ✅ CONCLUÍDO
 * **Objetivo:** Permite que os atletas que jogaram a partida votem no melhor jogador da rodada.
-* **Componentes / Páginas:** `Pages/Matches/MvpVoting.razor`
-* **Services & DTOs:** `IMatchApiService` (`SubmitMvpVoteAsync`), `SubmitMvpVoteDto`
-* **Endpoints API Consumidos:** `POST /api/v1/matches/{id}/mvp-vote` (`SubmitMvpVoteCommand`)
-* **Testes bUnit:** Garantir que o jogador não possa votar em si mesmo (se restrito) e que após votar o botão fique desabilitado.
+* **Componentes / Páginas:** 
+  * `Pages/Matches/MvpVoting.razor`
+  * `Components/Matches/MvpCandidateCard.razor`
+  * `Components/Matches/MvpLeaderboardWidget.razor`
+* **Services & DTOs:** `IMatchApiService`, `MatchApiService`, `SubmitMvpVoteDto`, `MvpCandidateDto`, `MvpResultDto`
+* **Endpoints API Consumidos:** `POST /api/v1/match/{id}/mvp-vote` (`SubmitMvpVoteCommand`), `GET /api/v1/match/{id}/mvp-results` (`GetMvpResultsQuery`)
+* **Testes bUnit/xUnit:** `MvpCandidateCardTests.cs`, `MvpLeaderboardWidgetTests.cs`, `MvpVotingPageTests.cs`, `SubmitMvpVoteCommandHandlerTests.cs`.
+
 
 #### **[F17] Rankings da Temporada e Histórico**
 * **Objetivo:** Tabelas e gráficos com a classificação geral da temporada: Artilharia, Líderes de Assistência, Cartões, Assiduidade (Frequência) e Avaliação Média.

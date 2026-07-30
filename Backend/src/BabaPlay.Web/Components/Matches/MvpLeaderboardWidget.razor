@@ -1,0 +1,73 @@
+@namespace BabaPlay.Web.Components.Matches
+@using BabaPlay.Web.Models
+
+<div class="mvp-leaderboard-widget card card-custom p-4 mb-4 shadow-sm bg-gradient-dark text-white" data-testid="mvp-leaderboard-widget">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="h5 font-weight-bold mb-0 text-warning" data-testid="leaderboard-title">
+            🏆 Pódio do Craque do Jogo (MVP)
+        </h3>
+        <span class="badge bg-secondary" data-testid="total-votes">
+            @TotalVotes Votos Computados
+        </span>
+    </div>
+
+    @if (TopCandidates.Count == 0)
+    {
+        <div class="text-center py-3 text-muted" data-testid="empty-podium">
+            Nenhum voto registrado ainda nesta partida.
+        </div>
+    }
+    else
+    {
+        <div class="row align-items-end text-center mt-4 mb-2 g-2" data-testid="podium-grid">
+            <!-- 2º Lugar -->
+            @if (TopCandidates.Count >= 2)
+            {
+                var second = TopCandidates[1];
+                <div class="col-4">
+                    <div class="podium-card p-2 bg-secondary bg-opacity-50 rounded" data-testid="podium-2nd">
+                        <div class="display-6">🥈</div>
+                        <div class="fw-bold small text-truncate">@second.Name</div>
+                        <span class="badge bg-light text-dark style-micro">@second.VotesCount votos</span>
+                    </div>
+                </div>
+            }
+
+            <!-- 1º Lugar (Vencedor / Líder) -->
+            @if (TopCandidates.Count >= 1)
+            {
+                var first = TopCandidates[0];
+                <div class="col-4">
+                    <div class="podium-card p-3 bg-warning text-dark rounded shadow-lg" style="transform: translateY(-10px);" data-testid="podium-1st">
+                        <div class="display-5">🥇</div>
+                        <div class="fw-bold fs-6 text-truncate">@first.Name</div>
+                        <div class="badge bg-dark text-white style-micro mt-1">@first.VotesCount votos (@first.Percentage.ToString("F0")%)</div>
+                    </div>
+                </div>
+            }
+
+            <!-- 3º Lugar -->
+            @if (TopCandidates.Count >= 3)
+            {
+                var third = TopCandidates[2];
+                <div class="col-4">
+                    <div class="podium-card p-2 bg-secondary bg-opacity-25 rounded" data-testid="podium-3rd">
+                        <div class="display-6">🥉</div>
+                        <div class="fw-bold small text-truncate">@third.Name</div>
+                        <span class="badge bg-light text-dark style-micro">@third.VotesCount votos</span>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<MvpCandidateDto> Candidates { get; set; } = new();
+    [Parameter] public int TotalVotes { get; set; }
+
+    private List<MvpCandidateDto> TopCandidates => Candidates
+        .OrderByDescending(c => c.VotesCount)
+        .Take(3)
+        .ToList();
+}

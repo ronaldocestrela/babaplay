@@ -8,7 +8,23 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F16 (Votação do Craque do Jogo - MVP)
+
+- **[F16] Votação do Craque do Jogo (MVP)**:
+  - `Pages/Matches/MvpVoting.razor`: Tela completa de votação do Craque do Jogo (`/matches/mvp` e `/matches/{matchId}/mvp`) com computação de votos e desabilitação em tempo real.
+  - `Components/Matches/MvpCandidateCard.razor`: Card visual do candidato a MVP exibindo foto, gols/assistências na partida, percentual de votos e botão "Votar como Craque ⭐" (desabilitado para auto-voto).
+  - `Components/Matches/MvpLeaderboardWidget.razor`: Pódio visual (1º, 2º e 3º lugar) com contagem total de votos e destaque do vencedor.
+  - `Services/Http/IMatchApiService.cs` & `MatchApiService.cs`: Métodos HTTP `GetMvpResultsAsync` e `SubmitMvpVoteAsync`.
+- **Backend CQRS Command/Query & Controller**:
+  - `SubmitMvpVoteCommand.cs` & `SubmitMvpVoteCommandHandler.cs`: Handler para registro do voto com impedimento estrito de auto-voto no backend.
+  - `GetMvpResultsQuery.cs` & `GetMvpResultsQueryHandler.cs`: Handler para apuração dos resultados da votação.
+  - `MatchController.cs`: Endpoints `POST /api/v1/match/{id}/mvp-vote` e `GET /api/v1/match/{id}/mvp-results`.
+- **Suíte de Testes TDD (bUnit & xUnit)**:
+  - `MvpCandidateCardTests.cs`, `MvpLeaderboardWidgetTests.cs`, `MvpVotingPageTests.cs`, `SubmitMvpVoteCommandHandlerTests.cs`.
+  - Total da suíte do projeto: **607/607 testes passando (100% de sucesso)**.
+
 ### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F15 (Registro de Súmula Pós-Jogo - Estatísticas em Tempo Real)
+
 
 - **[F15] Registro de Súmula Pós-Jogo (Estatísticas em Tempo Real)**:
   - `Pages/Matches/MatchStatsSummary.razor`: Tela de registro da súmula pós-jogo (`/matches/stats` e `/matches/{matchId}/stats`) dividida entre time mandante e visitante com cálculo em tempo real.

@@ -1,0 +1,68 @@
+@namespace BabaPlay.Web.Components.Matches
+@using BabaPlay.Web.Models
+
+<div class="mvp-candidate-card card card-custom p-3 shadow-sm h-100 d-flex flex-column justify-content-between" data-testid="mvp-candidate-card-@Candidate.PlayerId">
+    <div>
+        <div class="d-flex align-items-center mb-3">
+            <div class="avatar-circle bg-dark text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 44px; height: 44px; font-weight: bold;">
+                @GetInitials(Candidate.Name)
+            </div>
+            <div>
+                <h3 class="h6 font-weight-bold mb-0 text-dark" data-testid="candidate-name">@Candidate.Name</h3>
+                <div class="small text-muted mb-1">@Candidate.TeamName &bull; <span class="badge bg-secondary">@Candidate.PositionName</span></div>
+            </div>
+        </div>
+
+        <div class="bg-light p-2 rounded mb-3 small d-flex justify-content-around text-center">
+            <div><span class="fw-bold text-dark">⚽ @Candidate.GoalsCount</span> <span class="text-muted">Gols</span></div>
+            <div class="vr"></div>
+            <div><span class="fw-bold text-dark">👟 @Candidate.AssistsCount</span> <span class="text-muted">Assist.</span></div>
+        </div>
+
+        <div class="votes-progress mb-3">
+            <div class="d-flex justify-content-between small fw-bold mb-1">
+                <span>Votos Recebidos</span>
+                <span data-testid="candidate-votes">@Candidate.VotesCount votos (@Candidate.Percentage.ToString("F0")%)</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+                <div class="progress-bar bg-warning" role="progressbar" style="width: @(Candidate.Percentage)%;" aria-valuenow="@Candidate.Percentage" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        @if (Candidate.IsUserCandidate)
+        {
+            <button class="btn btn-outline-secondary w-100 disabled text-muted btn-vote-mvp" title="Você não pode votar em si mesmo" data-testid="btn-vote-mvp">
+                <i class="bi bi-person-x me-1"></i> Seu Perfil (Auto-voto proibido)
+            </button>
+        }
+        else if (IsUserVoted)
+        {
+            <button class="btn @(IsUserChoice ? "btn-success" : "btn-light text-muted") w-100 disabled btn-vote-mvp" data-testid="btn-vote-mvp">
+                <i class="bi @(IsUserChoice ? "bi-check-circle-fill" : "bi-lock-fill") me-1"></i> @(IsUserChoice ? "Seu Voto Registrado ✅" : "Votação Concluída")
+            </button>
+        }
+        else
+        {
+            <button class="btn btn-warning w-100 font-weight-bold text-dark btn-vote-mvp" @onclick="() => OnVote.InvokeAsync(Candidate)" data-testid="btn-vote-mvp">
+                <i class="bi bi-star-fill me-1"></i> Votar como Craque ⭐
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public MvpCandidateDto Candidate { get; set; } = null!;
+    [Parameter] public bool IsUserVoted { get; set; }
+    [Parameter] public bool IsUserChoice { get; set; }
+    [Parameter] public EventCallback<MvpCandidateDto> OnVote { get; set; }
+
+    private static string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "A";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][..1].ToUpperInvariant();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+    }
+}

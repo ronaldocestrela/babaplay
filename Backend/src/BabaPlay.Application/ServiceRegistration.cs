@@ -104,6 +104,9 @@ public static class ServiceRegistration
         services.AddScoped<IQueryHandler<GetMatchEventsByMatchQuery, Result<IReadOnlyList<MatchEventResponse>>>, GetMatchEventsByMatchQueryHandler>();
         services.AddScoped<IQueryHandler<GetMatchEventsByPlayerQuery, Result<IReadOnlyList<MatchEventResponse>>>, GetMatchEventsByPlayerQueryHandler>();
         services.AddScoped<ICommandHandler<RegisterMatchStatsCommand, Result<RegisterMatchStatsApplicationDto>>, RegisterMatchStatsCommandHandler>();
+        services.AddScoped<ICommandHandler<SubmitMvpVoteCommand, Result>, SubmitMvpVoteCommandHandler>();
+        services.AddScoped<IQueryHandler<GetMvpResultsQuery, Result<MvpResultApplicationDto>>, GetMvpResultsQueryHandler>();
+
 
 
         // Players — Fase 3

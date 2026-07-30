@@ -169,6 +169,26 @@ public sealed class MatchApiService : IMatchApiService
         return (false, errorMessage ?? "Falha ao registrar súmula da partida.");
     }
 
+    public async Task<MvpResultDto?> GetMvpResultsAsync(Guid matchId, CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.GetAsync($"api/v1/match/{matchId}/mvp-results", cancellationToken);
+        if (!response.IsSuccessStatusCode) return null;
+        return await response.Content.ReadFromJsonAsync<MvpResultDto>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> SubmitMvpVoteAsync(Guid matchId, SubmitMvpVoteDto dto, CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.PostAsJsonAsync($"api/v1/match/{matchId}/mvp-vote", dto, cancellationToken);
+        if (response.IsSuccessStatusCode)
+        {
+            return (true, null);
+        }
+
+        var errorMessage = await ExtractErrorMessageAsync(response, cancellationToken);
+        return (false, errorMessage ?? "Falha ao registrar voto para Craque do Jogo.");
+    }
+
+
 
     private static async Task<string?> ExtractErrorMessageAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {

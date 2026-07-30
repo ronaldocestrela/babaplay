@@ -23,5 +23,9 @@ public interface IMatchApiService
 
     Task<RegisterMatchStatsDto?> GetMatchStatsAsync(Guid matchId, CancellationToken cancellationToken = default);
     Task<(bool Success, string? ErrorMessage)> RegisterMatchStatsAsync(Guid matchId, RegisterMatchStatsDto dto, CancellationToken cancellationToken = default);
+
+    Task<MvpResultDto?> GetMvpResultsAsync(Guid matchId, CancellationToken cancellationToken = default);
+    Task<(bool Success, string? ErrorMessage)> SubmitMvpVoteAsync(Guid matchId, SubmitMvpVoteDto dto, CancellationToken cancellationToken = default);
 }
+
 
