@@ -156,4 +156,58 @@ public sealed class FinancialApiService : IFinancialApiService
 
         return await response.Content.ReadFromJsonAsync<FinancialStatementDto>(cancellationToken: cancellationToken);
     }
+
+    public async Task<List<FundraiserDto>?> GetFundraisersAsync(bool? onlyActive = null, CancellationToken cancellationToken = default)
+    {
+        var url = "api/v1/financial/fundraisers";
+        if (onlyActive.HasValue)
+        {
+            url += $"?onlyActive={onlyActive.Value.ToString().ToLowerInvariant()}";
+        }
+
+        var response = await _httpClient.GetAsync(url, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<List<FundraiserDto>>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<FundraiserDto?> CreateFundraiserAsync(CreateFundraiserDto dto, CancellationToken cancellationToken = default)
+    {
+        var payload = new
+        {
+            title = dto.Title,
+            description = dto.Description,
+            targetAmount = dto.TargetAmount,
+            deadlineUtc = dto.DeadlineUtc?.ToUniversalTime()
+        };
+
+        var response = await _httpClient.PostAsJsonAsync("api/v1/financial/fundraisers", payload, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<FundraiserDto>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<FundraiserDto?> ContributeToFundraiserAsync(Guid id, ContributeFundraiserDto dto, CancellationToken cancellationToken = default)
+    {
+        var payload = new
+        {
+            amount = dto.Amount,
+            playerId = dto.PlayerId,
+            contributorName = dto.ContributorName
+        };
+
+        var response = await _httpClient.PostAsJsonAsync($"api/v1/financial/fundraisers/{id}/contribute", payload, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<FundraiserDto>(cancellationToken: cancellationToken);
+    }
 }

@@ -333,12 +333,16 @@ flowchart TD
 * **Endpoints API Consumidos:** `GET /api/v1/financial/statement` (`GetFinancialStatementQuery`)
 * **Testes bUnit/xUnit:** `FinancialStatementSummaryCardTests.cs`, `FinancialStatementPageTests.cs`, `GetFinancialStatementQueryHandlerTests.cs`.
 
-#### **[F23] Caixinha do Time (Vaquinhas de Eventos)**
-* **Objetivo:** Arrecadação colaborativa para eventos extras (ex: churrasco de fim de ano, compra de novos coletes), mostrando meta e progresso da arrecadação.
-* **Componentes / Páginas:** `Pages/Financial/Fundraisers.razor`
-* **Services & DTOs:** `IFinancialApiService`, `FundraiserDto`
-* **Endpoints API Consumidos:** `GET /api/v1/financial/fundraisers`, `POST /api/v1/financial/fundraisers`
-* **Testes bUnit:** Renderização da barra de progresso da meta (ex: R$ 500 / R$ 1.000).
+#### **[F23] Caixinha do Time (Vaquinhas de Eventos)** ✅ CONCLUÍDO
+* **Objetivo:** Arrecadação colaborativa para eventos extras (churrasco, coletes, uniformes), mostrando meta, progresso da arrecadação e lançamentos em caixa.
+* **Componentes / Páginas:** 
+  * `Pages/Financial/Fundraisers.razor`
+  * `Components/Financial/FundraiserCard.razor`
+  * `Components/Financial/CreateFundraiserModal.razor`
+  * `Components/Financial/ContributeFundraiserModal.razor`
+* **Services & DTOs:** `IFinancialApiService`, `FinancialApiService`, `FundraiserDto`, `CreateFundraiserDto`, `ContributeFundraiserDto`, `FundraiserResponse`
+* **Endpoints API Consumidos:** `GET /api/v1/financial/fundraisers` (`GetFundraisersQuery`), `POST /api/v1/financial/fundraisers` (`CreateFundraiserCommand`), `POST /api/v1/financial/fundraisers/{id}/contribute` (`ContributeToFundraiserCommand`)
+* **Testes bUnit/xUnit:** `FundraiserDomainTests.cs`, `FundraiserCardTests.cs`, `FundraisersPageTests.cs`, `CreateFundraiserCommandHandlerTests.cs`, `ContributeToFundraiserCommandHandlerTests.cs`, `GetFundraisersQueryHandlerTests.cs`.
 
 ---
 

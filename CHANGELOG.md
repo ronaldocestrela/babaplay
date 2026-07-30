@@ -8,6 +8,26 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F23 (Caixinha do Time / Vaquinhas de Eventos)
+
+- **[F23] Caixinha do Time (Vaquinhas de Eventos)**:
+  - `Pages/Financial/Fundraisers.razor`: Página principal de vaquinhas e arrecadação colaborativa (`/financial/fundraisers`) com visual em grid de cards e filtros por status (Todas, Ativas, Meta Atingida).
+  - `Components/Financial/FundraiserCard.razor`: Componente de card exibindo título, descrição, barra de progresso visual (R$ Arrecadado / R$ Meta), porcentagem, contagem de contribuições e botão "Contribuir 💰".
+  - `Components/Financial/CreateFundraiserModal.razor`: Modal interativo para criação de novas vaquinhas de eventos.
+  - `Components/Financial/ContributeFundraiserModal.razor`: Modal interativo para lançamento de contribuições financeiras.
+  - `Services/Http/IFinancialApiService.cs` & `FinancialApiService.cs`: Adicionados métodos `GetFundraisersAsync`, `CreateFundraiserAsync` e `ContributeToFundraiserAsync`.
+  - `Components/Layout/NavMenu.razor`: Adicionado link de atalho direto para Caixinha (`/financial/fundraisers`).
+- **Domain Entity, Repository, CQRS & Controller Endpoints**:
+  - `Fundraiser.cs` & `FundraiserStatus.cs`: Entidade de domínio com lógica para atualização de arrecadação e encerramento.
+  - `IFundraiserRepository.cs` & `FundraiserRepository.cs`: Repositório de vaquinhas registrado no `AppDbContext`.
+  - `GetFundraisersQuery.cs` & `GetFundraisersQueryHandler.cs`: Query Handler para listagem das arrecadações.
+  - `CreateFundraiserCommand.cs` & `CreateFundraiserCommandHandler.cs`: Command Handler para criação de vaquinhas.
+  - `ContributeToFundraiserCommand.cs` & `ContributeToFundraiserCommandHandler.cs`: Command Handler para processar contribuições e registrar automaticamente a receita de entrada no caixa (`CashTransaction`).
+  - `FinancialController.cs`: Adicionados endpoints `GET /api/v1/financial/fundraisers`, `POST /api/v1/financial/fundraisers` e `POST /api/v1/financial/fundraisers/{id}/contribute`.
+- **Suíte de Testes TDD (bUnit & xUnit)**:
+  - `FundraiserDomainTests.cs`, `FundraiserCardTests.cs`, `FundraisersPageTests.cs`, `CreateFundraiserCommandHandlerTests.cs`, `ContributeToFundraiserCommandHandlerTests.cs`, `GetFundraisersQueryHandlerTests.cs`.
+  - Total da suíte do projeto: **661/661 testes passando (100% de sucesso)**.
+
 ### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F22 (Prestação de Contas Pública / Balancete para Sócios)
 
 - **[F22] Prestação de Contas Pública (Balancete para Sócios)**:

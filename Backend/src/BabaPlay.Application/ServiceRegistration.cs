@@ -170,6 +170,9 @@ public static class ServiceRegistration
         services.AddScoped<IQueryHandler<GetDefaultersListQuery, Result<DefaultersListResponse>>, GetDefaultersListQueryHandler>();
         services.AddScoped<ICommandHandler<SendPaymentReminderCommand, Result>, SendPaymentReminderCommandHandler>();
         services.AddScoped<IQueryHandler<GetFinancialStatementQuery, Result<FinancialStatementResponse>>, GetFinancialStatementQueryHandler>();
+        services.AddScoped<ICommandHandler<CreateFundraiserCommand, Result<FundraiserResponse>>, CreateFundraiserCommandHandler>();
+        services.AddScoped<ICommandHandler<ContributeToFundraiserCommand, Result<FundraiserResponse>>, ContributeToFundraiserCommandHandler>();
+        services.AddScoped<IQueryHandler<GetFundraisersQuery, Result<IReadOnlyList<FundraiserResponse>>>, GetFundraisersQueryHandler>();
 
         return services;
     }

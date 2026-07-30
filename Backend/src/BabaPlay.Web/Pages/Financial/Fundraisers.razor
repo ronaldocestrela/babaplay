@@ -1,0 +1,175 @@
+@page "/financial/fundraisers"
+@using BabaPlay.Web.Models
+@using BabaPlay.Web.Services.Http
+@using BabaPlay.Web.Components.Financial
+@using BabaPlay.Web.Components.Common
+@inject IFinancialApiService FinancialApiService
+
+<div class="container-fluid p-4" data-testid="fundraisers-page">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="font-weight-bold mb-1" style="color: var(--text-main);">
+                🎯 Caixinha do Time & Vaquinhas
+            </h3>
+            <p class="text-muted mb-0" style="font-size: 0.9rem;">
+                Arrecadação colaborativa para eventos, uniformes e infraestrutura da associação
+            </p>
+        </div>
+
+        <div>
+            <button class="btn btn-success font-weight-bold" @onclick="() => IsCreateModalOpen = true" data-testid="btn-open-create-fundraiser">
+                + Nova Vaquinha
+            </button>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" data-testid="success-toast">
+            ✓ @SuccessMessage
+            <button type="button" class="btn-close" @onclick="() => SuccessMessage = null"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger mb-4" data-testid="fundraisers-error-alert">
+            @ErrorMessage
+        </div>
+    }
+
+    <!-- Filter Bar -->
+    <div class="card p-3 mb-4 shadow-sm" style="border-radius: 10px;" data-testid="fundraisers-filter-bar">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm @(StatusFilter == "active" ? "btn-primary" : "btn-outline-secondary") font-weight-bold" @onclick='() => SetStatusFilter("active")' data-testid="filter-active">
+                    ⚡ Ativas (@(FundraisersList?.Count(x => x.Status == 0 && x.CollectedAmount < x.TargetAmount) ?? 0))
+                </button>
+                <button class="btn btn-sm @(StatusFilter == "all" ? "btn-primary" : "btn-outline-secondary") font-weight-bold" @onclick='() => SetStatusFilter("all")' data-testid="filter-all">
+                    Todas (@(FundraisersList?.Count ?? 0))
+                </button>
+                <button class="btn btn-sm @(StatusFilter == "completed" ? "btn-primary" : "btn-outline-secondary") font-weight-bold" @onclick='() => SetStatusFilter("completed")' data-testid="filter-completed">
+                    ✓ Meta Atingida (@(FundraisersList?.Count(x => x.Status == 1 || x.CollectedAmount >= x.TargetAmount) ?? 0))
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (IsLoading)
+    {
+        <div class="py-5" data-testid="fundraisers-loading">
+            <LoadingSpinner Message="Carregando caixinhas e vaquinhas do time..." />
+        </div>
+    }
+    else if (FilteredFundraisers.Count == 0)
+    {
+        <div class="card p-5 text-center shadow-sm" style="border-radius: 12px; background: var(--bg-surface, #ffffff);" data-testid="empty-fundraisers">
+            <div style="font-size: 3rem; color: #94a3b8;">📦</div>
+            <h5 class="font-weight-bold mt-2" style="color: var(--text-main);">Nenhuma arrecadação no momento</h5>
+            <p class="text-muted mb-3" style="font-size: 0.875rem;">Crie uma nova vaquinha para arrecadar recursos para churrascos, equipamentos ou uniformes.</p>
+            <div>
+                <button class="btn btn-outline-success font-weight-bold btn-sm" @onclick="() => IsCreateModalOpen = true">
+                    + Criar Primeira Vaquinha
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4" data-testid="fundraisers-grid">
+            @foreach (var item in FilteredFundraisers)
+            {
+                <div class="col-12 col-md-6 col-lg-4">
+                    <FundraiserCard Fundraiser="item" OnContribute="OpenContributeModal" />
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Create Modal Component -->
+    <CreateFundraiserModal IsOpen="IsCreateModalOpen"
+                           OnClose="() => IsCreateModalOpen = false"
+                           OnFundraiserCreated="HandleFundraiserCreated" />
+
+    <!-- Contribute Modal Component -->
+    <ContributeFundraiserModal IsOpen="IsContributeModalOpen"
+                              Fundraiser="SelectedFundraiser"
+                              OnClose="() => IsContributeModalOpen = false"
+                              OnContributionMade="HandleContributionMade" />
+</div>
+
+@code {
+    private List<FundraiserDto>? FundraisersList { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private string? ErrorMessage { get; set; }
+    private string? SuccessMessage { get; set; }
+
+    private bool IsCreateModalOpen { get; set; }
+    private bool IsContributeModalOpen { get; set; }
+    private FundraiserDto? SelectedFundraiser { get; set; }
+
+    private string StatusFilter { get; set; } = "active";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFundraisersAsync();
+    }
+
+    private async Task LoadFundraisersAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            FundraisersList = await FinancialApiService.GetFundraisersAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao carregar vaquinhas: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private List<FundraiserDto> FilteredFundraisers
+    {
+        get
+        {
+            if (FundraisersList == null) return new List<FundraiserDto>();
+
+            if (StatusFilter == "active")
+                return FundraisersList.Where(x => x.Status == 0 && x.CollectedAmount < x.TargetAmount).ToList();
+
+            if (StatusFilter == "completed")
+                return FundraisersList.Where(x => x.Status == 1 || x.CollectedAmount >= x.TargetAmount).ToList();
+
+            return FundraisersList;
+        }
+    }
+
+    private void SetStatusFilter(string filter)
+    {
+        StatusFilter = filter;
+    }
+
+    private void OpenContributeModal(FundraiserDto item)
+    {
+        SelectedFundraiser = item;
+        IsContributeModalOpen = true;
+    }
+
+    private async Task HandleFundraiserCreated(FundraiserDto newFundraiser)
+    {
+        SuccessMessage = $"Vaquinha '{newFundraiser.Title}' criada com sucesso!";
+        await LoadFundraisersAsync();
+    }
+
+    private async Task HandleContributionMade(FundraiserDto updatedFundraiser)
+    {
+        SuccessMessage = $"Contribuição registrada com sucesso na vaquinha '{updatedFundraiser.Title}'!";
+        await LoadFundraisersAsync();
+    }
+}

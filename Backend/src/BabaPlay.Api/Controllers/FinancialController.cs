@@ -29,6 +29,9 @@ public sealed class FinancialController : ControllerBase
     private readonly IQueryHandler<GetDefaultersListQuery, Result<DefaultersListResponse>> _getDefaultersHandler;
     private readonly ICommandHandler<SendPaymentReminderCommand, Result> _sendReminderHandler;
     private readonly IQueryHandler<GetFinancialStatementQuery, Result<FinancialStatementResponse>> _getFinancialStatementHandler;
+    private readonly ICommandHandler<CreateFundraiserCommand, Result<FundraiserResponse>> _createFundraiserHandler;
+    private readonly ICommandHandler<ContributeToFundraiserCommand, Result<FundraiserResponse>> _contributeFundraiserHandler;
+    private readonly IQueryHandler<GetFundraisersQuery, Result<IReadOnlyList<FundraiserResponse>>> _getFundraisersHandler;
 
     public FinancialController(
         ICommandHandler<CreateCashTransactionCommand, Result<CashTransactionResponse>> createCashTransactionHandler,
@@ -45,7 +48,10 @@ public sealed class FinancialController : ControllerBase
         ICommandHandler<ConfirmPixPaymentCommand, Result<MonthlyFeePaymentResponse>> confirmPixHandler,
         IQueryHandler<GetDefaultersListQuery, Result<DefaultersListResponse>> getDefaultersHandler,
         ICommandHandler<SendPaymentReminderCommand, Result> sendReminderHandler,
-        IQueryHandler<GetFinancialStatementQuery, Result<FinancialStatementResponse>> getFinancialStatementHandler)
+        IQueryHandler<GetFinancialStatementQuery, Result<FinancialStatementResponse>> getFinancialStatementHandler,
+        ICommandHandler<CreateFundraiserCommand, Result<FundraiserResponse>> createFundraiserHandler,
+        ICommandHandler<ContributeToFundraiserCommand, Result<FundraiserResponse>> contributeFundraiserHandler,
+        IQueryHandler<GetFundraisersQuery, Result<IReadOnlyList<FundraiserResponse>>> getFundraisersHandler)
     {
         _createCashTransactionHandler = createCashTransactionHandler;
         _createMonthlyFeeHandler = createMonthlyFeeHandler;
@@ -62,6 +68,9 @@ public sealed class FinancialController : ControllerBase
         _getDefaultersHandler = getDefaultersHandler;
         _sendReminderHandler = sendReminderHandler;
         _getFinancialStatementHandler = getFinancialStatementHandler;
+        _createFundraiserHandler = createFundraiserHandler;
+        _contributeFundraiserHandler = contributeFundraiserHandler;
+        _getFundraisersHandler = getFundraisersHandler;
     }
 
     [HttpPost("cash-transaction")]
@@ -326,6 +335,49 @@ public sealed class FinancialController : ControllerBase
         return Ok(result.Value);
     }
 
+    [HttpGet("fundraisers")]
+    [Authorize(Policy = AuthorizationPolicyNames.FinancialRead)]
+    [ProducesResponseType(typeof(IReadOnlyList<FundraiserResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> GetFundraisers([FromQuery] bool? onlyActive, CancellationToken ct)
+    {
+        var result = await _getFundraisersHandler.HandleAsync(new GetFundraisersQuery(onlyActive), ct);
+        if (!result.IsSuccess)
+            return UnprocessableEntity(ToProblem(StatusCodes.Status422UnprocessableEntity, result));
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("fundraisers")]
+    [Authorize(Policy = AuthorizationPolicyNames.FinancialWrite)]
+    [ProducesResponseType(typeof(FundraiserResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> CreateFundraiser([FromBody] CreateFundraiserRequest request, CancellationToken ct)
+    {
+        var result = await _createFundraiserHandler.HandleAsync(new CreateFundraiserCommand(request.Title, request.Description, request.TargetAmount, request.DeadlineUtc), ct);
+        if (!result.IsSuccess)
+            return UnprocessableEntity(ToProblem(StatusCodes.Status422UnprocessableEntity, result));
+
+        return CreatedAtAction(nameof(GetFundraisers), new { id = result.Value!.Id }, result.Value);
+    }
+
+    [HttpPost("fundraisers/{id:guid}/contribute")]
+    [Authorize(Policy = AuthorizationPolicyNames.FinancialWrite)]
+    [ProducesResponseType(typeof(FundraiserResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ContributeFundraiser(Guid id, [FromBody] ContributeFundraiserRequest request, CancellationToken ct)
+    {
+        var result = await _contributeFundraiserHandler.HandleAsync(new ContributeToFundraiserCommand(id, request.Amount, request.PlayerId, request.ContributorName), ct);
+        if (!result.IsSuccess)
+        {
+            var statusCode = result.ErrorCode == "FUNDRAISER_NOT_FOUND" ? StatusCodes.Status404NotFound : StatusCodes.Status422UnprocessableEntity;
+            return StatusCode(statusCode, ToProblem(statusCode, result));
+        }
+
+        return Ok(result.Value);
+    }
+
     private static ProblemDetails ToProblem<T>(int statusCode, Result<T> result)
         => new()
         {
@@ -367,3 +419,14 @@ public sealed record RegisterMonthlyFeePaymentRequest(
 public sealed record ReverseMonthlyFeePaymentRequest(DateTime ReversedAtUtc);
 
 public sealed record ConfirmPixRequest(string? TxId);
+
+public sealed record CreateFundraiserRequest(
+    string Title,
+    string Description,
+    decimal TargetAmount,
+    DateTime? DeadlineUtc);
+
+public sealed record ContributeFundraiserRequest(
+    decimal Amount,
+    Guid? PlayerId,
+    string? ContributorName);

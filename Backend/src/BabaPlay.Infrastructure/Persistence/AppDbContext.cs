@@ -52,10 +52,18 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<CashTransaction> CashTransactions => Set<CashTransaction>();
     public DbSet<PlayerMonthlyFee> PlayerMonthlyFees => Set<PlayerMonthlyFee>();
     public DbSet<MonthlyFeePayment> MonthlyFeePayments => Set<MonthlyFeePayment>();
+    public DbSet<Fundraiser> Fundraisers => Set<Fundraiser>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        builder.Entity<Fundraiser>(e =>
+        {
+            e.HasKey(f => f.Id);
+            e.Property(f => f.TargetAmount).HasPrecision(18, 2);
+            e.Property(f => f.CollectedAmount).HasPrecision(18, 2);
+        });
 
         builder.Entity<RefreshToken>(e =>
         {

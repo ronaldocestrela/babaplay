@@ -23,4 +23,10 @@ public interface IFinancialApiService
     Task<bool> SendPaymentReminderAsync(Guid playerId, CancellationToken cancellationToken = default);
 
     Task<FinancialStatementDto?> GetFinancialStatementAsync(int? year = null, int? month = null, CancellationToken cancellationToken = default);
+
+    Task<List<FundraiserDto>?> GetFundraisersAsync(bool? onlyActive = null, CancellationToken cancellationToken = default);
+
+    Task<FundraiserDto?> CreateFundraiserAsync(CreateFundraiserDto dto, CancellationToken cancellationToken = default);
+
+    Task<FundraiserDto?> ContributeToFundraiserAsync(Guid id, ContributeFundraiserDto dto, CancellationToken cancellationToken = default);
 }
