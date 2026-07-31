@@ -63,10 +63,8 @@ services:
 
   web:
     build:
-      context: ../../web
-      dockerfile: Dockerfile
-      args:
-        VITE_API_URL: ${WEB_VITE_API_URL}
+      context: ../../Backend
+      dockerfile: src/BabaPlay.Web/Dockerfile
     container_name: babaplay-web
     depends_on:
       api:

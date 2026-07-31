@@ -4,8 +4,8 @@ Este guia descreve como subir o BabaPlay manualmente com Docker Compose, sem pip
 
 ## Escopo
 
-- Backend: .NET 10 API
-- Frontend: React + Vite servido por Nginx
+- Backend: .NET 10 API (`BabaPlay.Api`)
+- Frontend: Blazor WebAssembly (.NET 10 `BabaPlay.Web`) servido por Nginx
 - Banco: SQL Server 2022 em container
 - Ambiente inicial: HTTP (sem HTTPS)
 
@@ -13,11 +13,10 @@ Este guia descreve como subir o BabaPlay manualmente com Docker Compose, sem pip
 
 - `deploy/docker/docker-compose.manual.yml`
 - `deploy/docker/.env.manual.example`
-- `Backend/Dockerfile`
-- `Backend/.dockerignore`
-- `web/Dockerfile`
-- `web/.dockerignore`
-- `web/nginx/default.conf`
+- `Backend/Dockerfile` (API)
+- `Backend/src/BabaPlay.Web/Dockerfile` (Blazor WebAssembly)
+- `Backend/src/BabaPlay.Web/nginx.conf`
+- `Backend/src/BabaPlay.Web/wwwroot/appsettings.Production.json`
 
 ## Pre-requisitos
 

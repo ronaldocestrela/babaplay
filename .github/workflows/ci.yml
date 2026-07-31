@@ -29,6 +29,9 @@ jobs:
       - name: Build
         run: dotnet build BabaPlay.slnx --no-restore --configuration Release
 
+      - name: Publish Blazor WebAssembly
+        run: dotnet publish src/BabaPlay.Web/BabaPlay.Web.csproj -c Release -o ./publish-blazor /p:UseAppHost=false
+
       - name: Run tests with coverage
         run: |
           dotnet test BabaPlay.slnx \

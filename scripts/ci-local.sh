@@ -34,6 +34,10 @@ run_backend() {
   (cd "$BACKEND_DIR" && dotnet build BabaPlay.slnx --no-restore --configuration Release --verbosity quiet)
   ok "Build concluído"
 
+  step "Publicando Blazor WebAssembly..."
+  (cd "$BACKEND_DIR" && dotnet publish src/BabaPlay.Web/BabaPlay.Web.csproj -c Release -o ./publish-blazor --verbosity quiet)
+  ok "Publish Blazor concluído"
+
   step "Executando testes com cobertura..."
   rm -rf "$BACKEND_DIR/coverage"
   (cd "$BACKEND_DIR" && dotnet test BabaPlay.slnx \
