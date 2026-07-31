@@ -14,11 +14,20 @@ public record LoginDto
     public string Password { get; set; } = string.Empty;
 }
 
+public record AuthTenantMembershipDto(
+    Guid Id,
+    string Name,
+    string Slug,
+    bool IsOwner,
+    DateTime JoinedAt);
+
 public record AuthResponseDto(
-    string Token,
+    string AccessToken,
     string RefreshToken,
-    DateTime ExpiresAt,
-    UserProfileDto User);
+    int ExpiresIn,
+    string TokenType,
+    AuthTenantMembershipDto? PrimaryTenant,
+    IReadOnlyList<AuthTenantMembershipDto>? Tenants);
 
 public record ForgotPasswordDto
 {
@@ -53,5 +62,5 @@ public record UserProfileDto(
     IReadOnlyList<string> Roles,
     bool IsActive,
     DateTime CreatedAt,
-    TenantSummaryDto? DefaultTenant,
-    IReadOnlyList<TenantSummaryDto> Memberships);
+    AuthTenantMembershipDto? PrimaryTenant,
+    IReadOnlyList<AuthTenantMembershipDto>? Tenants);

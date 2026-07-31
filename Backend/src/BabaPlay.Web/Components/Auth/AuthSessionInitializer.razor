@@ -1,0 +1,29 @@
+@namespace BabaPlay.Web.Components.Auth
+@inject AuthSessionService AuthSessionService
+
+@if (_isReady)
+{
+    @ChildContent
+}
+else
+{
+    <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #0f172a; color: #f8fafc; font-family: sans-serif;">
+        <div style="text-align: center;">
+            <div class="loading-spinner"></div>
+            <p style="margin-top: 1rem; color: #94a3b8;">Carregando Baba Play...</p>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private bool _isReady;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSessionService.RestoreSessionAsync();
+        _isReady = true;
+    }
+}

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -28,27 +29,36 @@ public sealed class TenantApiService : ITenantApiService
         }
 
         var profile = await response.Content.ReadFromJsonAsync<UserProfileDto>(cancellationToken: cancellationToken);
-        return profile?.Memberships ?? Array.Empty<TenantSummaryDto>();
+        if (profile?.Tenants is null || profile.Tenants.Count == 0)
+        {
+            return Array.Empty<TenantSummaryDto>();
+        }
+
+        return profile.Tenants
+            .Select(t => new TenantSummaryDto(t.Id, t.Name, t.Slug, null, t.IsOwner ? "Owner" : "Member"))
+            .ToList();
     }
 
-    public async Task<TenantSummaryDto?> CreateTenantAsync(CreateTenantDto dto, IBrowserFile? logoFile, CancellationToken cancellationToken = default)
+    public async Task<(TenantSummaryDto? Result, string? ErrorMessage)> CreateTenantAsync(CreateTenantDto dto, IBrowserFile? logoFile, CancellationToken cancellationToken = default)
     {
         using var content = new MultipartFormDataContent();
         content.Add(new StringContent(dto.Name), "Name");
         content.Add(new StringContent(dto.Slug), "Slug");
         content.Add(new StringContent(dto.AdminEmail), "AdminEmail");
         content.Add(new StringContent(dto.AdminPassword), "AdminPassword");
+        content.Add(new StringContent(dto.Street), "Street");
+        content.Add(new StringContent(dto.Number), "Number");
         content.Add(new StringContent(dto.City), "City");
         content.Add(new StringContent(dto.State), "State");
+        content.Add(new StringContent(dto.ZipCode), "ZipCode");
 
-        if (!string.IsNullOrWhiteSpace(dto.Street))
-            content.Add(new StringContent(dto.Street), "Street");
-        if (!string.IsNullOrWhiteSpace(dto.Number))
-            content.Add(new StringContent(dto.Number), "Number");
         if (!string.IsNullOrWhiteSpace(dto.Neighborhood))
             content.Add(new StringContent(dto.Neighborhood), "Neighborhood");
-        if (!string.IsNullOrWhiteSpace(dto.ZipCode))
-            content.Add(new StringContent(dto.ZipCode), "ZipCode");
+
+        if (dto.AssociationLatitude.HasValue)
+            content.Add(new StringContent(dto.AssociationLatitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)), "AssociationLatitude");
+        if (dto.AssociationLongitude.HasValue)
+            content.Add(new StringContent(dto.AssociationLongitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)), "AssociationLongitude");
 
         if (logoFile is not null)
         {
@@ -62,10 +72,12 @@ public sealed class TenantApiService : ITenantApiService
         var response = await _httpClient.PostAsync("api/v1/tenant", content, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            return null;
+            var errorMessage = await ExtractErrorMessageAsync(response, cancellationToken);
+            return (null, errorMessage ?? "Não foi possível cadastrar a associação.");
         }
 
-        return await response.Content.ReadFromJsonAsync<TenantSummaryDto>(cancellationToken: cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<TenantSummaryDto>(cancellationToken: cancellationToken);
+        return (result, null);
     }
 
     public async Task<InviteValidationDto?> ValidateInviteAsync(string token, CancellationToken cancellationToken = default)
@@ -176,5 +188,28 @@ public sealed class TenantApiService : ITenantApiService
 
         return await response.Content.ReadFromJsonAsync<TenantGameDayOptionDto>(cancellationToken: cancellationToken);
     }
+
+    private static async Task<string?> ExtractErrorMessageAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var problem = await response.Content.ReadFromJsonAsync<ApiProblemDetails>(cancellationToken: cancellationToken);
+            if (problem is not null)
+            {
+                if (!string.IsNullOrWhiteSpace(problem.Title) && problem.Title.StartsWith("TENANT_", StringComparison.Ordinal))
+                    return problem.Title;
+                if (!string.IsNullOrWhiteSpace(problem.Detail)) return problem.Detail;
+                if (!string.IsNullOrWhiteSpace(problem.Title)) return problem.Title;
+            }
+        }
+        catch
+        {
+            // Ignore JSON parse failure
+        }
+
+        return null;
+    }
+
+    private sealed record ApiProblemDetails(string? Title, string? Detail);
 }
 

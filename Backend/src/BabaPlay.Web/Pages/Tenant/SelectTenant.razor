@@ -2,6 +2,7 @@
 @attribute [Authorize]
 @inject ITenantApiService TenantApiService
 @inject TenantState TenantState
+@inject AuthSessionService AuthSessionService
 @inject NavigationManager NavigationManager
 
 <PageTitle>Selecionar Associação - Baba Play</PageTitle>
@@ -87,9 +88,10 @@
         }
     }
 
-    private void ChooseTenant(TenantSummaryDto tenant)
+    private async Task ChooseTenant(TenantSummaryDto tenant)
     {
         TenantState.SetTenant(tenant.Id, tenant.Name, tenant.Slug);
+        await AuthSessionService.SaveCurrentSessionAsync();
         NavigationManager.NavigateTo("/");
     }
 }

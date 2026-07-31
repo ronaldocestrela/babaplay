@@ -7,10 +7,14 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using BabaPlay.Web;
 using BabaPlay.Web.Services.Handlers;
 using BabaPlay.Web.Services.State;
+using BabaPlay.Web.Services.Storage;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
+
+builder.Services.AddScoped<IAuthSessionStorage, LocalStorageAuthSessionStorage>();
+builder.Services.AddScoped<AuthSessionService>();
 
 // State Providers (Scoped)
 builder.Services.AddScoped<TenantState>();

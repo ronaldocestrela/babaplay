@@ -1,20 +1,24 @@
 @namespace BabaPlay.Web
 
-<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-        <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
-            <NotAuthorized>
+<AuthSessionInitializer>
+    <CascadingAuthenticationState>
+        <Router AppAssembly="@typeof(App).Assembly">
+            <Found Context="routeData">
+                <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                    <NotAuthorized>
+                        <LayoutView Layout="@typeof(PublicLayout)">
+                            <p style="text-align: center; color: var(--danger);">Acesso não autorizado. Por favor faça login.</p>
+                        </LayoutView>
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+                <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+            </Found>
+            <NotFound>
+                <PageTitle>Não Encontrado</PageTitle>
                 <LayoutView Layout="@typeof(PublicLayout)">
-                    <p style="text-align: center; color: var(--danger);">Acesso não autorizado. Por favor faça login.</p>
+                    <p style="text-align: center; color: var(--text-muted);">Página não encontrada.</p>
                 </LayoutView>
-            </NotAuthorized>
-        </AuthorizeRouteView>
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-    <NotFound>
-        <PageTitle>Não Encontrado</PageTitle>
-        <LayoutView Layout="@typeof(PublicLayout)">
-            <p style="text-align: center; color: var(--text-muted);">Página não encontrada.</p>
-        </LayoutView>
-    </NotFound>
-</Router>
+            </NotFound>
+        </Router>
+    </CascadingAuthenticationState>
+</AuthSessionInitializer>

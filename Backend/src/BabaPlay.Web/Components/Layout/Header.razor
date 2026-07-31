@@ -1,7 +1,7 @@
 @namespace BabaPlay.Web.Components.Layout
 @inject TenantState TenantState
 @inject UserSessionState UserSessionState
-@inject AuthenticationStateProvider AuthStateProvider
+@inject AuthSessionService AuthSessionService
 
 <header class="header">
     <div style="display: flex; align-items: center; gap: 1rem;">
@@ -24,7 +24,7 @@
                 </button>
             </Authorized>
             <NotAuthorized>
-                <a href="login" class="badge badge-primary" style="text-decoration: none;">Entrar</a>
+                <a href="auth/login" class="badge badge-primary" style="text-decoration: none;">Entrar</a>
             </NotAuthorized>
         </AuthorizeView>
     </div>
@@ -37,12 +37,9 @@
         UserSessionState.OnChange += StateHasChanged;
     }
 
-    private void HandleLogout()
+    private async Task HandleLogout()
     {
-        if (AuthStateProvider is CustomAuthStateProvider customProvider)
-        {
-            customProvider.NotifyUserLogout();
-        }
+        await AuthSessionService.ClearSessionAsync();
     }
 
     public void Dispose()

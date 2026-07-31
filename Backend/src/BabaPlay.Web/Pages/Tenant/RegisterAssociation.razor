@@ -44,8 +44,12 @@
                 </div>
 
                 <div>
-                    <label for="logo-file" class="block text-sm font-medium text-slate-300 mb-1">Escudo / Logotipo (Opcional)</label>
-                    <InputFile id="logo-file" OnChange="OnLogoSelected" class="w-full px-3 py-2 bg-slate-900/90 border border-slate-700 rounded-lg text-slate-300 text-xs file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400" />
+                    <label for="logo-file" class="block text-sm font-medium text-slate-300 mb-1">Escudo / Logotipo *</label>
+                    <InputFile id="logo-file" OnChange="OnLogoSelected" class="w-full px-3 py-2 bg-slate-900/90 border border-slate-700 rounded-lg text-slate-300 text-xs file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400" accept="image/png,image/jpeg,image/webp" />
+                    @if (!string.IsNullOrEmpty(logoValidationMessage))
+                    {
+                        <p class="text-rose-400 text-xs mt-1">@logoValidationMessage</p>
+                    }
                 </div>
 
                 <div>
@@ -60,6 +64,29 @@
                     <ValidationMessage For="@(() => createModel.AdminPassword)" class="text-rose-400 text-xs mt-1" />
                 </div>
 
+                <div class="md:col-span-2 pt-2">
+                    <h2 class="text-sm font-semibold text-slate-200">Endereço da sede / campo principal</h2>
+                    <p class="text-xs text-slate-400 mt-1">Informe o endereço e as coordenadas da associação.</p>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="street-input" class="block text-sm font-medium text-slate-300 mb-1">Rua / Logradouro *</label>
+                    <InputText id="street-input" @bind-Value="createModel.Street" class="w-full px-4 py-2.5 bg-slate-900/90 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Ex: Av. dos Esportes" />
+                    <ValidationMessage For="@(() => createModel.Street)" class="text-rose-400 text-xs mt-1" />
+                </div>
+
+                <div>
+                    <label for="number-input" class="block text-sm font-medium text-slate-300 mb-1">Número *</label>
+                    <InputText id="number-input" @bind-Value="createModel.Number" class="w-full px-4 py-2.5 bg-slate-900/90 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="100" />
+                    <ValidationMessage For="@(() => createModel.Number)" class="text-rose-400 text-xs mt-1" />
+                </div>
+
+                <div>
+                    <label for="neighborhood-input" class="block text-sm font-medium text-slate-300 mb-1">Bairro</label>
+                    <InputText id="neighborhood-input" @bind-Value="createModel.Neighborhood" class="w-full px-4 py-2.5 bg-slate-900/90 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Centro" />
+                    <ValidationMessage For="@(() => createModel.Neighborhood)" class="text-rose-400 text-xs mt-1" />
+                </div>
+
                 <div>
                     <label for="city-input" class="block text-sm font-medium text-slate-300 mb-1">Cidade *</label>
                     <InputText id="city-input" @bind-Value="createModel.City" class="w-full px-4 py-2.5 bg-slate-900/90 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Salvador" />
@@ -70,6 +97,24 @@
                     <label for="state-input" class="block text-sm font-medium text-slate-300 mb-1">Estado (UF) *</label>
                     <InputText id="state-input" @bind-Value="createModel.State" class="w-full px-4 py-2.5 bg-slate-900/90 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="BA" />
                     <ValidationMessage For="@(() => createModel.State)" class="text-rose-400 text-xs mt-1" />
+                </div>
+
+                <div>
+                    <label for="zipcode-input" class="block text-sm font-medium text-slate-300 mb-1">CEP *</label>
+                    <InputText id="zipcode-input" @bind-Value="createModel.ZipCode" class="w-full px-4 py-2.5 bg-slate-900/90 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="40000-000" />
+                    <ValidationMessage For="@(() => createModel.ZipCode)" class="text-rose-400 text-xs mt-1" />
+                </div>
+
+                <div>
+                    <label for="latitude-input" class="block text-sm font-medium text-slate-300 mb-1">Latitude *</label>
+                    <InputNumber id="latitude-input" @bind-Value="createModel.AssociationLatitude" class="w-full px-4 py-2.5 bg-slate-900/90 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="-12.9714" step="any" />
+                    <ValidationMessage For="@(() => createModel.AssociationLatitude)" class="text-rose-400 text-xs mt-1" />
+                </div>
+
+                <div>
+                    <label for="longitude-input" class="block text-sm font-medium text-slate-300 mb-1">Longitude *</label>
+                    <InputNumber id="longitude-input" @bind-Value="createModel.AssociationLongitude" class="w-full px-4 py-2.5 bg-slate-900/90 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="-38.5014" step="any" />
+                    <ValidationMessage For="@(() => createModel.AssociationLongitude)" class="text-rose-400 text-xs mt-1" />
                 </div>
             </div>
 
@@ -92,10 +137,29 @@
 </div>
 
 @code {
+    private static readonly Dictionary<string, string> ApiErrorMessages = new(StringComparer.Ordinal)
+    {
+        ["TENANT_NAME_REQUIRED"] = "Nome da associação é obrigatório.",
+        ["TENANT_SLUG_REQUIRED"] = "Slug é obrigatório.",
+        ["TENANT_SLUG_TAKEN"] = "Este slug já está em uso.",
+        ["TENANT_LOGO_REQUIRED"] = "Logo da associação é obrigatório.",
+        ["TENANT_LOGO_INVALID_TYPE"] = "Logo deve ser PNG, JPG ou WEBP.",
+        ["TENANT_LOGO_INVALID_SIZE"] = "Logo deve ter até 2MB.",
+        ["TENANT_STREET_REQUIRED"] = "Rua é obrigatória.",
+        ["TENANT_NUMBER_REQUIRED"] = "Número é obrigatório.",
+        ["TENANT_CITY_REQUIRED"] = "Cidade é obrigatória.",
+        ["TENANT_STATE_REQUIRED"] = "Estado é obrigatório.",
+        ["TENANT_ZIPCODE_REQUIRED"] = "CEP é obrigatório.",
+        ["TENANT_ASSOCIATION_LATITUDE_INVALID"] = "Latitude da associação inválida.",
+        ["TENANT_ASSOCIATION_LONGITUDE_INVALID"] = "Longitude da associação inválida.",
+        ["TENANT_ADMIN_CREDENTIALS_REQUIRED"] = "Informe as credenciais iniciais do admin da associação.",
+    };
+
     private CreateTenantDto createModel = new();
     private IBrowserFile? selectedLogoFile;
     private bool isLoading = false;
     private string? errorMessage;
+    private string? logoValidationMessage;
 
     private void GenerateSlug()
     {
@@ -113,24 +177,32 @@
     private void OnLogoSelected(InputFileChangeEventArgs e)
     {
         selectedLogoFile = e.File;
+        logoValidationMessage = null;
     }
 
     private async Task HandleCreateTenantAsync()
     {
         isLoading = true;
         errorMessage = null;
+        logoValidationMessage = null;
+
+        if (selectedLogoFile is null)
+        {
+            logoValidationMessage = "O escudo/logotipo é obrigatório.";
+            isLoading = false;
+            return;
+        }
 
         try
         {
-            var result = await TenantApiService.CreateTenantAsync(createModel, selectedLogoFile);
+            var (result, apiError) = await TenantApiService.CreateTenantAsync(createModel, selectedLogoFile);
             if (result is not null)
             {
                 NavigationManager.NavigateTo("/auth/login");
+                return;
             }
-            else
-            {
-                errorMessage = "Não foi possível cadastrar a associação. O slug pode já estar em uso.";
-            }
+
+            errorMessage = ResolveApiErrorMessage(apiError);
         }
         catch (Exception)
         {
@@ -140,5 +212,20 @@
         {
             isLoading = false;
         }
+    }
+
+    private static string ResolveApiErrorMessage(string? apiError)
+    {
+        if (string.IsNullOrWhiteSpace(apiError))
+        {
+            return "Não foi possível cadastrar a associação.";
+        }
+
+        if (ApiErrorMessages.TryGetValue(apiError, out var mappedMessage))
+        {
+            return mappedMessage;
+        }
+
+        return apiError;
     }
 }

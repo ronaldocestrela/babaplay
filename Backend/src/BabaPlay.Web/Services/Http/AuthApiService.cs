@@ -26,6 +26,21 @@ public sealed class AuthApiService : IAuthApiService
         return await response.Content.ReadFromJsonAsync<AuthResponseDto>(cancellationToken: cancellationToken);
     }
 
+    public async Task<AuthResponseDto?> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.PostAsJsonAsync(
+            "api/v1/auth/refresh-token",
+            new { RefreshToken = refreshToken },
+            cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<AuthResponseDto>(cancellationToken: cancellationToken);
+    }
+
     public async Task<bool> ForgotPasswordAsync(ForgotPasswordDto dto, CancellationToken cancellationToken = default)
     {
         var response = await _httpClient.PostAsJsonAsync("api/v1/auth/forgot-password", dto, cancellationToken);

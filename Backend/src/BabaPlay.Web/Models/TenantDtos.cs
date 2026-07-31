@@ -28,8 +28,15 @@ public record CreateTenantDto
     [MinLength(6, ErrorMessage = "A senha deve ter no mínimo 6 caracteres.")]
     public string AdminPassword { get; set; } = string.Empty;
 
-    public string? Street { get; set; }
-    public string? Number { get; set; }
+    [Required(ErrorMessage = "A rua é obrigatória.")]
+    [StringLength(160, ErrorMessage = "A rua deve ter no máximo 160 caracteres.")]
+    public string Street { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "O número é obrigatório.")]
+    [StringLength(30, ErrorMessage = "O número deve ter no máximo 30 caracteres.")]
+    public string Number { get; set; } = string.Empty;
+
+    [StringLength(120, ErrorMessage = "O bairro deve ter no máximo 120 caracteres.")]
     public string? Neighborhood { get; set; }
 
     [Required(ErrorMessage = "A cidade é obrigatória.")]
@@ -38,9 +45,17 @@ public record CreateTenantDto
     [Required(ErrorMessage = "O estado é obrigatório.")]
     public string State { get; set; } = string.Empty;
 
-    public string? ZipCode { get; set; }
-    public double? Latitude { get; set; }
-    public double? Longitude { get; set; }
+    [Required(ErrorMessage = "O CEP é obrigatório.")]
+    [StringLength(20, ErrorMessage = "O CEP deve ter no máximo 20 caracteres.")]
+    public string ZipCode { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "A latitude é obrigatória.")]
+    [Range(-90, 90, ErrorMessage = "A latitude deve estar entre -90 e 90.")]
+    public double? AssociationLatitude { get; set; }
+
+    [Required(ErrorMessage = "A longitude é obrigatória.")]
+    [Range(-180, 180, ErrorMessage = "A longitude deve estar entre -180 e 180.")]
+    public double? AssociationLongitude { get; set; }
 }
 
 public record AcceptInviteDto

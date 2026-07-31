@@ -1,9 +1,13 @@
 @page "/auth/login"
 @attribute [AllowAnonymous]
 @layout PublicLayout
+@using System.Linq
+@using System.Security.Claims
 @inject IAuthApiService AuthApiService
 @inject CustomAuthStateProvider AuthStateProvider
 @inject UserSessionState UserSessionState
+@inject TenantState TenantState
+@inject AuthSessionService AuthSessionService
 @inject NavigationManager NavigationManager
 
 <PageTitle>Login - Baba Play</PageTitle>
@@ -90,21 +94,33 @@
         try
         {
             var result = await AuthApiService.LoginAsync(loginModel);
-            if (result is not null && !string.IsNullOrEmpty(result.Token))
+            if (result is not null && !string.IsNullOrEmpty(result.AccessToken))
             {
-                if (result.User != null)
-                {
-                    UserSessionState.SetUserSession(result.Token, result.User.Id, result.User.Email, result.User.Email, result.User.Roles);
-                }
-                AuthStateProvider.NotifyUserAuthentication(result.Token);
+                var claims = CustomAuthStateProvider.ParseClaimsFromJwt(result.AccessToken).ToList();
+                var userId = claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+                var email = claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value ?? loginModel.Email;
+                var roles = claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
 
-                if (result.User?.Memberships?.Count > 1)
+                UserSessionState.SetUserSession(result.AccessToken, userId, email, email, roles, result.RefreshToken);
+                AuthStateProvider.NotifyUserAuthentication(result.AccessToken);
+
+                var tenants = result.Tenants ?? Array.Empty<AuthTenantMembershipDto>();
+                if (tenants.Count > 1)
                 {
+                    await AuthSessionService.SaveCurrentSessionAsync();
                     NavigationManager.NavigateTo("/select-tenant");
+                }
+                else if (tenants.Count == 1)
+                {
+                    var tenant = tenants[0];
+                    TenantState.SetTenant(tenant.Id, tenant.Name, tenant.Slug);
+                    await AuthSessionService.SaveCurrentSessionAsync();
+                    NavigationManager.NavigateTo("/");
                 }
                 else
                 {
-                    NavigationManager.NavigateTo("/");
+                    await AuthSessionService.SaveCurrentSessionAsync();
+                    NavigationManager.NavigateTo("/select-tenant");
                 }
             }
             else
