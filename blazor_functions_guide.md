@@ -18,6 +18,7 @@ Todas as diretrizes e regras definidas em [`agents.md`](file:///home/rony/LPR/ba
    * O token JWT obtido no login armazena as claims do usuário e as associações (tenants) das quais ele faz parte.
    * Cada requisição HTTP enviada pelos services do Blazor deve incluir o cabeçalho `Authorization: Bearer <token>` e `X-Tenant-Slug: <tenant-slug>`.
    * As rotas protegidas utilizam `AuthorizeRouteView` e `CascadingAuthenticationState`.
+   * Gates de escrita de comunicação na UI usam `CommunicationWriteView` (baseado em `TenantState.IsOwner`). A policy `CommunicationWrite` também fica registrada em `AddAuthorizationCore` para compatibilidade; a API continua sendo a fonte da verdade nas escritas. Em restore de sessão, `IsOwner` é sincronizado via `GET /auth/me`.
 
 3. **Gerenciamento de Estado (State Management):**
    * Usar serviços com escopo (`Scoped`) para manter o estado da sessão do usuário (`UserSessionState`), tenant ativo (`TenantState`) e carrinho/ações temporárias.

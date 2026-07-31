@@ -1,10 +1,12 @@
 using System;
 using System.Net.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using BabaPlay.Web;
+using BabaPlay.Web.Authorization;
 using BabaPlay.Web.Services.Handlers;
 using BabaPlay.Web.Services.State;
 using BabaPlay.Web.Services.Storage;
@@ -21,7 +23,13 @@ builder.Services.AddScoped<TenantState>();
 builder.Services.AddScoped<UserSessionState>();
 builder.Services.AddScoped<CustomAuthStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<CustomAuthStateProvider>());
-builder.Services.AddAuthorizationCore();
+builder.Services.AddAuthorizationCore(options =>
+{
+    options.AddPolicy(ClientAuthorizationPolicies.CommunicationWrite, policy =>
+        policy.Requirements.Add(new ClientPermissionRequirement(
+            ClientAuthorizationPolicies.CommunicationWrite)));
+});
+builder.Services.AddScoped<IAuthorizationHandler, ClientPermissionAuthorizationHandler>();
 
 // HTTP Handler & Client
 // Do NOT use IHttpClientFactory for this client: it builds handlers in a separate DI scope,

@@ -1,5 +1,5 @@
 @namespace BabaPlay.Web.Components.Communication
-@using Microsoft.AspNetCore.Components.Authorization
+@using BabaPlay.Web.Components.Auth
 @using BabaPlay.Web.Models
 
 @if (Poll != null)
@@ -100,16 +100,14 @@
                         }
                     </button>
 
-                    <AuthorizeView Policy="CommunicationWrite">
-                        <Authorized>
-                            <button class="btn btn-sm btn-outline-danger"
-                                    @onclick="HandleClosePollAsync"
-                                    disabled="@_isClosing"
-                                    data-testid="btn-close-poll">
-                                🔒 Encerrar Enquete
-                            </button>
-                        </Authorized>
-                    </AuthorizeView>
+                    <CommunicationWriteView>
+                        <button class="btn btn-sm btn-outline-danger"
+                                @onclick="HandleClosePollAsync"
+                                disabled="@_isClosing"
+                                data-testid="btn-close-poll">
+                            🔒 Encerrar Enquete
+                        </button>
+                    </CommunicationWriteView>
                 </div>
             }
             else
@@ -147,21 +145,19 @@
                     }
                 </div>
 
-                <AuthorizeView Policy="CommunicationWrite">
-                    <Authorized>
-                        @if (!Poll.IsClosed)
-                        {
-                            <div class="text-end">
-                                <button class="btn btn-sm btn-outline-danger"
-                                        @onclick="HandleClosePollAsync"
-                                        disabled="@_isClosing"
-                                        data-testid="btn-close-poll">
-                                    🔒 Encerrar Enquete
-                                </button>
-                            </div>
-                        }
-                    </Authorized>
-                </AuthorizeView>
+                <CommunicationWriteView>
+                    @if (!Poll.IsClosed)
+                    {
+                        <div class="text-end">
+                            <button class="btn btn-sm btn-outline-danger"
+                                    @onclick="HandleClosePollAsync"
+                                    disabled="@_isClosing"
+                                    data-testid="btn-close-poll">
+                                🔒 Encerrar Enquete
+                            </button>
+                        </div>
+                    }
+                </CommunicationWriteView>
             }
         </div>
     </div>

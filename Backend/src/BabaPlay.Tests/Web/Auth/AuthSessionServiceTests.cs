@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
 using Xunit;
+using BabaPlay.Web.Models;
 using BabaPlay.Web.Services.Http;
 using BabaPlay.Web.Services.State;
 using BabaPlay.Web.Services.Storage;
@@ -26,11 +27,11 @@ public class AuthSessionServiceTests
 
         var userSessionState = new UserSessionState();
         var tenantState = new TenantState();
-        var authStateProvider = new CustomAuthStateProvider(userSessionState);
+        var authStateProvider = new CustomAuthStateProvider(userSessionState, tenantState);
         var authApiService = new Mock<IAuthApiService>();
 
         userSessionState.SetUserSession("access-token", "user-1", "user@baba.com", "User Baba", ["Admin"], "refresh-token");
-        tenantState.SetTenant(Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"), "Baba FC", "baba-fc");
+        tenantState.SetTenant(Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"), "Baba FC", "baba-fc", isOwner: true);
 
         var service = new AuthSessionService(
             storage.Object,
@@ -48,6 +49,7 @@ public class AuthSessionServiceTests
         savedSnapshot.RefreshToken.Should().Be("refresh-token");
         savedSnapshot.Email.Should().Be("user@baba.com");
         savedSnapshot.TenantSlug.Should().Be("baba-fc");
+        savedSnapshot.TenantIsOwner.Should().BeTrue();
     }
 
     [Fact]
@@ -66,6 +68,7 @@ public class AuthSessionServiceTests
             TenantId = tenantId,
             TenantName = "Baba FC",
             TenantSlug = "baba-fc",
+            TenantIsOwner = true,
         };
 
         var storage = new Mock<IAuthSessionStorage>();
@@ -73,8 +76,18 @@ public class AuthSessionServiceTests
 
         var userSessionState = new UserSessionState();
         var tenantState = new TenantState();
-        var authStateProvider = new CustomAuthStateProvider(userSessionState);
+        var authStateProvider = new CustomAuthStateProvider(userSessionState, tenantState);
         var authApiService = new Mock<IAuthApiService>();
+        authApiService
+            .Setup(x => x.GetMeAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserProfileDto(
+                "user-1",
+                "user@baba.com",
+                ["Admin"],
+                true,
+                DateTime.UtcNow,
+                new AuthTenantMembershipDto(tenantId, "Baba FC", "baba-fc", true, DateTime.UtcNow),
+                [new AuthTenantMembershipDto(tenantId, "Baba FC", "baba-fc", true, DateTime.UtcNow)]));
 
         var service = new AuthSessionService(
             storage.Object,
@@ -91,6 +104,57 @@ public class AuthSessionServiceTests
         userSessionState.Email.Should().Be("user@baba.com");
         tenantState.CurrentTenantId.Should().Be(tenantId);
         tenantState.CurrentTenantSlug.Should().Be("baba-fc");
+        tenantState.IsOwner.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task RestoreSessionAsync_WhenSnapshotMissingOwnerFlag_ShouldSyncIsOwnerFromProfile()
+    {
+        var tenantId = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+        var snapshot = new AuthSessionSnapshot
+        {
+            AccessToken = CreateJwt("user-1", "user@baba.com", ["Admin"], expiresInSeconds: 3600),
+            RefreshToken = "refresh-token",
+            UserId = "user-1",
+            Email = "user@baba.com",
+            FullName = "User Baba",
+            Roles = ["Admin"],
+            TenantId = tenantId,
+            TenantName = "Baba FC",
+            TenantSlug = "baba-fc",
+            TenantIsOwner = false,
+        };
+
+        var storage = new Mock<IAuthSessionStorage>();
+        storage.Setup(x => x.LoadAsync(It.IsAny<CancellationToken>())).ReturnsAsync(snapshot);
+        storage.Setup(x => x.SaveAsync(It.IsAny<AuthSessionSnapshot>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        var userSessionState = new UserSessionState();
+        var tenantState = new TenantState();
+        var authStateProvider = new CustomAuthStateProvider(userSessionState, tenantState);
+        var authApiService = new Mock<IAuthApiService>();
+        authApiService
+            .Setup(x => x.GetMeAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserProfileDto(
+                "user-1",
+                "user@baba.com",
+                ["Admin"],
+                true,
+                DateTime.UtcNow,
+                new AuthTenantMembershipDto(tenantId, "Baba FC", "baba-fc", true, DateTime.UtcNow),
+                [new AuthTenantMembershipDto(tenantId, "Baba FC", "baba-fc", true, DateTime.UtcNow)]));
+
+        var service = new AuthSessionService(
+            storage.Object,
+            userSessionState,
+            tenantState,
+            authStateProvider,
+            authApiService.Object);
+
+        await service.RestoreSessionAsync();
+
+        tenantState.IsOwner.Should().BeTrue();
+        storage.Verify(x => x.SaveAsync(It.Is<AuthSessionSnapshot>(s => s.TenantIsOwner), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
 
     [Fact]
@@ -102,7 +166,7 @@ public class AuthSessionServiceTests
 
         var userSessionState = new UserSessionState();
         var tenantState = new TenantState();
-        var authStateProvider = new CustomAuthStateProvider(userSessionState);
+        var authStateProvider = new CustomAuthStateProvider(userSessionState, tenantState);
         var authApiService = new Mock<IAuthApiService>();
 
         userSessionState.SetUserSession("access-token", "user-1", "user@baba.com", "User Baba");

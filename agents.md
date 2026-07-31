@@ -42,6 +42,7 @@ Ao gerar, alterar ou sugerir código, você deve obrigatoriamente seguir as segu
 *   Sempre garanta que as consultas e comandos validem ou incluam o `TenantId` correspondente ao contexto atual do usuário.
 *   Clientes HTTP (Blazor e React) devem enviar o header `X-Tenant-Slug` com o slug da associação ativa; a API resolve o tenant via `TenantMiddleware`.
 *   No Blazor WASM, o `HttpClient` autenticado deve ser criado no mesmo scope da UI (não via `IHttpClientFactory` + `DelegatingHandler`): o factory cria um scope separado e o handler perde `UserSessionState`/`TenantState` (Bearer/`X-Tenant-Slug` vazios → 401/403 em todas as APIs).
+*   Policies usadas em `<AuthorizeView Policy="...">` devem ser registradas em `AddAuthorizationCore` no Web (`ClientAuthorizationPolicies` + handler client-side). Hoje `CommunicationWrite` usa `TenantState.IsOwner` como gate de UI; a API continua validando RBAC de verdade.
 *   O isolamento de dados é prioridade máxima de segurança.
 
 ### 6. Documentação Viva e Atualização Contínua (Obrigatória)

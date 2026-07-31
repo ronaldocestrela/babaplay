@@ -12,12 +12,16 @@ namespace BabaPlay.Web.Services.State;
 public class CustomAuthStateProvider : AuthenticationStateProvider
 {
     private readonly UserSessionState _userSessionState;
+    private readonly TenantState _tenantState;
     private static readonly AuthenticationState Anonymous = new(new ClaimsPrincipal(new ClaimsIdentity()));
 
-    public CustomAuthStateProvider(UserSessionState userSessionState)
+    public CustomAuthStateProvider(UserSessionState userSessionState, TenantState tenantState)
     {
         _userSessionState = userSessionState;
+        _tenantState = tenantState;
+        // AuthorizeView policies (e.g. CommunicationWrite) read TenantState; re-evaluate when tenant changes.
         _userSessionState.OnChange += StateHasChanged;
+        _tenantState.OnChange += StateHasChanged;
     }
 
     public override Task<AuthenticationState> GetAuthenticationStateAsync()

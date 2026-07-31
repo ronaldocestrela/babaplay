@@ -7,14 +7,16 @@ public class TenantState
     public Guid? CurrentTenantId { get; private set; }
     public string? CurrentTenantName { get; private set; }
     public string? CurrentTenantSlug { get; private set; }
+    public bool IsOwner { get; private set; }
 
     public event Action? OnChange;
 
-    public void SetTenant(Guid tenantId, string tenantName, string? tenantSlug = null)
+    public void SetTenant(Guid tenantId, string tenantName, string? tenantSlug = null, bool isOwner = false)
     {
         CurrentTenantId = tenantId;
         CurrentTenantName = tenantName;
         CurrentTenantSlug = tenantSlug;
+        IsOwner = isOwner;
         NotifyStateChanged();
     }
 
@@ -23,6 +25,7 @@ public class TenantState
         CurrentTenantId = null;
         CurrentTenantName = null;
         CurrentTenantSlug = null;
+        IsOwner = false;
         NotifyStateChanged();
     }
 

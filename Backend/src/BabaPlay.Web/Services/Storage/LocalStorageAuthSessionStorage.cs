@@ -9,6 +9,11 @@ public sealed class LocalStorageAuthSessionStorage : IAuthSessionStorage
 {
     public const string StorageKey = "babaplay-auth-session";
 
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
+
     private readonly IJSRuntime _jsRuntime;
 
     public LocalStorageAuthSessionStorage(IJSRuntime jsRuntime)
@@ -24,12 +29,12 @@ public sealed class LocalStorageAuthSessionStorage : IAuthSessionStorage
             return null;
         }
 
-        return JsonSerializer.Deserialize<AuthSessionSnapshot>(json);
+        return JsonSerializer.Deserialize<AuthSessionSnapshot>(json, JsonOptions);
     }
 
     public async Task SaveAsync(AuthSessionSnapshot snapshot, CancellationToken cancellationToken = default)
     {
-        var json = JsonSerializer.Serialize(snapshot);
+        var json = JsonSerializer.Serialize(snapshot, JsonOptions);
         await _jsRuntime.InvokeVoidAsync("localStorage.setItem", cancellationToken, StorageKey, json);
     }
 

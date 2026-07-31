@@ -3,6 +3,7 @@
 @using Microsoft.AspNetCore.Authorization
 @using BabaPlay.Web.Models
 @using BabaPlay.Web.Services.Http
+@using BabaPlay.Web.Components.Auth
 @using BabaPlay.Web.Components.Communication
 @using BabaPlay.Web.Components.Common
 @inject ICommunicationApiService CommunicationApiService
@@ -28,16 +29,14 @@
             </p>
         </div>
 
-        <!-- Botão Novo Comunicado — visível apenas para quem tem permissão -->
-        <AuthorizeView Policy="CommunicationWrite">
-            <Authorized>
-                <button class="btn btn-success font-weight-bold"
-                        @onclick="OpenCreateModal"
-                        data-testid="btn-new-announcement">
-                    + Novo Comunicado
-                </button>
-            </Authorized>
-        </AuthorizeView>
+        <!-- Botão Novo Comunicado — visível apenas para owner do tenant (UI gate) -->
+        <CommunicationWriteView>
+            <button class="btn btn-success font-weight-bold"
+                    @onclick="OpenCreateModal"
+                    data-testid="btn-new-announcement">
+                + Novo Comunicado
+            </button>
+        </CommunicationWriteView>
     </div>
 
     <!-- Alertas -->

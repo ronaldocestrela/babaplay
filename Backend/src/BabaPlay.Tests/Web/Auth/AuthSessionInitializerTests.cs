@@ -7,6 +7,7 @@ using FluentAssertions;
 using Moq;
 using Xunit;
 using BabaPlay.Web.Components.Auth;
+using BabaPlay.Web.Models;
 using BabaPlay.Web.Services.Http;
 using BabaPlay.Web.Services.State;
 using BabaPlay.Web.Services.Storage;
@@ -42,8 +43,18 @@ public class AuthSessionInitializerTests : TestContext
 
         var userSessionState = new UserSessionState();
         var tenantState = new TenantState();
-        var authStateProvider = new CustomAuthStateProvider(userSessionState);
+        var authStateProvider = new CustomAuthStateProvider(userSessionState, tenantState);
         var authApiService = new Mock<IAuthApiService>();
+        authApiService
+            .Setup(x => x.GetMeAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserProfileDto(
+                "user-1",
+                "user@baba.com",
+                ["Admin"],
+                true,
+                DateTime.UtcNow,
+                new AuthTenantMembershipDto(tenantId, "Baba FC", "baba-fc", true, DateTime.UtcNow),
+                [new AuthTenantMembershipDto(tenantId, "Baba FC", "baba-fc", true, DateTime.UtcNow)]));
 
         Services.AddSingleton(storage.Object);
         Services.AddSingleton(userSessionState);

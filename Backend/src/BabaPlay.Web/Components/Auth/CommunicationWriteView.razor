@@ -1,0 +1,25 @@
+@namespace BabaPlay.Web.Components.Auth
+@inject TenantState TenantState
+@implements IDisposable
+
+@if (TenantState.IsOwner)
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    protected override void OnInitialized()
+    {
+        TenantState.OnChange += OnTenantChanged;
+    }
+
+    private void OnTenantChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        TenantState.OnChange -= OnTenantChanged;
+    }
+}

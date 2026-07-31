@@ -14,4 +14,5 @@ public sealed class AuthSessionSnapshot
     public Guid? TenantId { get; set; }
     public string? TenantName { get; set; }
     public string? TenantSlug { get; set; }
+    public bool TenantIsOwner { get; set; }
 }

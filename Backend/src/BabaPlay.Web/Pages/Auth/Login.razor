@@ -116,7 +116,11 @@
                 else if (tenants.Count == 1)
                 {
                     var tenant = tenants[0];
-                    TenantState.SetTenant(tenant.Id, tenant.Name, tenant.Slug);
+                    // Prefer PrimaryTenant.IsOwner when present (same membership, authoritative flag).
+                    var isOwner = result.PrimaryTenant?.Id == tenant.Id
+                        ? result.PrimaryTenant.IsOwner
+                        : tenant.IsOwner;
+                    TenantState.SetTenant(tenant.Id, tenant.Name, tenant.Slug, isOwner);
                     await AuthSessionService.SaveCurrentSessionAsync();
                     NavigationManager.NavigateTo(ResolvePostLoginUrl());
                 }

@@ -6,9 +6,11 @@ using Bunit.TestDoubles;
 using FluentAssertions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using BabaPlay.Web.Components.Communication;
 using BabaPlay.Web.Models;
+using BabaPlay.Web.Services.State;
 
 namespace BabaPlay.Tests.Web.Communication;
 
@@ -18,6 +20,9 @@ public class PollCardTests : TestContext
     {
         var auth = this.AddTestAuthorization();
         auth.SetAuthorized("Test User");
+        var tenantState = new TenantState();
+        tenantState.SetTenant(Guid.NewGuid(), "Baba FC", "baba-fc", isOwner: true);
+        Services.AddSingleton(tenantState);
     }
 
     [Fact]

@@ -48,6 +48,7 @@ public sealed class AuthSessionService
             TenantId = _tenantState.CurrentTenantId,
             TenantName = _tenantState.CurrentTenantName,
             TenantSlug = _tenantState.CurrentTenantSlug,
+            TenantIsOwner = _tenantState.IsOwner,
         };
 
         await _storage.SaveAsync(snapshot, cancellationToken);
@@ -91,7 +92,8 @@ public sealed class AuthSessionService
 
         if (snapshot.TenantId.HasValue && !string.IsNullOrWhiteSpace(snapshot.TenantName))
         {
-            _tenantState.SetTenant(snapshot.TenantId.Value, snapshot.TenantName, snapshot.TenantSlug);
+            _tenantState.SetTenant(snapshot.TenantId.Value, snapshot.TenantName, snapshot.TenantSlug, snapshot.TenantIsOwner);
+            await SyncTenantOwnershipFromProfileAsync(snapshot, cancellationToken);
         }
         else
         {
@@ -99,6 +101,40 @@ public sealed class AuthSessionService
         }
 
         _authStateProvider.NotifyUserAuthentication(snapshot.AccessToken);
+    }
+
+    /// <summary>
+    /// Refreshes <see cref="TenantState.IsOwner"/> from the API so UI policies stay correct
+    /// even when localStorage snapshots predate TenantIsOwner.
+    /// </summary>
+    private async Task SyncTenantOwnershipFromProfileAsync(
+        AuthSessionSnapshot snapshot,
+        CancellationToken cancellationToken)
+    {
+        if (!snapshot.TenantId.HasValue)
+        {
+            return;
+        }
+
+        var profile = await _authApiService.GetMeAsync(cancellationToken);
+        var membership = profile?.Tenants?.FirstOrDefault(t => t.Id == snapshot.TenantId.Value);
+        if (membership is null)
+        {
+            return;
+        }
+
+        if (_tenantState.IsOwner == membership.IsOwner
+            && string.Equals(_tenantState.CurrentTenantSlug, membership.Slug, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(_tenantState.CurrentTenantName, membership.Name, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _tenantState.SetTenant(membership.Id, membership.Name, membership.Slug, membership.IsOwner);
+        snapshot.TenantName = membership.Name;
+        snapshot.TenantSlug = membership.Slug;
+        snapshot.TenantIsOwner = membership.IsOwner;
+        await _storage.SaveAsync(snapshot, cancellationToken);
     }
 
     public async Task ClearSessionAsync(CancellationToken cancellationToken = default)

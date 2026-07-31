@@ -3,6 +3,7 @@
 @using Microsoft.AspNetCore.Authorization
 @using BabaPlay.Web.Models
 @using BabaPlay.Web.Services.Http
+@using BabaPlay.Web.Components.Auth
 @using BabaPlay.Web.Components.Communication
 @using BabaPlay.Web.Components.Common
 @inject ICommunicationApiService CommunicationApiService
@@ -28,15 +29,13 @@
             </p>
         </div>
 
-        <AuthorizeView Policy="CommunicationWrite">
-            <Authorized>
-                <button class="btn btn-success font-weight-bold"
-                        @onclick="OpenCreateModal"
-                        data-testid="btn-new-poll">
-                    + Nova Enquete
-                </button>
-            </Authorized>
-        </AuthorizeView>
+        <CommunicationWriteView>
+            <button class="btn btn-success font-weight-bold"
+                    @onclick="OpenCreateModal"
+                    data-testid="btn-new-poll">
+                + Nova Enquete
+            </button>
+        </CommunicationWriteView>
     </div>
 
     <!-- Alertas -->

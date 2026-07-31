@@ -10,6 +10,7 @@ using Xunit;
 using BabaPlay.Web.Pages.Communication;
 using BabaPlay.Web.Models;
 using BabaPlay.Web.Services.Http;
+using BabaPlay.Web.Services.State;
 
 namespace BabaPlay.Tests.Web.Communication;
 
@@ -20,6 +21,9 @@ public class PollsPageTests : TestContext
     public PollsPageTests()
     {
         Services.AddSingleton(_mockService.Object);
+        var tenantState = new TenantState();
+        tenantState.SetTenant(Guid.NewGuid(), "Baba FC", "baba-fc", isOwner: true);
+        Services.AddSingleton(tenantState);
     }
 
     [Fact]
@@ -28,7 +32,6 @@ public class PollsPageTests : TestContext
         // Arrange
         var authContext = this.AddTestAuthorization();
         authContext.SetAuthorized("Admin User");
-        authContext.SetPolicies("CommunicationWrite");
 
         var list = new List<PollDto>
         {

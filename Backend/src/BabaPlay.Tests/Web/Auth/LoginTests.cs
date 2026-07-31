@@ -98,7 +98,7 @@ public class LoginTests : TestContext
     {
         var userSessionState = new UserSessionState();
         var tenantState = new TenantState();
-        var customAuthStateProvider = new CustomAuthStateProvider(userSessionState);
+        var customAuthStateProvider = new CustomAuthStateProvider(userSessionState, tenantState);
         var storage = mockStorage ?? new Mock<IAuthSessionStorage>();
 
         storage.Setup(x => x.SaveAsync(It.IsAny<AuthSessionSnapshot>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);

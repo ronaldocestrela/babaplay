@@ -13,7 +13,7 @@ public class CustomAuthStateProviderTests
     {
         // Arrange
         var userSessionState = new UserSessionState();
-        var provider = new CustomAuthStateProvider(userSessionState);
+        var provider = new CustomAuthStateProvider(userSessionState, new TenantState());
 
         // Act
         var state = await provider.GetAuthenticationStateAsync();
@@ -28,7 +28,7 @@ public class CustomAuthStateProviderTests
     {
         // Arrange
         var userSessionState = new UserSessionState();
-        var provider = new CustomAuthStateProvider(userSessionState);
+        var provider = new CustomAuthStateProvider(userSessionState, new TenantState());
 
         userSessionState.SetUserSession(
             jwtToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
