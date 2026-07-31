@@ -8,6 +8,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Envio administrativo de alertas e gate CommunicationWrite alinhado ao RBAC
+
+- **`POST /api/v1/notifications`**: admins/managers com `communication.write` enviam alertas para todos os membros do tenant (ou lista explícita de destinatários).
+- **`GET /api/v1/auth/me/permissions`**: expõe códigos RBAC do usuário no tenant ativo para gates de UI.
+- **`TenantState.Permissions`**: Blazor carrega permissões após login, seleção de tenant e restore de sessão.
+- **`CommunicationWriteView` / `ClientPermissionAuthorizationHandler`**: liberam escrita com `communication.write` ou owner (antes só owner).
+- **`CreateNotificationModal.razor`**: modal "Enviar Alerta" em `/communication/notifications`.
+- **Testes**: `SendNotificationCommandHandlerTests`, extensões em `NotificationsPageTests` e `ClientPermissionAuthorizationHandlerTests`.
+
 ### Changed — Menu de navegação agrupado
 
 - **`NavMenu`**: itens de Financeiro e Comunicação passam a secções expansíveis; top-level fica Dashboard, Jogadores, Partidas, Times, grupos e Configurações.

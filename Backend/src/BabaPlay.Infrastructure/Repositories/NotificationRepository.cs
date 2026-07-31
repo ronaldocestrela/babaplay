@@ -46,6 +46,15 @@ public sealed class NotificationRepository : INotificationRepository
         await SaveChangesAsync(ct);
     }
 
+    public async Task AddRangeAsync(IReadOnlyList<Notification> notifications, CancellationToken ct = default)
+    {
+        if (notifications.Count == 0)
+            return;
+
+        await _context.Notifications.AddRangeAsync(notifications, ct);
+        await SaveChangesAsync(ct);
+    }
+
     public async Task UpdateAsync(Notification notification, CancellationToken ct = default)
     {
         _context.Notifications.Update(notification);

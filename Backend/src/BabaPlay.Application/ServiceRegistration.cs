@@ -197,6 +197,7 @@ public static class ServiceRegistration
         services.AddScoped<IQueryHandler<GetNotificationsQuery, Result<NotificationSummaryResponse>>, GetNotificationsQueryHandler>();
         services.AddScoped<ICommandHandler<MarkNotificationReadCommand, Result>, MarkNotificationReadCommandHandler>();
         services.AddScoped<ICommandHandler<MarkAllNotificationsReadCommand, Result>, MarkAllNotificationsReadCommandHandler>();
+        services.AddScoped<ICommandHandler<SendNotificationCommand, Result<SendNotificationResponse>>, SendNotificationCommandHandler>();
 
         // Communication — Real-Time Team Chat (F27)
         services.AddScoped<IQueryHandler<GetRecentChatMessagesQuery, Result<IReadOnlyList<ChatMessageResponse>>>, GetRecentChatMessagesQueryHandler>();

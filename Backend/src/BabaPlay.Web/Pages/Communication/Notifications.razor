@@ -3,6 +3,8 @@
 @using BabaPlay.Web.Models
 @using BabaPlay.Web.Services.Http
 @using BabaPlay.Web.Components.Common
+@using BabaPlay.Web.Components.Auth
+@using BabaPlay.Web.Components.Communication
 @inject INotificationApiService NotificationApiService
 
 <PageTitle>Central de Notificações | Baba Play</PageTitle>
@@ -21,15 +23,32 @@
             </h1>
             <p class="page-header__subtitle">Histórico completo de alertas, avisos, cobranças e convocações.</p>
         </div>
-        @if (UnreadCount > 0)
-        {
-            <button class="btn btn-outline-primary btn-sm font-weight-bold"
-                    @onclick="MarkAllAsReadAsync"
-                    data-testid="btn-mark-all-read-page">
-                <i class="bi bi-check2-all me-1" aria-hidden="true"></i> Marcar todas como lidas
-            </button>
-        }
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <CommunicationWriteView>
+                <button class="btn btn-success btn-sm font-weight-bold"
+                        @onclick="OpenCreateModal"
+                        data-testid="btn-new-notification">
+                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i> Enviar Alerta
+                </button>
+            </CommunicationWriteView>
+            @if (UnreadCount > 0)
+            {
+                <button class="btn btn-outline-primary btn-sm font-weight-bold"
+                        @onclick="MarkAllAsReadAsync"
+                        data-testid="btn-mark-all-read-page">
+                    <i class="bi bi-check2-all me-1" aria-hidden="true"></i> Marcar todas como lidas
+                </button>
+            }
+        </div>
     </div>
+
+    @if (!string.IsNullOrEmpty(SuccessMessage))
+    {
+        <div class="alert alert-success mb-4" role="alert" data-testid="notifications-success-alert">
+            <i class="bi bi-check-circle-fill me-2" aria-hidden="true"></i>
+            @SuccessMessage
+        </div>
+    }
 
     @if (!string.IsNullOrEmpty(ErrorMessage))
     {
@@ -107,10 +126,16 @@
     }
 </div>
 
+<CreateNotificationModal IsOpen="_isCreateModalOpen"
+                         OnClose="CloseCreateModal"
+                         OnSent="HandleNotificationSentAsync" />
+
 @code {
     private List<NotificationDto>? _allNotifications;
     private bool IsLoading = true;
+    private bool _isCreateModalOpen;
     private string? ErrorMessage;
+    private string? SuccessMessage;
     private string ReadFilter = "all";
     private int UnreadCount = 0;
 
@@ -188,6 +213,22 @@
     }
 
     private void SetFilter(string filter) => ReadFilter = filter;
+
+    private void OpenCreateModal()
+    {
+        SuccessMessage = null;
+        _isCreateModalOpen = true;
+    }
+
+    private void CloseCreateModal() => _isCreateModalOpen = false;
+
+    private async Task HandleNotificationSentAsync(int createdCount)
+    {
+        SuccessMessage = createdCount == 1
+            ? "Alerta enviado para 1 membro."
+            : $"Alerta enviado para {createdCount} membros.";
+        await LoadNotificationsAsync();
+    }
 
     private static string GetNotificationIcon(int type) => type switch
     {

@@ -5,6 +5,7 @@ using BabaPlay.Application.Common;
 using BabaPlay.Application.DTOs;
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Application.Queries.Notifications;
+using BabaPlay.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,6 +16,7 @@ namespace BabaPlay.Api.Controllers;
 /// GET /api/v1/notifications          → lista notificações do usuário e contagem de não lidas
 /// PUT /api/v1/notifications/{id}/read → marca notificação individual como lida
 /// PUT /api/v1/notifications/read-all  → marca todas as notificações do usuário como lidas
+/// POST /api/v1/notifications          → envia alertas para membros do tenant (CommunicationWrite)
 /// </summary>
 [ApiController]
 [Route("api/v1/notifications")]
@@ -24,15 +26,18 @@ public sealed class NotificationController : ControllerBase
     private readonly IQueryHandler<GetNotificationsQuery, Result<NotificationSummaryResponse>> _getNotificationsHandler;
     private readonly ICommandHandler<MarkNotificationReadCommand, Result> _markReadHandler;
     private readonly ICommandHandler<MarkAllNotificationsReadCommand, Result> _markAllReadHandler;
+    private readonly ICommandHandler<SendNotificationCommand, Result<SendNotificationResponse>> _sendNotificationHandler;
 
     public NotificationController(
         IQueryHandler<GetNotificationsQuery, Result<NotificationSummaryResponse>> getNotificationsHandler,
         ICommandHandler<MarkNotificationReadCommand, Result> markReadHandler,
-        ICommandHandler<MarkAllNotificationsReadCommand, Result> markAllReadHandler)
+        ICommandHandler<MarkAllNotificationsReadCommand, Result> markAllReadHandler,
+        ICommandHandler<SendNotificationCommand, Result<SendNotificationResponse>> sendNotificationHandler)
     {
         _getNotificationsHandler = getNotificationsHandler;
         _markReadHandler = markReadHandler;
         _markAllReadHandler = markAllReadHandler;
+        _sendNotificationHandler = sendNotificationHandler;
     }
 
     /// <summary>Lists notifications for the authenticated user along with unread count.</summary>
@@ -106,4 +111,34 @@ public sealed class NotificationController : ControllerBase
 
         return NoContent();
     }
+
+    /// <summary>Sends notifications to tenant members. Requires CommunicationWrite permission.</summary>
+    [HttpPost]
+    [Authorize(Policy = AuthorizationPolicyNames.CommunicationWrite)]
+    [ProducesResponseType(typeof(SendNotificationResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> SendNotification(
+        [FromBody] SendNotificationRequest request,
+        CancellationToken ct = default)
+    {
+        var command = new SendNotificationCommand(
+            request.Title,
+            request.Message,
+            request.Type ?? NotificationType.System,
+            request.TargetUserIds);
+
+        var result = await _sendNotificationHandler.HandleAsync(command, ct);
+
+        if (!result.IsSuccess)
+            return Problem(detail: result.ErrorMessage, statusCode: StatusCodes.Status422UnprocessableEntity, title: result.ErrorCode);
+
+        return StatusCode(StatusCodes.Status201Created, result.Value);
+    }
 }
+
+public sealed record SendNotificationRequest(
+    string Title,
+    string Message,
+    NotificationType? Type = null,
+    IReadOnlyList<Guid>? TargetUserIds = null);

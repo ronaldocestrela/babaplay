@@ -1,8 +1,9 @@
 @namespace BabaPlay.Web.Components.Auth
+@using BabaPlay.Application.Common
 @inject TenantState TenantState
 @implements IDisposable
 
-@if (TenantState.IsOwner)
+@if (CanWriteCommunication)
 {
     @ChildContent
 }
@@ -10,6 +11,10 @@
 @code {
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
+
+    private bool CanWriteCommunication =>
+        TenantState.IsOwner
+        || TenantState.HasPermission(RbacCatalog.Permissions.CommunicationWrite);
 
     protected override void OnInitialized()
     {

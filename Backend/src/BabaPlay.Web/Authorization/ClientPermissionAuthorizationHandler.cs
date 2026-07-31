@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using BabaPlay.Application.Common;
 using BabaPlay.Web.Services.State;
 using Microsoft.AspNetCore.Authorization;
 
@@ -22,7 +23,8 @@ public sealed class ClientPermissionAuthorizationHandler
         ClientPermissionRequirement requirement)
     {
         if (requirement.PolicyName == ClientAuthorizationPolicies.CommunicationWrite
-            && _tenantState.IsOwner)
+            && (_tenantState.IsOwner
+                || _tenantState.HasPermission(RbacCatalog.Permissions.CommunicationWrite)))
         {
             context.Succeed(requirement);
         }

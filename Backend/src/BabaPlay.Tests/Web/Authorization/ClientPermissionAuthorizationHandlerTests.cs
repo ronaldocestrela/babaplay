@@ -45,4 +45,23 @@ public class ClientPermissionAuthorizationHandlerTests
 
         context.HasSucceeded.Should().BeFalse();
     }
+
+    [Fact]
+    public async Task HandleRequirementAsync_WhenHasCommunicationWritePermission_ShouldSucceed()
+    {
+        var tenantState = new TenantState();
+        tenantState.SetTenant(Guid.NewGuid(), "Baba FC", "baba-fc", isOwner: false);
+        tenantState.SetPermissions(["communication.write"]);
+
+        var handler = new ClientPermissionAuthorizationHandler(tenantState);
+        var requirement = new ClientPermissionRequirement(ClientAuthorizationPolicies.CommunicationWrite);
+        var context = new AuthorizationHandlerContext(
+            [requirement],
+            new ClaimsPrincipal(new ClaimsIdentity("test")),
+            null);
+
+        await handler.HandleAsync(context);
+
+        context.HasSucceeded.Should().BeTrue();
+    }
 }

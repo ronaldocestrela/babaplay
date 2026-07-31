@@ -88,6 +88,9 @@ public class AuthSessionServiceTests
                 DateTime.UtcNow,
                 new AuthTenantMembershipDto(tenantId, "Baba FC", "baba-fc", true, DateTime.UtcNow),
                 [new AuthTenantMembershipDto(tenantId, "Baba FC", "baba-fc", true, DateTime.UtcNow)]));
+        authApiService
+            .Setup(x => x.GetMyPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["communication.write"]);
 
         var service = new AuthSessionService(
             storage.Object,
@@ -105,6 +108,7 @@ public class AuthSessionServiceTests
         tenantState.CurrentTenantId.Should().Be(tenantId);
         tenantState.CurrentTenantSlug.Should().Be("baba-fc");
         tenantState.IsOwner.Should().BeTrue();
+        tenantState.HasPermission("communication.write").Should().BeTrue();
     }
 
     [Fact]
@@ -143,6 +147,9 @@ public class AuthSessionServiceTests
                 DateTime.UtcNow,
                 new AuthTenantMembershipDto(tenantId, "Baba FC", "baba-fc", true, DateTime.UtcNow),
                 [new AuthTenantMembershipDto(tenantId, "Baba FC", "baba-fc", true, DateTime.UtcNow)]));
+        authApiService
+            .Setup(x => x.GetMyPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["communication.write"]);
 
         var service = new AuthSessionService(
             storage.Object,

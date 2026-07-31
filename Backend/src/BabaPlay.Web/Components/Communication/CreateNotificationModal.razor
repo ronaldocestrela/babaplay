@@ -1,0 +1,148 @@
+@namespace BabaPlay.Web.Components.Communication
+@using BabaPlay.Web.Models
+@using BabaPlay.Web.Services.Http
+@inject INotificationApiService NotificationApiService
+
+@if (IsOpen)
+{
+    <div class="modal-backdrop fade show app-modal-backdrop" data-testid="create-notification-backdrop"></div>
+    <div class="modal fade show d-block app-modal" tabindex="-1" data-testid="create-notification-modal">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="bi bi-bell me-2" aria-hidden="true"></i>
+                        Enviar Alerta
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseAsync" aria-label="Fechar" data-testid="btn-close-notification-modal"></button>
+                </div>
+
+                <EditForm Model="Model" OnValidSubmit="HandleSubmitAsync" data-testid="form-create-notification">
+                    <DataAnnotationsValidator />
+
+                    <div class="modal-body">
+                        @if (!string.IsNullOrEmpty(ErrorMessage))
+                        {
+                            <div class="alert alert-danger p-2 small mb-3" role="alert" data-testid="notification-modal-error-alert">
+                                <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
+                                @ErrorMessage
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label class="form-label filters-toolbar__label" for="input-notification-title">Título *</label>
+                            <InputText id="input-notification-title"
+                                       class="form-control"
+                                       placeholder="Ex: Mudança de horário do baba"
+                                       @bind-Value="Model.Title"
+                                       data-testid="input-notification-title" />
+                            <ValidationMessage For="() => Model.Title" class="text-danger small" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label filters-toolbar__label" for="input-notification-message">Mensagem *</label>
+                            <InputTextArea id="input-notification-message"
+                                           class="form-control"
+                                           rows="5"
+                                           placeholder="Escreva o alerta que será enviado para os membros..."
+                                           @bind-Value="Model.Message"
+                                           data-testid="input-notification-message" />
+                            <ValidationMessage For="() => Model.Message" class="text-danger small" />
+                            <small class="text-muted">@(Model.Message?.Length ?? 0) / 5000 caracteres</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label filters-toolbar__label" for="input-notification-type">Tipo</label>
+                            <InputSelect id="input-notification-type"
+                                         class="form-select"
+                                         @bind-Value="Model.Type"
+                                         data-testid="input-notification-type">
+                                <option value="4">Sistema</option>
+                                <option value="3">Dia de Jogo</option>
+                                <option value="1">Partida</option>
+                                <option value="0">Check-in</option>
+                                <option value="2">Evento de Partida</option>
+                            </InputSelect>
+                        </div>
+
+                        <p class="text-muted small mb-0">
+                            <i class="bi bi-people me-1" aria-hidden="true"></i>
+                            O alerta será enviado para todos os membros da associação.
+                        </p>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button"
+                                class="btn btn-outline-secondary"
+                                @onclick="CloseAsync"
+                                disabled="@_isLoading"
+                                data-testid="btn-cancel-notification">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                                class="btn btn-success"
+                                disabled="@_isLoading"
+                                data-testid="btn-submit-notification">
+                            @if (_isLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                <span>Enviando…</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-send me-1" aria-hidden="true"></i>
+                                <span>Enviar Alerta</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<int> OnSent { get; set; }
+
+    private CreateNotificationDto Model { get; set; } = new();
+    private bool _isLoading;
+    private string? ErrorMessage;
+
+    private async Task HandleSubmitAsync()
+    {
+        _isLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var result = await NotificationApiService.SendAsync(Model);
+            if (result is null)
+            {
+                ErrorMessage = "Não foi possível enviar o alerta. Verifique sua conexão ou permissões.";
+                return;
+            }
+
+            var createdCount = result.CreatedCount;
+            Model = new();
+            await OnSent.InvokeAsync(createdCount);
+            await OnClose.InvokeAsync();
+        }
+        catch
+        {
+            ErrorMessage = "Erro inesperado ao enviar o alerta. Tente novamente.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        Model = new();
+        ErrorMessage = null;
+        await OnClose.InvokeAsync();
+    }
+}

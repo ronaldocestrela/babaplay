@@ -91,6 +91,7 @@
     private async Task ChooseTenant(TenantSummaryDto tenant)
     {
         TenantState.SetTenant(tenant.Id, tenant.Name, tenant.Slug, string.Equals(tenant.Role, "Owner", StringComparison.OrdinalIgnoreCase));
+        await AuthSessionService.SyncTenantPermissionsAsync();
         await AuthSessionService.SaveCurrentSessionAsync();
         NavigationManager.NavigateTo("/");
     }

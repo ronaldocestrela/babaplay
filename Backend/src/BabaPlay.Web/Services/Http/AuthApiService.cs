@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading;
@@ -62,5 +63,17 @@ public sealed class AuthApiService : IAuthApiService
         }
 
         return await response.Content.ReadFromJsonAsync<UserProfileDto>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<string>> GetMyPermissionsAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.GetAsync("api/v1/auth/me/permissions", cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return [];
+        }
+
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<string>>(cancellationToken: cancellationToken)
+            ?? [];
     }
 }

@@ -23,3 +23,8 @@ public sealed record NotificationResponse(
 public sealed record NotificationSummaryResponse(
     int UnreadCount,
     IReadOnlyList<NotificationResponse> Notifications);
+
+/// <summary>
+/// Response DTO after an admin sends notifications to tenant members.
+/// </summary>
+public sealed record SendNotificationResponse(int CreatedCount);

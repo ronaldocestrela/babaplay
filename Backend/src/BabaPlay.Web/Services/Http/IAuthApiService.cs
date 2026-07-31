@@ -11,4 +11,5 @@ public interface IAuthApiService
     Task<bool> ForgotPasswordAsync(ForgotPasswordDto dto, CancellationToken cancellationToken = default);
     Task<bool> ResetPasswordAsync(ResetPasswordDto dto, CancellationToken cancellationToken = default);
     Task<UserProfileDto?> GetMeAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<string>> GetMyPermissionsAsync(CancellationToken cancellationToken = default);
 }

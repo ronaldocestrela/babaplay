@@ -121,6 +121,7 @@
                         ? result.PrimaryTenant.IsOwner
                         : tenant.IsOwner;
                     TenantState.SetTenant(tenant.Id, tenant.Name, tenant.Slug, isOwner);
+                    await AuthSessionService.SyncTenantPermissionsAsync();
                     await AuthSessionService.SaveCurrentSessionAsync();
                     NavigationManager.NavigateTo(ResolvePostLoginUrl());
                 }

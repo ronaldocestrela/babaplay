@@ -34,4 +34,23 @@ public sealed class UserTenantRepository : IUserTenantRepository
                 ut.IsOwner,
                 ut.JoinedAt))
             .ToListAsync(ct);
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Guid>> GetMemberUserIdsAsync(Guid tenantId, CancellationToken ct = default)
+    {
+        var userIds = await _context.UserTenants
+            .AsNoTracking()
+            .Where(ut => ut.TenantId == tenantId && ut.Tenant.IsActive)
+            .Select(ut => ut.UserId)
+            .ToListAsync(ct);
+
+        var parsed = new List<Guid>(userIds.Count);
+        foreach (var userId in userIds)
+        {
+            if (Guid.TryParse(userId, out var guid))
+                parsed.Add(guid);
+        }
+
+        return parsed;
+    }
 }

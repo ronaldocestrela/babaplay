@@ -7,20 +7,25 @@ using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
+using BabaPlay.Application.Common;
+using BabaPlay.Web.Components.Communication;
 using BabaPlay.Web.Pages.Communication;
 using BabaPlay.Web.Models;
 using BabaPlay.Web.Services.Http;
+using BabaPlay.Web.Services.State;
 
 namespace BabaPlay.Tests.Web.Communication;
 
 public class NotificationsPageTests : TestContext
 {
     private readonly Mock<INotificationApiService> _mockService = new();
+    private readonly TenantState _tenantState = new();
 
     public NotificationsPageTests()
     {
         this.AddTestAuthorization().SetAuthorized("Test User");
         Services.AddSingleton(_mockService.Object);
+        Services.AddSingleton(_tenantState);
     }
 
     [Fact]
@@ -63,5 +68,35 @@ public class NotificationsPageTests : TestContext
 
         // Assert
         cut.Find("[data-testid='empty-notifications-page']").TextContent.Should().Contain("Nenhuma notificação encontrada");
+    }
+
+    [Fact]
+    public void NotificationsPage_WhenUserHasCommunicationWrite_ShouldShowSendButton()
+    {
+        _tenantState.SetTenant(Guid.NewGuid(), "Baba FC", "baba-fc", isOwner: false);
+        _tenantState.SetPermissions([RbacCatalog.Permissions.CommunicationWrite]);
+
+        _mockService
+            .Setup(x => x.GetNotificationsAsync(false, 50, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new NotificationSummaryDto(0, []));
+
+        var cut = RenderComponent<Notifications>();
+
+        cut.Find("[data-testid='btn-new-notification']").TextContent.Should().Contain("Enviar Alerta");
+    }
+
+    [Fact]
+    public void NotificationsPage_WhenUserLacksCommunicationWrite_ShouldHideSendButton()
+    {
+        _tenantState.SetTenant(Guid.NewGuid(), "Baba FC", "baba-fc", isOwner: false);
+        _tenantState.SetPermissions([]);
+
+        _mockService
+            .Setup(x => x.GetNotificationsAsync(false, 50, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new NotificationSummaryDto(0, []));
+
+        var cut = RenderComponent<Notifications>();
+
+        cut.Markup.Should().NotContain("data-testid=\"btn-new-notification\"");
     }
 }

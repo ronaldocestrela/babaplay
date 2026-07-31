@@ -18,7 +18,7 @@ Todas as diretrizes e regras definidas em [`agents.md`](file:///home/rony/LPR/ba
    * O token JWT obtido no login armazena as claims do usuário e as associações (tenants) das quais ele faz parte.
    * Cada requisição HTTP enviada pelos services do Blazor deve incluir o cabeçalho `Authorization: Bearer <token>` e `X-Tenant-Slug: <tenant-slug>`.
    * As rotas protegidas utilizam `AuthorizeRouteView` e `CascadingAuthenticationState`.
-   * Gates de escrita de comunicação na UI usam `CommunicationWriteView` (baseado em `TenantState.IsOwner`). A policy `CommunicationWrite` também fica registrada em `AddAuthorizationCore` para compatibilidade; a API continua sendo a fonte da verdade nas escritas. Em restore de sessão, `IsOwner` é sincronizado via `GET /auth/me`.
+   * Gates de escrita de comunicação na UI usam `CommunicationWriteView`, baseado em `TenantState.Permissions` (via `GET /api/v1/auth/me/permissions`) com fallback para `TenantState.IsOwner`. A policy `CommunicationWrite` também fica registrada em `AddAuthorizationCore`; a API continua sendo a fonte da verdade nas escritas. Em restore de sessão, owner e permissões são sincronizados via API.
 
 3. **Gerenciamento de Estado (State Management):**
    * Usar serviços com escopo (`Scoped`) para manter o estado da sessão do usuário (`UserSessionState`), tenant ativo (`TenantState`) e carrinho/ações temporárias.
@@ -371,13 +371,14 @@ flowchart TD
 * **Testes bUnit/xUnit:** `PollDomainTests.cs`, `CreatePollCommandHandlerTests.cs`, `SubmitPollVoteCommandHandlerTests.cs`, `GetPollsQueryHandlerTests.cs`, `PollCardTests.cs`, `CreatePollModalTests.cs`, `PollsPageTests.cs`.
 
 #### **[F26] Hub de Notificações no App** ✅ CONCLUÍDO
-* **Objetivo:** Central de alertas do usuário (alteração de horário de jogo, nova cobrança, convocação, comunicados e enquetes) com contador dinâmico no cabeçalho e histórico completo.
+* **Objetivo:** Central de alertas do usuário (alteração de horário de jogo, nova cobrança, convocação, comunicados e enquetes) com contador dinâmico no cabeçalho, histórico completo e envio administrativo de alertas.
 * **Componentes / Páginas:** 
   * `Components/Communication/NotificationCenter.razor`
+  * `Components/Communication/CreateNotificationModal.razor`
   * `Pages/Communication/Notifications.razor`
-* **Services & DTOs:** `INotificationApiService`, `NotificationApiService`, `NotificationDto`, `NotificationSummaryDto`, `NotificationResponse`, `NotificationSummaryResponse`
-* **Endpoints API Consumidos:** `GET /api/v1/notifications`, `PUT /api/v1/notifications/{id}/read`, `PUT /api/v1/notifications/read-all`
-* **Testes bUnit/xUnit:** `GetNotificationsQueryHandlerTests.cs`, `MarkNotificationReadCommandHandlerTests.cs`, `MarkAllNotificationsReadCommandHandlerTests.cs`, `NotificationCenterTests.cs`, `NotificationsPageTests.cs`.
+* **Services & DTOs:** `INotificationApiService`, `NotificationApiService`, `NotificationDto`, `NotificationSummaryDto`, `CreateNotificationDto`, `SendNotificationResultDto`, `NotificationResponse`, `NotificationSummaryResponse`, `SendNotificationResponse`
+* **Endpoints API Consumidos:** `GET /api/v1/notifications`, `POST /api/v1/notifications`, `PUT /api/v1/notifications/{id}/read`, `PUT /api/v1/notifications/read-all`, `GET /api/v1/auth/me/permissions`
+* **Testes bUnit/xUnit:** `GetNotificationsQueryHandlerTests.cs`, `MarkNotificationReadCommandHandlerTests.cs`, `MarkAllNotificationsReadCommandHandlerTests.cs`, `SendNotificationCommandHandlerTests.cs`, `NotificationCenterTests.cs`, `NotificationsPageTests.cs`, `ClientPermissionAuthorizationHandlerTests.cs`.
 
 #### **[F27] Chat em Tempo Real via SignalR** ✅ CONCLUÍDO
 * **Objetivo:** Chat da turma/time utilizando a biblioteca cliente do SignalR no Blazor (`Microsoft.AspNetCore.SignalR.Client`) com persistência no banco e transmissão instantânea por tenant.

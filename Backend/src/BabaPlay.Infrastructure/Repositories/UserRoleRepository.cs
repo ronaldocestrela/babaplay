@@ -64,6 +64,20 @@ public sealed class UserRoleRepository : IUserRoleRepository
         ).AnyAsync(ct);
     }
 
+    public async Task<IReadOnlyList<string>> GetPermissionCodesAsync(string userId, CancellationToken ct = default)
+    {
+        var db = _db;
+
+        return await (
+            from userRole in db.UserRoles
+            join role in db.Roles on userRole.RoleId equals role.Id
+            join rolePermission in db.RolePermissions on role.Id equals rolePermission.RoleId
+            join permission in db.Permissions on rolePermission.PermissionId equals permission.Id
+            where userRole.UserId == userId && role.IsActive
+            select permission.NormalizedCode
+        ).Distinct().ToListAsync(ct);
+    }
+
     public Task SaveChangesAsync(CancellationToken ct = default)
         => Task.CompletedTask;
 }

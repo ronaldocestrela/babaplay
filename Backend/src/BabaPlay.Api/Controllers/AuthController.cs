@@ -17,6 +17,7 @@ public sealed class AuthController : ControllerBase
     private readonly ICommandHandler<RefreshTokenCommand, Result<AuthResponse>> _refreshTokenHandler;
     private readonly IUserRepository _userRepository;
     private readonly IUserTenantRepository _userTenantRepository;
+    private readonly IUserRoleRepository _userRoleRepository;
     private readonly ICommandHandler<ForgotPasswordCommand, Result> _forgotPasswordHandler;
     private readonly ICommandHandler<ResetPasswordCommand, Result> _resetPasswordHandler;
 
@@ -25,6 +26,7 @@ public sealed class AuthController : ControllerBase
         ICommandHandler<RefreshTokenCommand, Result<AuthResponse>> refreshTokenHandler,
         IUserRepository userRepository,
         IUserTenantRepository userTenantRepository,
+        IUserRoleRepository userRoleRepository,
         ICommandHandler<ForgotPasswordCommand, Result> forgotPasswordHandler,
         ICommandHandler<ResetPasswordCommand, Result> resetPasswordHandler)
     {
@@ -32,6 +34,7 @@ public sealed class AuthController : ControllerBase
         _refreshTokenHandler = refreshTokenHandler;
         _userRepository = userRepository;
         _userTenantRepository = userTenantRepository;
+        _userRoleRepository = userRoleRepository;
         _forgotPasswordHandler = forgotPasswordHandler;
         _resetPasswordHandler = resetPasswordHandler;
     }
@@ -129,6 +132,33 @@ public sealed class AuthController : ControllerBase
             user.CreatedAt,
             memberships.FirstOrDefault(),
             memberships));
+    }
+
+    /// <summary>
+    /// Returns RBAC permission codes for the authenticated user in the current tenant context.
+    /// </summary>
+    [Authorize(Policy = AuthorizationPolicyNames.TenantMember)]
+    [HttpGet("me/permissions")]
+    [ProducesResponseType(typeof(IReadOnlyList<string>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> MyPermissions(CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+            ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(ClaimTypes.Name);
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "UNAUTHORIZED",
+                Detail = "Authenticated user could not be resolved from token claims.",
+            });
+        }
+
+        var permissions = await _userRoleRepository.GetPermissionCodesAsync(userId, cancellationToken);
+        return Ok(permissions);
     }
 
     /// <summary>

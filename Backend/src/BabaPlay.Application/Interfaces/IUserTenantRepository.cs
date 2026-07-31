@@ -13,4 +13,7 @@ public interface IUserTenantRepository
 
     /// <summary>Returns all active tenant memberships for the user.</summary>
     Task<IReadOnlyList<AuthTenantMembershipDto>> GetMembershipsAsync(string userId, CancellationToken ct = default);
+
+    /// <summary>Returns user ids (as Guid) of all members belonging to the tenant.</summary>
+    Task<IReadOnlyList<Guid>> GetMemberUserIdsAsync(Guid tenantId, CancellationToken ct = default);
 }

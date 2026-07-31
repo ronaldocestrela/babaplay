@@ -24,6 +24,9 @@ public interface INotificationRepository
     /// <summary>Tracks a new notification for persistence.</summary>
     Task AddAsync(Notification notification, CancellationToken ct = default);
 
+    /// <summary>Tracks multiple notifications and persists them in a single transaction.</summary>
+    Task AddRangeAsync(IReadOnlyList<Notification> notifications, CancellationToken ct = default);
+
     /// <summary>Updates an existing notification.</summary>
     Task UpdateAsync(Notification notification, CancellationToken ct = default);
 

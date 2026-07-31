@@ -44,4 +44,23 @@ public sealed class NotificationApiService : INotificationApiService
         var response = await _httpClient.PutAsync($"{BaseUrl}/read-all", content: null, cancellationToken);
         return response.IsSuccessStatusCode;
     }
+
+    /// <inheritdoc/>
+    public async Task<SendNotificationResultDto?> SendAsync(
+        CreateNotificationDto dto,
+        CancellationToken cancellationToken = default)
+    {
+        var payload = new
+        {
+            dto.Title,
+            dto.Message,
+            Type = dto.Type,
+        };
+
+        var response = await _httpClient.PostAsJsonAsync(BaseUrl, payload, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        return await response.Content.ReadFromJsonAsync<SendNotificationResultDto>(cancellationToken: cancellationToken);
+    }
 }

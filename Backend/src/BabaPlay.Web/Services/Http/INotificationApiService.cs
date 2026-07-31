@@ -18,4 +18,7 @@ public interface INotificationApiService
 
     /// <summary>Marks all notifications for the current user as read.</summary>
     Task<bool> MarkAllAsReadAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Sends notifications to tenant members (requires CommunicationWrite).</summary>
+    Task<SendNotificationResultDto?> SendAsync(CreateNotificationDto dto, CancellationToken cancellationToken = default);
 }
