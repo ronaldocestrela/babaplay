@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 # ci-local.sh — Executa a mesma esteira do CI (GitHub Actions) localmente.
-# Uso: ./scripts/ci-local.sh [backend|frontend|all]
-#      Sem argumento roda tudo (all).
+# Uso: ./scripts/ci-local.sh [backend]
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BACKEND_DIR="$ROOT/Backend"
-WEB_DIR="$ROOT/web"
 
 # ─── Cores ───────────────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
@@ -64,34 +62,6 @@ run_backend() {
   echo -e "\n  Relatório: ${CYAN}file://$BACKEND_DIR/coverage/report/Summary.txt${RESET}"
 }
 
-# ─── Frontend ─────────────────────────────────────────────────────────────────
-run_frontend() {
-  echo -e "\n${BOLD}━━━ FRONTEND ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-
-  step "Verificando Node.js 24+..."
-  NODE_MAJOR=$(node --version | sed 's/v\([0-9]*\).*/\1/')
-  [[ "$NODE_MAJOR" -ge 24 ]] || fail "Requer Node.js 24+. Versão atual: $(node --version)"
-  ok "$(node --version)"
-
-  step "Instalando dependências (yarn)..."
-  (cd "$WEB_DIR" && yarn install --frozen-lockfile --silent)
-  ok "Dependências instaladas"
-
-  step "Lint..."
-  (cd "$WEB_DIR" && yarn lint)
-  ok "Lint OK"
-
-  step "Executando testes com cobertura (>= 80%)..."
-  (cd "$WEB_DIR" && yarn coverage \
-    --coverage.thresholds.lines=80 \
-    --coverage.thresholds.functions=80 \
-    --coverage.thresholds.statements=80 \
-    --coverage.thresholds.branches=70)
-  ok "Testes e cobertura OK"
-
-  echo -e "\n  Relatório: ${CYAN}file://$WEB_DIR/coverage/index.html${RESET}"
-}
-
 # ─── Resultado final ──────────────────────────────────────────────────────────
 print_summary() {
   local status=$1
@@ -108,16 +78,15 @@ print_summary() {
 }
 
 # ─── Entrypoint ───────────────────────────────────────────────────────────────
-TARGET="${1:-all}"
+TARGET="${1:-backend}"
 
 trap 'print_summary $?' EXIT
 
 case "$TARGET" in
-  backend)  run_backend  ;;
-  frontend) run_frontend ;;
-  all)      run_backend && run_frontend ;;
+  backend|all) run_backend ;;
   *)
-    echo "Uso: $0 [backend|frontend|all]"
+    echo "Uso: $0 [backend|all]"
     exit 1
     ;;
 esac
+

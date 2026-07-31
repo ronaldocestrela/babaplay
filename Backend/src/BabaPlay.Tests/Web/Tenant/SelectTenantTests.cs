@@ -10,18 +10,45 @@ using BabaPlay.Web.Models;
 using BabaPlay.Web.Pages.Tenant;
 using BabaPlay.Web.Services.Http;
 using BabaPlay.Web.Services.State;
+using BabaPlay.Web.Services.Storage;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BabaPlay.Tests.Web.Tenant;
 
 public class SelectTenantTests : TestContext
 {
+    private void RegisterServices(Mock<ITenantApiService> mockTenantService)
+    {
+        var tenantState = new TenantState();
+        var userSessionState = new UserSessionState();
+        var customAuthStateProvider = new CustomAuthStateProvider(userSessionState, tenantState);
+        var mockStorage = new Mock<IAuthSessionStorage>();
+        var mockAuthApi = new Mock<IAuthApiService>();
+
+        mockStorage.Setup(x => x.SaveAsync(It.IsAny<AuthSessionSnapshot>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        mockStorage.Setup(x => x.ClearAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        var authSessionService = new AuthSessionService(
+            mockStorage.Object,
+            userSessionState,
+            tenantState,
+            customAuthStateProvider,
+            mockAuthApi.Object);
+
+        Services.AddSingleton(mockTenantService.Object);
+        Services.AddSingleton(tenantState);
+        Services.AddSingleton(userSessionState);
+        Services.AddSingleton(customAuthStateProvider);
+        Services.AddSingleton<AuthenticationStateProvider>(customAuthStateProvider);
+        Services.AddSingleton(authSessionService);
+    }
+
     [Fact]
     public void SelectTenant_WhenMembershipsExist_ShouldRenderTenantCards()
     {
         // Arrange
         var mockTenantService = new Mock<ITenantApiService>();
-        var tenantState = new TenantState();
 
         var memberships = new List<TenantSummaryDto>
         {
@@ -33,8 +60,7 @@ public class SelectTenantTests : TestContext
             .Setup(x => x.GetMyMembershipsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(memberships);
 
-        Services.AddSingleton(mockTenantService.Object);
-        Services.AddSingleton(tenantState);
+        RegisterServices(mockTenantService);
 
         // Act
         var cut = RenderComponent<SelectTenant>();
@@ -50,14 +76,12 @@ public class SelectTenantTests : TestContext
     {
         // Arrange
         var mockTenantService = new Mock<ITenantApiService>();
-        var tenantState = new TenantState();
 
         mockTenantService
             .Setup(x => x.GetMyMembershipsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<TenantSummaryDto>());
 
-        Services.AddSingleton(mockTenantService.Object);
-        Services.AddSingleton(tenantState);
+        RegisterServices(mockTenantService);
 
         // Act
         var cut = RenderComponent<SelectTenant>();
@@ -67,3 +91,4 @@ public class SelectTenantTests : TestContext
         cut.Find("#create-first-tenant-btn").Should().NotBeNull();
     }
 }
+
