@@ -4,162 +4,152 @@
 
 @if (Poll != null)
 {
-    <div class="card shadow-sm mb-3 poll-card"
-         style="border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0); background: var(--bg-surface, #ffffff);"
+    <div class="widget-card poll-card"
          data-testid="poll-card"
          @attributes="AdditionalAttributes">
 
-        <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                @if (Poll.IsClosed)
+                {
+                    <span class="badge badge-secondary" data-testid="badge-closed">Encerrada</span>
+                }
+                else if (Poll.HasVoted)
+                {
+                    <span class="badge badge-success" data-testid="badge-voted">Voto Computado</span>
+                }
+                else
+                {
+                    <span class="badge badge-primary" data-testid="badge-open">Enquete Aberta</span>
+                }
 
-            <!-- Badges + Status -->
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <div class="d-flex align-items-center gap-2 flex-wrap">
-                    @if (Poll.IsClosed)
+                <span class="badge badge-light" data-testid="badge-total-votes">
+                    <i class="bi bi-bar-chart me-1" aria-hidden="true"></i>
+                    @Poll.TotalVotes voto(s)
+                </span>
+            </div>
+
+            <small class="text-muted text-nowrap">
+                Por: <strong>@Poll.AuthorName</strong>
+            </small>
+        </div>
+
+        <h2 class="widget-card__title mb-1" data-testid="poll-title">
+            <i class="bi bi-ui-checks-grid" aria-hidden="true"></i>
+            @Poll.Title
+        </h2>
+
+        @if (!string.IsNullOrWhiteSpace(Poll.Description))
+        {
+            <p class="text-muted mb-3" data-testid="poll-description">
+                @Poll.Description
+            </p>
+        }
+
+        <hr class="poll-card__divider" />
+
+        @if (!Poll.HasVoted && !Poll.IsClosed)
+        {
+            <div class="mb-3" data-testid="vote-form">
+                @foreach (var option in Poll.Options)
+                {
+                    <div class="poll-option @(SelectedOptionId == option.Id ? "poll-option--selected" : null)"
+                         @onclick="() => SelectedOptionId = option.Id"
+                         data-testid="option-select-row">
+                        <input class="form-check-input"
+                               type="radio"
+                               name="pollOptions_@Poll.Id"
+                               id="opt_@option.Id"
+                               value="@option.Id"
+                               checked="@(SelectedOptionId == option.Id)"
+                               @onchange="() => SelectedOptionId = option.Id"
+                               data-testid="radio-option" />
+                        <label class="form-check-label font-weight-bold" for="opt_@option.Id">
+                            @option.Text
+                        </label>
+                    </div>
+                }
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <button type="button"
+                        class="btn btn-sm btn-primary font-weight-bold"
+                        disabled="@(SelectedOptionId == null || _isSubmitting)"
+                        @onclick="HandleSubmitVoteAsync"
+                        data-testid="btn-submit-vote">
+                    @if (_isSubmitting)
                     {
-                        <span class="badge bg-secondary" style="font-size: 0.7rem;" data-testid="badge-closed">
-                            🔒 Encerrada
-                        </span>
-                    }
-                    else if (Poll.HasVoted)
-                    {
-                        <span class="badge bg-success" style="font-size: 0.7rem;" data-testid="badge-voted">
-                            ✔ Voto Computado
-                        </span>
+                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        <span>Enviando…</span>
                     }
                     else
                     {
-                        <span class="badge bg-primary" style="font-size: 0.7rem;" data-testid="badge-open">
-                            ⚡ Enquete Aberta
-                        </span>
+                        <i class="bi bi-check2-square me-1" aria-hidden="true"></i>
+                        <span>Confirmar Voto</span>
                     }
+                </button>
 
-                    <span class="badge" style="background-color: #f1f5f9; color: #475569; font-size: 0.7rem;" data-testid="badge-total-votes">
-                        🗳️ @Poll.TotalVotes voto(s)
-                    </span>
-                </div>
+                <CommunicationWriteView>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-danger"
+                            @onclick="HandleClosePollAsync"
+                            disabled="@_isClosing"
+                            data-testid="btn-close-poll">
+                        <i class="bi bi-lock me-1" aria-hidden="true"></i>
+                        Encerrar Enquete
+                    </button>
+                </CommunicationWriteView>
+            </div>
+        }
+        else
+        {
+            <div class="mb-3" data-testid="poll-results">
+                @foreach (var option in Poll.Options)
+                {
+                    var isMyChoice = Poll.VotedOptionId == option.Id;
 
-                <small class="text-muted" style="font-size: 0.78rem;">
-                    Por: <strong>@Poll.AuthorName</strong>
-                </small>
+                    <div class="poll-result @(isMyChoice ? "poll-result--mine" : null)" data-testid="result-row">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="font-weight-bold">
+                                @option.Text
+                                @if (isMyChoice)
+                                {
+                                    <span class="badge badge-success ms-1" data-testid="badge-my-choice">Seu voto</span>
+                                }
+                            </span>
+                            <span class="text-muted font-weight-bold" data-testid="option-percentage">
+                                @option.Percentage% <small class="fw-normal">(@option.VotesCount)</small>
+                            </span>
+                        </div>
+                        <div class="progress financial-collection-progress">
+                            <div class="progress-bar @(isMyChoice ? "financial-collection-progress__bar--success" : "financial-collection-progress__bar--primary")"
+                                 role="progressbar"
+                                 style="width: @(Math.Min(100, option.Percentage))%"
+                                 aria-valuenow="@option.Percentage"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
 
-            <!-- Título & Descrição -->
-            <h5 class="font-weight-bold mb-1" style="color: var(--text-main);" data-testid="poll-title">
-                📊 @Poll.Title
-            </h5>
-
-            @if (!string.IsNullOrWhiteSpace(Poll.Description))
-            {
-                <p class="text-muted mb-3" style="font-size: 0.88rem;" data-testid="poll-description">
-                    @Poll.Description
-                </p>
-            }
-
-            <hr style="border-color: #e2e8f0; margin: 12px 0;" />
-
-            <!-- Opções: Formulário de Voto vs Resultado Visual -->
-            @if (!Poll.HasVoted && !Poll.IsClosed)
-            {
-                <!-- Form de Voto -->
-                <div class="mb-3" data-testid="vote-form">
-                    @foreach (var option in Poll.Options)
-                    {
-                        <div class="form-check p-2 mb-2 rounded border"
-                             style="background: var(--bg-muted, #f8fafc); cursor: pointer;"
-                             @onclick="() => SelectedOptionId = option.Id"
-                             data-testid="option-select-row">
-                            <input class="form-check-input ms-1"
-                                   type="radio"
-                                   name="pollOptions_@Poll.Id"
-                                   id="opt_@option.Id"
-                                   value="@option.Id"
-                                   checked="@(SelectedOptionId == option.Id)"
-                                   @onchange="() => SelectedOptionId = option.Id"
-                                   data-testid="radio-option" />
-                            <label class="form-check-label ms-2 font-weight-bold" for="opt_@option.Id" style="color: var(--text-main); font-size: 0.9rem;">
-                                @option.Text
-                            </label>
-                        </div>
-                    }
-                </div>
-
-                <div class="d-flex justify-content-between align-items-center">
-                    <button class="btn btn-sm btn-primary font-weight-bold px-4"
-                            style="border-radius: 8px;"
-                            disabled="@(SelectedOptionId == null || _isSubmitting)"
-                            @onclick="HandleSubmitVoteAsync"
-                            data-testid="btn-submit-vote">
-                        @if (_isSubmitting)
-                        {
-                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                            <span>Enviando…</span>
-                        }
-                        else
-                        {
-                            <span>🗳️ Confirmar Voto</span>
-                        }
-                    </button>
-
-                    <CommunicationWriteView>
-                        <button class="btn btn-sm btn-outline-danger"
+            <CommunicationWriteView>
+                @if (!Poll.IsClosed)
+                {
+                    <div class="text-end">
+                        <button type="button"
+                                class="btn btn-sm btn-outline-danger"
                                 @onclick="HandleClosePollAsync"
                                 disabled="@_isClosing"
                                 data-testid="btn-close-poll">
-                            🔒 Encerrar Enquete
+                            <i class="bi bi-lock me-1" aria-hidden="true"></i>
+                            Encerrar Enquete
                         </button>
-                    </CommunicationWriteView>
-                </div>
-            }
-            else
-            {
-                <!-- Resultados de Votação com Barras de Progresso -->
-                <div class="mb-3" data-testid="poll-results">
-                    @foreach (var option in Poll.Options)
-                    {
-                        var isMyChoice = Poll.VotedOptionId == option.Id;
-
-                        <div class="mb-3 p-2 rounded" style="background: @(isMyChoice ? "#f0fdf4" : "var(--bg-muted, #f8fafc)"); border: 1px solid @(isMyChoice ? "#86efac" : "transparent");" data-testid="result-row">
-                            <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.88rem;">
-                                <span class="font-weight-bold" style="color: var(--text-main);">
-                                    @option.Text
-                                    @if (isMyChoice)
-                                    {
-                                        <span class="badge bg-success ms-1" style="font-size: 0.65rem;" data-testid="badge-my-choice">Seu voto</span>
-                                    }
-                                </span>
-                                <span class="text-muted font-weight-bold" data-testid="option-percentage">
-                                    @option.Percentage% <small class="fw-normal">(@option.VotesCount)</small>
-                                </span>
-                            </div>
-
-                            <div class="progress" style="height: 10px; border-radius: 6px; background-color: #e2e8f0;">
-                                <div class="progress-bar @(isMyChoice ? "bg-success" : "bg-primary")"
-                                     role="progressbar"
-                                     style="width: @(Math.Min(100, option.Percentage))%; border-radius: 6px;"
-                                     aria-valuenow="@option.Percentage"
-                                     aria-valuemin="0"
-                                     aria-valuemax="100">
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-
-                <CommunicationWriteView>
-                    @if (!Poll.IsClosed)
-                    {
-                        <div class="text-end">
-                            <button class="btn btn-sm btn-outline-danger"
-                                    @onclick="HandleClosePollAsync"
-                                    disabled="@_isClosing"
-                                    data-testid="btn-close-poll">
-                                🔒 Encerrar Enquete
-                            </button>
-                        </div>
-                    }
-                </CommunicationWriteView>
-            }
-        </div>
+                    </div>
+                }
+            </CommunicationWriteView>
+        }
     </div>
 }
 

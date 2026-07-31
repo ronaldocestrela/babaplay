@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading;
@@ -17,7 +18,7 @@ public sealed class FinancialApiService : IFinancialApiService
         _httpClient = httpClient;
     }
 
-    public async Task<FinancialOverviewDto?> GetFinancialOverviewAsync(int? year = null, int? month = null, CancellationToken cancellationToken = default)
+    public async Task<ApiServiceResult<FinancialOverviewDto>> GetFinancialOverviewAsync(int? year = null, int? month = null, CancellationToken cancellationToken = default)
     {
         var url = "api/v1/financial/overview";
         if (year.HasValue && month.HasValue)
@@ -36,10 +37,13 @@ public sealed class FinancialApiService : IFinancialApiService
         var response = await _httpClient.GetAsync(url, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            return null;
+            return ApiServiceResult<FinancialOverviewDto>.Fail(
+                (int)response.StatusCode,
+                FinancialApiErrorMessages.FromStatusCode(response.StatusCode));
         }
 
-        return await response.Content.ReadFromJsonAsync<FinancialOverviewDto>(cancellationToken: cancellationToken);
+        var data = await response.Content.ReadFromJsonAsync<FinancialOverviewDto>(cancellationToken: cancellationToken);
+        return ApiServiceResult<FinancialOverviewDto>.Ok(data!);
     }
 
     public async Task<List<InvoiceDto>?> GetInvoicesAsync(

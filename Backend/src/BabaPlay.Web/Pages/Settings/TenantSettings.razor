@@ -8,56 +8,67 @@
 <PageTitle>Configurações da Associação - Baba Play</PageTitle>
 
 <div class="container-fluid py-4" data-testid="tenant-settings-page">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+    <div class="page-header">
         <div>
-            <h1 class="h3 mb-1 font-weight-bold text-gradient">Configurações da Associação</h1>
-            <p class="text-muted mb-0">Gerencie as preferências gerais, escudo, regras de sorteio e agendamento dos babas.</p>
+            <h1 class="page-header__title text-gradient">Configurações da Associação</h1>
+            <p class="page-header__subtitle">Gerencie as preferências gerais, escudo, regras de sorteio e agendamento dos babas.</p>
         </div>
+        <button class="btn btn-outline-primary btn-sm"
+                @onclick="LoadSettingsAsync"
+                disabled="@IsLoading"
+                data-testid="btn-refresh-settings">
+            @if (IsRefreshing)
+            {
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                <span>Atualizando...</span>
+            }
+            else
+            {
+                <i class="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>
+                <span>Atualizar</span>
+            }
+        </button>
     </div>
 
     @if (!string.IsNullOrWhiteSpace(ErrorMessage))
     {
         <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert" data-testid="settings-page-error">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <i class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></i>
             @ErrorMessage
             <button type="button" class="btn-close" @onclick="() => ErrorMessage = null"></button>
         </div>
     }
 
-    @if (IsLoading)
+    @if (IsInitialLoading)
     {
-        <div class="d-flex justify-content-center py-5">
-            <LoadingSpinner Message="Carregando configurações da associação..." />
-        </div>
+        <LoadingSpinner Message="Carregando configurações da associação..." />
     }
     else
     {
-        <!-- Navegação por Abas -->
-        <ul class="nav nav-tabs border-bottom mb-4" role="tablist" data-testid="settings-tabs">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link @(ActiveTab == "general" ? "active font-weight-bold" : "")"
+        <div class="widget-card filters-toolbar mb-4 p-2" data-testid="settings-tabs">
+            <div class="nav nav-pills match-list-filters flex-wrap gap-1" role="tablist">
+                <button type="button"
+                        class="nav-link @(ActiveTab == "general" ? "active" : "")"
                         @onclick='() => ActiveTab = "general"'
                         data-testid="tab-general">
-                    <i class="bi bi-sliders me-2"></i> Geral & Identidade
+                    <i class="bi bi-sliders me-1" aria-hidden="true"></i> Geral & Identidade
                 </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link @(ActiveTab == "gamedays" ? "active font-weight-bold" : "")"
+                <button type="button"
+                        class="nav-link @(ActiveTab == "gamedays" ? "active" : "")"
                         @onclick='() => ActiveTab = "gamedays"'
                         data-testid="tab-gamedays">
-                    <i class="bi bi-calendar-week me-2"></i> Dias Fixos do Baba
+                    <i class="bi bi-calendar-week me-1" aria-hidden="true"></i> Dias Fixos do Baba
                 </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link @(ActiveTab == "invite" ? "active font-weight-bold" : "")"
+                <button type="button"
+                        class="nav-link @(ActiveTab == "invite" ? "active" : "")"
                         @onclick='() => ActiveTab = "invite"'
                         data-testid="tab-invite">
-                    <i class="bi bi-share me-2"></i> Link de Convite
+                    <i class="bi bi-share me-1" aria-hidden="true"></i> Link de Convite
                 </button>
-            </li>
-        </ul>
+            </div>
+        </div>
 
-        <div class="tab-content">
+        <div class="list-content @(IsRefreshing ? "list-content--refreshing" : null)">
             @if (ActiveTab == "general")
             {
                 <TenantGeneralSettingsWidget InitialSettings="Settings" OnSettingsUpdated="HandleSettingsUpdated" />
@@ -78,7 +89,11 @@
     private TenantSettingsDto? Settings { get; set; }
     private string ActiveTab { get; set; } = "general";
     private bool IsLoading { get; set; } = true;
+    private bool HasLoadedOnce { get; set; }
     private string? ErrorMessage { get; set; }
+
+    private bool IsInitialLoading => IsLoading && !HasLoadedOnce;
+    private bool IsRefreshing => IsLoading && HasLoadedOnce;
 
     protected override async Task OnInitializedAsync()
     {
@@ -88,6 +103,7 @@
     private async Task LoadSettingsAsync()
     {
         IsLoading = true;
+        ErrorMessage = null;
         try
         {
             Settings = await TenantApiService.GetSettingsAsync();
@@ -99,6 +115,7 @@
         finally
         {
             IsLoading = false;
+            HasLoadedOnce = true;
         }
     }
 

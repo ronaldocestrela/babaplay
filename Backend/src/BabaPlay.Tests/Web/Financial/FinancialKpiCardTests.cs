@@ -14,7 +14,7 @@ public class FinancialKpiCardTests : TestContext
         var cut = RenderComponent<FinancialKpiCard>(parameters => parameters
             .Add(p => p.Title, "Saldo da Caixinha")
             .Add(p => p.Amount, 1500.50m)
-            .Add(p => p.Icon, "💰")
+            .Add(p => p.Icon, "bi-wallet2")
             .Add(p => p.Subtitle, "Balanço acumulado")
             .Add(p => p.BadgeText, "Superávit")
             .Add(p => p.BadgeColorClass, "badge-success")
@@ -23,7 +23,7 @@ public class FinancialKpiCardTests : TestContext
         // Assert
         cut.Markup.Should().Contain("Saldo da Caixinha");
         cut.Markup.Should().Contain("1.500,50");
-        cut.Markup.Should().Contain("💰");
+        cut.Markup.Should().Contain("bi-wallet2");
         cut.Markup.Should().Contain("Balanço acumulado");
         cut.Markup.Should().Contain("Superávit");
         cut.Markup.Should().Contain("badge-success");

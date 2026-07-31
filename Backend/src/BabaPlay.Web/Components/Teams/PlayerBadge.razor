@@ -1,34 +1,44 @@
 @namespace BabaPlay.Web.Components.Teams
 @using BabaPlay.Web.Models
 
-<div class="player-badge card p-2 mb-2 shadow-sm bg-white border-light" data-testid="player-badge-@Player.PlayerId">
-    <div class="d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center">
-            <div class="avatar-sm bg-dark text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.75rem;">
+<div class="player-badge" data-testid="player-badge-@Player.PlayerId">
+    <div class="d-flex align-items-center justify-content-between gap-2">
+        <div class="d-flex align-items-center min-w-0">
+            <div class="player-badge__avatar me-2" aria-hidden="true">
                 @GetInitials(Player.Name)
             </div>
-            <div>
-                <div class="fw-bold text-dark small leading-tight" data-testid="player-name">@Player.Name</div>
-                <div class="d-flex align-items-center gap-1">
-                    <span class="badge bg-secondary style-xs" data-testid="player-position">@Player.PositionName</span>
-                    <span class="text-warning style-xs" data-testid="player-stars" title="@($"{Player.RatingStars} estrelas")">
+            <div class="min-w-0">
+                <div class="player-badge__name" data-testid="player-name">@Player.Name</div>
+                <div class="d-flex align-items-center gap-1 flex-wrap">
+                    <span class="badge badge-secondary" data-testid="player-position">@Player.PositionName</span>
+                    <span class="player-badge__stars" data-testid="player-stars" title="@($"{Player.RatingStars} estrelas")">
                         @RenderStars(Player.RatingStars)
                     </span>
                 </div>
             </div>
         </div>
 
-        <div class="btn-group btn-group-sm">
+        <div class="btn-group btn-group-sm flex-shrink-0">
             @if (CanMoveLeft)
             {
-                <button class="btn btn-sm btn-outline-secondary p-0 px-1 btn-move-left" @onclick="() => OnMoveLeft.InvokeAsync(Player)" title="Mover para time anterior" data-testid="btn-move-left">
-                    <i class="bi bi-chevron-left"></i>
+                <button type="button"
+                        class="btn btn-sm btn-outline-secondary player-badge__move"
+                        @onclick="() => OnMoveLeft.InvokeAsync(Player)"
+                        title="Mover para time anterior"
+                        aria-label="Mover para time anterior"
+                        data-testid="btn-move-left">
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i>
                 </button>
             }
             @if (CanMoveRight)
             {
-                <button class="btn btn-sm btn-outline-secondary p-0 px-1 btn-move-right" @onclick="() => OnMoveRight.InvokeAsync(Player)" title="Mover para próximo time" data-testid="btn-move-right">
-                    <i class="bi bi-chevron-right"></i>
+                <button type="button"
+                        class="btn btn-sm btn-outline-secondary player-badge__move"
+                        @onclick="() => OnMoveRight.InvokeAsync(Player)"
+                        title="Mover para próximo time"
+                        aria-label="Mover para próximo time"
+                        data-testid="btn-move-right">
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
                 </button>
             }
         </div>

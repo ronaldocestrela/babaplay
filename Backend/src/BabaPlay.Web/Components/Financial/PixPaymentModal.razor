@@ -7,18 +7,19 @@
 
 @if (IsOpen && Invoice != null)
 {
-    <div class="modal-backdrop fade show" style="display: block; background: rgba(0,0,0,0.5);" data-testid="pix-modal-backdrop"></div>
-    <div class="modal fade show" tabindex="-1" style="display: block;" data-testid="pix-payment-modal">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-                <div class="modal-header" style="border-bottom: 1px solid var(--border-color, #e2e8f0);">
-                    <h5 class="modal-title font-weight-bold" style="color: var(--text-main);">
-                        💳 Pagamento via Pix - Baba Play
+    <div class="modal-backdrop fade show app-modal-backdrop" data-testid="pix-modal-backdrop"></div>
+    <div class="modal fade show d-block app-modal" tabindex="-1" data-testid="pix-payment-modal">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="bi bi-qr-code me-2" aria-hidden="true"></i>
+                        Pagamento via Pix - Baba Play
                     </h5>
-                    <button type="button" class="btn-close" @onclick="CloseAsync" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseAsync" aria-label="Fechar"></button>
                 </div>
 
-                <div class="modal-body text-center p-4">
+                <div class="modal-body text-center">
                     @if (IsLoading)
                     {
                         <div class="py-4" data-testid="pix-loading">
@@ -27,67 +28,79 @@
                     }
                     else if (!string.IsNullOrWhiteSpace(ErrorMessage))
                     {
-                        <div class="alert alert-danger" data-testid="pix-error-alert">
+                        <div class="alert alert-danger text-start" data-testid="pix-error-alert">
+                            <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
                             @ErrorMessage
                         </div>
                     }
                     else if (IsPaid)
                     {
                         <div class="py-3" data-testid="pix-success-alert">
-                            <div style="font-size: 3.5rem; color: #10b981; margin-bottom: 0.5rem;">✅</div>
-                            <h4 class="font-weight-bold" style="color: var(--text-main);">Pagamento Confirmado!</h4>
-                            <p class="text-muted">A sua fatura foi baixada com sucesso no sistema.</p>
-                            <button class="btn btn-success font-weight-bold mt-2" @onclick="CloseAsync">Concluir</button>
+                            <div class="pix-success-icon" aria-hidden="true">
+                                <i class="bi bi-check-circle-fill"></i>
+                            </div>
+                            <h4 class="font-weight-bold">Pagamento Confirmado!</h4>
+                            <p class="text-muted mb-3">A sua fatura foi baixada com sucesso no sistema.</p>
+                            <button type="button" class="btn btn-success font-weight-bold" @onclick="CloseAsync">Concluir</button>
                         </div>
                     }
                     else if (PixDetails != null)
                     {
                         <div class="mb-3">
-                            <span class="text-muted" style="font-size: 0.875rem;">Valor a pagar</span>
-                            <div class="font-weight-bold" style="font-size: 2rem; color: #10b981;" data-testid="pix-amount">
+                            <span class="text-muted small">Valor a pagar</span>
+                            <div class="pix-amount amount-income" data-testid="pix-amount">
                                 @Invoice.OpenAmount.ToString("C2", new System.Globalization.CultureInfo("pt-BR"))
                             </div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">
+                            <div class="text-muted small">
                                 Competência: @Invoice.Month.ToString("D2")/@Invoice.Year | Vencimento: @Invoice.DueDateUtc.ToLocalTime().ToString("dd/MM/yyyy")
                             </div>
                         </div>
 
-                        <!-- Synthetic QR Code Graphic Box -->
-                        <div class="card p-3 mb-3 d-inline-block" style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 8px;" data-testid="qr-code-box">
-                            <div style="width: 160px; height: 160px; margin: 0 auto; background: #0f172a; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #ffffff; flex-direction: column; font-size: 0.75rem;">
-                                <div style="font-size: 2.5rem; margin-bottom: 0.25rem;">📱</div>
+                        <div class="pix-qr-box mb-3" data-testid="qr-code-box">
+                            <div class="pix-qr-placeholder">
+                                <i class="bi bi-phone" aria-hidden="true"></i>
                                 <span>Escaneie o QR Code</span>
-                                <span style="font-size: 0.65rem; color: #94a3b8;">(Pix Instantâneo)</span>
+                                <small>Pix Instantâneo</small>
                             </div>
                         </div>
 
                         <div class="mb-3 text-start">
-                            <label class="form-label font-weight-bold mb-1" style="font-size: 0.8rem;">Código Pix Copia e Cola:</label>
+                            <label class="form-label filters-toolbar__label" for="input-pix-copia-cola">Código Pix Copia e Cola</label>
                             <div class="input-group">
-                                <input type="text" class="form-control form-control-sm font-monospace" value="@PixDetails.QrCodeCopyAndPaste" readonly data-testid="input-pix-copia-cola" />
-                                <button class="btn btn-primary btn-sm font-weight-bold" @onclick="CopyPixCodeAsync" data-testid="btn-copy-pix">
-                                    @(IsCopied ? "✓ Copiado!" : "📋 Copiar")
+                                <input id="input-pix-copia-cola" type="text" class="form-control form-control-sm font-monospace" value="@PixDetails.QrCodeCopyAndPaste" readonly data-testid="input-pix-copia-cola" />
+                                <button type="button" class="btn btn-primary btn-sm font-weight-bold" @onclick="CopyPixCodeAsync" data-testid="btn-copy-pix">
+                                    @if (IsCopied)
+                                    {
+                                        <i class="bi bi-check-lg me-1" aria-hidden="true"></i>
+                                        <span>Copiado!</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-clipboard me-1" aria-hidden="true"></i>
+                                        <span>Copiar</span>
+                                    }
                                 </button>
                             </div>
                             @if (IsCopied)
                             {
-                                <div class="text-success mt-1" style="font-size: 0.75rem; font-weight: 600;" data-testid="copied-feedback">
-                                    ✓ Código Pix copiado para a área de transferência!
+                                <div class="text-success mt-1 small font-weight-bold" data-testid="copied-feedback">
+                                    Código Pix copiado para a área de transferência!
                                 </div>
                             }
                         </div>
 
-                        <div class="alert alert-info py-2" style="font-size: 0.75rem;" data-testid="pix-expiry-info">
-                            ⏳ Chave Pix válida por 30 minutos (Expira às @PixDetails.ExpiresAtUtc.ToLocalTime().ToString("HH:mm")).
+                        <div class="alert alert-info py-2 small text-start mb-0" data-testid="pix-expiry-info">
+                            <i class="bi bi-hourglass-split me-1" aria-hidden="true"></i>
+                            Chave Pix válida por 30 minutos (Expira às @PixDetails.ExpiresAtUtc.ToLocalTime().ToString("HH:mm")).
                         </div>
                     }
                 </div>
 
                 @if (!IsPaid && PixDetails != null)
                 {
-                    <div class="modal-footer" style="border-top: 1px solid var(--border-color, #e2e8f0); justify-content: space-between;">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="CloseAsync">Fechar</button>
-                        <button type="button" class="btn btn-success btn-sm font-weight-bold" @onclick="ConfirmPaymentAsync" disabled="@IsConfirming" data-testid="btn-confirm-pix-payment">
+                    <div class="modal-footer justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CloseAsync">Fechar</button>
+                        <button type="button" class="btn btn-success font-weight-bold" @onclick="ConfirmPaymentAsync" disabled="@IsConfirming" data-testid="btn-confirm-pix-payment">
                             @if (IsConfirming)
                             {
                                 <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
@@ -95,7 +108,8 @@
                             }
                             else
                             {
-                                <span>✓ Já Paguei / Confirmar Pix</span>
+                                <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>
+                                <span>Já Paguei / Confirmar Pix</span>
                             }
                         </button>
                     </div>
@@ -169,7 +183,7 @@
         }
         catch
         {
-            IsCopied = true; // Fallback simulation for tests or browsers without clipboard permission
+            IsCopied = true;
         }
     }
 

@@ -1,28 +1,28 @@
 @namespace BabaPlay.Web.Components.Financial
 
 <div class="stat-card financial-kpi-card" data-testid="financial-kpi-card">
-    <div style="display: flex; align-items: center; justify-content: space-between;">
-        <span style="font-size: 0.875rem; color: var(--text-muted); font-weight: 600;">@Title</span>
+    <div class="stat-card__header">
+        <span class="stat-card__label">@Title</span>
         @if (!string.IsNullOrEmpty(Icon))
         {
-            <span class="kpi-icon" style="font-size: 1.25rem;">@Icon</span>
+            <span class="stat-card__icon" aria-hidden="true">
+                <i class="bi @Icon"></i>
+            </span>
         }
     </div>
 
-    <div class="kpi-value" style="font-size: 1.75rem; font-weight: 800; margin-top: 0.5rem; color: @GetColorStyle();">
+    <div class="stat-card__value financial-kpi-card__value financial-kpi-card__value--@ValueTone">
         @FormatCurrency(Amount)
     </div>
 
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.5rem;">
+    <div class="financial-kpi-card__footer">
         @if (!string.IsNullOrEmpty(Subtitle))
         {
-            <span class="kpi-subtitle" style="font-size: 0.75rem; color: var(--text-muted);">@Subtitle</span>
+            <span class="stat-card__subtitle">@Subtitle</span>
         }
         @if (!string.IsNullOrEmpty(BadgeText))
         {
-            <span class="badge @BadgeColorClass" style="font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 4px;">
-                @BadgeText
-            </span>
+            <span class="badge @BadgeColorClass">@BadgeText</span>
         }
     </div>
 </div>
@@ -31,17 +31,18 @@
     [Parameter] public string Title { get; set; } = string.Empty;
     [Parameter] public decimal Amount { get; set; }
     [Parameter] public string? Subtitle { get; set; }
+    /// <summary>Bootstrap Icons class without the "bi " prefix (e.g. "bi-wallet2").</summary>
     [Parameter] public string? Icon { get; set; }
     [Parameter] public string? BadgeText { get; set; }
     [Parameter] public string BadgeColorClass { get; set; } = "badge-info";
     [Parameter] public string? ValueColor { get; set; }
 
-    private string GetColorStyle() => ValueColor switch
+    private string ValueTone => ValueColor switch
     {
-        "success" => "var(--success-color, #10b981)",
-        "danger" => "var(--danger-color, #ef4444)",
-        "warning" => "var(--warning-color, #f59e0b)",
-        _ => !string.IsNullOrEmpty(ValueColor) ? ValueColor : "var(--text-main, #0f172a)"
+        "success" => "success",
+        "danger" => "danger",
+        "warning" => "warning",
+        _ => "default"
     };
 
     private static string FormatCurrency(decimal value) => value.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));

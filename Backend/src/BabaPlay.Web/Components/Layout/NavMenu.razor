@@ -1,52 +1,91 @@
 @namespace BabaPlay.Web.Components.Layout
+@implements IDisposable
+@inject NavigationManager Navigation
 
 <div class="sidebar @(IsOpen ? "open" : null)">
     <div class="sidebar-brand">
         <img src="babaplayOG.png" alt="Baba Play" class="sidebar-brand__logo" />
     </div>
 
-    <nav>
+    <nav class="sidebar-nav" aria-label="Menu principal">
         <NavLink class="nav-link" href="" Match="NavLinkMatch.All" @onclick="HandleNavigate">
-            <span>📊</span> Dashboard
+            <i class="bi bi-speedometer2" aria-hidden="true"></i> Dashboard
         </NavLink>
         <NavLink class="nav-link" href="players" @onclick="HandleNavigate">
-            <span>🏃</span> Jogadores
+            <i class="bi bi-people" aria-hidden="true"></i> Jogadores
         </NavLink>
         <NavLink class="nav-link" href="matches" @onclick="HandleNavigate">
-            <span>📅</span> Partidas & RSVP
+            <i class="bi bi-calendar-event" aria-hidden="true"></i> Partidas &amp; RSVP
         </NavLink>
         <NavLink class="nav-link" href="teams" @onclick="HandleNavigate">
-            <span>👕</span> Sorteio de Times
+            <i class="bi bi-shuffle" aria-hidden="true"></i> Sorteio de Times
         </NavLink>
-        <NavLink class="nav-link" href="financial" @onclick="HandleNavigate">
-            <span>💰</span> Financeiro
-        </NavLink>
-        <NavLink class="nav-link" href="financial/invoices" @onclick="HandleNavigate">
-            <span>📄</span> Faturas
-        </NavLink>
-        <NavLink class="nav-link" href="financial/defaulters" @onclick="HandleNavigate">
-            <span>🚨</span> Inadimplência
-        </NavLink>
-        <NavLink class="nav-link" href="financial/statement" @onclick="HandleNavigate">
-            <span>📋</span> Balancete
-        </NavLink>
-        <NavLink class="nav-link" href="financial/fundraisers" @onclick="HandleNavigate">
-            <span>🎯</span> Caixinha / Vaquinhas
-        </NavLink>
-        <NavLink class="nav-link" href="communication/announcements" @onclick="HandleNavigate">
-            <span>📣</span> Comunicados
-        </NavLink>
-        <NavLink class="nav-link" href="communication/polls" @onclick="HandleNavigate">
-            <span>📊</span> Enquetes
-        </NavLink>
-        <NavLink class="nav-link" href="communication/notifications" @onclick="HandleNavigate">
-            <span>🔔</span> Alertas & Notificações
-        </NavLink>
-        <NavLink class="nav-link" href="communication/team-chat" @onclick="HandleNavigate">
-            <span>💬</span> Chat do Time
-        </NavLink>
+
+        <div class="nav-group @(_financialOpen ? "nav-group--open" : null) @(IsFinancialActive ? "nav-group--active" : null)">
+            <button type="button"
+                    class="nav-group__toggle"
+                    aria-expanded="@_financialOpen.ToString().ToLowerInvariant()"
+                    aria-controls="nav-group-financial"
+                    @onclick="ToggleFinancial">
+                <span class="nav-group__label">
+                    <i class="bi bi-wallet2" aria-hidden="true"></i> Financeiro
+                </span>
+                <i class="bi bi-chevron-down nav-group__chevron" aria-hidden="true"></i>
+            </button>
+            @if (_financialOpen)
+            {
+                <div id="nav-group-financial" class="nav-group__items" role="group" aria-label="Financeiro">
+                    <NavLink class="nav-link nav-link--sub" href="financial" Match="NavLinkMatch.All" @onclick="HandleNavigate">
+                        <i class="bi bi-pie-chart" aria-hidden="true"></i> Painel
+                    </NavLink>
+                    <NavLink class="nav-link nav-link--sub" href="financial/invoices" @onclick="HandleNavigate">
+                        <i class="bi bi-receipt" aria-hidden="true"></i> Faturas
+                    </NavLink>
+                    <NavLink class="nav-link nav-link--sub" href="financial/defaulters" @onclick="HandleNavigate">
+                        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Inadimplência
+                    </NavLink>
+                    <NavLink class="nav-link nav-link--sub" href="financial/statement" @onclick="HandleNavigate">
+                        <i class="bi bi-journal-text" aria-hidden="true"></i> Balancete
+                    </NavLink>
+                    <NavLink class="nav-link nav-link--sub" href="financial/fundraisers" @onclick="HandleNavigate">
+                        <i class="bi bi-bullseye" aria-hidden="true"></i> Caixinha / Vaquinhas
+                    </NavLink>
+                </div>
+            }
+        </div>
+
+        <div class="nav-group @(_communicationOpen ? "nav-group--open" : null) @(IsCommunicationActive ? "nav-group--active" : null)">
+            <button type="button"
+                    class="nav-group__toggle"
+                    aria-expanded="@_communicationOpen.ToString().ToLowerInvariant()"
+                    aria-controls="nav-group-communication"
+                    @onclick="ToggleCommunication">
+                <span class="nav-group__label">
+                    <i class="bi bi-chat-dots" aria-hidden="true"></i> Comunicação
+                </span>
+                <i class="bi bi-chevron-down nav-group__chevron" aria-hidden="true"></i>
+            </button>
+            @if (_communicationOpen)
+            {
+                <div id="nav-group-communication" class="nav-group__items" role="group" aria-label="Comunicação">
+                    <NavLink class="nav-link nav-link--sub" href="communication/announcements" @onclick="HandleNavigate">
+                        <i class="bi bi-megaphone" aria-hidden="true"></i> Comunicados
+                    </NavLink>
+                    <NavLink class="nav-link nav-link--sub" href="communication/polls" @onclick="HandleNavigate">
+                        <i class="bi bi-bar-chart" aria-hidden="true"></i> Enquetes
+                    </NavLink>
+                    <NavLink class="nav-link nav-link--sub" href="communication/notifications" @onclick="HandleNavigate">
+                        <i class="bi bi-bell" aria-hidden="true"></i> Alertas &amp; Notificações
+                    </NavLink>
+                    <NavLink class="nav-link nav-link--sub" href="communication/team-chat" @onclick="HandleNavigate">
+                        <i class="bi bi-chat-left-text" aria-hidden="true"></i> Chat do Time
+                    </NavLink>
+                </div>
+            }
+        </div>
+
         <NavLink class="nav-link" href="settings/tenant" @onclick="HandleNavigate">
-            <span>⚙️</span> Configurações
+            <i class="bi bi-gear" aria-hidden="true"></i> Configurações
         </NavLink>
     </nav>
 </div>
@@ -55,8 +94,65 @@
     [Parameter] public bool IsOpen { get; set; }
     [Parameter] public EventCallback OnNavigate { get; set; }
 
+    private bool _financialOpen;
+    private bool _communicationOpen;
+    private bool _financialUserToggled;
+    private bool _communicationUserToggled;
+
+    private bool IsFinancialActive => IsPathUnder("financial");
+    private bool IsCommunicationActive => IsPathUnder("communication");
+
+    protected override void OnInitialized()
+    {
+        SyncOpenGroupsFromRoute();
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        SyncOpenGroupsFromRoute();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void SyncOpenGroupsFromRoute()
+    {
+        if (!_financialUserToggled || IsFinancialActive)
+            _financialOpen = IsFinancialActive;
+
+        if (!_communicationUserToggled || IsCommunicationActive)
+            _communicationOpen = IsCommunicationActive;
+    }
+
+    private void ToggleFinancial()
+    {
+        _financialUserToggled = true;
+        _financialOpen = !_financialOpen;
+    }
+
+    private void ToggleCommunication()
+    {
+        _communicationUserToggled = true;
+        _communicationOpen = !_communicationOpen;
+    }
+
+    private bool IsPathUnder(string segment)
+    {
+        var relative = Navigation.ToBaseRelativePath(Navigation.Uri);
+        if (string.IsNullOrEmpty(relative))
+            return false;
+
+        var path = relative.Split('?', 2)[0].Trim('/');
+        return path.Equals(segment, StringComparison.OrdinalIgnoreCase)
+               || path.StartsWith(segment + "/", StringComparison.OrdinalIgnoreCase);
+    }
+
     private async Task HandleNavigate()
     {
         await OnNavigate.InvokeAsync();
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
     }
 }

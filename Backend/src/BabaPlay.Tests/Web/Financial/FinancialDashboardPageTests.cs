@@ -45,7 +45,7 @@ public class FinancialDashboardPageTests : TestContext
 
         mockService
             .Setup(x => x.GetFinancialOverviewAsync(It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(overviewDto);
+            .ReturnsAsync(ApiServiceResult<FinancialOverviewDto>.Ok(overviewDto));
 
         Services.AddSingleton(mockService.Object);
 
@@ -65,13 +65,48 @@ public class FinancialDashboardPageTests : TestContext
     }
 
     [Fact]
-    public void FinancialDashboardPage_WhenServiceReturnsNull_ShouldShowErrorBanner()
+    public void FinancialDashboardPage_WhenServiceReturnsForbidden_ShouldShowPermissionErrorBanner()
     {
-        // Arrange
         var mockService = new Mock<IFinancialApiService>();
         mockService
             .Setup(x => x.GetFinancialOverviewAsync(It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((FinancialOverviewDto?)null);
+            .ReturnsAsync(ApiServiceResult<FinancialOverviewDto>.Fail(
+                403,
+                "Você não tem permissão para acessar os dados financeiros desta associação."));
+
+        Services.AddSingleton(mockService.Object);
+
+        var cut = RenderComponent<FinancialDashboard>();
+
+        cut.Find("[data-testid='financial-error-banner']").Should().NotBeNull();
+        cut.Markup.Should().Contain("Você não tem permissão para acessar os dados financeiros");
+    }
+
+    [Fact]
+    public void FinancialDashboardPage_WhenServiceReturnsUnauthorized_ShouldShowSessionErrorBanner()
+    {
+        var mockService = new Mock<IFinancialApiService>();
+        mockService
+            .Setup(x => x.GetFinancialOverviewAsync(It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApiServiceResult<FinancialOverviewDto>.Fail(
+                401,
+                "Sua sessão expirou ou não está autenticada. Faça login novamente."));
+
+        Services.AddSingleton(mockService.Object);
+
+        var cut = RenderComponent<FinancialDashboard>();
+
+        cut.Find("[data-testid='financial-error-banner']").Should().NotBeNull();
+        cut.Markup.Should().Contain("Sua sessão expirou ou não está autenticada");
+    }
+
+    [Fact]
+    public void FinancialDashboardPage_WhenServiceReturnsFailureWithoutMessage_ShouldShowGenericErrorBanner()
+    {
+        var mockService = new Mock<IFinancialApiService>();
+        mockService
+            .Setup(x => x.GetFinancialOverviewAsync(It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApiServiceResult<FinancialOverviewDto>.Fail(500, string.Empty));
 
         Services.AddSingleton(mockService.Object);
 

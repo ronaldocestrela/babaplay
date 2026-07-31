@@ -51,6 +51,15 @@ O isolamento de dados entre diferentes times e associações é o pilar de segur
 *   **Identificação:** Cada registro no banco de dados possuirá uma coluna `TenantId`.
 *   **Implementação Segura:** Utilização de **Global Query Filters** no Entity Framework Core (`modelBuilder.Entity<Entidade>().HasQueryFilter(e => e.TenantId == _currentTenantId)`). O ID do Tenant atual é resolvido a cada requisição HTTP através do Token JWT do usuário ou do cabeçalho da requisição, sendo injetado via Dependency Injection no contexto de banco de dados.
 
+### 5.1. RBAC e sincronização de catálogo
+*   Permissões e roles default vivem em `RbacCatalog` (Application). Na **criação** do tenant, `EnsureOwnerAdminAccessAsync` provisiona o catálogo e atribui a role Admin ao owner.
+*   Tenants já existentes recebem novas permissões (ex.: `financial.read`, `financial.write`, `financial.approve`) via `ITenantRbacCatalogSyncService.SyncAllTenantsAsync()` executado na subida da API, após migrations.
+*   Autorização de API combina membership (`TenantMember`) com permissões tenant-scoped (`PermissionAuthorizationHandler`). Ausência de permissão → HTTP 403; JWT inválido/ausente → HTTP 401.
+
+### 5.2. Módulo Financial (API + Blazor)
+*   Controller: `FinancialController` (`/api/v1/financial/*`) com policy `FinancialRead` para leituras (overview, invoices, statement, defaulters, fundraisers).
+*   Blazor: páginas em `Pages/Financial/*` protegidas com `@attribute [Authorize]`; `FinancialApiService.GetFinancialOverviewAsync` expõe mensagens distintas para 401 (sessão) e 403 (permissão).
+
 ---
 
 ## 6. Comunicação e Assincronicidade

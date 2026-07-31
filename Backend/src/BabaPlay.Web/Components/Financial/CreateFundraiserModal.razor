@@ -6,56 +6,57 @@
 
 @if (IsOpen)
 {
-    <div class="modal-backdrop fade show" style="display: block; background: rgba(0,0,0,0.5);" data-testid="create-fundraiser-backdrop"></div>
-    <div class="modal fade show" tabindex="-1" style="display: block;" data-testid="create-fundraiser-modal">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-                <div class="modal-header" style="border-bottom: 1px solid var(--border-color, #e2e8f0);">
-                    <h5 class="modal-title font-weight-bold" style="color: var(--text-main);">
-                        🎯 Criar Nova Vaquinha do Time
+    <div class="modal-backdrop fade show app-modal-backdrop" data-testid="create-fundraiser-backdrop"></div>
+    <div class="modal fade show d-block app-modal" tabindex="-1" data-testid="create-fundraiser-modal">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="bi bi-bullseye me-2" aria-hidden="true"></i>
+                        Criar Nova Vaquinha do Time
                     </h5>
-                    <button type="button" class="btn-close" @onclick="CloseAsync" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseAsync" aria-label="Fechar"></button>
                 </div>
 
                 <EditForm Model="Model" OnValidSubmit="HandleSubmitAsync">
                     <DataAnnotationsValidator />
 
-                    <div class="modal-body p-4">
+                    <div class="modal-body">
                         @if (!string.IsNullOrEmpty(ErrorMessage))
                         {
-                            <div class="alert alert-danger mb-3" data-testid="modal-error-alert">
+                            <div class="alert alert-danger p-2 small mb-3" role="alert" data-testid="modal-error-alert">
+                                <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
                                 @ErrorMessage
                             </div>
                         }
 
                         <div class="mb-3">
-                            <label class="form-label font-weight-bold" style="font-size: 0.85rem;">Título da Arrecadação *</label>
-                            <InputText class="form-control form-control-sm" placeholder="Ex: Churrasco de Fim de Ano, Compra de Coletes" @bind-Value="Model.Title" data-testid="input-fundraiser-title" />
-                            <ValidationMessage For="() => Model.Title" class="text-danger" style="font-size: 0.75rem;" />
+                            <label class="form-label filters-toolbar__label" for="input-fundraiser-title">Título da Arrecadação *</label>
+                            <InputText id="input-fundraiser-title" class="form-control" placeholder="Ex: Churrasco de Fim de Ano, Compra de Coletes" @bind-Value="Model.Title" data-testid="input-fundraiser-title" />
+                            <ValidationMessage For="() => Model.Title" class="text-danger small" />
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label font-weight-bold" style="font-size: 0.85rem;">Descrição / Objetivo</label>
-                            <InputTextArea class="form-control form-control-sm" rows="3" placeholder="Descreva os detalhes do evento ou meta..." @bind-Value="Model.Description" data-testid="input-fundraiser-desc" />
+                            <label class="form-label filters-toolbar__label" for="input-fundraiser-desc">Descrição / Objetivo</label>
+                            <InputTextArea id="input-fundraiser-desc" class="form-control" rows="3" placeholder="Descreva os detalhes do evento ou meta..." @bind-Value="Model.Description" data-testid="input-fundraiser-desc" />
                         </div>
 
-                        <div class="row g-2 mb-3">
+                        <div class="row g-3 mb-1">
                             <div class="col-12 col-md-6">
-                                <label class="form-label font-weight-bold" style="font-size: 0.85rem;">Meta de Arrecadação (R$) *</label>
-                                <InputNumber class="form-control form-control-sm" @bind-Value="Model.TargetAmount" data-testid="input-fundraiser-target" />
-                                <ValidationMessage For="() => Model.TargetAmount" class="text-danger" style="font-size: 0.75rem;" />
+                                <label class="form-label filters-toolbar__label" for="input-fundraiser-target">Meta de Arrecadação (R$) *</label>
+                                <InputNumber id="input-fundraiser-target" class="form-control" @bind-Value="Model.TargetAmount" data-testid="input-fundraiser-target" />
+                                <ValidationMessage For="() => Model.TargetAmount" class="text-danger small" />
                             </div>
-
                             <div class="col-12 col-md-6">
-                                <label class="form-label font-weight-bold" style="font-size: 0.85rem;">Data Limite (Opcional)</label>
-                                <InputDate class="form-control form-control-sm" @bind-Value="Model.DeadlineUtc" data-testid="input-fundraiser-deadline" />
+                                <label class="form-label filters-toolbar__label" for="input-fundraiser-deadline">Data Limite (Opcional)</label>
+                                <InputDate id="input-fundraiser-deadline" class="form-control" @bind-Value="Model.DeadlineUtc" data-testid="input-fundraiser-deadline" />
                             </div>
                         </div>
                     </div>
 
-                    <div class="modal-footer" style="border-top: 1px solid var(--border-color, #e2e8f0);">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="CloseAsync">Cancelar</button>
-                        <button type="submit" class="btn btn-success btn-sm font-weight-bold" disabled="@IsSubmitting" data-testid="btn-submit-fundraiser">
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CloseAsync">Cancelar</button>
+                        <button type="submit" class="btn btn-success font-weight-bold" disabled="@IsSubmitting" data-testid="btn-submit-fundraiser">
                             @if (IsSubmitting)
                             {
                                 <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
@@ -63,7 +64,8 @@
                             }
                             else
                             {
-                                <span>🚀 Criar Arrecadação</span>
+                                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+                                <span>Criar Arrecadação</span>
                             }
                         </button>
                     </div>

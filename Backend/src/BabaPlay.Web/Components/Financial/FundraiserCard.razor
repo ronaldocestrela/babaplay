@@ -6,45 +6,44 @@
     var isCompleted = Fundraiser.Status == 1 || Fundraiser.CollectedAmount >= Fundraiser.TargetAmount;
     var isActive = Fundraiser.Status == 0 && !isCompleted;
 
-    <div class="card shadow-sm h-100" style="border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0); overflow: hidden; background: var(--bg-surface, #ffffff);" data-testid="fundraiser-card">
-        <div class="card-body p-4 d-flex flex-column justify-content-between">
-            <div>
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h5 class="font-weight-bold mb-0" style="color: var(--text-main);" data-testid="fundraiser-title">
-                        🎯 @Fundraiser.Title
-                    </h5>
+    <div class="widget-card fundraiser-card h-100 mb-0" data-testid="fundraiser-card">
+        <div class="d-flex flex-column h-100">
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                    <h3 class="widget-card__title mb-0" data-testid="fundraiser-title">
+                        <i class="bi bi-bullseye" aria-hidden="true"></i>
+                        @Fundraiser.Title
+                    </h3>
                     @if (isCompleted)
                     {
-                        <span class="badge bg-success" style="font-size: 0.7rem;" data-testid="status-badge-completed">✓ Meta Atingida</span>
+                        <span class="badge badge-success flex-shrink-0" data-testid="status-badge-completed">Meta Atingida</span>
                     }
                     else if (isActive)
                     {
-                        <span class="badge bg-primary" style="font-size: 0.7rem;" data-testid="status-badge-active">⚡ Em Andamento</span>
+                        <span class="badge badge-primary flex-shrink-0" data-testid="status-badge-active">Em Andamento</span>
                     }
                     else
                     {
-                        <span class="badge bg-secondary" style="font-size: 0.7rem;" data-testid="status-badge-cancelled">Encerrada</span>
+                        <span class="badge badge-secondary flex-shrink-0" data-testid="status-badge-cancelled">Encerrada</span>
                     }
                 </div>
 
                 @if (!string.IsNullOrWhiteSpace(Fundraiser.Description))
                 {
-                    <p class="text-muted mb-3" style="font-size: 0.875rem;" data-testid="fundraiser-desc">
+                    <p class="text-muted small mb-3" data-testid="fundraiser-desc">
                         @Fundraiser.Description
                     </p>
                 }
 
-                <!-- Progress Bar -->
                 <div class="mb-3">
-                    <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.8rem;">
-                        <span class="font-weight-bold" style="color: var(--text-main);">Progresso de Arrecadação</span>
-                        <span class="font-weight-bold text-primary" data-testid="progress-percentage">@Fundraiser.ProgressPercentage%</span>
+                    <div class="d-flex justify-content-between align-items-center mb-1 small">
+                        <span class="font-weight-bold">Progresso de Arrecadação</span>
+                        <span class="font-weight-bold text-primary-light" data-testid="progress-percentage">@Fundraiser.ProgressPercentage%</span>
                     </div>
-
-                    <div class="progress" style="height: 12px; border-radius: 6px; background-color: #e2e8f0;" data-testid="progress-bar-container">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated @(isCompleted ? "bg-success" : "bg-primary")"
+                    <div class="progress financial-collection-progress" data-testid="progress-bar-container">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated @(isCompleted ? "financial-collection-progress__bar--success" : "financial-collection-progress__bar--primary")"
                              role="progressbar"
-                             style="width: @(Math.Min(100, Fundraiser.ProgressPercentage))%; border-radius: 6px;"
+                             style="width: @(Math.Min(100, Fundraiser.ProgressPercentage))%"
                              aria-valuenow="@Fundraiser.ProgressPercentage"
                              aria-valuemin="0"
                              aria-valuemax="100"
@@ -53,17 +52,16 @@
                     </div>
                 </div>
 
-                <!-- Financial Metrics -->
-                <div class="d-flex justify-content-between align-items-center p-2 mb-3" style="background: var(--bg-muted, #f8fafc); border-radius: 8px; font-size: 0.85rem;">
+                <div class="fundraiser-card__metrics mb-3">
                     <div>
-                        <span class="text-muted d-block" style="font-size: 0.75rem;">Arrecadado</span>
-                        <strong class="text-success" style="font-size: 1.05rem;" data-testid="collected-amount">
+                        <span class="text-muted small d-block">Arrecadado</span>
+                        <strong class="amount-income" data-testid="collected-amount">
                             @FormatCurrency(Fundraiser.CollectedAmount)
                         </strong>
                     </div>
                     <div class="text-end">
-                        <span class="text-muted d-block" style="font-size: 0.75rem;">Meta</span>
-                        <strong style="color: var(--text-main); font-size: 1.05rem;" data-testid="target-amount">
+                        <span class="text-muted small d-block">Meta</span>
+                        <strong data-testid="target-amount">
                             @FormatCurrency(Fundraiser.TargetAmount)
                         </strong>
                     </div>
@@ -71,20 +69,21 @@
             </div>
 
             <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                <span class="text-muted" style="font-size: 0.75rem;" data-testid="contributions-count">
-                    👥 @Fundraiser.ContributionsCount @(Fundraiser.ContributionsCount == 1 ? "contribuição" : "contribuições")
+                <span class="text-muted small" data-testid="contributions-count">
+                    <i class="bi bi-people me-1" aria-hidden="true"></i>
+                    @Fundraiser.ContributionsCount @(Fundraiser.ContributionsCount == 1 ? "contribuição" : "contribuições")
                 </span>
 
                 @if (isActive)
                 {
                     <button class="btn btn-success btn-sm font-weight-bold" @onclick="ContributeAsync" data-testid="btn-contribute">
-                        💰 Contribuir
+                        <i class="bi bi-cash-coin me-1" aria-hidden="true"></i> Contribuir
                     </button>
                 }
                 else
                 {
                     <button class="btn btn-outline-secondary btn-sm" disabled>
-                        ✓ Concluída
+                        <i class="bi bi-check-lg me-1" aria-hidden="true"></i> Concluída
                     </button>
                 }
             </div>

@@ -9,10 +9,14 @@ namespace BabaPlay.Infrastructure.Services;
 public sealed class TenantOwnerRbacBootstrapService : ITenantOwnerRbacBootstrapService
 {
     private readonly AppDbContext _db;
+    private readonly ITenantRbacCatalogSyncService _rbacCatalogSyncService;
 
-    public TenantOwnerRbacBootstrapService(AppDbContext db)
+    public TenantOwnerRbacBootstrapService(
+        AppDbContext db,
+        ITenantRbacCatalogSyncService rbacCatalogSyncService)
     {
         _db = db;
+        _rbacCatalogSyncService = rbacCatalogSyncService;
     }
 
     public async Task<Result> EnsureOwnerAdminAccessAsync(string userId, Guid tenantId, CancellationToken ct = default)
@@ -23,82 +27,31 @@ public sealed class TenantOwnerRbacBootstrapService : ITenantOwnerRbacBootstrapS
         if (tenantId == Guid.Empty)
             return Result.Fail("TENANT_ID_REQUIRED", "Tenant id is required.");
 
+        var syncResult = await _rbacCatalogSyncService.SyncTenantAsync(tenantId, ct);
+        if (!syncResult.IsSuccess)
+            return syncResult;
+
         try
         {
-            var strategy = _db.Database.CreateExecutionStrategy();
+            var adminRole = await _db.Roles
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(
+                    r => r.TenantId == tenantId &&
+                         r.NormalizedName == RbacCatalog.Roles.Admin.ToUpperInvariant(),
+                    ct);
 
-            await strategy.ExecuteAsync(async () =>
+            if (adminRole is null)
+                return Result.Fail("TENANT_ADMIN_ROLE_MISSING", "Admin role was not provisioned for tenant.");
+
+            var ownerAlreadyAssigned = await _db.UserRoles
+                .IgnoreQueryFilters()
+                .AnyAsync(ur => ur.UserId == userId && ur.RoleId == adminRole.Id, ct);
+
+            if (!ownerAlreadyAssigned)
             {
-                var db = _db;
-                await using var tx = await db.Database.BeginTransactionAsync(ct);
-
-                var permissionByNormalizedCode = await db.Permissions
-                    .IgnoreQueryFilters()
-                    .Where(p => p.TenantId == tenantId)
-                    .ToDictionaryAsync(p => p.NormalizedCode, StringComparer.OrdinalIgnoreCase, ct);
-
-                foreach (var permissionCode in RbacCatalog.AllPermissions)
-                {
-                    var normalizedCode = permissionCode.Trim().ToUpperInvariant();
-                    if (permissionByNormalizedCode.ContainsKey(normalizedCode))
-                        continue;
-
-                    var permission = Permission.Create(
-                        tenantId,
-                        permissionCode,
-                        $"System permission: {permissionCode}");
-
-                    db.Permissions.Add(permission);
-                    permissionByNormalizedCode[normalizedCode] = permission;
-                }
-
-                await db.SaveChangesAsync(ct);
-
-                var roleByNormalizedName = await db.Roles
-                    .IgnoreQueryFilters()
-                    .Include(r => r.Permissions)
-                    .Where(r => r.TenantId == tenantId)
-                    .ToDictionaryAsync(r => r.NormalizedName, StringComparer.OrdinalIgnoreCase, ct);
-
-                foreach (var roleName in RbacCatalog.DefaultRolePermissions.Keys)
-                {
-                    var normalizedName = roleName.Trim().ToUpperInvariant();
-                    if (roleByNormalizedName.ContainsKey(normalizedName))
-                        continue;
-
-                    var role = Role.Create(tenantId, roleName, "System default role");
-                    db.Roles.Add(role);
-                    roleByNormalizedName[normalizedName] = role;
-                }
-
-                await db.SaveChangesAsync(ct);
-
-                foreach (var roleEntry in RbacCatalog.DefaultRolePermissions)
-                {
-                    var role = roleByNormalizedName[roleEntry.Key.Trim().ToUpperInvariant()];
-
-                    foreach (var permissionCode in roleEntry.Value)
-                    {
-                        var permission = permissionByNormalizedCode[permissionCode.Trim().ToUpperInvariant()];
-                        role.AddPermission(permission.Id);
-                    }
-                }
-
-                await db.SaveChangesAsync(ct);
-
-                var adminRole = roleByNormalizedName[RbacCatalog.Roles.Admin.ToUpperInvariant()];
-                var ownerAlreadyAssigned = await db.UserRoles
-                    .IgnoreQueryFilters()
-                    .AnyAsync(ur => ur.UserId == userId && ur.RoleId == adminRole.Id, ct);
-
-                if (!ownerAlreadyAssigned)
-                {
-                    db.UserRoles.Add(UserRole.Create(userId, adminRole.Id));
-                    await db.SaveChangesAsync(ct);
-                }
-
-                await tx.CommitAsync(ct);
-            });
+                _db.UserRoles.Add(UserRole.Create(userId, adminRole.Id));
+                await _db.SaveChangesAsync(ct);
+            }
 
             return Result.Ok();
         }

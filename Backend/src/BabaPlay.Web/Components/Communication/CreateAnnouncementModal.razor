@@ -5,87 +5,83 @@
 
 @if (IsOpen)
 {
-    <div class="modal-backdrop fade show" style="display: block; background: rgba(0,0,0,0.5);" data-testid="create-announcement-backdrop"></div>
-    <div class="modal fade show" tabindex="-1" style="display: block;" data-testid="create-announcement-modal">
+    <div class="modal-backdrop fade show app-modal-backdrop" data-testid="create-announcement-backdrop"></div>
+    <div class="modal fade show d-block app-modal" tabindex="-1" data-testid="create-announcement-modal">
         <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
-            <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-
-                <div class="modal-header" style="border-bottom: 1px solid var(--border-color, #e2e8f0);">
-                    <h5 class="modal-title font-weight-bold" style="color: var(--text-main);">
-                        📢 Publicar Novo Comunicado
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="bi bi-megaphone me-2" aria-hidden="true"></i>
+                        Publicar Novo Comunicado
                     </h5>
-                    <button type="button" class="btn-close" @onclick="CloseAsync" aria-label="Fechar" data-testid="btn-close-modal"></button>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseAsync" aria-label="Fechar" data-testid="btn-close-modal"></button>
                 </div>
 
                 <EditForm Model="Model" OnValidSubmit="HandleSubmitAsync" data-testid="form-create-announcement">
                     <DataAnnotationsValidator />
 
-                    <div class="modal-body p-4">
-
+                    <div class="modal-body">
                         @if (!string.IsNullOrEmpty(ErrorMessage))
                         {
-                            <div class="alert alert-danger mb-3" role="alert" data-testid="modal-error-alert">
-                                ⚠️ @ErrorMessage
+                            <div class="alert alert-danger p-2 small mb-3" role="alert" data-testid="modal-error-alert">
+                                <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
+                                @ErrorMessage
                             </div>
                         }
 
-                        <!-- Título -->
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Título *</label>
-                            <InputText class="form-control form-control-sm"
+                            <label class="form-label filters-toolbar__label" for="input-announcement-title">Título *</label>
+                            <InputText id="input-announcement-title"
+                                       class="form-control"
                                        placeholder="Ex: Informativo sobre mudança de horário"
                                        @bind-Value="Model.Title"
                                        data-testid="input-announcement-title" />
-                            <ValidationMessage For="() => Model.Title" class="text-danger" style="font-size: 0.75rem;" />
+                            <ValidationMessage For="() => Model.Title" class="text-danger small" />
                         </div>
 
-                        <!-- Conteúdo -->
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Conteúdo *</label>
-                            <InputTextArea class="form-control"
-                                          rows="5"
-                                          placeholder="Escreva o comunicado completo aqui..."
-                                          @bind-Value="Model.Content"
-                                          data-testid="input-announcement-content" />
-                            <ValidationMessage For="() => Model.Content" class="text-danger" style="font-size: 0.75rem;" />
-                            <small class="text-muted" style="font-size: 0.75rem;">
-                                @(Model.Content?.Length ?? 0) / 5000 caracteres
-                            </small>
+                            <label class="form-label filters-toolbar__label" for="input-announcement-content">Conteúdo *</label>
+                            <InputTextArea id="input-announcement-content"
+                                           class="form-control"
+                                           rows="5"
+                                           placeholder="Escreva o comunicado completo aqui..."
+                                           @bind-Value="Model.Content"
+                                           data-testid="input-announcement-content" />
+                            <ValidationMessage For="() => Model.Content" class="text-danger small" />
+                            <small class="text-muted">@(Model.Content?.Length ?? 0) / 5000 caracteres</small>
                         </div>
 
-                        <!-- Tags + Expiração -->
-                        <div class="row g-3 mb-2">
+                        <div class="row g-3">
                             <div class="col-12 col-md-6">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Tags (Opcional)</label>
-                                <InputText class="form-control form-control-sm"
+                                <label class="form-label filters-toolbar__label" for="input-announcement-tags">Tags (Opcional)</label>
+                                <InputText id="input-announcement-tags"
+                                           class="form-control"
                                            placeholder="Ex: importante, horário, uniforme"
                                            @bind-Value="Model.Tags"
                                            data-testid="input-announcement-tags" />
-                                <ValidationMessage For="() => Model.Tags" class="text-danger" style="font-size: 0.75rem;" />
-                                <small class="text-muted" style="font-size: 0.75rem;">Separe com vírgulas</small>
+                                <ValidationMessage For="() => Model.Tags" class="text-danger small" />
+                                <small class="text-muted">Separe com vírgulas</small>
                             </div>
-
                             <div class="col-12 col-md-6">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Expira em (Opcional)</label>
-                                <InputDate class="form-control form-control-sm"
+                                <label class="form-label filters-toolbar__label" for="input-announcement-expiry">Expira em (Opcional)</label>
+                                <InputDate id="input-announcement-expiry"
+                                           class="form-control"
                                            @bind-Value="Model.ExpiresAtUtc"
                                            data-testid="input-announcement-expiry" />
                             </div>
                         </div>
-
                     </div>
 
-                    <div class="modal-footer" style="border-top: 1px solid var(--border-color, #e2e8f0);">
+                    <div class="modal-footer">
                         <button type="button"
-                                class="btn btn-sm btn-outline-secondary"
+                                class="btn btn-outline-secondary"
                                 @onclick="CloseAsync"
                                 disabled="@_isLoading"
                                 data-testid="btn-cancel">
                             Cancelar
                         </button>
                         <button type="submit"
-                                class="btn btn-sm btn-success"
-                                style="border-radius: 8px; min-width: 120px;"
+                                class="btn btn-success"
                                 disabled="@_isLoading"
                                 data-testid="btn-submit-announcement">
                             @if (_isLoading)
@@ -95,11 +91,11 @@
                             }
                             else
                             {
-                                <span>📢 Publicar</span>
+                                <i class="bi bi-megaphone me-1" aria-hidden="true"></i>
+                                <span>Publicar</span>
                             }
                         </button>
                     </div>
-
                 </EditForm>
             </div>
         </div>

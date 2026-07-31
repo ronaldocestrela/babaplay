@@ -2,42 +2,51 @@
 
 <div class="row g-3 mb-4" data-testid="statement-summary-cards">
     <div class="col-12 col-md-4">
-        <div class="card p-3 shadow-sm" style="border-radius: 10px; border-left: 4px solid #10b981;" data-testid="card-total-incomes">
-            <div class="text-muted font-weight-bold text-uppercase" style="font-size: 0.75rem;">🟢 Total Arrecadado (Receitas)</div>
-            <div class="h3 font-weight-bold text-success mb-0" data-testid="val-total-incomes">
+        <div class="stat-card financial-kpi-accent financial-kpi-accent--success" data-testid="card-total-incomes">
+            <div class="stat-card__label text-uppercase">
+                <i class="bi bi-arrow-down-circle me-1" aria-hidden="true"></i>
+                Total Arrecadado (Receitas)
+            </div>
+            <div class="stat-card__value amount-income" data-testid="val-total-incomes">
                 @FormatCurrency(TotalIncomes)
             </div>
-            <div style="font-size: 0.75rem; color: var(--text-muted);">Mensalidades e receitas do período</div>
+            <div class="stat-card__subtitle">Mensalidades e receitas do período</div>
         </div>
     </div>
 
     <div class="col-12 col-md-4">
-        <div class="card p-3 shadow-sm" style="border-radius: 10px; border-left: 4px solid #ef4444;" data-testid="card-total-expenses">
-            <div class="text-muted font-weight-bold text-uppercase" style="font-size: 0.75rem;">🔴 Total Gasto (Despesas)</div>
-            <div class="h3 font-weight-bold text-danger mb-0" data-testid="val-total-expenses">
+        <div class="stat-card financial-kpi-accent financial-kpi-accent--danger" data-testid="card-total-expenses">
+            <div class="stat-card__label text-uppercase">
+                <i class="bi bi-arrow-up-circle me-1" aria-hidden="true"></i>
+                Total Gasto (Despesas)
+            </div>
+            <div class="stat-card__value amount-expense" data-testid="val-total-expenses">
                 @FormatCurrency(TotalExpenses)
             </div>
-            <div style="font-size: 0.75rem; color: var(--text-muted);">Aluguel de quadras e equipamentos</div>
+            <div class="stat-card__subtitle">Aluguel de quadras e despesas</div>
         </div>
     </div>
 
     <div class="col-12 col-md-4">
-        <div class="card p-3 shadow-sm" style="border-radius: 10px; border-left: 4px solid @(NetBalance >= 0 ? "#3b82f6" : "#dc2626");" data-testid="card-net-balance">
+        <div class="stat-card financial-kpi-accent @(NetBalance >= 0 ? "financial-kpi-accent--info" : "financial-kpi-accent--danger")" data-testid="card-net-balance">
             <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="text-muted font-weight-bold text-uppercase" style="font-size: 0.75rem;">⚖️ Saldo Transparente</span>
+                <span class="stat-card__label text-uppercase mb-0">
+                    <i class="bi bi-scales me-1" aria-hidden="true"></i>
+                    Saldo Transparente
+                </span>
                 @if (NetBalance >= 0)
                 {
-                    <span class="badge bg-success" style="font-size: 0.65rem;" data-testid="badge-superavit">✓ Superávit</span>
+                    <span class="badge badge-success" data-testid="badge-superavit">Superávit</span>
                 }
                 else
                 {
-                    <span class="badge bg-danger" style="font-size: 0.65rem;" data-testid="badge-deficit">⚠️ Déficit</span>
+                    <span class="badge badge-danger" data-testid="badge-deficit">Déficit</span>
                 }
             </div>
-            <div class="h3 font-weight-bold mb-0" style="color: @(NetBalance >= 0 ? "#10b981" : "#ef4444");" data-testid="val-net-balance">
+            <div class="stat-card__value @(NetBalance >= 0 ? "amount-income" : "amount-expense")" data-testid="val-net-balance">
                 @FormatCurrency(NetBalance)
             </div>
-            <div style="font-size: 0.75rem; color: var(--text-muted);">Resultado líquido do caixa</div>
+            <div class="stat-card__subtitle">Resultado líquido do caixa</div>
         </div>
     </div>
 </div>

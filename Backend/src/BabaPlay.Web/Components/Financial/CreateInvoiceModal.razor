@@ -5,29 +5,33 @@
 
 @if (IsOpen)
 {
-    <div class="modal-backdrop fade show" style="display: block; background: rgba(0,0,0,0.5);" data-testid="create-invoice-modal-backdrop"></div>
-    <div class="modal fade show" tabindex="-1" style="display: block;" data-testid="create-invoice-modal">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-                <div class="modal-header" style="border-bottom: 1px solid var(--border-color, #e2e8f0);">
-                    <h5 class="modal-title font-weight-bold" style="color: var(--text-main);">➕ Emitir Nova Cobrança</h5>
-                    <button type="button" class="btn-close" @onclick="CloseAsync" aria-label="Close"></button>
+    <div class="modal-backdrop fade show app-modal-backdrop" data-testid="create-invoice-modal-backdrop"></div>
+    <div class="modal fade show d-block app-modal" tabindex="-1" data-testid="create-invoice-modal">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="bi bi-receipt me-2" aria-hidden="true"></i>
+                        Emitir Nova Cobrança
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseAsync" aria-label="Fechar"></button>
                 </div>
-                
+
                 <EditForm Model="FormModel" OnValidSubmit="HandleSubmitAsync">
                     <DataAnnotationsValidator />
-                    
+
                     <div class="modal-body">
                         @if (!string.IsNullOrWhiteSpace(ErrorMessage))
                         {
-                            <div class="alert alert-danger" data-testid="modal-error-alert">
+                            <div class="alert alert-danger p-2 small mb-3" role="alert" data-testid="modal-error-alert">
+                                <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
                                 @ErrorMessage
                             </div>
                         }
 
                         <div class="mb-3">
-                            <label class="form-label font-weight-bold">Atleta *</label>
-                            <InputSelect @bind-Value="FormModel.PlayerId" class="form-select" data-testid="select-player">
+                            <label class="form-label filters-toolbar__label" for="create-invoice-player">Atleta *</label>
+                            <InputSelect id="create-invoice-player" @bind-Value="FormModel.PlayerId" class="form-select" data-testid="select-player">
                                 <option value="@Guid.Empty">-- Selecione o Atleta --</option>
                                 @if (Players != null)
                                 {
@@ -39,44 +43,44 @@
                                     }
                                 }
                             </InputSelect>
-                            <ValidationMessage For="() => FormModel.PlayerId" class="text-danger" />
+                            <ValidationMessage For="() => FormModel.PlayerId" class="text-danger small" />
                         </div>
 
                         <div class="row">
                             <div class="col-6 mb-3">
-                                <label class="form-label font-weight-bold">Ano Competência *</label>
-                                <InputNumber @bind-Value="FormModel.Year" class="form-content form-control" data-testid="input-year" />
-                                <ValidationMessage For="() => FormModel.Year" class="text-danger" />
+                                <label class="form-label filters-toolbar__label" for="create-invoice-year">Ano Competência *</label>
+                                <InputNumber id="create-invoice-year" @bind-Value="FormModel.Year" class="form-control" data-testid="input-year" />
+                                <ValidationMessage For="() => FormModel.Year" class="text-danger small" />
                             </div>
                             <div class="col-6 mb-3">
-                                <label class="form-label font-weight-bold">Mês Competência *</label>
-                                <InputNumber @bind-Value="FormModel.Month" class="form-control" data-testid="input-month" />
-                                <ValidationMessage For="() => FormModel.Month" class="text-danger" />
+                                <label class="form-label filters-toolbar__label" for="create-invoice-month">Mês Competência *</label>
+                                <InputNumber id="create-invoice-month" @bind-Value="FormModel.Month" class="form-control" data-testid="input-month" />
+                                <ValidationMessage For="() => FormModel.Month" class="text-danger small" />
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-6 mb-3">
-                                <label class="form-label font-weight-bold">Valor (R$) *</label>
-                                <InputNumber @bind-Value="FormModel.Amount" class="form-control" step="0.01" data-testid="input-amount" />
-                                <ValidationMessage For="() => FormModel.Amount" class="text-danger" />
+                                <label class="form-label filters-toolbar__label" for="create-invoice-amount">Valor (R$) *</label>
+                                <InputNumber id="create-invoice-amount" @bind-Value="FormModel.Amount" class="form-control" step="0.01" data-testid="input-amount" />
+                                <ValidationMessage For="() => FormModel.Amount" class="text-danger small" />
                             </div>
                             <div class="col-6 mb-3">
-                                <label class="form-label font-weight-bold">Vencimento *</label>
-                                <InputDate @bind-Value="FormModel.DueDateUtc" class="form-control" data-testid="input-due-date" />
-                                <ValidationMessage For="() => FormModel.DueDateUtc" class="text-danger" />
+                                <label class="form-label filters-toolbar__label" for="create-invoice-due">Vencimento *</label>
+                                <InputDate id="create-invoice-due" @bind-Value="FormModel.DueDateUtc" class="form-control" data-testid="input-due-date" />
+                                <ValidationMessage For="() => FormModel.DueDateUtc" class="text-danger small" />
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label font-weight-bold">Descrição / Observações</label>
-                            <InputTextArea @bind-Value="FormModel.Notes" class="form-control" rows="2" placeholder="Ex: Mensalidade de Maio" data-testid="input-notes" />
+                            <label class="form-label filters-toolbar__label" for="create-invoice-notes">Descrição / Observações</label>
+                            <InputTextArea id="create-invoice-notes" @bind-Value="FormModel.Notes" class="form-control" rows="2" placeholder="Ex: Mensalidade de Maio" data-testid="input-notes" />
                         </div>
                     </div>
 
-                    <div class="modal-footer" style="border-top: 1px solid var(--border-color, #e2e8f0);">
-                        <button type="button" class="btn btn-secondary" @onclick="CloseAsync">Cancelar</button>
-                        <button type="submit" class="btn btn-primary" disabled="@IsSubmitting" data-testid="btn-submit-invoice">
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CloseAsync">Cancelar</button>
+                        <button type="submit" class="btn btn-outline-primary" disabled="@IsSubmitting" data-testid="btn-submit-invoice">
                             @if (IsSubmitting)
                             {
                                 <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
@@ -84,6 +88,7 @@
                             }
                             else
                             {
+                                <i class="bi bi-check-lg me-1" aria-hidden="true"></i>
                                 <span>Confirmar Emissão</span>
                             }
                         </button>

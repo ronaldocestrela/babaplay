@@ -121,9 +121,11 @@ Componentes relacionados:
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `NavMenu.razor` | Links de navegação; classe `.open` no mobile |
+| `NavMenu.razor` | Links de navegação agrupados; classe `.open` no mobile |
 | `Header.razor` | Tenant, notificações, usuário, logout, toggle menu |
-| `app.css` | `.sidebar`, `.sidebar-backdrop`, `.sidebar-toggle`, media queries |
+| `app.css` | `.sidebar`, `.nav-group`, `.sidebar-backdrop`, `.sidebar-toggle`, media queries |
+
+**Grupos do menu (sidebar):** itens top-level ficam Dashboard, Jogadores, Partidas & RSVP, Sorteio de Times e Configurações. Subitens ficam em secções expansíveis **Financeiro** (Painel, Faturas, Inadimplência, Balancete, Caixinha) e **Comunicação** (Comunicados, Enquetes, Alertas, Chat). O grupo abre automaticamente quando a rota actual pertence a ele.
 
 ### 5.2 PublicLayout (público)
 
@@ -191,8 +193,12 @@ Arquivo: [`Components/Common/EmptyState.razor`](Backend/src/BabaPlay.Web/Compone
 **Onde já está adotado:**
 
 - Dashboard: `NextMatchWidget`, `RecentAnnouncementsWidget`
-- `MatchList`, `PlayerList`
+- `MatchList`, `PlayerList`, `TeamDraw`
+- Financeiro: `InvoicesList`, `DefaultersReport`, `FinancialStatement`, `Fundraisers`
+- Comunicação: `Announcements`, `Polls`, `Notifications`, `TeamChat`
+- Settings: `TenantSettings` (e widgets de aba)
 - `RecentTransactionsWidget`, `NotificationCenter` (dropdown)
+- `TeamColumn` (empty state interno quando o time não tem jogadores)
 
 ### 6.4 Loading
 
@@ -227,7 +233,22 @@ Modais longos devem incluir:
 <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
 ```
 
-Adotado em: `EditPlayerModal`, `CreatePollModal`, `CreateAnnouncementModal`.
+Adotado em: `MatchModal`, `EditPlayerModal`, `CreatePollModal`, `CreateAnnouncementModal`, `CreateInvoiceModal`, `PixPaymentModal`, `CreateFundraiserModal`, `ContributeFundraiserModal`.
+
+Estrutura de referência (tema escuro via `.app-modal` / `.app-modal-backdrop` em `app.css`):
+
+```html
+<div class="modal-backdrop fade show app-modal-backdrop"></div>
+<div class="modal fade show d-block app-modal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
+    <div class="modal-content">...</div>
+  </div>
+</div>
+```
+
+- Fechar: `btn-close btn-close-white` com `aria-label="Fechar"`.
+- Labels: `.filters-toolbar__label`.
+- Sem estilos inline nem emojis no título/ações.
 
 ---
 
@@ -250,8 +271,10 @@ Adotado em: `EditPlayerModal`, `CreatePollModal`, `CreateAnnouncementModal`.
 | NotificationCenter | `width: min(340px, calc(100vw - 2rem))` |
 | ScoreboardWidget | Colunas empilhadas + `clamp()` no placar |
 | TacticalBoard | Pins e altura reduzidos em ≤576px |
-| TeamChat | Altura `calc(100dvh - header - padding)` |
 | MatchList filtros | `.match-list-filters { flex-wrap: wrap }` |
+| TeamDraw | Opções em `.widget-card.filters-toolbar`; colunas empilhadas em `<md` |
+| Financeiro | Tabelas `.financial-table` + colunas `d-none d-md/lg-table-cell`; filtros em toolbar |
+| TeamChat | Altura `calc(100dvh - header - padding)`; bolhas `.team-chat-bubble` |
 
 ### 7.3 Testes visuais recomendados
 
@@ -262,7 +285,7 @@ Em DevTools, validar em **360px**, **390px**, **768px** e **≥992px** após mud
 ## 8. Ícones
 
 - **Biblioteca oficial:** Bootstrap Icons (`<i class="bi bi-nome" aria-hidden="true"></i>`).
-- **NavMenu:** ainda usa emojis nos links — migrar para `bi-*` quando tocar nesses arquivos.
+- **NavMenu:** usa Bootstrap Icons (`bi-*`) nos links e toggles de grupo.
 - **StatCard:** alguns KPIs ainda usam emoji no parâmetro `Icon` — preferir ícones Bootstrap no futuro.
 
 ---
@@ -315,9 +338,9 @@ Ao criar ou alterar uma página autenticada:
 | Prioridade | Item |
 |---|---|
 | Média | Consolidar CDN → build local (Tailwind CLI ou Bootstrap npm) |
-| Média | Migrar NavMenu e StatCard de emojis para Bootstrap Icons |
-| Média | Migrar empty states restantes (Faturas, Enquetes, Inadimplência, etc.) para `EmptyState` |
-| Média | Aplicar `.page-header` nas demais páginas de listagem |
+| Média | Migrar StatCard de emojis para Bootstrap Icons |
+| Média | Migrar empty states restantes (Rankings, Positions, etc.) para `EmptyState` |
+| Média | Aplicar `.page-header` nas demais páginas de listagem (TeamDraw, Financeiro, Comunicação e TenantSettings já migrados) |
 | Baixa | PWA (manifest, service worker) — fora de escopo atual |
 | Baixa | Tabelas como cards no mobile (alternativa a scroll horizontal) |
 | Baixa | Tema claro (dark-only hoje) |
@@ -328,11 +351,18 @@ Ao criar ou alterar uma página autenticada:
 
 | Data | Decisão |
 |---|---|
+| 2026-07 | NavMenu: grupos expansíveis Financeiro/Comunicação + ícones Bootstrap (menos itens top-level) |
 | 2026-07 | Adicionado Bootstrap + Bootstrap Icons + Tailwind CDN em `index.html` (app estava sem CSS framework) |
 | 2026-07 | Implementado shell mobile off-canvas (sidebar 260px quebrava telefone) |
 | 2026-07 | Criado design system em `app.css` (tokens, widget-card, page-header, overrides Bootstrap) |
 | 2026-07 | Dashboard: skeleton loading, refresh com opacity, EmptyState, elevação de cards |
 | 2026-07 | PublicLayout simplificado (removido card-duplo em páginas Tailwind) |
+| 2026-07 | TeamDraw (`/teams`): `.page-header`, `EmptyState`, `widget-card` nas opções e colunas; PlayerBadge no tema escuro |
+| 2026-07 | Financeiro (`/financial*`): page-header, EmptyState, filtros em widget-card, tabelas `.financial-table`, KPIs sem emoji |
+| 2026-07 | Comunicação (`/communication*`): page-header, EmptyState, filtros em pills, cards/chat no tema escuro sem emoji |
+| 2026-07 | TenantSettings (`/settings/tenant`): page-header, abas em pills, widgets em `widget-card`, EmptyState nos dias fixos |
+| 2026-07 | Modais financeiro/comunicação alinhados a `.app-modal` (scrollable + fullscreen-sm-down) |
+| 2026-07 | Aba Dias Fixos (`TenantGameDayOptionsWidget`): page-header local, EmptyState com CTA, tabela/cards mobile |
 
 ---
 

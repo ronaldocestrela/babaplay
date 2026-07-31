@@ -5,78 +5,77 @@
 
 @if (IsOpen)
 {
-    <div class="modal-backdrop fade show" style="display: block; background: rgba(0,0,0,0.5);" data-testid="create-poll-backdrop"></div>
-    <div class="modal fade show" tabindex="-1" style="display: block;" data-testid="create-poll-modal">
+    <div class="modal-backdrop fade show app-modal-backdrop" data-testid="create-poll-backdrop"></div>
+    <div class="modal fade show d-block app-modal" tabindex="-1" data-testid="create-poll-modal">
         <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
-            <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-
-                <div class="modal-header" style="border-bottom: 1px solid var(--border-color, #e2e8f0);">
-                    <h5 class="modal-title font-weight-bold" style="color: var(--text-main);">
-                        📊 Criar Nova Enquete
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="bi bi-ui-checks-grid me-2" aria-hidden="true"></i>
+                        Criar Nova Enquete
                     </h5>
-                    <button type="button" class="btn-close" @onclick="CloseAsync" aria-label="Fechar" data-testid="btn-close-modal"></button>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseAsync" aria-label="Fechar" data-testid="btn-close-modal"></button>
                 </div>
 
                 <EditForm Model="Model" OnValidSubmit="HandleSubmitAsync" data-testid="form-create-poll">
                     <DataAnnotationsValidator />
 
-                    <div class="modal-body p-4">
-
+                    <div class="modal-body">
                         @if (!string.IsNullOrEmpty(ErrorMessage))
                         {
-                            <div class="alert alert-danger mb-3" role="alert" data-testid="modal-error-alert">
-                                ⚠️ @ErrorMessage
+                            <div class="alert alert-danger p-2 small mb-3" role="alert" data-testid="modal-error-alert">
+                                <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
+                                @ErrorMessage
                             </div>
                         }
 
-                        <!-- Título -->
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Título da Enquete *</label>
-                            <InputText class="form-control form-control-sm"
+                            <label class="form-label filters-toolbar__label" for="input-poll-title">Título da Enquete *</label>
+                            <InputText id="input-poll-title"
+                                       class="form-control"
                                        placeholder="Ex: Qual o local preferido para o churrasco?"
                                        @bind-Value="Model.Title"
                                        data-testid="input-poll-title" />
-                            <ValidationMessage For="() => Model.Title" class="text-danger" style="font-size: 0.75rem;" />
+                            <ValidationMessage For="() => Model.Title" class="text-danger small" />
                         </div>
 
-                        <!-- Descrição -->
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Descrição / Regras (Opcional)</label>
-                            <InputTextArea class="form-control form-control-sm"
-                                          rows="2"
-                                          placeholder="Ex: A opção mais votada até sexta-feira será a escolhida."
-                                          @bind-Value="Model.Description"
-                                          data-testid="input-poll-description" />
-                            <ValidationMessage For="() => Model.Description" class="text-danger" style="font-size: 0.75rem;" />
+                            <label class="form-label filters-toolbar__label" for="input-poll-description">Descrição / Regras (Opcional)</label>
+                            <InputTextArea id="input-poll-description"
+                                           class="form-control"
+                                           rows="2"
+                                           placeholder="Ex: A opção mais votada até sexta-feira será a escolhida."
+                                           @bind-Value="Model.Description"
+                                           data-testid="input-poll-description" />
+                            <ValidationMessage For="() => Model.Description" class="text-danger small" />
                         </div>
 
-                        <!-- Data Limite -->
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Data de Encerramento (Opcional)</label>
-                            <InputDate class="form-control form-control-sm"
+                            <label class="form-label filters-toolbar__label" for="input-poll-expiry">Data de Encerramento (Opcional)</label>
+                            <InputDate id="input-poll-expiry"
+                                       class="form-control"
                                        @bind-Value="Model.ExpiresAtUtc"
                                        data-testid="input-poll-expiry" />
                         </div>
 
-                        <!-- Opções Dinâmicas -->
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <label class="form-label fw-semibold mb-0" style="font-size: 0.85rem;">Opções de Escolha * (Mínimo 2)</label>
+                        <div class="mb-1">
+                            <div class="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap">
+                                <label class="form-label filters-toolbar__label mb-0">Opções de Escolha * (Mínimo 2)</label>
                                 <button type="button"
-                                        class="btn btn-sm btn-outline-primary py-0"
-                                        style="font-size: 0.78rem;"
+                                        class="btn btn-sm btn-outline-primary"
                                         @onclick="AddOptionInput"
                                         disabled="@(Model.Options.Count >= 10)"
                                         data-testid="btn-add-option-input">
-                                    + Adicionar Opção
+                                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+                                    Adicionar Opção
                                 </button>
                             </div>
 
                             @for (var i = 0; i < Model.Options.Count; i++)
                             {
                                 var index = i;
-                                <div class="input-group input-group-sm mb-2" data-testid="option-input-group">
-                                    <span class="input-group-text" style="font-size: 0.8rem;">@(index + 1)</span>
+                                <div class="input-group mb-2" data-testid="option-input-group">
+                                    <span class="input-group-text">@(index + 1)</span>
                                     <input class="form-control"
                                            placeholder="Descreva a opção..."
                                            value="@Model.Options[index]"
@@ -87,27 +86,26 @@
                                         <button type="button"
                                                 class="btn btn-outline-danger"
                                                 @onclick="() => RemoveOptionInput(index)"
+                                                aria-label="Remover opção"
                                                 data-testid="btn-remove-option">
-                                            ✕
+                                            <i class="bi bi-x-lg" aria-hidden="true"></i>
                                         </button>
                                     }
                                 </div>
                             }
                         </div>
-
                     </div>
 
-                    <div class="modal-footer" style="border-top: 1px solid var(--border-color, #e2e8f0);">
+                    <div class="modal-footer">
                         <button type="button"
-                                class="btn btn-sm btn-outline-secondary"
+                                class="btn btn-outline-secondary"
                                 @onclick="CloseAsync"
                                 disabled="@_isLoading"
                                 data-testid="btn-cancel">
                             Cancelar
                         </button>
                         <button type="submit"
-                                class="btn btn-sm btn-success"
-                                style="border-radius: 8px; min-width: 120px;"
+                                class="btn btn-success"
                                 disabled="@_isLoading"
                                 data-testid="btn-submit-poll">
                             @if (_isLoading)
@@ -117,11 +115,11 @@
                             }
                             else
                             {
-                                <span>📊 Criar Enquete</span>
+                                <i class="bi bi-ui-checks-grid me-1" aria-hidden="true"></i>
+                                <span>Criar Enquete</span>
                             }
                         </button>
                     </div>
-
                 </EditForm>
             </div>
         </div>

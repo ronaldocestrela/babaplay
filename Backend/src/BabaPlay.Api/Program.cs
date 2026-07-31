@@ -1,6 +1,7 @@
 using BabaPlay.Api.Filters;
 using BabaPlay.Api.Middlewares;
 using BabaPlay.Application;
+using BabaPlay.Application.Interfaces;
 using BabaPlay.Infrastructure;
 using BabaPlay.Infrastructure.Hubs;
 using BabaPlay.Infrastructure.Persistence;
@@ -101,6 +102,14 @@ if (!app.Environment.IsEnvironment("Testing") && runMigrationsOnStartup)
     using var scope = app.Services.CreateScope();
     var migrationRunner = scope.ServiceProvider.GetRequiredService<DatabaseMigrationRunner>();
     await migrationRunner.RunAsync();
+
+    var rbacCatalogSync = scope.ServiceProvider.GetRequiredService<ITenantRbacCatalogSyncService>();
+    var rbacSyncResult = await rbacCatalogSync.SyncAllTenantsAsync();
+    if (!rbacSyncResult.IsSuccess)
+    {
+        throw new InvalidOperationException(
+            $"RBAC catalog sync failed: {rbacSyncResult.ErrorCode} - {rbacSyncResult.ErrorMessage}");
+    }
 }
 
 app.UseExceptionHandler();

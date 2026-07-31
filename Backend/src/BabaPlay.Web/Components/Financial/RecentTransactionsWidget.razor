@@ -2,12 +2,13 @@
 @using BabaPlay.Web.Models
 @using BabaPlay.Web.Components.Common
 
-<div class="card recent-transactions-widget" data-testid="recent-transactions-widget" style="background: var(--card-bg, #ffffff); border-radius: 8px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin: 0;">
+<div class="widget-card recent-transactions-widget" data-testid="recent-transactions-widget">
+    <div class="widget-card__header">
+        <h3 class="widget-card__title">
+            <i class="bi bi-cash-stack" aria-hidden="true"></i>
             Movimentações Recentes do Caixa
         </h3>
-        <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: var(--primary-color, #6366f1); font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px;">
+        <span class="badge badge-primary">
             Últimas @(Transactions?.Count ?? 0)
         </span>
     </div>
@@ -21,41 +22,37 @@
     else
     {
         <div class="table-responsive">
-            <table class="table" style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+            <table class="table table-hover align-middle mb-0 financial-table">
                 <thead>
-                    <tr style="border-bottom: 1px solid var(--border-color, #e2e8f0); text-align: left; color: var(--text-muted);">
-                        <th style="padding: 0.5rem;">Data</th>
-                        <th style="padding: 0.5rem;">Descrição</th>
-                        <th style="padding: 0.5rem;">Tipo</th>
-                        <th style="padding: 0.5rem; text-align: right;">Valor</th>
+                    <tr>
+                        <th>Data</th>
+                        <th>Descrição</th>
+                        <th class="d-none d-sm-table-cell">Tipo</th>
+                        <th class="text-end">Valor</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in Transactions)
                     {
                         var isIncome = item.Type == 1;
-                        <tr style="border-bottom: 1px solid var(--border-color, #f1f5f9);">
-                            <td style="padding: 0.75rem 0.5rem; color: var(--text-muted);">
+                        <tr>
+                            <td class="text-muted">
                                 @item.OccurredOnUtc.ToLocalTime().ToString("dd/MM/yyyy")
                             </td>
-                            <td style="padding: 0.75rem 0.5rem; font-weight: 500; color: var(--text-main);">
+                            <td class="font-weight-medium">
                                 @item.Description
                             </td>
-                            <td style="padding: 0.75rem 0.5rem;">
+                            <td class="d-none d-sm-table-cell">
                                 @if (isIncome)
                                 {
-                                    <span class="badge badge-success" style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600;">
-                                        Entrada
-                                    </span>
+                                    <span class="badge badge-success">Entrada</span>
                                 }
                                 else
                                 {
-                                    <span class="badge badge-danger" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600;">
-                                        Saída
-                                    </span>
+                                    <span class="badge badge-danger">Saída</span>
                                 }
                             </td>
-                            <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 700; color: @(isIncome ? "#10b981" : "#ef4444");">
+                            <td class="text-end font-weight-bold @(isIncome ? "amount-income" : "amount-expense")">
                                 @(isIncome ? "+" : "-")@item.Amount.ToString("C2", new System.Globalization.CultureInfo("pt-BR"))
                             </td>
                         </tr>

@@ -90,6 +90,32 @@ public sealed class RbacIntegrationTests : IClassFixture<RbacWebApplicationFacto
     }
 
     [Fact]
+    public async Task GetFinancialOverview_MemberWithoutFinancialReadInTenantA_ShouldReturn403()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/financial/overview");
+        request.Headers.Authorization = new("Bearer", "test-token");
+        request.Headers.Add("X-Tenant-Slug", RbacWebApplicationFactory.TenantASlug);
+        request.Headers.Add(TestAuthHandler.UserIdHeader, RbacWebApplicationFactory.MemberUserId);
+
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task GetFinancialOverview_AdminWithFinancialReadInTenantA_ShouldReturn200()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/financial/overview");
+        request.Headers.Authorization = new("Bearer", "test-token");
+        request.Headers.Add("X-Tenant-Slug", RbacWebApplicationFactory.TenantASlug);
+        request.Headers.Add(TestAuthHandler.UserIdHeader, RbacWebApplicationFactory.AdminUserId);
+
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
     public async Task GetRoles_CrossTenantMemberWithRoleOnlyInTenantA_ShouldReturn403InTenantB()
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/role");

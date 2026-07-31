@@ -1,3 +1,4 @@
+using BabaPlay.Application.Interfaces;
 using BabaPlay.Infrastructure;
 using BabaPlay.Infrastructure.Persistence;
 using BabaPlay.Infrastructure.Services;
@@ -44,5 +45,6 @@ public sealed class DatabaseMigrationRunnerTests
         services.AddInfrastructureServices(configuration);
 
         services.Should().Contain(d => d.ServiceType == typeof(DatabaseMigrationRunner));
+        services.Should().Contain(d => d.ServiceType == typeof(ITenantRbacCatalogSyncService));
     }
 }

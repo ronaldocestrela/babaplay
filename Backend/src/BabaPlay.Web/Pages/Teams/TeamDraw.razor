@@ -11,17 +11,32 @@
 <PageTitle>Sorteio de Times & Coletes - Baba Play</PageTitle>
 
 <div class="container-fluid py-4" data-testid="team-draw-page">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+    <div class="page-header">
         <div>
-            <h1 class="h3 mb-1 font-weight-bold text-gradient">Sorteio de Times & Coletes</h1>
-            <p class="text-muted mb-0">Formação de equipes equilibradas por rating e posições com ajuste manual.</p>
+            <h1 class="page-header__title text-gradient">Sorteio de Times & Coletes</h1>
+            <p class="page-header__subtitle">Formação de equipes equilibradas por rating e posições com ajuste manual.</p>
         </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-success font-weight-bold btn-draw-teams" @onclick="GenerateTeamsAsync" data-testid="btn-draw-teams">
-                <i class="bi bi-dice-5-fill me-1"></i> Sortear Coletes
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-success btn-sm font-weight-bold btn-draw-teams"
+                    @onclick="GenerateTeamsAsync"
+                    disabled="@IsLoading"
+                    data-testid="btn-draw-teams">
+                @if (IsLoading)
+                {
+                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    <span>Sorteando...</span>
+                }
+                else
+                {
+                    <i class="bi bi-dice-5-fill me-1" aria-hidden="true"></i>
+                    <span>Sortear Coletes</span>
+                }
             </button>
-            <button class="btn btn-outline-primary btn-save-composition" @onclick="SaveCompositionAsync" disabled="@(DrawResult == null || DrawResult.Teams.Count == 0)" data-testid="btn-save-composition">
-                <i class="bi bi-check-lg me-1"></i> Salvar Composição
+            <button class="btn btn-outline-primary btn-sm btn-save-composition"
+                    @onclick="SaveCompositionAsync"
+                    disabled="@(IsLoading || DrawResult == null || DrawResult.Teams.Count == 0)"
+                    data-testid="btn-save-composition">
+                <i class="bi bi-check-lg me-1" aria-hidden="true"></i> Salvar Composição
             </button>
         </div>
     </div>
@@ -29,25 +44,24 @@
     @if (!string.IsNullOrWhiteSpace(AlertMessage))
     {
         <div class="alert @(IsAlertError ? "alert-danger" : "alert-success") alert-dismissible fade show mb-4" role="alert" data-testid="alert-banner">
-            <i class="bi @(IsAlertError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill") me-2"></i>
+            <i class="bi @(IsAlertError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill") me-2" aria-hidden="true"></i>
             @AlertMessage
             <button type="button" class="btn-close" @onclick="() => AlertMessage = null"></button>
         </div>
     }
 
-    <!-- Barra de Opções do Sorteio -->
-    <div class="card card-custom p-3 mb-4 shadow-sm">
-        <div class="row align-items-center g-3">
+    <div class="widget-card filters-toolbar mb-4">
+        <div class="row align-items-end g-3">
             <div class="col-md-4">
-                <label class="form-label font-weight-bold mb-1">Quantidade de Coletes/Times</label>
-                <select class="form-select" @bind="NumberOfTeams" data-testid="select-num-teams">
+                <label class="form-label filters-toolbar__label" for="select-num-teams">Quantidade de Coletes/Times</label>
+                <select id="select-num-teams" class="form-select" @bind="NumberOfTeams" data-testid="select-num-teams">
                     <option value="2">2 Times (Amarelo vs Azul)</option>
                     <option value="3">3 Times (Amarelo, Azul, Vermelho)</option>
                     <option value="4">4 Times (Amarelo, Azul, Vermelho, Verde)</option>
                 </select>
             </div>
             <div class="col-md-4">
-                <div class="form-check mt-md-4">
+                <div class="form-check">
                     <input class="form-check-input" type="checkbox" @bind="BalanceByPosition" id="balancePosCheck" data-testid="checkbox-balance-pos" />
                     <label class="form-check-label fw-bold" for="balancePosCheck">
                         Equilibrar por Posição (Goleiros/Linha)
@@ -55,46 +69,45 @@
                 </div>
             </div>
             <div class="col-md-4 text-md-end">
-                <span class="badge bg-secondary p-2 font-size-sm" data-testid="total-players-badge">
+                <span class="badge badge-secondary p-2" data-testid="total-players-badge">
                     Total: @(DrawResult?.TotalPlayersCount ?? 0) Atletas no Baba
                 </span>
             </div>
         </div>
     </div>
 
-    @if (IsLoading)
+    @if (IsLoading && DrawResult == null)
     {
-        <div class="d-flex justify-content-center py-5">
-            <LoadingSpinner Message="Calculando balanceamento de equipes..." />
-        </div>
+        <LoadingSpinner Message="Calculando balanceamento de equipes..." />
     }
     else if (DrawResult == null || DrawResult.Teams.Count == 0)
     {
-        <div class="card card-custom py-5 text-center my-4" data-testid="empty-draw-state">
-            <div class="card-body">
-                <i class="bi bi-dice-3 display-4 text-muted mb-3 d-block"></i>
-                <h4 class="h5 font-weight-bold">Nenhum sorteio realizado ainda</h4>
-                <p class="text-muted mb-3">Clique no botão acima para acionar o algoritmo de balanceamento de times.</p>
-                <button class="btn btn-primary" @onclick="GenerateTeamsAsync">
-                    <i class="bi bi-dice-5-fill me-1"></i> Executar Sorteio Agora
-                </button>
-            </div>
-        </div>
+        <EmptyState IsPageLevel="true"
+                    IconClass="bi-dice-3"
+                    Title="Nenhum sorteio realizado ainda"
+                    Hint="Clique no botão acima para acionar o algoritmo de balanceamento de times."
+                    TestId="empty-draw-state">
+            <button class="btn btn-outline-primary" @onclick="GenerateTeamsAsync" disabled="@IsLoading">
+                <i class="bi bi-dice-5-fill me-1" aria-hidden="true"></i> Executar Sorteio Agora
+            </button>
+        </EmptyState>
     }
     else
     {
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-@DrawResult.Teams.Count g-3" data-testid="teams-columns-grid">
-            @for (int i = 0; i < DrawResult.Teams.Count; i++)
-            {
-                var teamIndex = i;
-                var team = DrawResult.Teams[teamIndex];
-                <div class="col" key="@team.TeamId">
-                    <TeamColumn Team="team"
-                                CanMoveLeft="teamIndex > 0"
-                                CanMoveRight="teamIndex < DrawResult.Teams.Count - 1"
-                                OnMovePlayer="args => MovePlayer(args.Player, teamIndex, args.Direction)" />
-                </div>
-            }
+        <div class="list-content @(IsLoading ? "list-content--refreshing" : null)">
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-@DrawResult.Teams.Count g-3" data-testid="teams-columns-grid">
+                @for (int i = 0; i < DrawResult.Teams.Count; i++)
+                {
+                    var teamIndex = i;
+                    var team = DrawResult.Teams[teamIndex];
+                    <div class="col" key="@team.TeamId">
+                        <TeamColumn Team="team"
+                                    CanMoveLeft="teamIndex > 0"
+                                    CanMoveRight="teamIndex < DrawResult.Teams.Count - 1"
+                                    OnMovePlayer="args => MovePlayer(args.Player, teamIndex, args.Direction)" />
+                    </div>
+                }
+            </div>
         </div>
     }
 </div>

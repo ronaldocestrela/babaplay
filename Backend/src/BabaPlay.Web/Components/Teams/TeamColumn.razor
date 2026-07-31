@@ -1,10 +1,11 @@
 @namespace BabaPlay.Web.Components.Teams
 @using BabaPlay.Web.Models
+@using BabaPlay.Web.Components.Common
 
-<div class="team-column card card-custom h-100 p-3 shadow-sm" data-testid="team-column-@Team.TeamId">
-    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+<div class="widget-card team-column h-100 mb-0" data-testid="team-column-@Team.TeamId">
+    <div class="widget-card__header team-column__header">
         <div>
-            <h3 class="h6 font-weight-bold mb-0 text-dark" data-testid="team-name">
+            <h3 class="widget-card__title mb-0" data-testid="team-name">
                 @Team.Name
             </h3>
             <div class="text-muted small" data-testid="team-count">
@@ -12,18 +13,18 @@
             </div>
         </div>
         <div class="text-end">
-            <span class="badge @Team.BadgeClass mb-1">
-                ⭐ @Team.AverageRating.ToString("F1")
+            <span class="badge @Team.BadgeClass mb-1" data-testid="team-rating">
+                <i class="bi bi-star-fill me-1" aria-hidden="true"></i>@Team.AverageRating.ToString("F1")
             </span>
         </div>
     </div>
 
-    <div class="players-list flex-grow-1 overflow-auto pe-1">
+    <div class="team-column__players flex-grow-1 overflow-auto pe-1">
         @if (Team.Players.Count == 0)
         {
-            <div class="text-center py-4 text-muted small" data-testid="empty-team">
-                Nenhum jogador neste time.
-            </div>
+            <EmptyState IconClass="bi-people"
+                        Title="Nenhum jogador neste time."
+                        TestId="empty-team" />
         }
         else
         {

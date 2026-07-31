@@ -8,6 +8,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Changed — Menu de navegação agrupado
+
+- **`NavMenu`**: itens de Financeiro e Comunicação passam a secções expansíveis; top-level fica Dashboard, Jogadores, Partidas, Times, grupos e Configurações.
+- Ícones do menu migrados de emoji para Bootstrap Icons; estilos `.nav-group` em `app.css`.
+
 ### Changed — Status inicial escolhido na criação do baba
 
 - **`CreateGameDayCommand` / API `POST /api/v1/gameday`**: aceitam `status` (`Pending` ou `Confirmed`; default `Confirmed`).

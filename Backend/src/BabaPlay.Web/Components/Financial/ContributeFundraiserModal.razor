@@ -6,48 +6,53 @@
 
 @if (IsOpen && Fundraiser != null)
 {
-    <div class="modal-backdrop fade show" style="display: block; background: rgba(0,0,0,0.5);" data-testid="contribute-fundraiser-backdrop"></div>
-    <div class="modal fade show" tabindex="-1" style="display: block;" data-testid="contribute-fundraiser-modal">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-                <div class="modal-header" style="border-bottom: 1px solid var(--border-color, #e2e8f0);">
-                    <h5 class="modal-title font-weight-bold" style="color: var(--text-main);">
-                        💰 Contribuir na Vaquinha: @Fundraiser.Title
+    <div class="modal-backdrop fade show app-modal-backdrop" data-testid="contribute-fundraiser-backdrop"></div>
+    <div class="modal fade show d-block app-modal" tabindex="-1" data-testid="contribute-fundraiser-modal">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="bi bi-cash-coin me-2" aria-hidden="true"></i>
+                        Contribuir na Vaquinha: @Fundraiser.Title
                     </h5>
-                    <button type="button" class="btn-close" @onclick="CloseAsync" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseAsync" aria-label="Fechar"></button>
                 </div>
 
                 <EditForm Model="Model" OnValidSubmit="HandleSubmitAsync">
                     <DataAnnotationsValidator />
 
-                    <div class="modal-body p-4">
+                    <div class="modal-body">
                         @if (!string.IsNullOrEmpty(ErrorMessage))
                         {
-                            <div class="alert alert-danger mb-3" data-testid="modal-error-alert">
+                            <div class="alert alert-danger p-2 small mb-3" role="alert" data-testid="modal-error-alert">
+                                <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
                                 @ErrorMessage
                             </div>
                         }
 
-                        <div class="alert alert-info py-2 mb-3" style="font-size: 0.8rem;">
-                            🎯 <strong>Meta:</strong> @FormatCurrency(Fundraiser.TargetAmount) |
-                            🟢 <strong>Já Arrecadado:</strong> @FormatCurrency(Fundraiser.CollectedAmount)
+                        <div class="alert alert-info py-2 mb-3 small">
+                            <i class="bi bi-bullseye me-1" aria-hidden="true"></i>
+                            <strong>Meta:</strong> @FormatCurrency(Fundraiser.TargetAmount)
+                            <span class="mx-1">|</span>
+                            <i class="bi bi-check-circle me-1" aria-hidden="true"></i>
+                            <strong>Já Arrecadado:</strong> @FormatCurrency(Fundraiser.CollectedAmount)
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label font-weight-bold" style="font-size: 0.85rem;">Valor da Contribuição (R$) *</label>
-                            <InputNumber class="form-control form-control-sm" @bind-Value="Model.Amount" data-testid="input-contribution-amount" />
-                            <ValidationMessage For="() => Model.Amount" class="text-danger" style="font-size: 0.75rem;" />
+                            <label class="form-label filters-toolbar__label" for="input-contribution-amount">Valor da Contribuição (R$) *</label>
+                            <InputNumber id="input-contribution-amount" class="form-control" @bind-Value="Model.Amount" data-testid="input-contribution-amount" />
+                            <ValidationMessage For="() => Model.Amount" class="text-danger small" />
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label font-weight-bold" style="font-size: 0.85rem;">Nome do Contribuidor / Identificação</label>
-                            <InputText class="form-control form-control-sm" placeholder="Ex: Carlos Silva, Anônimo" @bind-Value="Model.ContributorName" data-testid="input-contributor-name" />
+                            <label class="form-label filters-toolbar__label" for="input-contributor-name">Nome do Contribuidor / Identificação</label>
+                            <InputText id="input-contributor-name" class="form-control" placeholder="Ex: Carlos Silva, Anônimo" @bind-Value="Model.ContributorName" data-testid="input-contributor-name" />
                         </div>
                     </div>
 
-                    <div class="modal-footer" style="border-top: 1px solid var(--border-color, #e2e8f0);">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="CloseAsync">Cancelar</button>
-                        <button type="submit" class="btn btn-success btn-sm font-weight-bold" disabled="@IsSubmitting" data-testid="btn-submit-contribution">
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CloseAsync">Cancelar</button>
+                        <button type="submit" class="btn btn-success font-weight-bold" disabled="@IsSubmitting" data-testid="btn-submit-contribution">
                             @if (IsSubmitting)
                             {
                                 <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
@@ -55,7 +60,8 @@
                             }
                             else
                             {
-                                <span>💰 Confirmar Contribuição</span>
+                                <i class="bi bi-cash-coin me-1" aria-hidden="true"></i>
+                                <span>Confirmar Contribuição</span>
                             }
                         </button>
                     </div>
