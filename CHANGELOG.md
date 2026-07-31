@@ -8,6 +8,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.0-beta.1] - 2026-07-31
+
 ### Added — Envio administrativo de alertas e gate CommunicationWrite alinhado ao RBAC
 
 - **`POST /api/v1/notifications`**: admins/managers com `communication.write` enviam alertas para todos os membros do tenant (ou lista explícita de destinatários).
