@@ -120,6 +120,7 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<CheckinHub>("/hubs/checkin");
 app.MapHub<MatchHub>("/hubs/match");
+app.MapHub<ChatHub>("/hubs/chat");
 
 app.Run();
 

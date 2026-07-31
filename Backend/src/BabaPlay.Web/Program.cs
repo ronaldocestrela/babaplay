@@ -42,6 +42,7 @@ builder.Services.AddScoped<BabaPlay.Web.Services.Http.IRankingApiService, BabaPl
 builder.Services.AddScoped<BabaPlay.Web.Services.Http.IFinancialApiService, BabaPlay.Web.Services.Http.FinancialApiService>();
 builder.Services.AddScoped<BabaPlay.Web.Services.Http.ICommunicationApiService, BabaPlay.Web.Services.Http.CommunicationApiService>();
 builder.Services.AddScoped<BabaPlay.Web.Services.Http.INotificationApiService, BabaPlay.Web.Services.Http.NotificationApiService>();
+builder.Services.AddScoped<BabaPlay.Web.Services.SignalR.ISignalRChatService, BabaPlay.Web.Services.SignalR.SignalRChatService>();
 
 
 

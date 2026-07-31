@@ -38,6 +38,8 @@ using BabaPlay.Application.Commands.Polls;
 using BabaPlay.Application.Queries.Polls;
 using BabaPlay.Application.Commands.Notifications;
 using BabaPlay.Application.Queries.Notifications;
+using BabaPlay.Application.Commands.Chat;
+using BabaPlay.Application.Queries.Chat;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BabaPlay.Application;
@@ -195,6 +197,10 @@ public static class ServiceRegistration
         services.AddScoped<IQueryHandler<GetNotificationsQuery, Result<NotificationSummaryResponse>>, GetNotificationsQueryHandler>();
         services.AddScoped<ICommandHandler<MarkNotificationReadCommand, Result>, MarkNotificationReadCommandHandler>();
         services.AddScoped<ICommandHandler<MarkAllNotificationsReadCommand, Result>, MarkAllNotificationsReadCommandHandler>();
+
+        // Communication — Real-Time Team Chat (F27)
+        services.AddScoped<IQueryHandler<GetRecentChatMessagesQuery, Result<IReadOnlyList<ChatMessageResponse>>>, GetRecentChatMessagesQueryHandler>();
+        services.AddScoped<ICommandHandler<SendChatMessageCommand, Result<ChatMessageResponse>>, SendChatMessageCommandHandler>();
 
         return services;
     }

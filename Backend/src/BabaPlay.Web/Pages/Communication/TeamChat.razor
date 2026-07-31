@@ -1,0 +1,238 @@
+@page "/communication/team-chat"
+@attribute [Authorize]
+@using BabaPlay.Web.Models
+@using BabaPlay.Web.Services.SignalR
+@using BabaPlay.Web.Services.State
+@using BabaPlay.Web.Components.Common
+@inject ISignalRChatService ChatService
+@inject TenantState TenantState
+@inject UserSessionState UserSessionState
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<PageTitle>Chat da Turma | Baba Play</PageTitle>
+
+<div class="container-fluid p-4 d-flex flex-column" style="height: calc(100vh - 80px);" data-testid="team-chat-page">
+
+    <!-- Header do Chat -->
+    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom flex-wrap gap-2">
+        <div>
+            <h3 class="font-weight-bold mb-1" style="color: var(--text-main);">
+                💬 Chat da Turma
+            </h3>
+            <p class="text-muted mb-0" style="font-size: 0.88rem;">
+                Espaço exclusivo de resenha e avisos em tempo real da associação
+            </p>
+        </div>
+
+        <!-- Indicador de Status da Conexão SignalR -->
+        <div class="d-flex align-items-center gap-2 px-3 py-1 bg-white rounded-pill shadow-sm border" data-testid="connection-status">
+            @if (ChatService.IsConnected)
+            {
+                <span class="badge bg-success rounded-circle p-1" style="width: 10px; height: 10px;"></span>
+                <small class="fw-bold text-success" style="font-size: 0.8rem;">Ao Vivo (Conectado)</small>
+            }
+            else
+            {
+                <span class="badge bg-secondary rounded-circle p-1" style="width: 10px; height: 10px;"></span>
+                <small class="fw-bold text-muted" style="font-size: 0.8rem;">Conectando...</small>
+            }
+        </div>
+    </div>
+
+    <!-- Área Principal de Mensagens -->
+    <div class="card flex-grow-1 shadow-sm border-0 d-flex flex-column mb-3" style="border-radius: 16px; overflow: hidden; background: var(--bg-surface, #f8fafc);">
+
+        <!-- Lista de Mensagens -->
+        <div class="card-body flex-grow-1 overflow-auto p-4 d-flex flex-column gap-3" id="chat-message-container" data-testid="chat-messages-list">
+            @if (_isLoading)
+            {
+                <div class="my-auto text-center text-muted" data-testid="chat-loading">
+                    <LoadingSpinner Message="Carregando mensagens do chat..." />
+                </div>
+            }
+            else if (_messages.Count == 0)
+            {
+                <div class="my-auto text-center text-muted p-5" data-testid="chat-empty">
+                    <div style="font-size: 3rem;">⚽</div>
+                    <h5 class="fw-bold mt-2" style="color: var(--text-main);">Nenhuma mensagem por aqui ainda</h5>
+                    <p class="text-muted mb-0" style="font-size: 0.875rem;">Mande a primeira mensagem para esquentar o baba!</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var msg in _messages)
+                {
+                    var isMine = IsUserMessage(msg);
+                    <div class="d-flex flex-column @(isMine ? "align-items-end" : "align-items-start")" data-testid="chat-message-item">
+                        <div class="d-flex align-items-center gap-1 mb-1">
+                            <span class="fw-bold text-secondary" style="font-size: 0.78rem;">
+                                @(isMine ? "Você" : msg.SenderName)
+                            </span>
+                            <span class="text-muted" style="font-size: 0.7rem;">
+                                • @msg.SentAtUtc.ToLocalTime().ToString("HH:mm")
+                            </span>
+                        </div>
+                        <div class="p-3 rounded-4 shadow-sm text-break"
+                             style="max-width: 75%; font-size: 0.92rem; line-height: 1.4;
+                                    background: @(isMine ? "var(--primary-color, #0284c7)" : "#ffffff");
+                                    color: @(isMine ? "#ffffff" : "var(--text-main, #1e293b)");
+                                    border-bottom-right-radius: @(isMine ? "4px" : "16px") !important;
+                                    border-bottom-left-radius: @(isMine ? "16px" : "4px") !important;">
+                            @msg.Content
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- Caixa de Envio de Mensagem -->
+        <div class="card-footer bg-white p-3 border-top">
+            <div class="input-group">
+                <input type="text"
+                       class="form-control border-0 bg-light p-3"
+                       style="border-radius: 12px 0 0 12px; font-size: 0.92rem;"
+                       placeholder="Escreva sua mensagem..."
+                       @bind="_newMessageText"
+                       @bind:event="oninput"
+                       @onkeyup="HandleKeyUp"
+                       disabled="@_isSending"
+                       data-testid="input-chat-message" />
+                <button class="btn btn-primary px-4 fw-bold d-flex align-items-center gap-2"
+                        style="border-radius: 0 12px 12px 0;"
+                        @onclick="SendMessageAsync"
+                        disabled="@(string.IsNullOrWhiteSpace(_newMessageText) || _isSending)"
+                        data-testid="btn-send-message">
+                    @if (_isSending)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                    }
+                    else
+                    {
+                        <span>Enviar</span>
+                        <span>🚀</span>
+                    }
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+    private List<ChatMessageDto> _messages = [];
+    private string _newMessageText = string.Empty;
+    private bool _isLoading = true;
+    private bool _isSending = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ChatService.OnMessageReceived += HandleMessageReceived;
+        ChatService.OnStateChanged += HandleStateChanged;
+
+        await LoadHistoryAsync();
+        await InitializeSignalRAsync();
+    }
+
+    private async Task LoadHistoryAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _messages = await ChatService.GetRecentMessagesAsync();
+        }
+        catch
+        {
+            // Graceful handling
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task InitializeSignalRAsync()
+    {
+        var tenantId = TenantState.CurrentTenantId ?? Guid.Empty;
+        var token = UserSessionState.JwtToken ?? string.Empty;
+        await ChatService.ConnectAsync(token, tenantId);
+    }
+
+    private void HandleMessageReceived(ChatMessageDto message)
+    {
+        InvokeAsync(() =>
+        {
+            if (!_messages.Any(m => m.Id == message.Id))
+            {
+                _messages.Add(message);
+                StateHasChanged();
+                ScrollToBottom();
+            }
+        });
+    }
+
+    private void HandleStateChanged(Microsoft.AspNetCore.SignalR.Client.HubConnectionState state)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SendMessageAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newMessageText) || _isSending)
+            return;
+
+        _isSending = true;
+        var textToSend = _newMessageText;
+        _newMessageText = string.Empty;
+
+        try
+        {
+            var success = await ChatService.SendMessageAsync(textToSend);
+            if (!success)
+            {
+                _newMessageText = textToSend; // Restaura o texto se falhar
+            }
+        }
+        finally
+        {
+            _isSending = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+            await SendMessageAsync();
+        }
+    }
+
+    private bool IsUserMessage(ChatMessageDto msg)
+    {
+        if (UserSessionState.UserId != null && Guid.TryParse(UserSessionState.UserId, out var myUserId))
+        {
+            return msg.SenderId == myUserId;
+        }
+        return false;
+    }
+
+    private void ScrollToBottom()
+    {
+        try
+        {
+            _ = JSRuntime.InvokeVoidAsync("eval", "var el = document.getElementById('chat-message-container'); if(el) el.scrollTop = el.scrollHeight;");
+        }
+        catch
+        {
+            // Ignore JS interop failure in test environments
+        }
+    }
+
+    public void Dispose()
+    {
+        ChatService.OnMessageReceived -= HandleMessageReceived;
+        ChatService.OnStateChanged -= HandleStateChanged;
+    }
+}

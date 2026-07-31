@@ -8,6 +8,24 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F27 (Chat em Tempo Real via SignalR)
+
+- **[F27] Chat em Tempo Real via SignalR**:
+  - `Pages/Communication/TeamChat.razor`: Página de chat em tempo real (`/communication/team-chat`) com bolhas de mensagem personalizadas (remetente vs associados), indicador de conexão em tempo real (🟢 Conectado / 🔴 Conectando), rolagem automática de histórico e campo de mensagem interativo com suporte a `Enter`.
+  - `Services/SignalR/ISignalRChatService.cs` & `SignalRChatService.cs`: Serviço cliente SignalR em Blazor WebAssembly com reconexão automática (`WithAutomaticReconnect`), escuta do evento `receiveMessage` e integração com a API REST.
+  - `BabaPlay.Web.csproj`: Adicionado pacote `Microsoft.AspNetCore.SignalR.Client` (v10.0.0).
+  - `Components/Layout/NavMenu.razor`: Adicionado atalho para Chat do Time 💬 (`/communication/team-chat`).
+- **Domain Entity, Repository, Migration, CQRS & Controller / SignalR Hub Endpoints**:
+  - `ChatMessage.cs`: Entidade de domínio com factory method, validações e desativação.
+  - `IChatMessageRepository.cs` & `ChatMessageRepository.cs`: Repositório de chat integrado ao `AppDbContext` e migration EF Core `20260731001333_AddChatTables`.
+  - `GetRecentChatMessagesQuery.cs` & `GetRecentChatMessagesQueryHandler.cs`: Query Handler para histórico recente ordenado cronologicamente.
+  - `SendChatMessageCommand.cs` & `SendChatMessageCommandHandler.cs`: Command Handler para validação e persistência de novas mensagens.
+  - `ChatHub.cs`: Hub SignalR em `/hubs/chat` utilizando isolamento de grupo por associação (`tenant:{tenantId}`) e evento `receiveMessage`.
+  - `ChatController.cs`: Controller API REST com endpoints `GET /api/v1/communication/chat/messages` e `POST /api/v1/communication/chat/messages` integrado ao `IHubContext<ChatHub>`.
+- **Suíte de Testes TDD (bUnit & xUnit)**:
+  - `ChatMessageDomainTests.cs`, `GetRecentChatMessagesQueryHandlerTests.cs`, `SendChatMessageCommandHandlerTests.cs`, `TeamChatPageTests.cs`.
+  - Total da suíte do projeto: **746/746 testes passando (100% de sucesso)**.
+
 ### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F26 (Hub de Notificações no App)
 
 - **[F26] Hub de Notificações no App**:

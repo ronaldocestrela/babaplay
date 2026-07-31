@@ -54,13 +54,14 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<MonthlyFeePayment> MonthlyFeePayments => Set<MonthlyFeePayment>();
     public DbSet<Fundraiser> Fundraisers => Set<Fundraiser>();
 
-    // Communication module (F24, F25 & F26)
+    // Communication module (F24, F25, F26 & F27)
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<AnnouncementRead> AnnouncementReads => Set<AnnouncementRead>();
     public DbSet<Poll> Polls => Set<Poll>();
     public DbSet<PollOption> PollOptions => Set<PollOption>();
     public DbSet<PollVote> PollVotes => Set<PollVote>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -158,6 +159,19 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser>
             e.Property(n => n.IsActive).IsRequired();
             e.HasIndex(n => new { n.TenantId, n.UserId, n.IsRead, n.IsActive });
             e.HasIndex(n => new { n.TenantId, n.UserId, n.CreatedAt });
+        });
+
+        // Communication: Real-Time Team Chat (F27)
+        builder.Entity<ChatMessage>(e =>
+        {
+            e.HasKey(c => c.Id);
+            e.Property(c => c.TenantId).IsRequired();
+            e.Property(c => c.SenderId).IsRequired();
+            e.Property(c => c.SenderName).IsRequired().HasMaxLength(150);
+            e.Property(c => c.Content).IsRequired().HasMaxLength(2000);
+            e.Property(c => c.SentAtUtc).IsRequired();
+            e.Property(c => c.IsActive).IsRequired();
+            e.HasIndex(c => new { c.TenantId, c.IsActive, c.CreatedAt });
         });
 
 

@@ -377,12 +377,12 @@ flowchart TD
 * **Endpoints API Consumidos:** `GET /api/v1/notifications`, `PUT /api/v1/notifications/{id}/read`, `PUT /api/v1/notifications/read-all`
 * **Testes bUnit/xUnit:** `GetNotificationsQueryHandlerTests.cs`, `MarkNotificationReadCommandHandlerTests.cs`, `MarkAllNotificationsReadCommandHandlerTests.cs`, `NotificationCenterTests.cs`, `NotificationsPageTests.cs`.
 
-#### **[F27] Chat em Tempo Real via SignalR**
-* **Objetivo:** Chat da turma/time utilizando a biblioteca cliente do SignalR no Blazor (`Microsoft.AspNetCore.SignalR.Client`).
+#### **[F27] Chat em Tempo Real via SignalR** ✅ CONCLUÍDO
+* **Objetivo:** Chat da turma/time utilizando a biblioteca cliente do SignalR no Blazor (`Microsoft.AspNetCore.SignalR.Client`) com persistência no banco e transmissão instantânea por tenant.
 * **Componentes / Páginas:** `Pages/Communication/TeamChat.razor`
-* **Services & DTOs:** `SignalRChatService.cs`, `ChatMessageDto`
-* **Endpoints API / Hubs Consumidos:** `HubConnection` conectando em `/hubs/chat`
-* **Testes bUnit:** Testar envio de mensagem e simulação de recepção de evento do Hub SignalR.
+* **Services & DTOs:** `ISignalRChatService`, `SignalRChatService`, `ChatMessageDto`, `SendChatMessageDto`, `ChatMessageResponse`, `SendChatMessageRequest`
+* **Endpoints API / Hubs Consumidos:** `HubConnection` conectando em `/hubs/chat`, `GET /api/v1/communication/chat/messages`, `POST /api/v1/communication/chat/messages`
+* **Testes bUnit/xUnit:** `ChatMessageDomainTests.cs`, `GetRecentChatMessagesQueryHandlerTests.cs`, `SendChatMessageCommandHandlerTests.cs`, `TeamChatPageTests.cs`.
 
 ---
 

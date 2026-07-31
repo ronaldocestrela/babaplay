@@ -246,6 +246,7 @@ public static class ServiceRegistration
         services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
         services.AddScoped<IPollRepository, PollRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
         services.AddScoped<ITenantGeolocationSettingsRepository, TenantGeolocationSettingsRepository>();
         services.AddScoped<ICheckinRealtimeNotifier, SignalRCheckinRealtimeNotifier>();
         services.AddScoped<IMatchEventRealtimeNotifier, SignalRMatchEventRealtimeNotifier>();
