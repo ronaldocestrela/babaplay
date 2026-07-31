@@ -8,6 +8,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed — Deserialização de status em `/matches`
+
+- **`GameDayDto` / `MatchDto`**: conversores JSON (`GameDayStatusStringConverter`, `MatchStatusStringConverter`) aceitam `status` numérico (enum da API) ou string e normalizam para o nome usado pela UI (`Pending`, `Confirmed`, etc.).
+- **Testes**: `GameDayDtoDeserializationTests` cobre payloads com `status: 0` e `status: "Confirmed"`.
+
 ### Fixed — Dashboard summary (dados fictícios pós-cadastro)
 
 - **`GetDashboardSummaryQueryHandler`**: remove stubs hardcoded (avisos de exemplo, 42 gols, 88,5% de mensalidades, 14 confirmados). O summary passa a ler avisos publicados (`IAnnouncementRepository`), gols da temporada (`IPlayerScoreRepository`), adimplência do mês (`IPlayerMonthlyFeeRepository`) e RSVP real da próxima partida (`ICheckinRepository` + `RequestingUserId` do JWT).

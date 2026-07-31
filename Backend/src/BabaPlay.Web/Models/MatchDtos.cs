@@ -1,5 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+using BabaPlay.Web.Serialization;
 
 namespace BabaPlay.Web.Models;
 
@@ -12,6 +14,7 @@ public record MatchDto(
     string? Description,
     string? HomeTeamName,
     string? AwayTeamName,
+    [property: JsonConverter(typeof(MatchStatusStringConverter))]
     string Status, // "Pending", "Scheduled", "InProgress", "Completed", "Cancelled"
     int MaxPlayers,
     int ConfirmedCount);
@@ -67,6 +70,7 @@ public record GameDayDto(
     string? Location,
     string? Description,
     int MaxPlayers,
+    [property: JsonConverter(typeof(GameDayStatusStringConverter))]
     string Status);
 
 public record ChangeMatchStatusDto(string Status);
