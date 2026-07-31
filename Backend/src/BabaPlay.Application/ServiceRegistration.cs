@@ -36,6 +36,8 @@ using BabaPlay.Application.Commands.Announcements;
 using BabaPlay.Application.Queries.Announcements;
 using BabaPlay.Application.Commands.Polls;
 using BabaPlay.Application.Queries.Polls;
+using BabaPlay.Application.Commands.Notifications;
+using BabaPlay.Application.Queries.Notifications;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BabaPlay.Application;
@@ -188,6 +190,11 @@ public static class ServiceRegistration
         services.AddScoped<ICommandHandler<CreatePollCommand, Result<PollResponse>>, CreatePollCommandHandler>();
         services.AddScoped<ICommandHandler<SubmitPollVoteCommand, Result<PollResponse>>, SubmitPollVoteCommandHandler>();
         services.AddScoped<ICommandHandler<ClosePollCommand, Result>, ClosePollCommandHandler>();
+
+        // Communication — Notification Hub (F26)
+        services.AddScoped<IQueryHandler<GetNotificationsQuery, Result<NotificationSummaryResponse>>, GetNotificationsQueryHandler>();
+        services.AddScoped<ICommandHandler<MarkNotificationReadCommand, Result>, MarkNotificationReadCommandHandler>();
+        services.AddScoped<ICommandHandler<MarkAllNotificationsReadCommand, Result>, MarkAllNotificationsReadCommandHandler>();
 
         return services;
     }

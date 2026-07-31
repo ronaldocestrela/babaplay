@@ -1,0 +1,211 @@
+@page "/communication/notifications"
+@attribute [Authorize]
+@using BabaPlay.Web.Models
+@using BabaPlay.Web.Services.Http
+@using BabaPlay.Web.Components.Common
+@inject INotificationApiService NotificationApiService
+
+<PageTitle>Central de Notificações | Baba Play</PageTitle>
+
+<div class="container-fluid p-4" data-testid="notifications-page">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="font-weight-bold mb-1" style="color: var(--text-main);">
+                🔔 Central de Notificações
+                @if (UnreadCount > 0)
+                {
+                    <span class="badge bg-danger ms-2" style="font-size: 0.7rem; border-radius: 20px;" data-testid="unread-badge">
+                        @UnreadCount não lida(s)
+                    </span>
+                }
+            </h3>
+            <p class="text-muted mb-0" style="font-size: 0.9rem;">
+                Histórico completo de alertas, avisos, cobranças e convocações
+            </p>
+        </div>
+
+        @if (UnreadCount > 0)
+        {
+            <button class="btn btn-outline-primary btn-sm font-weight-bold"
+                    @onclick="MarkAllAsReadAsync"
+                    data-testid="btn-mark-all-read-page">
+                ✓ Marcar todas como lidas
+            </button>
+        }
+    </div>
+
+    <!-- Alertas -->
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger mb-4" role="alert" data-testid="notifications-error-alert">
+            ⚠️ @ErrorMessage
+        </div>
+    }
+
+    <!-- Filtros -->
+    <div class="card p-3 mb-4 shadow-sm" style="border-radius: 10px;" data-testid="notifications-filter-bar">
+        <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-sm @(ReadFilter == "all" ? "btn-primary" : "btn-outline-secondary") font-weight-bold"
+                    @onclick='() => SetFilter("all")'
+                    data-testid="filter-all">
+                Todas (@(_allNotifications?.Count ?? 0))
+            </button>
+            <button class="btn btn-sm @(ReadFilter == "unread" ? "btn-primary" : "btn-outline-secondary") font-weight-bold"
+                    @onclick='() => SetFilter("unread")'
+                    data-testid="filter-unread">
+                ✉ Não Lidas (@UnreadCount)
+            </button>
+        </div>
+    </div>
+
+    <!-- Lista -->
+    @if (IsLoading)
+    {
+        <div class="py-5" data-testid="notifications-loading">
+            <LoadingSpinner Message="Carregando notificações..." />
+        </div>
+    }
+    else if (FilteredNotifications.Count == 0)
+    {
+        <div class="card p-5 text-center shadow-sm" style="border-radius: 12px; background: var(--bg-surface, #ffffff);" data-testid="empty-notifications-page">
+            <div style="font-size: 3rem; color: #94a3b8;">🎉</div>
+            <h5 class="font-weight-bold mt-2" style="color: var(--text-main);">Nenhuma notificação encontrada</h5>
+            <p class="text-muted mb-0" style="font-size: 0.875rem;">
+                @(ReadFilter == "unread" ? "Você já leu todas as suas notificações!" : "Você ainda não possui alertas registrados.")
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0" style="border-radius: 12px;" data-testid="notifications-list">
+            <div class="list-group list-group-flush" style="border-radius: 12px;">
+                @foreach (var item in FilteredNotifications)
+                {
+                    <div class="list-group-item p-3 border-bottom @(item.IsRead ? "" : "bg-light")" data-testid="notification-card-item">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <h6 class="font-weight-bold mb-0" style="color: var(--text-main);">
+                                @GetNotificationIcon(item.Type) @item.Title
+                            </h6>
+                            <div class="d-flex align-items-center gap-2">
+                                <small class="text-muted" style="font-size: 0.75rem;">
+                                    @item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                </small>
+                                @if (!item.IsRead)
+                                {
+                                    <button class="btn btn-sm btn-outline-success py-0 px-2"
+                                            style="font-size: 0.75rem;"
+                                            @onclick="() => HandleMarkReadAsync(item)"
+                                            data-testid="btn-mark-read-item">
+                                        ✔ Lido
+                                    </button>
+                                }
+                            </div>
+                        </div>
+
+                        <p class="text-muted mb-0 mt-1" style="font-size: 0.88rem; line-height: 1.5;">
+                            @item.Message
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<NotificationDto>? _allNotifications;
+    private bool IsLoading = true;
+    private string? ErrorMessage;
+    private string ReadFilter = "all";
+    private int UnreadCount = 0;
+
+    private List<NotificationDto> FilteredNotifications
+    {
+        get
+        {
+            if (_allNotifications is null) return [];
+
+            return ReadFilter switch
+            {
+                "unread" => _allNotifications.Where(n => !n.IsRead).ToList(),
+                _ => _allNotifications,
+            };
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadNotificationsAsync();
+    }
+
+    private async Task LoadNotificationsAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var summary = await NotificationApiService.GetNotificationsAsync(onlyUnread: false, limit: 50);
+            if (summary is null)
+            {
+                ErrorMessage = "Não foi possível carregar as notificações. Verifique sua conexão.";
+            }
+            else
+            {
+                UnreadCount = summary.UnreadCount;
+                _allNotifications = summary.Notifications ?? [];
+            }
+        }
+        catch
+        {
+            ErrorMessage = "Erro inesperado ao carregar notificações.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task HandleMarkReadAsync(NotificationDto item)
+    {
+        var success = await NotificationApiService.MarkAsReadAsync(item.Id);
+        if (success && _allNotifications != null)
+        {
+            UnreadCount = Math.Max(0, UnreadCount - 1);
+            var idx = _allNotifications.IndexOf(item);
+            if (idx >= 0)
+            {
+                _allNotifications[idx] = item with { IsRead = true };
+            }
+            StateHasChanged();
+        }
+    }
+
+    private async Task MarkAllAsReadAsync()
+    {
+        var success = await NotificationApiService.MarkAllAsReadAsync();
+        if (success && _allNotifications != null)
+        {
+            UnreadCount = 0;
+            _allNotifications = _allNotifications.Select(n => n with { IsRead = true }).ToList();
+            StateHasChanged();
+        }
+    }
+
+    private void SetFilter(string filter) => ReadFilter = filter;
+
+    private static string GetNotificationIcon(int type)
+    {
+        return type switch
+        {
+            1 => "📅", // Match
+            2 => "🏃", // Checkin
+            3 => "⚽", // MatchEvent
+            4 => "💰", // Financial
+            5 => "📣", // Announcement
+            _ => "🔔"
+        };
+    }
+}

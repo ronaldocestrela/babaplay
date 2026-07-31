@@ -22,9 +22,11 @@ public class MainLayoutTests : TestContext
         var tenantState = new TenantState();
         var authStateProvider = new CustomAuthStateProvider(userSessionState);
 
+        var mockNotificationService = new Moq.Mock<BabaPlay.Web.Services.Http.INotificationApiService>();
         Services.AddSingleton(tenantState);
         Services.AddSingleton(userSessionState);
         Services.AddSingleton(authStateProvider);
+        Services.AddSingleton(mockNotificationService.Object);
 
         // Act
         var cut = RenderComponent<MainLayout>();

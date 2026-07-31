@@ -368,12 +368,14 @@ flowchart TD
 * **Endpoints API Consumidos:** `GET /api/v1/communication/polls`, `POST /api/v1/communication/polls`, `POST /api/v1/communication/polls/{id}/vote`, `POST /api/v1/communication/polls/{id}/close`
 * **Testes bUnit/xUnit:** `PollDomainTests.cs`, `CreatePollCommandHandlerTests.cs`, `SubmitPollVoteCommandHandlerTests.cs`, `GetPollsQueryHandlerTests.cs`, `PollCardTests.cs`, `CreatePollModalTests.cs`, `PollsPageTests.cs`.
 
-#### **[F26] Hub de Notificações no App**
-* **Objetivo:** Central de alertas do usuário (alteração de horário de jogo, nova cobrança, convocação).
-* **Componentes / Páginas:** `Components/Communication/NotificationCenter.razor`
-* **Services & DTOs:** `INotificationApiService`, `NotificationDto`
-* **Endpoints API Consumidos:** `GET /api/v1/notifications`, `PUT /api/v1/notifications/{id}/read`
-* **Testes bUnit:** Marcar notificação como lida e atualizar contador de não lidas no cabeçalho.
+#### **[F26] Hub de Notificações no App** ✅ CONCLUÍDO
+* **Objetivo:** Central de alertas do usuário (alteração de horário de jogo, nova cobrança, convocação, comunicados e enquetes) com contador dinâmico no cabeçalho e histórico completo.
+* **Componentes / Páginas:** 
+  * `Components/Communication/NotificationCenter.razor`
+  * `Pages/Communication/Notifications.razor`
+* **Services & DTOs:** `INotificationApiService`, `NotificationApiService`, `NotificationDto`, `NotificationSummaryDto`, `NotificationResponse`, `NotificationSummaryResponse`
+* **Endpoints API Consumidos:** `GET /api/v1/notifications`, `PUT /api/v1/notifications/{id}/read`, `PUT /api/v1/notifications/read-all`
+* **Testes bUnit/xUnit:** `GetNotificationsQueryHandlerTests.cs`, `MarkNotificationReadCommandHandlerTests.cs`, `MarkAllNotificationsReadCommandHandlerTests.cs`, `NotificationCenterTests.cs`, `NotificationsPageTests.cs`.
 
 #### **[F27] Chat em Tempo Real via SignalR**
 * **Objetivo:** Chat da turma/time utilizando a biblioteca cliente do SignalR no Blazor (`Microsoft.AspNetCore.SignalR.Client`).

@@ -14,6 +14,7 @@
     <div style="display: flex; align-items: center; gap: 1.5rem;">
         <AuthorizeView>
             <Authorized>
+                <BabaPlay.Web.Components.Communication.NotificationCenter />
                 <div style="text-align: right;">
                     <div style="font-size: 0.9rem; font-weight: 600;">@(UserSessionState.FullName ?? context.User.Identity?.Name ?? "Usuário")</div>
                     <div style="font-size: 0.75rem; color: var(--text-muted);">@(UserSessionState.Email)</div>

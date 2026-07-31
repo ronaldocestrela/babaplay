@@ -8,6 +8,25 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F26 (Hub de Notificações no App)
+
+- **[F26] Hub de Notificações no App**:
+  - `Components/Communication/NotificationCenter.razor`: Componente do cabeçalho com ícone de sininho 🔔, badge vermelho dinâmico com contagem de não lidas e painel dropdown flyout com lista de notificações recentes, ação de leitura e ícones por categoria.
+  - `Pages/Communication/Notifications.razor`: Página dedicada em `/communication/notifications` com histórico completo de notificações do usuário, filtros por estado (Todas vs Não Lidas) e opção de marcação em lote.
+  - `Components/Layout/Header.razor`: Integrada a `NotificationCenter` no cabeçalho visível em todas as telas da aplicação.
+  - `Services/Http/INotificationApiService.cs` & `NotificationApiService.cs`: Serviço cliente HTTP para notificações no Blazor.
+  - `Components/Layout/NavMenu.razor`: Adicionado atalho para Alertas & Notificações (`/communication/notifications`).
+- **Domain Entity, Repository, Migration, CQRS & Controller Endpoints**:
+  - `Notification.cs`: Reaproveitada entidade de domínio com factory method, validações e marcação de leitura.
+  - `INotificationRepository.cs` & `NotificationRepository.cs`: Repositório de notificações integrado ao `AppDbContext` e migration EF Core `20260730233736_AddNotificationTables`.
+  - `GetNotificationsQuery.cs` & `GetNotificationsQueryHandler.cs`: Query Handler para retorno de notificações do usuário com contagem de não lidas.
+  - `MarkNotificationReadCommand.cs` & `MarkNotificationReadCommandHandler.cs`: Command Handler para marcação de leitura individual.
+  - `MarkAllNotificationsReadCommand.cs` & `MarkAllNotificationsReadCommandHandler.cs`: Command Handler para leitura em lote.
+  - `NotificationController.cs`: Controller API REST com endpoints `GET /api/v1/notifications`, `PUT /api/v1/notifications/{id}/read` e `PUT /api/v1/notifications/read-all`.
+- **Suíte de Testes TDD (bUnit & xUnit)**:
+  - `GetNotificationsQueryHandlerTests.cs`, `MarkNotificationReadCommandHandlerTests.cs`, `MarkAllNotificationsReadCommandHandlerTests.cs`, `NotificationCenterTests.cs`, `NotificationsPageTests.cs`.
+  - Total da suíte do projeto: **733/733 testes passando (100% de sucesso)**.
+
 ### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F25 (Enquetes Interativas)
 
 - **[F25] Enquetes Interativas**:

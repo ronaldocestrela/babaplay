@@ -54,12 +54,13 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<MonthlyFeePayment> MonthlyFeePayments => Set<MonthlyFeePayment>();
     public DbSet<Fundraiser> Fundraisers => Set<Fundraiser>();
 
-    // Communication module (F24 & F25)
+    // Communication module (F24, F25 & F26)
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<AnnouncementRead> AnnouncementReads => Set<AnnouncementRead>();
     public DbSet<Poll> Polls => Set<Poll>();
     public DbSet<PollOption> PollOptions => Set<PollOption>();
     public DbSet<PollVote> PollVotes => Set<PollVote>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -141,6 +142,22 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser>
              .HasForeignKey(v => v.OptionId)
              .OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(v => new { v.PollId, v.UserId }).IsUnique();
+        });
+
+        // Communication: App Notification Hub (F26)
+        builder.Entity<Notification>(e =>
+        {
+            e.HasKey(n => n.Id);
+            e.Property(n => n.TenantId).IsRequired();
+            e.Property(n => n.UserId).IsRequired();
+            e.Property(n => n.Type).IsRequired();
+            e.Property(n => n.Title).IsRequired().HasMaxLength(200);
+            e.Property(n => n.Message).IsRequired().HasMaxLength(2000);
+            e.Property(n => n.PayloadJson).HasMaxLength(4000);
+            e.Property(n => n.IsRead).IsRequired();
+            e.Property(n => n.IsActive).IsRequired();
+            e.HasIndex(n => new { n.TenantId, n.UserId, n.IsRead, n.IsActive });
+            e.HasIndex(n => new { n.TenantId, n.UserId, n.CreatedAt });
         });
 
 

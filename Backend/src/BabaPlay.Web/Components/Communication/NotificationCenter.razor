@@ -1,0 +1,193 @@
+@namespace BabaPlay.Web.Components.Communication
+@using BabaPlay.Web.Models
+@using BabaPlay.Web.Services.Http
+@inject INotificationApiService NotificationApiService
+@inject NavigationManager NavigationManager
+
+<div class="dropdown notification-center-container" data-testid="notification-center">
+    <!-- Botão de Sininho 🔔 -->
+    <button class="btn btn-icon position-relative text-dark border-0 p-2"
+            type="button"
+            @onclick="ToggleDropdown"
+            data-testid="btn-notification-bell"
+            aria-label="Central de Notificações">
+        <span style="font-size: 1.25rem;">🔔</span>
+        @if (UnreadCount > 0)
+        {
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  style="font-size: 0.65rem;"
+                  data-testid="unread-count-badge">
+                @(UnreadCount > 99 ? "99+" : UnreadCount)
+            </span>
+        }
+    </button>
+
+    <!-- Menu Flyout Dropdown -->
+    @if (IsOpen)
+    {
+        <div class="dropdown-menu dropdown-menu-end show shadow-lg p-0 border-0"
+             style="display: block; position: absolute; right: 0; top: 100%; width: 340px; border-radius: 12px; z-index: 1050; background: var(--bg-surface, #ffffff);"
+             data-testid="notification-dropdown">
+
+            <!-- Cabeçalho -->
+            <div class="d-flex justify-content-between align-items-center p-3 border-bottom" style="background: var(--bg-muted, #f8fafc); border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <h6 class="mb-0 font-weight-bold" style="color: var(--text-main);">
+                    🔔 Notificações
+                </h6>
+                @if (UnreadCount > 0)
+                {
+                    <button class="btn btn-link btn-sm p-0 text-decoration-none"
+                            style="font-size: 0.78rem;"
+                            @onclick="MarkAllAsReadAsync"
+                            data-testid="btn-mark-all-read">
+                        Marcar lidas
+                    </button>
+                }
+            </div>
+
+            <!-- Lista de Notificações Recentes -->
+            <div class="notification-list" style="max-height: 320px; overflow-y: auto;">
+                @if (_isLoading)
+                {
+                    <div class="p-4 text-center text-muted" data-testid="notifications-loading">
+                        <div class="spinner-border spinner-border-sm text-primary mb-1" role="status"></div>
+                        <div style="font-size: 0.8rem;">Carregando…</div>
+                    </div>
+                }
+                else if (_notifications.Count == 0)
+                {
+                    <div class="p-4 text-center text-muted" data-testid="notifications-empty">
+                        <div style="font-size: 1.5rem;">🎉</div>
+                        <div style="font-size: 0.85rem;" class="mt-1">Nenhuma notificação por aqui!</div>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var item in _notifications)
+                    {
+                        <div class="p-3 border-bottom notification-item @(item.IsRead ? "" : "unread")"
+                             style="cursor: pointer; background: @(item.IsRead ? "transparent" : "#f0fdf4"); transition: background 0.2s;"
+                             @onclick="() => HandleNotificationClickAsync(item)"
+                             data-testid="notification-item">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <span class="font-weight-bold" style="font-size: 0.85rem; color: var(--text-main);">
+                                    @GetNotificationIcon(item.Type) @item.Title
+                                </span>
+                                @if (!item.IsRead)
+                                {
+                                    <span class="badge bg-danger rounded-circle p-1" style="width: 8px; height: 8px;" data-testid="dot-unread"></span>
+                                }
+                            </div>
+                            <p class="mb-1 text-muted" style="font-size: 0.8rem; line-height: 1.4;">
+                                @item.Message
+                            </p>
+                            <small class="text-muted" style="font-size: 0.72rem;">
+                                @item.CreatedAt.ToLocalTime().ToString("dd/MM HH:mm")
+                            </small>
+                        </div>
+                    }
+                }
+            </div>
+
+            <!-- Rodapé -->
+            <div class="p-2 text-center border-top bg-light" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+                <button class="btn btn-link btn-sm p-0 text-decoration-none fw-bold"
+                        style="font-size: 0.8rem;"
+                        @onclick="NavigateToFullPage"
+                        data-testid="btn-view-all">
+                    Ver histórico completo ➔
+                </button>
+            </div>
+
+        </div>
+    }
+</div>
+
+@code {
+    private bool IsOpen = false;
+    private bool _isLoading = false;
+    private int UnreadCount = 0;
+    private List<NotificationDto> _notifications = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshSummaryAsync();
+    }
+
+    public async Task RefreshSummaryAsync()
+    {
+        try
+        {
+            var summary = await NotificationApiService.GetNotificationsAsync(onlyUnread: false, limit: 10);
+            if (summary != null)
+            {
+                UnreadCount = summary.UnreadCount;
+                _notifications = summary.Notifications ?? [];
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+            // Fail gracefully in UI
+        }
+    }
+
+    private async Task ToggleDropdown()
+    {
+        IsOpen = !IsOpen;
+        if (IsOpen)
+        {
+            _isLoading = true;
+            await RefreshSummaryAsync();
+            _isLoading = false;
+        }
+    }
+
+    private async Task HandleNotificationClickAsync(NotificationDto item)
+    {
+        if (!item.IsRead)
+        {
+            var success = await NotificationApiService.MarkAsReadAsync(item.Id);
+            if (success)
+            {
+                UnreadCount = Math.Max(0, UnreadCount - 1);
+                var idx = _notifications.IndexOf(item);
+                if (idx >= 0)
+                {
+                    _notifications[idx] = item with { IsRead = true };
+                }
+            }
+        }
+
+        IsOpen = false;
+    }
+
+    private async Task MarkAllAsReadAsync()
+    {
+        var success = await NotificationApiService.MarkAllAsReadAsync();
+        if (success)
+        {
+            UnreadCount = 0;
+            _notifications = _notifications.Select(n => n with { IsRead = true }).ToList();
+        }
+    }
+
+    private void NavigateToFullPage()
+    {
+        IsOpen = false;
+        NavigationManager.NavigateTo("communication/notifications");
+    }
+
+    private static string GetNotificationIcon(int type)
+    {
+        return type switch
+        {
+            1 => "📅", // Match
+            2 => "🏃", // Checkin
+            3 => "⚽", // MatchEvent
+            4 => "💰", // Financial
+            5 => "📣", // Announcement
+            _ => "🔔"
+        };
+    }
+}
