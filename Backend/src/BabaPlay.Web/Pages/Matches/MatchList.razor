@@ -3,7 +3,9 @@
 @using BabaPlay.Web.Services.Http
 @using BabaPlay.Web.Components.Common
 @using BabaPlay.Web.Components.Matches
+@using BabaPlay.Web.Serialization
 @inject IMatchApiService MatchApiService
+@inject ICheckinApiService CheckinApiService
 
 <PageTitle>Calendário de Partidas & Babas - Baba Play</PageTitle>
 
@@ -50,6 +52,7 @@
                 <label class="form-label filters-toolbar__label">Status</label>
                 <div class="nav nav-pills match-list-filters" data-testid="status-filter-tabs">
                     <button type="button" class="nav-link @(SelectedStatusFilter == null ? "active" : "")" @onclick="SelectFilterAll">Todos</button>
+                    <button type="button" class="nav-link @(SelectedStatusFilter == "Pending" ? "active" : "")" @onclick="SelectFilterPending">Pendentes</button>
                     <button type="button" class="nav-link @(SelectedStatusFilter == "Confirmed" ? "active" : "")" @onclick="SelectFilterConfirmed">Agendados</button>
                     <button type="button" class="nav-link @(SelectedStatusFilter == "Completed" ? "active" : "")" @onclick="SelectFilterCompleted">Concluídos</button>
                     <button type="button" class="nav-link @(SelectedStatusFilter == "Cancelled" ? "active" : "")" @onclick="SelectFilterCancelled">Cancelados</button>
@@ -153,6 +156,9 @@
 
             foreach (var gd in gameDays)
             {
+                var checkins = await CheckinApiService.GetCheckinsByGameDayAsync(gd.Id);
+                var confirmedCount = checkins.Count;
+
                 result.Add(new MatchDto(
                     gd.Id,
                     gd.Id,
@@ -164,7 +170,7 @@
                     null,
                     gd.Status,
                     gd.MaxPlayers,
-                    14
+                    confirmedCount
                 ));
             }
 
@@ -186,6 +192,7 @@
     }
 
     private void SelectFilterAll() => FilterByStatus(null);
+    private void SelectFilterPending() => FilterByStatus("Pending");
     private void SelectFilterConfirmed() => FilterByStatus("Confirmed");
     private void SelectFilterCompleted() => FilterByStatus("Completed");
     private void SelectFilterCancelled() => FilterByStatus("Cancelled");
@@ -197,7 +204,8 @@
         ModalModel = new ScheduleGameDayDto
         {
             ScheduledAt = DateTime.Now.AddDays(1),
-            MaxPlayers = 20
+            MaxPlayers = 20,
+            Status = "Confirmed"
         };
         IsModalOpen = true;
     }
@@ -212,7 +220,8 @@
             ScheduledAt = match.ScheduledAt,
             Location = match.Location ?? string.Empty,
             Description = match.Description,
-            MaxPlayers = match.MaxPlayers
+            MaxPlayers = match.MaxPlayers,
+            Status = match.Status
         };
         IsModalOpen = true;
     }
@@ -257,11 +266,17 @@
 
     private async Task ConfirmChangeStatusAsync(MatchDto match)
     {
-        var newStatus = match.Status == "Completed" ? "Confirmed" : "Completed";
-        var (success, error) = await MatchApiService.ChangeMatchStatusAsync(match.Id, newStatus);
+        var newStatus = GameDayStatusMapper.GetNextStatus(match.Status);
+        if (newStatus is null)
+        {
+            SetAlert($"O baba '{match.GameDayName}' já está em status final ({GetStatusLabel(match.Status)}).", isError: true);
+            return;
+        }
+
+        var (success, error) = await MatchApiService.ChangeGameDayStatusAsync(match.GameDayId, newStatus);
         if (success)
         {
-            SetAlert($"Status do baba '{match.GameDayName}' alterado para {newStatus}.");
+            SetAlert($"Status do baba '{match.GameDayName}' alterado para {GetStatusLabel(newStatus)}.");
             await LoadMatchesAsync();
         }
         else
@@ -269,6 +284,15 @@
             SetAlert(error ?? "Não foi possível alterar o status.", isError: true);
         }
     }
+
+    private static string GetStatusLabel(string status) => status switch
+    {
+        "Pending" => "Pendente",
+        "Confirmed" => "Agendado",
+        "Completed" => "Concluído",
+        "Cancelled" => "Cancelado",
+        _ => status
+    };
 
     private async Task ConfirmDeleteAsync(MatchDto match)
     {

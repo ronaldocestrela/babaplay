@@ -1,6 +1,7 @@
 using BabaPlay.Application.Commands.GameDays;
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Domain.Entities;
+using BabaPlay.Domain.Enums;
 using FluentAssertions;
 using Moq;
 
@@ -43,7 +44,7 @@ public class CreateGameDayCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ValidCommand_ShouldCreateGameDay()
+    public async Task Handle_ValidCommand_ShouldCreateGameDayAsConfirmedByDefault()
     {
         var scheduledAt = DateTime.UtcNow.AddHours(2);
         _gameDayRepo
@@ -55,7 +56,35 @@ public class CreateGameDayCommandHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value!.Name.Should().Be("Rodada");
         result.Value.MaxPlayers.Should().Be(18);
+        result.Value.Status.Should().Be(GameDayStatus.Confirmed);
         _gameDayRepo.Verify(r => r.AddAsync(It.IsAny<GameDay>(), It.IsAny<CancellationToken>()), Times.Once);
         _gameDayRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_WithPendingStatus_ShouldCreateAsPending()
+    {
+        var scheduledAt = DateTime.UtcNow.AddHours(2);
+        _gameDayRepo
+            .Setup(r => r.ExistsByNormalizedNameAndScheduledAtAsync("RASCUNHO", scheduledAt, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var result = await _handler.HandleAsync(
+            new CreateGameDayCommand("Rascunho", scheduledAt, "Campo A", null, 18, GameDayStatus.Pending));
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.Status.Should().Be(GameDayStatus.Pending);
+    }
+
+    [Fact]
+    public async Task Handle_WithCompletedStatus_ShouldReturnInvalidStatus()
+    {
+        var scheduledAt = DateTime.UtcNow.AddHours(2);
+
+        var result = await _handler.HandleAsync(
+            new CreateGameDayCommand("Rodada", scheduledAt, null, null, 18, GameDayStatus.Completed));
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorCode.Should().Be("INVALID_STATUS");
     }
 }

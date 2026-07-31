@@ -61,6 +61,10 @@ public record ScheduleGameDayDto
 
     [Range(1, 100, ErrorMessage = "O número máximo de jogadores deve ser de pelo menos 1.")]
     public int MaxPlayers { get; set; } = 20;
+
+    /// <summary>Initial status: "Pending" (rascunho) or "Confirmed" (agendado). Default Confirmed.</summary>
+    [Required(ErrorMessage = "Selecione o status do agendamento.")]
+    public string Status { get; set; } = "Confirmed";
 }
 
 public record GameDayDto(
@@ -74,3 +78,5 @@ public record GameDayDto(
     string Status);
 
 public record ChangeMatchStatusDto(string Status);
+
+public record ChangeGameDayStatusDto(int Status);

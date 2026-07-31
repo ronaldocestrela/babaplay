@@ -45,7 +45,13 @@ public sealed class GameDayController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateGameDayRequest request, CancellationToken ct)
     {
         var result = await _createHandler.HandleAsync(
-            new CreateGameDayCommand(request.Name, request.ScheduledAt, request.Location, request.Description, request.MaxPlayers),
+            new CreateGameDayCommand(
+                request.Name,
+                request.ScheduledAt,
+                request.Location,
+                request.Description,
+                request.MaxPlayers,
+                request.Status ?? GameDayStatus.Confirmed),
             ct);
 
         if (!result.IsSuccess)
@@ -173,7 +179,8 @@ public sealed record CreateGameDayRequest(
     DateTime ScheduledAt,
     string? Location,
     string? Description,
-    int MaxPlayers);
+    int MaxPlayers,
+    GameDayStatus? Status = null);
 
 public sealed record UpdateGameDayRequest(
     string Name,

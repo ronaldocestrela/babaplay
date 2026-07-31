@@ -2,6 +2,7 @@ using BabaPlay.Application.Common;
 using BabaPlay.Application.DTOs;
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Domain.Entities;
+using BabaPlay.Domain.Enums;
 
 namespace BabaPlay.Application.Commands.GameDays;
 
@@ -28,6 +29,11 @@ public sealed class CreateGameDayCommandHandler
         if (cmd.MaxPlayers <= 0)
             return Result<GameDayResponse>.Fail("INVALID_MAX_PLAYERS", "MaxPlayers must be greater than zero.");
 
+        if (cmd.Status is not (GameDayStatus.Pending or GameDayStatus.Confirmed))
+            return Result<GameDayResponse>.Fail(
+                "INVALID_STATUS",
+                "Initial status must be Pending or Confirmed.");
+
         var normalizedName = cmd.Name.Trim().ToUpperInvariant();
         var exists = await _gameDayRepository.ExistsByNormalizedNameAndScheduledAtAsync(normalizedName, cmd.ScheduledAt, ct);
         if (exists)
@@ -40,6 +46,9 @@ public sealed class CreateGameDayCommandHandler
             cmd.Location,
             cmd.Description,
             cmd.MaxPlayers);
+
+        if (cmd.Status != GameDayStatus.Pending)
+            gameDay.ChangeStatus(cmd.Status);
 
         await _gameDayRepository.AddAsync(gameDay, ct);
         await _gameDayRepository.SaveChangesAsync(ct);

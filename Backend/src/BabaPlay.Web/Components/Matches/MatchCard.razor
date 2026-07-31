@@ -56,12 +56,12 @@
                     data-testid="btn-edit-match">
                 <i class="bi bi-pencil" aria-hidden="true"></i>
             </button>
-            <button class="btn btn-outline-secondary btn-status-match"
+            <button class="btn @(Match.Status == "Pending" ? "btn-outline-success" : "btn-outline-secondary") btn-status-match"
                     @onclick="() => OnChangeStatus.InvokeAsync(Match)"
-                    title="Alterar status"
-                    aria-label="Alterar status"
+                    title="@GetStatusActionTitle(Match.Status)"
+                    aria-label="@GetStatusActionTitle(Match.Status)"
                     data-testid="btn-status-match">
-                <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                <i class="bi @(Match.Status == "Pending" ? "bi-check-circle" : "bi-arrow-repeat")" aria-hidden="true"></i>
             </button>
             <button class="btn btn-outline-danger btn-delete-match"
                     @onclick="() => OnDelete.InvokeAsync(Match)"
@@ -98,5 +98,12 @@
         "Completed" => "Concluído",
         "Cancelled" => "Cancelado",
         _ => status
+    };
+
+    private static string GetStatusActionTitle(string status) => status switch
+    {
+        "Pending" => "Confirmar agendamento",
+        "Confirmed" => "Marcar como concluído",
+        _ => "Alterar status"
     };
 }

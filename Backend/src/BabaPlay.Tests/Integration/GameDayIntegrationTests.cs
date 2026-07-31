@@ -29,7 +29,8 @@ public sealed class GameDayIntegrationTests : IClassFixture<PlayerWebApplication
         DateTime? scheduledAt = null,
         string? location = null,
         string? description = null,
-        int maxPlayers = 22)
+        int maxPlayers = 22,
+        GameDayStatus? status = null)
         => JsonContent.Create(new
         {
             name,
@@ -37,6 +38,7 @@ public sealed class GameDayIntegrationTests : IClassFixture<PlayerWebApplication
             location,
             description,
             maxPlayers,
+            status,
         });
 
     [Fact]
@@ -50,7 +52,19 @@ public sealed class GameDayIntegrationTests : IClassFixture<PlayerWebApplication
         var body = await response.Content.ReadFromJsonAsync<GameDayResponse>(JsonOptions);
         body.Should().NotBeNull();
         body!.Name.Should().Be("Rodada A");
-        body.Status.Should().Be(GameDayStatus.Pending);
+        body.Status.Should().Be(GameDayStatus.Confirmed);
+    }
+
+    [Fact]
+    public async Task Post_WithPendingStatus_ShouldReturn201AsPending()
+    {
+        var response = await _client.PostAsync(
+            "/api/v1/gameday",
+            CreateBody("Rodada Pendente", DateTime.UtcNow.AddHours(4), status: GameDayStatus.Pending));
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var body = await response.Content.ReadFromJsonAsync<GameDayResponse>(JsonOptions);
+        body!.Status.Should().Be(GameDayStatus.Pending);
     }
 
     [Fact]

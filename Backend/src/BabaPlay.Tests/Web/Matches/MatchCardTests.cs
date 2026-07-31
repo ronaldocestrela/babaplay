@@ -40,6 +40,29 @@ public class MatchCardTests : TestContext
     }
 
     [Fact]
+    public void MatchCard_WhenPending_ShouldShowConfirmAction()
+    {
+        var match = new MatchDto(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Baba Pendente",
+            DateTime.Now.AddDays(1),
+            "Campo 1",
+            null,
+            null,
+            null,
+            "Pending",
+            20,
+            0);
+
+        var cut = RenderComponent<MatchCard>(parameters => parameters
+            .Add(p => p.Match, match));
+
+        cut.Find("[data-testid='match-status-badge']").TextContent.Should().Contain("Pendente");
+        cut.Find("[data-testid='btn-status-match']").GetAttribute("title").Should().Be("Confirmar agendamento");
+    }
+
+    [Fact]
     public void MatchCard_WhenEditButtonClicked_ShouldTriggerOnEditCallback()
     {
         // Arrange

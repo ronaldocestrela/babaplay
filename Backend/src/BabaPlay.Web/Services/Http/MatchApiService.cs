@@ -6,6 +6,7 @@ using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using BabaPlay.Web.Models;
+using BabaPlay.Web.Serialization;
 
 namespace BabaPlay.Web.Services.Http;
 
@@ -44,7 +45,20 @@ public sealed class MatchApiService : IMatchApiService
 
     public async Task<(bool Success, string? ErrorMessage)> CreateGameDayAsync(ScheduleGameDayDto dto, CancellationToken cancellationToken = default)
     {
-        var response = await _httpClient.PostAsJsonAsync("api/v1/gameday", dto, cancellationToken);
+        if (!GameDayStatusMapper.TryToNumeric(dto.Status, out var statusValue))
+            return (false, "Status inválido para o agendamento.");
+
+        var payload = new
+        {
+            dto.Name,
+            dto.ScheduledAt,
+            dto.Location,
+            dto.Description,
+            dto.MaxPlayers,
+            status = statusValue,
+        };
+
+        var response = await _httpClient.PostAsJsonAsync("api/v1/gameday", payload, cancellationToken);
         if (response.IsSuccessStatusCode)
         {
             return (true, null);
@@ -76,6 +90,26 @@ public sealed class MatchApiService : IMatchApiService
 
         var errorMessage = await ExtractErrorMessageAsync(response, cancellationToken);
         return (false, errorMessage ?? "Falha ao excluir evento de baba.");
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> ChangeGameDayStatusAsync(
+        Guid id,
+        string status,
+        CancellationToken cancellationToken = default)
+    {
+        if (!GameDayStatusMapper.TryToNumeric(status, out var statusValue))
+            return (false, "Status inválido para o agendamento.");
+
+        var response = await _httpClient.PutAsJsonAsync(
+            $"api/v1/gameday/{id}/status",
+            new ChangeGameDayStatusDto(statusValue),
+            cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+            return (true, null);
+
+        var errorMessage = await ExtractErrorMessageAsync(response, cancellationToken);
+        return (false, errorMessage ?? "Falha ao alterar status do agendamento.");
     }
 
     public async Task<IReadOnlyList<MatchDto>> GetMatchesAsync(string? status = null, CancellationToken cancellationToken = default)

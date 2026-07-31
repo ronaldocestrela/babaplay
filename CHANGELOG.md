@@ -8,6 +8,20 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Changed — Status inicial escolhido na criação do baba
+
+- **`CreateGameDayCommand` / API `POST /api/v1/gameday`**: aceitam `status` (`Pending` ou `Confirmed`; default `Confirmed`).
+- **`MatchModal`**: campo **Status inicial** na criação (Agendado ou Pendente/rascunho).
+- **`MatchCard`**: em Pendente, botão explícito "Confirmar agendamento".
+
+### Fixed — Confirmados fictícios e status Pendente em `/matches`
+
+- **`MatchList`**: `ConfirmedCount` passa a vir de check-ins reais (`ICheckinApiService.GetCheckinsByGameDayAsync`); remove stub `14`.
+- **`MatchApiService`**: novo `ChangeGameDayStatusAsync` (`PUT /api/v1/gameday/{id}/status`) com status numérico alinhado ao enum da API.
+- **Botão de status**: avança `Pending → Confirmed → Completed` no GameDay (deixa de chamar endpoint de Match).
+- **Filtros**: tab **Pendentes** para localizar babas recém-criados.
+- **Testes**: `MatchListTests` e `GameDayStatusMapperTests`.
+
 ### Fixed — Deserialização de status em `/matches`
 
 - **`GameDayDto` / `MatchDto`**: conversores JSON (`GameDayStatusStringConverter`, `MatchStatusStringConverter`) aceitam `status` numérico (enum da API) ou string e normalizam para o nome usado pela UI (`Pending`, `Confirmed`, etc.).

@@ -65,5 +65,28 @@ public class MatchModalTests : TestContext
         // Assert
         submittedDto.Should().NotBeNull();
         submittedDto!.Name.Should().Be("Baba Futuro");
+        submittedDto.Status.Should().Be("Confirmed");
+    }
+
+    [Fact]
+    public void MatchModal_WhenCreating_ShouldRenderStatusSelect()
+    {
+        var model = new ScheduleGameDayDto
+        {
+            Name = "Baba",
+            ScheduledAt = DateTime.Now.AddDays(2),
+            Location = "Arena",
+            MaxPlayers = 20,
+            Status = "Pending"
+        };
+
+        var cut = RenderComponent<MatchModal>(parameters => parameters
+            .Add(p => p.IsOpen, true)
+            .Add(p => p.IsEditing, false)
+            .Add(p => p.Model, model));
+
+        cut.Find("[data-testid='input-match-status']").Should().NotBeNull();
+        cut.Markup.Should().Contain("Pendente (rascunho)");
+        cut.Markup.Should().Contain("Agendado (aberto para confirmações)");
     }
 }

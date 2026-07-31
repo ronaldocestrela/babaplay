@@ -54,6 +54,20 @@
                                 <InputNumber id="match-modal-max-players" class="form-control" @bind-Value="Model.MaxPlayers" data-testid="input-match-max-players" />
                                 <ValidationMessage For="() => Model.MaxPlayers" class="text-danger small" />
                             </div>
+                            @if (!IsEditing)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label filters-toolbar__label" for="match-modal-status">Status inicial</label>
+                                    <InputSelect id="match-modal-status"
+                                                 class="form-select"
+                                                 @bind-Value="Model.Status"
+                                                 data-testid="input-match-status">
+                                        <option value="Confirmed">Agendado (aberto para confirmações)</option>
+                                        <option value="Pending">Pendente (rascunho)</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="() => Model.Status" class="text-danger small" />
+                                </div>
+                            }
                         </div>
 
                         <div class="mb-3">
