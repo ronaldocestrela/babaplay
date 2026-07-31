@@ -1,53 +1,62 @@
 @namespace BabaPlay.Web.Components.Layout
 
-<div class="sidebar">
+<div class="sidebar @(IsOpen ? "open" : null)">
     <div class="sidebar-brand">
-        ⚽ <span>Baba Play</span>
+        <img src="babaplayOG.png" alt="Baba Play" class="sidebar-brand__logo" />
     </div>
 
     <nav>
-        <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+        <NavLink class="nav-link" href="" Match="NavLinkMatch.All" @onclick="HandleNavigate">
             <span>📊</span> Dashboard
         </NavLink>
-        <NavLink class="nav-link" href="players">
+        <NavLink class="nav-link" href="players" @onclick="HandleNavigate">
             <span>🏃</span> Jogadores
         </NavLink>
-        <NavLink class="nav-link" href="matches">
+        <NavLink class="nav-link" href="matches" @onclick="HandleNavigate">
             <span>📅</span> Partidas & RSVP
         </NavLink>
-        <NavLink class="nav-link" href="teams">
+        <NavLink class="nav-link" href="teams" @onclick="HandleNavigate">
             <span>👕</span> Sorteio de Times
         </NavLink>
-        <NavLink class="nav-link" href="financial">
+        <NavLink class="nav-link" href="financial" @onclick="HandleNavigate">
             <span>💰</span> Financeiro
         </NavLink>
-        <NavLink class="nav-link" href="financial/invoices">
+        <NavLink class="nav-link" href="financial/invoices" @onclick="HandleNavigate">
             <span>📄</span> Faturas
         </NavLink>
-        <NavLink class="nav-link" href="financial/defaulters">
+        <NavLink class="nav-link" href="financial/defaulters" @onclick="HandleNavigate">
             <span>🚨</span> Inadimplência
         </NavLink>
-        <NavLink class="nav-link" href="financial/statement">
+        <NavLink class="nav-link" href="financial/statement" @onclick="HandleNavigate">
             <span>📋</span> Balancete
         </NavLink>
-        <NavLink class="nav-link" href="financial/fundraisers">
+        <NavLink class="nav-link" href="financial/fundraisers" @onclick="HandleNavigate">
             <span>🎯</span> Caixinha / Vaquinhas
         </NavLink>
-        <NavLink class="nav-link" href="communication/announcements">
+        <NavLink class="nav-link" href="communication/announcements" @onclick="HandleNavigate">
             <span>📣</span> Comunicados
         </NavLink>
-        <NavLink class="nav-link" href="communication/polls">
+        <NavLink class="nav-link" href="communication/polls" @onclick="HandleNavigate">
             <span>📊</span> Enquetes
         </NavLink>
-        <NavLink class="nav-link" href="communication/notifications">
+        <NavLink class="nav-link" href="communication/notifications" @onclick="HandleNavigate">
             <span>🔔</span> Alertas & Notificações
         </NavLink>
-        <NavLink class="nav-link" href="communication/team-chat">
+        <NavLink class="nav-link" href="communication/team-chat" @onclick="HandleNavigate">
             <span>💬</span> Chat do Time
         </NavLink>
-        <NavLink class="nav-link" href="settings/tenant">
+        <NavLink class="nav-link" href="settings/tenant" @onclick="HandleNavigate">
             <span>⚙️</span> Configurações
         </NavLink>
     </nav>
 </div>
 
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback OnNavigate { get; set; }
+
+    private async Task HandleNavigate()
+    {
+        await OnNavigate.InvokeAsync();
+    }
+}

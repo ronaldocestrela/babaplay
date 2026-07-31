@@ -2,18 +2,18 @@
 @using BabaPlay.Web.Models
 
 <div class="scoreboard-widget card card-custom p-4 mb-4 shadow-sm bg-dark text-white text-center" data-testid="scoreboard-widget">
-    <div class="row align-items-center">
+    <div class="row align-items-center g-2">
         <!-- Time Mandante -->
-        <div class="col-4 text-end">
-            <h3 class="h5 font-weight-bold mb-1 text-warning" data-testid="home-team-name">
+        <div class="col-12 col-sm-4 text-sm-end">
+            <h3 class="h5 font-weight-bold mb-1 text-warning scoreboard-team-name" data-testid="home-team-name">
                 @(Scoreboard?.HomeTeamName ?? "Time Amarelo 🟡")
             </h3>
             <span class="badge bg-secondary">Mandante</span>
         </div>
 
         <!-- Placar Central -->
-        <div class="col-4">
-            <div class="display-4 font-weight-bold text-white mb-0" data-testid="scoreboard-score">
+        <div class="col-12 col-sm-4 order-first order-sm-0">
+            <div class="scoreboard-score font-weight-bold text-white mb-0" data-testid="scoreboard-score">
                 @(Scoreboard?.HomeScore ?? 0) <span class="text-muted fs-4">x</span> @(Scoreboard?.AwayScore ?? 0)
             </div>
             <span class="badge bg-success mt-1" data-testid="match-status">
@@ -22,8 +22,8 @@
         </div>
 
         <!-- Time Visitante -->
-        <div class="col-4 text-start">
-            <h3 class="h5 font-weight-bold mb-1 text-info" data-testid="away-team-name">
+        <div class="col-12 col-sm-4 text-sm-start">
+            <h3 class="h5 font-weight-bold mb-1 text-info scoreboard-team-name" data-testid="away-team-name">
                 @(Scoreboard?.AwayTeamName ?? "Time Azul 🔵")
             </h3>
             <span class="badge bg-secondary">Visitante</span>

@@ -33,7 +33,7 @@
     <div class="card card-custom p-3 mb-4 shadow-sm">
         <div class="row align-items-center g-3">
             <div class="col-md-6">
-                <div class="nav nav-pills" data-testid="status-filter-tabs">
+                <div class="nav nav-pills match-list-filters" data-testid="status-filter-tabs">
                     <button class="nav-link @(SelectedStatusFilter == null ? "active" : "") me-1" @onclick="SelectFilterAll">Todos</button>
                     <button class="nav-link @(SelectedStatusFilter == "Confirmed" ? "active" : "") me-1" @onclick="SelectFilterConfirmed">Agendados</button>
                     <button class="nav-link @(SelectedStatusFilter == "Completed" ? "active" : "") me-1" @onclick="SelectFilterCompleted">Concluídos</button>
@@ -59,16 +59,15 @@
     }
     else if (FilteredMatches.Count == 0)
     {
-        <div class="card card-custom py-5 text-center my-4" data-testid="empty-matches-state">
-            <div class="card-body">
-                <i class="bi bi-calendar-x display-4 text-muted mb-3 d-block"></i>
-                <h4 class="h5 font-weight-bold">Nenhum baba ou partida encontrada</h4>
-                <p class="text-muted mb-3">Não há eventos esportivos cadastrados para o filtro selecionado.</p>
-                <button class="btn btn-outline-primary" @onclick="OpenCreateModal">
-                    <i class="bi bi-calendar-plus me-1"></i> Agendar Primeira Partida
-                </button>
-            </div>
-        </div>
+        <EmptyState IsPageLevel="true"
+                    IconClass="bi-calendar-x"
+                    Title="Nenhum baba ou partida encontrada"
+                    Hint="Não há eventos esportivos cadastrados para o filtro selecionado."
+                    TestId="empty-matches-state">
+            <button class="btn btn-outline-primary" @onclick="OpenCreateModal">
+                <i class="bi bi-calendar-plus me-1" aria-hidden="true"></i> Agendar Primeira Partida
+            </button>
+        </EmptyState>
     }
     else
     {

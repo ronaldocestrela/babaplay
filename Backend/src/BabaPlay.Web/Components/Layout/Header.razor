@@ -1,40 +1,56 @@
 @namespace BabaPlay.Web.Components.Layout
+@implements IDisposable
 @inject TenantState TenantState
 @inject UserSessionState UserSessionState
 @inject AuthSessionService AuthSessionService
 
 <header class="header">
-    <div style="display: flex; align-items: center; gap: 1rem;">
-        <span style="font-weight: 600; color: var(--text-muted);">Associação:</span>
-        <span class="badge badge-primary" style="font-size: 0.9rem;">
+    <div class="header-left">
+        <button type="button"
+                class="sidebar-toggle"
+                aria-label="Abrir menu"
+                aria-expanded="@IsMenuOpen.ToString().ToLowerInvariant()"
+                @onclick="HandleToggleMenu">
+            <i class="bi bi-list" aria-hidden="true"></i>
+        </button>
+        <span class="header-tenant-label">Associação:</span>
+        <span class="badge badge-primary text-truncate header-tenant-badge">
             @(TenantState.CurrentTenantName ?? "Nenhuma selecionada")
         </span>
     </div>
 
-    <div style="display: flex; align-items: center; gap: 1.5rem;">
+    <div class="header-right">
         <AuthorizeView>
             <Authorized>
                 <BabaPlay.Web.Components.Communication.NotificationCenter />
-                <div style="text-align: right;">
-                    <div style="font-size: 0.9rem; font-weight: 600;">@(UserSessionState.FullName ?? context.User.Identity?.Name ?? "Usuário")</div>
-                    <div style="font-size: 0.75rem; color: var(--text-muted);">@(UserSessionState.Email)</div>
+                <div class="header-user-block">
+                    <div class="header-user-name">@(UserSessionState.FullName ?? context.User.Identity?.Name ?? "Usuário")</div>
+                    <div class="header-user-email">@(UserSessionState.Email)</div>
                 </div>
-                <button class="badge badge-danger" style="border: none; cursor: pointer;" @onclick="HandleLogout">
+                <button class="badge badge-danger header-logout-btn" @onclick="HandleLogout">
                     Sair
                 </button>
             </Authorized>
             <NotAuthorized>
-                <a href="auth/login" class="badge badge-primary" style="text-decoration: none;">Entrar</a>
+                <a href="auth/login" class="badge badge-primary header-login-link">Entrar</a>
             </NotAuthorized>
         </AuthorizeView>
     </div>
 </header>
 
 @code {
+    [Parameter] public bool IsMenuOpen { get; set; }
+    [Parameter] public EventCallback OnToggleMenu { get; set; }
+
     protected override void OnInitialized()
     {
         TenantState.OnChange += StateHasChanged;
         UserSessionState.OnChange += StateHasChanged;
+    }
+
+    private async Task HandleToggleMenu()
+    {
+        await OnToggleMenu.InvokeAsync();
     }
 
     private async Task HandleLogout()

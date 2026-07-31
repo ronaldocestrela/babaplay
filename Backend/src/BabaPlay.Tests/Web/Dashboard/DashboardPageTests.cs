@@ -69,6 +69,40 @@ public class DashboardPageTests : TestContext
     }
 
     [Fact]
+    public void DashboardPage_OnInitialLoad_ShouldShowSkeletonBeforeDataArrives()
+    {
+        // Arrange
+        this.AddTestAuthorization().SetAuthorized("Test User");
+
+        var loadGate = new TaskCompletionSource<DashboardSummaryLoadResult>();
+        var mockService = new Mock<IDashboardApiService>();
+        mockService
+            .Setup(x => x.GetDashboardSummaryAsync(It.IsAny<CancellationToken>()))
+            .Returns(loadGate.Task);
+
+        Services.AddSingleton(mockService.Object);
+
+        // Act
+        var cut = RenderComponent<BabaPlay.Web.Pages.Dashboard.Dashboard>();
+
+        // Assert — skeleton visible while API is pending
+        cut.Find("[data-testid='dashboard-skeleton']").Should().NotBeNull();
+
+        loadGate.SetResult(new DashboardSummaryLoadResult(
+            new DashboardSummaryDto(
+                null,
+                new QuickStatsDto(0, 0, 0, 0m),
+                Array.Empty<RecentAnnouncementDto>()),
+            null));
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find("[data-testid='quick-stats-widget']").Should().NotBeNull();
+            cut.FindAll("[data-testid='dashboard-skeleton']").Should().BeEmpty();
+        });
+    }
+
+    [Fact]
     public void DashboardPage_WhenServiceReturnsUnauthorized_ShouldShowAuthErrorMessage()
     {
         // Arrange

@@ -88,10 +88,10 @@
                                 <th style="width: 50px;">Pos</th>
                                 <th>Atleta</th>
                                 <th class="text-center">Pontos</th>
-                                <th class="text-center">Jogos</th>
-                                <th class="text-center">Vitórias</th>
-                                <th class="text-center">Empates</th>
-                                <th class="text-center">Derrotas</th>
+                                <th class="d-none d-md-table-cell text-center">Jogos</th>
+                                <th class="d-none d-md-table-cell text-center">Vitórias</th>
+                                <th class="d-none d-lg-table-cell text-center">Empates</th>
+                                <th class="d-none d-lg-table-cell text-center">Derrotas</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -119,10 +119,10 @@
                                         </div>
                                     </td>
                                     <td class="text-center fw-bold text-warning" data-testid="ranking-points">@player.TotalPoints pts</td>
-                                    <td class="text-center">@player.MatchesPlayed</td>
-                                    <td class="text-center text-success">@player.Victories</td>
-                                    <td class="text-center text-muted">@player.Draws</td>
-                                    <td class="text-center text-danger">@player.Losses</td>
+                                    <td class="d-none d-md-table-cell text-center">@player.MatchesPlayed</td>
+                                    <td class="d-none d-md-table-cell text-center text-success">@player.Victories</td>
+                                    <td class="d-none d-lg-table-cell text-center text-muted">@player.Draws</td>
+                                    <td class="d-none d-lg-table-cell text-center text-danger">@player.Losses</td>
                                 </tr>
                             }
                         </tbody>

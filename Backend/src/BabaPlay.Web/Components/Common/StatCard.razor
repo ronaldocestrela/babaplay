@@ -1,21 +1,17 @@
 @namespace BabaPlay.Web.Components.Common
 
 <div class="stat-card">
-    <div style="display: flex; align-items: center; justify-content: space-between;">
-        <span style="font-size: 0.875rem; color: var(--text-muted); font-weight: 500;">@Title</span>
+    <div class="stat-card__header">
+        <span class="stat-card__label">@Title</span>
         @if (!string.IsNullOrEmpty(Icon))
         {
-            <span style="font-size: 1.25rem;">@Icon</span>
+            <span class="stat-card__icon" aria-hidden="true">@Icon</span>
         }
     </div>
-    <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-top: 0.5rem;">
-        @Value
-    </div>
+    <div class="stat-card__value">@Value</div>
     @if (!string.IsNullOrEmpty(Subtitle))
     {
-        <div style="font-size: 0.75rem; color: var(--primary-color); margin-top: 0.25rem;">
-            @Subtitle
-        </div>
+        <div class="stat-card__subtitle">@Subtitle</div>
     }
 </div>
 

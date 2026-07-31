@@ -2,9 +2,12 @@
 @using BabaPlay.Web.Components.Common
 @using BabaPlay.Web.Models
 
-<div class="quick-stats-widget mb-4" data-testid="quick-stats-widget">
-    <h3 class="h5 mb-3 font-weight-bold">📊 Métricas Rápida</h3>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+<div class="widget-card quick-stats-widget mb-4" data-testid="quick-stats-widget">
+    <h3 class="widget-card__title mb-3">
+        <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
+        Métricas Rápidas
+    </h3>
+    <div class="stats-grid">
         <StatCard Title="Atletas Ativos" Value="@Stats.ActivePlayersCount.ToString()" Icon="👥" Subtitle="Cadastrados no Tenant" />
         <StatCard Title="Jogos no Mês" Value="@Stats.MatchesThisMonth.ToString()" Icon="🏆" Subtitle="Partidas realizadas" />
         <StatCard Title="Gols na Temporada" Value="@Stats.TotalSeasonGoals.ToString()" Icon="⚽" Subtitle="Artilharia geral" />

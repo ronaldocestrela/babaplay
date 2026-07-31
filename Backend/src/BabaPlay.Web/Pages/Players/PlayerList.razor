@@ -105,13 +105,11 @@
     }
     else if (FilteredPlayers.Count == 0)
     {
-        <div class="card card-custom py-5 text-center my-4" data-testid="empty-state">
-            <div class="card-body">
-                <i class="bi bi-person-x display-4 text-muted mb-3 d-block"></i>
-                <h4 class="h5 font-weight-bold">Nenhum atleta encontrado</h4>
-                <p class="text-muted">Tente ajustar os filtros ou a busca acima para encontrar o atleta desejado.</p>
-            </div>
-        </div>
+        <EmptyState IsPageLevel="true"
+                    IconClass="bi-person-x"
+                    Title="Nenhum atleta encontrado"
+                    Hint="Tente ajustar os filtros ou a busca acima para encontrar o atleta desejado."
+                    TestId="empty-state" />
     }
     else
     {
@@ -137,11 +135,11 @@
                     <table class="table table-hover align-middle mb-0" data-testid="player-table">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 50px;">#</th>
+                                <th class="d-none d-md-table-cell" style="width: 50px;">#</th>
                                 <th>Atleta</th>
                                 <th>Posição</th>
-                                <th>Telefone</th>
-                                <th>Perfil</th>
+                                <th class="d-none d-md-table-cell">Telefone</th>
+                                <th class="d-none d-lg-table-cell">Perfil</th>
                                 <th>Status</th>
                                 <th class="text-end">Ações</th>
                             </tr>
@@ -150,7 +148,7 @@
                             @foreach (var player in FilteredPlayers)
                             {
                                 <tr>
-                                    <td class="font-weight-bold">
+                                    <td class="font-weight-bold d-none d-md-table-cell">
                                         @(player.JerseyNumber.HasValue ? $"#{player.JerseyNumber}" : "-")
                                     </td>
                                     <td>
@@ -172,8 +170,8 @@
                                             @(string.IsNullOrWhiteSpace(player.PrimaryPositionName) ? "Não definida" : player.PrimaryPositionName)
                                         </span>
                                     </td>
-                                    <td>@(string.IsNullOrWhiteSpace(player.Phone) ? "-" : player.Phone)</td>
-                                    <td>
+                                    <td class="d-none d-md-table-cell">@(string.IsNullOrWhiteSpace(player.Phone) ? "-" : player.Phone)</td>
+                                    <td class="d-none d-lg-table-cell">
                                         <span class="badge @(player.RoleName?.ToLower() == "admin" ? "bg-purple" : "bg-info")">
                                             @(string.IsNullOrWhiteSpace(player.RoleName) ? "Atleta" : player.RoleName)
                                         </span>

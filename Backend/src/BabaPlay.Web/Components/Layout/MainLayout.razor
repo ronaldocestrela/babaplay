@@ -1,12 +1,59 @@
 @inherits LayoutComponentBase
 @namespace BabaPlay.Web.Components.Layout
+@implements IDisposable
+@inject NavigationManager NavigationManager
 
 <div class="app-container">
-    <NavMenu />
+    @if (_isMenuOpen)
+    {
+        <button type="button"
+                class="sidebar-backdrop visible"
+                aria-label="Fechar menu"
+                @onclick="CloseMenu"></button>
+    }
+
+    <NavMenu IsOpen="_isMenuOpen" OnNavigate="CloseMenu" />
+
     <div class="main-content">
-        <Header />
+        <Header IsMenuOpen="_isMenuOpen" OnToggleMenu="ToggleMenu" />
         <main class="content-body">
             @Body
         </main>
     </div>
 </div>
+
+@code {
+    private bool _isMenuOpen;
+
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void ToggleMenu()
+    {
+        _isMenuOpen = !_isMenuOpen;
+    }
+
+    private void CloseMenu()
+    {
+        if (_isMenuOpen)
+        {
+            _isMenuOpen = false;
+        }
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _ = InvokeAsync(() =>
+        {
+            CloseMenu();
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}

@@ -16,7 +16,12 @@
             <NotFound>
                 <PageTitle>Não Encontrado</PageTitle>
                 <LayoutView Layout="@typeof(PublicLayout)">
-                    <p style="text-align: center; color: var(--text-muted);">Página não encontrada.</p>
+                    <div class="public-card">
+                        <div class="public-brand">
+                            <img src="babaplayOG.png" alt="Baba Play" class="public-brand__logo" />
+                        </div>
+                        <p class="public-not-found">Página não encontrada.</p>
+                    </div>
                 </LayoutView>
             </NotFound>
         </Router>

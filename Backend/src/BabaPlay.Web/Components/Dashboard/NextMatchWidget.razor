@@ -1,10 +1,12 @@
 @namespace BabaPlay.Web.Components.Dashboard
 @using BabaPlay.Web.Models
+@using BabaPlay.Web.Components.Common
 
-<div class="next-match-widget card p-4 mb-4" data-testid="next-match-widget">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="h5 mb-0 font-weight-bold">
-            <span class="mr-2">⚽</span> Próxima Partida
+<div class="widget-card next-match-widget" data-testid="next-match-widget">
+    <div class="widget-card__header">
+        <h3 class="widget-card__title">
+            <i class="bi bi-dribbble" aria-hidden="true"></i>
+            Próxima Partida
         </h3>
         @if (NextMatch != null)
         {
@@ -16,19 +18,18 @@
 
     @if (NextMatch == null)
     {
-        <div class="text-center py-4 text-muted" data-testid="no-upcoming-match">
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📅</div>
-            <p class="mb-2 font-weight-medium">Nenhum baba agendado no momento</p>
-            <small class="d-block text-secondary">Fique atento aos comunicados da diretoria para os próximos horários.</small>
-        </div>
+        <EmptyState IconClass="bi-calendar-x"
+                    Title="Nenhum baba agendado no momento"
+                    Hint="Fique atento aos comunicados da diretoria para os próximos horários."
+                    TestId="no-upcoming-match" />
     }
     else
     {
         <div class="match-info mb-3">
             <h4 class="h6 font-weight-bold mb-1">@NextMatch.Title</h4>
             <div class="d-flex flex-wrap text-muted small gap-3">
-                <div>🗓️ @NextMatch.Date.ToString("dd/MM/yyyy HH:mm")</div>
-                <div>📍 @NextMatch.Location</div>
+                <div><i class="bi bi-calendar3 me-1" aria-hidden="true"></i>@NextMatch.Date.ToString("dd/MM/yyyy HH:mm")</div>
+                <div><i class="bi bi-geo-alt me-1" aria-hidden="true"></i>@NextMatch.Location</div>
             </div>
         </div>
 
@@ -37,8 +38,8 @@
                 <span>Confirmados</span>
                 <span class="font-weight-bold">@NextMatch.ConfirmedCount / @NextMatch.MaxPlayers vagas</span>
             </div>
-            <div class="progress" style="height: 8px; border-radius: 4px; background-color: var(--bg-secondary, #e9ecef);">
-                <div class="progress-bar bg-success"
+            <div class="progress rsvp-progress">
+                <div class="progress-bar bg-success rsvp-progress__bar"
                      role="progressbar"
                      style="width: @(CalculatePercentage())%;"
                      aria-valuenow="@NextMatch.ConfirmedCount"
@@ -48,31 +49,31 @@
             </div>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+        <div class="d-flex flex-wrap justify-content-between align-items-center pt-2 border-top gap-2">
             <div class="rsvp-status small">
                 Status:
                 @if (NextMatch.UserRsvpStatus == "Confirmed")
                 {
-                    <span class="badge badge-success text-white ml-1" data-testid="user-rsvp-badge">Vou jogar! ✅</span>
+                    <span class="badge badge-success ms-1" data-testid="user-rsvp-badge">Vou jogar!</span>
                 }
                 else if (NextMatch.UserRsvpStatus == "Declined")
                 {
-                    <span class="badge badge-danger text-white ml-1" data-testid="user-rsvp-badge">Não vou ❌</span>
+                    <span class="badge badge-danger ms-1" data-testid="user-rsvp-badge">Não vou</span>
                 }
                 else if (NextMatch.UserRsvpStatus == "Waitlist")
                 {
-                    <span class="badge badge-warning text-dark ml-1" data-testid="user-rsvp-badge">Lista de Espera ⏳</span>
+                    <span class="badge badge-warning ms-1" data-testid="user-rsvp-badge">Lista de Espera</span>
                 }
                 else
                 {
-                    <span class="badge badge-light text-dark ml-1" data-testid="user-rsvp-badge">Não respondido</span>
+                    <span class="badge badge-light ms-1" data-testid="user-rsvp-badge">Não respondido</span>
                 }
             </div>
 
             @if (NextMatch.IsOpenForRsvp)
             {
-                <div class="rsvp-actions">
-                    <button class="btn btn-sm btn-outline-success mr-2" @onclick="() => OnRsvpStatusChanged.InvokeAsync(true)">
+                <div class="rsvp-actions d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-success" @onclick="() => OnRsvpStatusChanged.InvokeAsync(true)">
                         Confirmar
                     </button>
                     <button class="btn btn-sm btn-outline-danger" @onclick="() => OnRsvpStatusChanged.InvokeAsync(false)">

@@ -8,7 +8,7 @@
             @Member.PlayerName
         </td>
 
-        <td style="padding: 0.75rem 1rem; text-align: center;">
+        <td class="d-none d-md-table-cell" style="padding: 0.75rem 1rem; text-align: center;">
             <span class="badge bg-secondary" style="font-size: 0.75rem;" data-testid="overdue-count-badge">
                 @Member.OverdueInvoicesCount @(Member.OverdueInvoicesCount == 1 ? "fatura" : "faturas")
             </span>
@@ -21,7 +21,7 @@
             @Member.TotalOverdueAmount.ToString("C2", new System.Globalization.CultureInfo("pt-BR"))
         </td>
 
-        <td style="padding: 0.75rem 1rem; text-align: center;">
+        <td class="d-none d-lg-table-cell" style="padding: 0.75rem 1rem; text-align: center;">
             @if (Member.MaxDaysOverdue <= 30)
             {
                 <span class="badge bg-warning text-dark" style="font-size: 0.75rem;" data-testid="risk-badge-leve">

@@ -25,8 +25,8 @@
     <!-- Menu Flyout Dropdown -->
     @if (IsOpen)
     {
-        <div class="dropdown-menu dropdown-menu-end show shadow-lg p-0 border-0"
-             style="display: block; position: absolute; right: 0; top: 100%; width: 340px; border-radius: 12px; z-index: 1050; background: var(--bg-surface, #ffffff);"
+        <div class="dropdown-menu dropdown-menu-end show shadow-lg p-0 border-0 notification-dropdown-menu"
+             style="display: block; position: absolute; right: 0; top: 100%; border-radius: 12px; z-index: 1050; background: var(--bg-surface, #ffffff);"
              data-testid="notification-dropdown">
 
             <!-- Cabeçalho -->
@@ -56,9 +56,10 @@
                 }
                 else if (_notifications.Count == 0)
                 {
-                    <div class="p-4 text-center text-muted" data-testid="notifications-empty">
-                        <div style="font-size: 1.5rem;">🎉</div>
-                        <div style="font-size: 0.85rem;" class="mt-1">Nenhuma notificação por aqui!</div>
+                    <div class="p-2" data-testid="notifications-empty">
+                        <EmptyState IconClass="bi-bell"
+                                    Title="Nenhuma notificação por aqui!"
+                                    TestId="notifications-empty-state" />
                     </div>
                 }
                 else

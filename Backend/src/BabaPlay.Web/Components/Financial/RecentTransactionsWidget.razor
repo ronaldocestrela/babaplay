@@ -1,5 +1,6 @@
 @namespace BabaPlay.Web.Components.Financial
 @using BabaPlay.Web.Models
+@using BabaPlay.Web.Components.Common
 
 <div class="card recent-transactions-widget" data-testid="recent-transactions-widget" style="background: var(--card-bg, #ffffff); border-radius: 8px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -13,9 +14,9 @@
 
     @if (Transactions == null || Transactions.Count == 0)
     {
-        <div class="empty-state" style="text-align: center; padding: 2rem 1rem; color: var(--text-muted);">
-            <p style="margin: 0; font-size: 0.9rem;">Nenhuma movimentação registrada no período.</p>
-        </div>
+        <EmptyState IconClass="bi-cash-stack"
+                    Title="Nenhuma movimentação registrada no período."
+                    TestId="empty-transactions" />
     }
     else
     {

@@ -1,0 +1,51 @@
+@namespace BabaPlay.Web.Components.Common
+
+@if (IsPageLevel)
+{
+    <div class="widget-card page-empty-card" data-testid="@TestId">
+        <div class="empty-state text-center py-4">
+            <div class="empty-state__icon empty-state__icon--page" aria-hidden="true">
+                <i class="bi @IconClass"></i>
+            </div>
+            <p class="empty-state__title mb-1">@Title</p>
+            @if (!string.IsNullOrWhiteSpace(Hint))
+            {
+                <small class="empty-state__hint d-block">@Hint</small>
+            }
+            @if (ChildContent is not null)
+            {
+                <div class="empty-state__actions mt-3">
+                    @ChildContent
+                </div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="empty-state text-center py-4 text-muted" data-testid="@TestId">
+        <div class="empty-state__icon" aria-hidden="true">
+            <i class="bi @IconClass"></i>
+        </div>
+        <p class="empty-state__title mb-1">@Title</p>
+        @if (!string.IsNullOrWhiteSpace(Hint))
+        {
+            <small class="empty-state__hint d-block">@Hint</small>
+        }
+        @if (ChildContent is not null)
+        {
+            <div class="empty-state__actions mt-3">
+                @ChildContent
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public string IconClass { get; set; } = "bi-inbox";
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string? Hint { get; set; }
+    [Parameter] public string TestId { get; set; } = "empty-state";
+    [Parameter] public bool IsPageLevel { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}
