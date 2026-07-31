@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Bunit;
+using Bunit.TestDoubles;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -18,6 +19,8 @@ public class DashboardPageTests : TestContext
     public void DashboardPage_ShouldRenderSummaryData()
     {
         // Arrange
+        this.AddTestAuthorization().SetAuthorized("Test User");
+
         var mockService = new Mock<IDashboardApiService>();
         var summaryDto = new DashboardSummaryDto(
             new NextMatchWidgetDto(Guid.NewGuid(), "Baba de Sábado", DateTime.Now.AddDays(3), "Arena Sol", 15, 20, "Confirmed", true),
@@ -30,7 +33,7 @@ public class DashboardPageTests : TestContext
 
         mockService
             .Setup(x => x.GetDashboardSummaryAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(summaryDto);
+            .ReturnsAsync(new DashboardSummaryLoadResult(summaryDto, null));
 
         Services.AddSingleton(mockService.Object);
 
@@ -48,10 +51,12 @@ public class DashboardPageTests : TestContext
     public void DashboardPage_WhenServiceReturnsNull_ShouldShowErrorBanner()
     {
         // Arrange
+        this.AddTestAuthorization().SetAuthorized("Test User");
+
         var mockService = new Mock<IDashboardApiService>();
         mockService
             .Setup(x => x.GetDashboardSummaryAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync((DashboardSummaryDto?)null);
+            .ReturnsAsync(new DashboardSummaryLoadResult(null, "Não foi possível carregar os dados do dashboard. Verifique sua conexão ou tente novamente mais tarde."));
 
         Services.AddSingleton(mockService.Object);
 
@@ -61,5 +66,26 @@ public class DashboardPageTests : TestContext
         // Assert
         cut.Find("[data-testid='dashboard-error-banner']").Should().NotBeNull();
         cut.Markup.Should().Contain("Não foi possível carregar os dados do dashboard");
+    }
+
+    [Fact]
+    public void DashboardPage_WhenServiceReturnsUnauthorized_ShouldShowAuthErrorMessage()
+    {
+        // Arrange
+        this.AddTestAuthorization().SetAuthorized("Test User");
+
+        var mockService = new Mock<IDashboardApiService>();
+        mockService
+            .Setup(x => x.GetDashboardSummaryAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DashboardSummaryLoadResult(null, "Sessão expirada ou inválida. Faça login novamente."));
+
+        Services.AddSingleton(mockService.Object);
+
+        // Act
+        var cut = RenderComponent<BabaPlay.Web.Pages.Dashboard.Dashboard>();
+
+        // Assert
+        cut.Find("[data-testid='dashboard-error-banner']").Should().NotBeNull();
+        cut.Markup.Should().Contain("Sessão expirada ou inválida");
     }
 }

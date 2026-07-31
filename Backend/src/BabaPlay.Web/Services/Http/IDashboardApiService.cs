@@ -6,5 +6,5 @@ namespace BabaPlay.Web.Services.Http;
 
 public interface IDashboardApiService
 {
-    Task<DashboardSummaryDto?> GetDashboardSummaryAsync(CancellationToken cancellationToken = default);
+    Task<DashboardSummaryLoadResult> GetDashboardSummaryAsync(CancellationToken cancellationToken = default);
 }

@@ -16,7 +16,7 @@ Todas as diretrizes e regras definidas em [`agents.md`](file:///home/rony/LPR/ba
 
 2. **Multitenancy & Segurança:**
    * O token JWT obtido no login armazena as claims do usuário e as associações (tenants) das quais ele faz parte.
-   * Cada requisição HTTP enviada pelos services do Blazor deve incluir o cabeçalho `Authorization: Bearer <token>` e `X-Tenant-Id: <tenant-guid>` (ou via claim do token).
+   * Cada requisição HTTP enviada pelos services do Blazor deve incluir o cabeçalho `Authorization: Bearer <token>` e `X-Tenant-Slug: <tenant-slug>`.
    * As rotas protegidas utilizam `AuthorizeRouteView` e `CascadingAuthenticationState`.
 
 3. **Gerenciamento de Estado (State Management):**
@@ -96,7 +96,8 @@ flowchart TD
 * **Objetivo:** Criar o projeto Blazor WebAssembly / Auto em .NET 10, configurar a injeção de dependência do `HttpClient`, manipulador de Token JWT (`AuthorizationHeaderHandler`) e o sistema de design (CSS/Layout).
 * **Componentes / Arquivos:**
   * `Program.cs` (Configuração de DI, `HttpClient`, `AuthenticationStateProvider`)
-  * `Services/Handlers/AuthorizationHeaderHandler.cs` (Injeta Bearer Token e `X-Tenant-Id`)
+  * `Services/Handlers/AuthorizationHeaderHandler.cs` (Injeta Bearer Token e `X-Tenant-Slug`)
+  * `Program.cs` — registrar `HttpClient` autenticado no mesmo scope da UI (evitar `IHttpClientFactory` para esse client)
   * `Services/State/CustomAuthStateProvider.cs` (Gerencia estado do JWT e Claims)
   * `Components/Layout/MainLayout.razor` & `PublicLayout.razor`
 * **Testes bUnit/xUnit:** Testar se o `AuthorizationHeaderHandler` anexa os cabeçalhos corretos e se `CustomAuthStateProvider` parseia as claims do JWT corretamente.

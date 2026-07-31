@@ -1,5 +1,7 @@
 @page "/dashboard"
 @page "/"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
 @using BabaPlay.Web.Models
 @using BabaPlay.Web.Services.Http
 @using BabaPlay.Web.Components.Common
@@ -64,10 +66,12 @@
         ErrorMessage = null;
         try
         {
-            Summary = await DashboardApiService.GetDashboardSummaryAsync();
+            var result = await DashboardApiService.GetDashboardSummaryAsync();
+            Summary = result.Summary;
             if (Summary == null)
             {
-                ErrorMessage = "Não foi possível carregar os dados do dashboard. Verifique sua conexão ou tente novamente mais tarde.";
+                ErrorMessage = result.ErrorMessage
+                    ?? "Não foi possível carregar os dados do dashboard. Verifique sua conexão ou tente novamente mais tarde.";
             }
         }
         catch (Exception ex)

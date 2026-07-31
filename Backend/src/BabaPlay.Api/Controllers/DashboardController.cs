@@ -12,7 +12,7 @@ namespace BabaPlay.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-[Authorize]
+[Authorize(Policy = AuthorizationPolicyNames.TenantMember)]
 public sealed class DashboardController : ControllerBase
 {
     private readonly IQueryHandler<GetDashboardSummaryQuery, Result<DashboardSummaryApplicationDto>> _dashboardQueryHandler;

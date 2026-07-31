@@ -24,14 +24,20 @@ builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredServ
 builder.Services.AddAuthorizationCore();
 
 // HTTP Handler & Client
-builder.Services.AddTransient<AuthorizationHeaderHandler>();
-
-builder.Services.AddHttpClient("BabaPlayApi", client =>
+// Do NOT use IHttpClientFactory for this client: it builds handlers in a separate DI scope,
+// so AuthorizationHeaderHandler would receive a different (empty) UserSessionState/TenantState
+// and every API call would go out without Bearer / X-Tenant-Slug → 401/403.
+builder.Services.AddScoped<AuthorizationHeaderHandler>();
+builder.Services.AddScoped(sp =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? builder.HostEnvironment.BaseAddress);
-}).AddHttpMessageHandler<AuthorizationHeaderHandler>();
-
-builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("BabaPlayApi"));
+    var handler = sp.GetRequiredService<AuthorizationHeaderHandler>();
+    handler.InnerHandler = new HttpClientHandler();
+    var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? builder.HostEnvironment.BaseAddress;
+    return new HttpClient(handler)
+    {
+        BaseAddress = new Uri(apiBaseUrl),
+    };
+});
 
 // API Services
 builder.Services.AddScoped<BabaPlay.Web.Services.Http.IAuthApiService, BabaPlay.Web.Services.Http.AuthApiService>();

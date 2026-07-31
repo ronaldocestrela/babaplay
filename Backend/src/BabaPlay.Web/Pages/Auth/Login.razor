@@ -86,6 +86,9 @@
     private bool isLoading = false;
     private string? errorMessage;
 
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
     private async Task HandleLoginAsync()
     {
         isLoading = true;
@@ -115,7 +118,7 @@
                     var tenant = tenants[0];
                     TenantState.SetTenant(tenant.Id, tenant.Name, tenant.Slug);
                     await AuthSessionService.SaveCurrentSessionAsync();
-                    NavigationManager.NavigateTo("/");
+                    NavigationManager.NavigateTo(ResolvePostLoginUrl());
                 }
                 else
                 {
@@ -136,5 +139,21 @@
         {
             isLoading = false;
         }
+    }
+
+    private string ResolvePostLoginUrl()
+    {
+        if (string.IsNullOrWhiteSpace(ReturnUrl))
+        {
+            return "/";
+        }
+
+        var decoded = Uri.UnescapeDataString(ReturnUrl);
+        if (decoded.StartsWith('/') && !decoded.StartsWith("//", StringComparison.Ordinal))
+        {
+            return decoded;
+        }
+
+        return "/";
     }
 }

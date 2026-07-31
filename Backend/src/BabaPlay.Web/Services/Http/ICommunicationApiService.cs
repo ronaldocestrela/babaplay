@@ -8,7 +8,7 @@ namespace BabaPlay.Web.Services.Http;
 
 /// <summary>
 /// HTTP service interface for the Communication module (F24 — Announcements).
-/// All calls include the Bearer token and X-Tenant-Id header via AuthorizationHeaderHandler.
+/// All calls include the Bearer token and X-Tenant-Slug header via AuthorizationHeaderHandler.
 /// </summary>
 public interface ICommunicationApiService
 {

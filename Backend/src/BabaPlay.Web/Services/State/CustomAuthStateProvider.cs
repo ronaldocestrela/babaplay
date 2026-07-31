@@ -90,16 +90,23 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
 
         foreach (var kvp in keyValuePairs)
         {
-            if (kvp.Value is JsonElement element && element.ValueKind == JsonValueKind.Array)
+            if (kvp.Value is JsonElement element)
             {
-                foreach (var item in element.EnumerateArray())
+                if (element.ValueKind == JsonValueKind.Array)
                 {
-                    claims.Add(new Claim(MapClaimType(kvp.Key), item.ToString()));
+                    foreach (var item in element.EnumerateArray())
+                    {
+                        claims.Add(new Claim(MapClaimType(kvp.Key), ClaimValueFromJsonElement(item)));
+                    }
+                }
+                else
+                {
+                    claims.Add(new Claim(MapClaimType(kvp.Key), ClaimValueFromJsonElement(element)));
                 }
             }
             else
             {
-                claims.Add(new Claim(MapClaimType(kvp.Key), kvp.Value.ToString() ?? ""));
+                claims.Add(new Claim(MapClaimType(kvp.Key), kvp.Value?.ToString() ?? ""));
             }
         }
 
@@ -115,6 +122,19 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
             "role" or "roles" => ClaimTypes.Role,
             "name" => ClaimTypes.Name,
             _ => key
+        };
+    }
+
+    private static string ClaimValueFromJsonElement(JsonElement element)
+    {
+        return element.ValueKind switch
+        {
+            JsonValueKind.String => element.GetString() ?? string.Empty,
+            JsonValueKind.Number => element.GetRawText(),
+            JsonValueKind.True => bool.TrueString,
+            JsonValueKind.False => bool.FalseString,
+            JsonValueKind.Null or JsonValueKind.Undefined => string.Empty,
+            _ => element.ToString(),
         };
     }
 

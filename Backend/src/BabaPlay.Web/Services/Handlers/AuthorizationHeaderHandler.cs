@@ -24,10 +24,10 @@ public class AuthorizationHeaderHandler : DelegatingHandler
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _userSessionState.JwtToken);
         }
 
-        if (_tenantState.CurrentTenantId.HasValue)
+        if (!string.IsNullOrWhiteSpace(_tenantState.CurrentTenantSlug))
         {
-            request.Headers.Remove("X-Tenant-Id");
-            request.Headers.Add("X-Tenant-Id", _tenantState.CurrentTenantId.Value.ToString());
+            request.Headers.Remove("X-Tenant-Slug");
+            request.Headers.Add("X-Tenant-Slug", _tenantState.CurrentTenantSlug);
         }
 
         return await base.SendAsync(request, cancellationToken);

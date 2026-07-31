@@ -1,0 +1,16 @@
+@namespace BabaPlay.Web.Components.Auth
+@inject NavigationManager NavigationManager
+
+<p style="text-align: center; color: var(--danger);">Acesso não autorizado. Redirecionando para o login…</p>
+
+@code {
+    protected override void OnInitialized()
+    {
+        var returnUrl = Uri.EscapeDataString(NavigationManager.ToBaseRelativePath(NavigationManager.Uri));
+        var target = string.IsNullOrWhiteSpace(returnUrl)
+            ? "auth/login"
+            : $"auth/login?returnUrl={returnUrl}";
+
+        NavigationManager.NavigateTo(target);
+    }
+}

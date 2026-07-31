@@ -32,9 +32,10 @@ public class AuthorizationHeaderHandlerTests
 
         var token = "jwt-test-token";
         var tenantId = Guid.NewGuid();
+        const string tenantSlug = "test-tenant";
 
         userSessionState.SetUserSession(token, "user-1", "test@test.com", "Test User");
-        tenantState.SetTenant(tenantId, "Test Tenant");
+        tenantState.SetTenant(tenantId, "Test Tenant", tenantSlug);
 
         var innerHandler = new TestHttpMessageHandler();
         var handler = new AuthorizationHeaderHandler(userSessionState, tenantState)
@@ -53,8 +54,9 @@ public class AuthorizationHeaderHandlerTests
         innerHandler.LastRequest.Headers.Authorization!.Scheme.Should().Be("Bearer");
         innerHandler.LastRequest.Headers.Authorization.Parameter.Should().Be(token);
 
-        innerHandler.LastRequest.Headers.Contains("X-Tenant-Id").Should().BeTrue();
-        innerHandler.LastRequest.Headers.GetValues("X-Tenant-Id").FirstOrDefault().Should().Be(tenantId.ToString());
+        innerHandler.LastRequest.Headers.Contains("X-Tenant-Slug").Should().BeTrue();
+        innerHandler.LastRequest.Headers.GetValues("X-Tenant-Slug").FirstOrDefault().Should().Be(tenantSlug);
+        innerHandler.LastRequest.Headers.Contains("X-Tenant-Id").Should().BeFalse();
     }
 
     [Fact]
@@ -78,6 +80,34 @@ public class AuthorizationHeaderHandlerTests
         // Assert
         innerHandler.LastRequest.Should().NotBeNull();
         innerHandler.LastRequest!.Headers.Authorization.Should().BeNull();
+        innerHandler.LastRequest.Headers.Contains("X-Tenant-Slug").Should().BeFalse();
+        innerHandler.LastRequest.Headers.Contains("X-Tenant-Id").Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task SendAsync_WhenTenantHasIdButNoSlug_ShouldNotAppendTenantHeader()
+    {
+        // Arrange
+        var userSessionState = new UserSessionState();
+        var tenantState = new TenantState();
+
+        userSessionState.SetUserSession("jwt-test-token", "user-1", "test@test.com", "Test User");
+        tenantState.SetTenant(Guid.NewGuid(), "Test Tenant");
+
+        var innerHandler = new TestHttpMessageHandler();
+        var handler = new AuthorizationHeaderHandler(userSessionState, tenantState)
+        {
+            InnerHandler = innerHandler
+        };
+
+        var client = new HttpClient(handler);
+
+        // Act
+        await client.GetAsync("http://localhost/api/v1/test");
+
+        // Assert
+        innerHandler.LastRequest.Should().NotBeNull();
+        innerHandler.LastRequest!.Headers.Contains("X-Tenant-Slug").Should().BeFalse();
         innerHandler.LastRequest.Headers.Contains("X-Tenant-Id").Should().BeFalse();
     }
 }

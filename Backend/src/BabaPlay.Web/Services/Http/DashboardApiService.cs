@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading;
@@ -15,14 +16,25 @@ public sealed class DashboardApiService : IDashboardApiService
         _httpClient = httpClient;
     }
 
-    public async Task<DashboardSummaryDto?> GetDashboardSummaryAsync(CancellationToken cancellationToken = default)
+    public async Task<DashboardSummaryLoadResult> GetDashboardSummaryAsync(CancellationToken cancellationToken = default)
     {
         var response = await _httpClient.GetAsync("api/v1/dashboard/summary", cancellationToken);
-        if (!response.IsSuccessStatusCode)
+        if (response.IsSuccessStatusCode)
         {
-            return null;
+            var summary = await response.Content.ReadFromJsonAsync<DashboardSummaryDto>(cancellationToken: cancellationToken);
+            return new DashboardSummaryLoadResult(summary, null);
         }
 
-        return await response.Content.ReadFromJsonAsync<DashboardSummaryDto>(cancellationToken: cancellationToken);
+        var errorMessage = response.StatusCode switch
+        {
+            HttpStatusCode.Unauthorized =>
+                "Sessão expirada ou inválida. Faça login novamente.",
+            HttpStatusCode.Forbidden =>
+                "Você não tem permissão para acessar o dashboard desta associação.",
+            _ =>
+                "Não foi possível carregar os dados do dashboard. Verifique sua conexão ou tente novamente mais tarde.",
+        };
+
+        return new DashboardSummaryLoadResult(null, errorMessage);
     }
 }
