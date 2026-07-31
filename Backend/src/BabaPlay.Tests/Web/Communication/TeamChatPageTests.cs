@@ -7,6 +7,7 @@ using Bunit.TestDoubles;
 using FluentAssertions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
@@ -24,6 +25,12 @@ public class TeamChatPageTests : TestContext
     public TeamChatPageTests()
     {
         this.AddTestAuthorization().SetAuthorized("Test User");
+
+        _mockChatService.Setup(x => x.State).Returns(HubConnectionState.Disconnected);
+        _mockChatService.Setup(x => x.IsConnected).Returns(false);
+        _mockChatService
+            .Setup(x => x.ConnectAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         Services.AddSingleton(_mockChatService.Object);
         Services.AddSingleton(new TenantState());
@@ -75,5 +82,18 @@ public class TeamChatPageTests : TestContext
 
         // Assert
         _mockChatService.Verify(x => x.SendMessageAsync("Bora jogar!", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void TeamChat_WhenDisconnected_ShouldShowRetryButton()
+    {
+        _mockChatService
+            .Setup(x => x.GetRecentMessagesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        var cut = RenderComponent<TeamChat>();
+
+        cut.Find("[data-testid='connection-status']").TextContent.Should().Contain("Desconectado");
+        cut.Find("[data-testid='btn-retry-connection']").Should().NotBeNull();
     }
 }

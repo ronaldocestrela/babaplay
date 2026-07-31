@@ -41,6 +41,7 @@ Ao gerar, alterar ou sugerir código, você deve obrigatoriamente seguir as segu
 *   Todo o sistema é estruturado em formato SaaS multitenant.
 *   Sempre garanta que as consultas e comandos validem ou incluam o `TenantId` correspondente ao contexto atual do usuário.
 *   Clientes HTTP (Blazor e React) devem enviar o header `X-Tenant-Slug` com o slug da associação ativa; a API resolve o tenant via `TenantMiddleware`.
+*   Conexões SignalR (hubs em `/hubs/*`) também devem enviar `X-Tenant-Slug` nos headers da negociação; no browser/WASM o JWT vai em `?access_token=` no WebSocket e a API deve ler esse token em `JwtBearerEvents.OnMessageReceived`.
 *   No Blazor WASM, o `HttpClient` autenticado deve ser criado no mesmo scope da UI (não via `IHttpClientFactory` + `DelegatingHandler`): o factory cria um scope separado e o handler perde `UserSessionState`/`TenantState` (Bearer/`X-Tenant-Slug` vazios → 401/403 em todas as APIs).
 *   Policies usadas em `<AuthorizeView Policy="...">` devem ser registradas em `AddAuthorizationCore` no Web (`ClientAuthorizationPolicies` + handler client-side). Hoje `CommunicationWrite` usa `TenantState.IsOwner` como gate de UI; a API continua validando RBAC de verdade.
 *   O isolamento de dados é prioridade máxima de segurança.

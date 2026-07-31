@@ -13,8 +13,13 @@ public interface ISignalRChatService : IAsyncDisposable
     bool IsConnected { get; }
     event Action<HubConnectionState>? OnStateChanged;
     event Action<ChatMessageDto>? OnMessageReceived;
+    event Action<string>? OnConnectionFailed;
 
-    Task ConnectAsync(string token, Guid tenantId, CancellationToken cancellationToken = default);
+    Task ConnectAsync(
+        string token,
+        string? tenantSlug,
+        Guid tenantId,
+        CancellationToken cancellationToken = default);
     Task DisconnectAsync();
     Task<List<ChatMessageDto>> GetRecentMessagesAsync(CancellationToken cancellationToken = default);
     Task<bool> SendMessageAsync(string content, CancellationToken cancellationToken = default);

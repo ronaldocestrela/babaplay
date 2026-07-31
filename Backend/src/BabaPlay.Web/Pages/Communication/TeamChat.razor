@@ -4,11 +4,12 @@
 @using BabaPlay.Web.Services.SignalR
 @using BabaPlay.Web.Services.State
 @using BabaPlay.Web.Components.Common
+@using Microsoft.AspNetCore.SignalR.Client
 @inject ISignalRChatService ChatService
 @inject TenantState TenantState
 @inject UserSessionState UserSessionState
 @inject IJSRuntime JSRuntime
-@implements IDisposable
+@implements IAsyncDisposable
 
 <PageTitle>Chat da Turma | Baba Play</PageTitle>
 
@@ -32,10 +33,24 @@
                 <span class="badge bg-success rounded-circle p-1" style="width: 10px; height: 10px;"></span>
                 <small class="fw-bold text-success" style="font-size: 0.8rem;">Ao Vivo (Conectado)</small>
             }
-            else
+            else if (ChatService.State == HubConnectionState.Connecting || ChatService.State == HubConnectionState.Reconnecting)
             {
                 <span class="badge bg-secondary rounded-circle p-1" style="width: 10px; height: 10px;"></span>
-                <small class="fw-bold text-muted" style="font-size: 0.8rem;">Conectando...</small>
+                <small class="fw-bold text-muted" style="font-size: 0.8rem;">
+                    @(ChatService.State == HubConnectionState.Reconnecting ? "Reconectando..." : "Conectando...")
+                </small>
+            }
+            else
+            {
+                <span class="badge bg-danger rounded-circle p-1" style="width: 10px; height: 10px;"></span>
+                <small class="fw-bold text-danger" style="font-size: 0.8rem;">Desconectado</small>
+                <button type="button"
+                        class="btn btn-sm btn-outline-secondary py-0 px-2"
+                        style="font-size: 0.75rem;"
+                        @onclick="RetryConnectionAsync"
+                        data-testid="btn-retry-connection">
+                    Tentar novamente
+                </button>
             }
         </div>
     </div>
@@ -155,8 +170,14 @@
     private async Task InitializeSignalRAsync()
     {
         var tenantId = TenantState.CurrentTenantId ?? Guid.Empty;
+        var tenantSlug = TenantState.CurrentTenantSlug;
         var token = UserSessionState.JwtToken ?? string.Empty;
-        await ChatService.ConnectAsync(token, tenantId);
+        await ChatService.ConnectAsync(token, tenantSlug, tenantId);
+    }
+
+    private async Task RetryConnectionAsync()
+    {
+        await InitializeSignalRAsync();
     }
 
     private void HandleMessageReceived(ChatMessageDto message)
@@ -230,9 +251,10 @@
         }
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
         ChatService.OnMessageReceived -= HandleMessageReceived;
         ChatService.OnStateChanged -= HandleStateChanged;
+        await ChatService.DisconnectAsync();
     }
 }
