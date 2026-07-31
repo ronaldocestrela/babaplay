@@ -3,34 +3,39 @@
 
 @if (IsOpen)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" data-testid="match-modal">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow">
+    <div class="modal-backdrop fade show app-modal-backdrop"></div>
+    <div class="modal fade show d-block app-modal" tabindex="-1" data-testid="match-modal">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
+            <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title font-weight-bold">
-                        @(IsEditing ? "Editar Agendamento de Baba" : "Novo Agendamento de Baba")
+                        <i class="bi bi-calendar-plus me-2" aria-hidden="true"></i>
+                        @(IsEditing ? "Editar agendamento de baba" : "Novo agendamento de baba")
                     </h5>
-                    <button type="button" class="btn-close" @onclick="OnClose" aria-label="Close" data-testid="btn-close-modal"></button>
+                    <button type="button" class="btn-close btn-close-white" @onclick="OnClose" aria-label="Fechar" data-testid="btn-close-modal"></button>
                 </div>
                 <EditForm Model="Model" OnValidSubmit="HandleSubmit">
                     <DataAnnotationsValidator />
                     <div class="modal-body">
                         @if (!string.IsNullOrWhiteSpace(ErrorMessage))
                         {
-                            <div class="alert alert-danger p-2 small mb-3" data-testid="modal-error-alert">
+                            <div class="alert alert-danger p-2 small mb-3" role="alert" data-testid="modal-error-alert">
+                                <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
                                 @ErrorMessage
                             </div>
                         }
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Nome do Baba / Evento</label>
-                            <InputText class="form-control" @bind-Value="Model.Name" placeholder="Ex: Baba de Terça à Noite" data-testid="input-match-name" />
+                            <label class="form-label filters-toolbar__label" for="match-modal-name">Nome do baba / evento</label>
+                            <InputText id="match-modal-name" class="form-control" @bind-Value="Model.Name" placeholder="Ex: Baba de terça à noite" data-testid="input-match-name" />
                             <ValidationMessage For="() => Model.Name" class="text-danger small" />
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Data e Hora da Partida</label>
-                            <input type="datetime-local" class="form-control"
+                            <label class="form-label filters-toolbar__label" for="match-modal-date">Data e hora</label>
+                            <input id="match-modal-date"
+                                   type="datetime-local"
+                                   class="form-control"
                                    value="@Model.ScheduledAt.ToString("yyyy-MM-ddTHH:mm")"
                                    @onchange="OnScheduledAtChanged"
                                    data-testid="input-match-date" />
@@ -38,30 +43,30 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Local do Jogo / Arena</label>
-                            <InputText class="form-control" @bind-Value="Model.Location" placeholder="Ex: Arena Parque Esportivo - Campo 2" data-testid="input-match-location" />
+                            <label class="form-label filters-toolbar__label" for="match-modal-location">Local / arena</label>
+                            <InputText id="match-modal-location" class="form-control" @bind-Value="Model.Location" placeholder="Ex: Arena Parque Esportivo — Campo 2" data-testid="input-match-location" />
                             <ValidationMessage For="() => Model.Location" class="text-danger small" />
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Vagas / Limite de Atletas</label>
-                                <InputNumber class="form-control" @bind-Value="Model.MaxPlayers" data-testid="input-match-max-players" />
+                                <label class="form-label filters-toolbar__label" for="match-modal-max-players">Vagas / limite de atletas</label>
+                                <InputNumber id="match-modal-max-players" class="form-control" @bind-Value="Model.MaxPlayers" data-testid="input-match-max-players" />
                                 <ValidationMessage For="() => Model.MaxPlayers" class="text-danger small" />
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Observações / Regras Gerais</label>
-                            <InputTextArea class="form-control" @bind-Value="Model.Description" rows="3" placeholder="Instruções para os atletas (ex: chegar 15min antes)" data-testid="input-match-description" />
+                            <label class="form-label filters-toolbar__label" for="match-modal-description">Observações / regras</label>
+                            <InputTextArea id="match-modal-description" class="form-control" @bind-Value="Model.Description" rows="3" placeholder="Instruções para os atletas (ex: chegar 15 min antes)" data-testid="input-match-description" />
                             <ValidationMessage For="() => Model.Description" class="text-danger small" />
                         </div>
                     </div>
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" @onclick="OnClose" data-testid="btn-cancel-modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary" data-testid="btn-save-match">
-                            @(IsEditing ? "Salvar Alterações" : "Agendar Baba")
+                        <button type="submit" class="btn btn-outline-primary" data-testid="btn-save-match">
+                            @(IsEditing ? "Salvar alterações" : "Agendar baba")
                         </button>
                     </div>
                 </EditForm>

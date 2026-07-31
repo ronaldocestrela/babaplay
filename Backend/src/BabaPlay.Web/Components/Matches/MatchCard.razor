@@ -1,14 +1,15 @@
 @namespace BabaPlay.Web.Components.Matches
 @using BabaPlay.Web.Models
 
-<div class="match-card card card-custom shadow-sm h-100 p-3" data-testid="match-card-@Match.Id">
-    <div class="d-flex justify-content-between align-items-start mb-2">
+<div class="match-card" data-testid="match-card-@Match.Id">
+    <div class="match-card__header">
         <div>
-            <h3 class="h6 font-weight-bold mb-1 text-dark" data-testid="match-title">
-                @(string.IsNullOrWhiteSpace(Match.GameDayName) ? "Baba Sem Nome" : Match.GameDayName)
+            <h3 class="match-card__title" data-testid="match-title">
+                @(string.IsNullOrWhiteSpace(Match.GameDayName) ? "Baba sem nome" : Match.GameDayName)
             </h3>
-            <div class="text-muted small">
-                <i class="bi bi-calendar-event me-1"></i> @Match.ScheduledAt.ToString("dd/MM/yyyy HH:mm")
+            <div class="match-card__datetime text-muted small">
+                <i class="bi bi-calendar-event me-1" aria-hidden="true"></i>
+                @Match.ScheduledAt.ToString("dd/MM/yyyy HH:mm")
             </div>
         </div>
         <span class="badge @GetStatusBadgeClass(Match.Status)" data-testid="match-status-badge">
@@ -16,46 +17,58 @@
         </span>
     </div>
 
-    <div class="match-details my-2 small">
+    <div class="match-card__body">
         @if (!string.IsNullOrWhiteSpace(Match.Location))
         {
-            <div class="text-secondary mb-1">
-                <i class="bi bi-geo-alt-fill me-1 text-danger"></i> @Match.Location
+            <div class="match-card__location text-muted small mb-2">
+                <i class="bi bi-geo-alt me-1" aria-hidden="true"></i> @Match.Location
             </div>
         }
 
         @if (!string.IsNullOrWhiteSpace(Match.HomeTeamName) && !string.IsNullOrWhiteSpace(Match.AwayTeamName))
         {
-            <div class="fw-bold my-2 p-2 bg-light rounded text-center">
+            <div class="match-card__versus">
                 <span>@Match.HomeTeamName</span>
-                <span class="text-muted mx-2">VS</span>
+                <span class="match-card__versus-sep">vs</span>
                 <span>@Match.AwayTeamName</span>
             </div>
         }
 
         @if (!string.IsNullOrWhiteSpace(Match.Description))
         {
-            <div class="text-muted italic text-truncate mb-2" title="@Match.Description">
+            <p class="match-card__description text-muted small mb-0" title="@Match.Description">
                 @Match.Description
-            </div>
+            </p>
         }
     </div>
 
-    <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+    <div class="match-card__footer">
         <div class="vagas-count small text-muted">
-            <i class="bi bi-people-fill me-1"></i>
-            <span class="fw-bold text-dark">@Match.ConfirmedCount</span> / @Match.MaxPlayers vagas
+            <i class="bi bi-people-fill me-1" aria-hidden="true"></i>
+            <span class="font-weight-bold">@Match.ConfirmedCount</span> / @Match.MaxPlayers vagas
         </div>
 
         <div class="match-actions btn-group btn-group-sm">
-            <button class="btn btn-outline-primary btn-edit-match" @onclick="() => OnEdit.InvokeAsync(Match)" title="Editar Partida" data-testid="btn-edit-match">
-                <i class="bi bi-pencil"></i>
+            <button class="btn btn-outline-primary btn-edit-match"
+                    @onclick="() => OnEdit.InvokeAsync(Match)"
+                    title="Editar partida"
+                    aria-label="Editar partida"
+                    data-testid="btn-edit-match">
+                <i class="bi bi-pencil" aria-hidden="true"></i>
             </button>
-            <button class="btn btn-outline-secondary btn-status-match" @onclick="() => OnChangeStatus.InvokeAsync(Match)" title="Alterar Status" data-testid="btn-status-match">
-                <i class="bi bi-arrow-repeat"></i>
+            <button class="btn btn-outline-secondary btn-status-match"
+                    @onclick="() => OnChangeStatus.InvokeAsync(Match)"
+                    title="Alterar status"
+                    aria-label="Alterar status"
+                    data-testid="btn-status-match">
+                <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
             </button>
-            <button class="btn btn-outline-danger btn-delete-match" @onclick="() => OnDelete.InvokeAsync(Match)" title="Excluir Partida" data-testid="btn-delete-match">
-                <i class="bi bi-trash"></i>
+            <button class="btn btn-outline-danger btn-delete-match"
+                    @onclick="() => OnDelete.InvokeAsync(Match)"
+                    title="Excluir partida"
+                    aria-label="Excluir partida"
+                    data-testid="btn-delete-match">
+                <i class="bi bi-trash" aria-hidden="true"></i>
             </button>
         </div>
     </div>
@@ -69,19 +82,19 @@
 
     private static string GetStatusBadgeClass(string status) => status switch
     {
-        "Pending" => "bg-warning text-dark",
-        "Scheduled" or "Confirmed" => "bg-primary text-white",
-        "InProgress" => "bg-info text-white",
-        "Completed" => "bg-success text-white",
-        "Cancelled" => "bg-danger text-white",
-        _ => "bg-secondary text-white"
+        "Pending" => "badge-warning",
+        "Scheduled" or "Confirmed" => "badge-primary",
+        "InProgress" => "badge-info",
+        "Completed" => "badge-success",
+        "Cancelled" => "badge-danger",
+        _ => "badge-secondary"
     };
 
     private static string GetStatusDisplayName(string status) => status switch
     {
         "Pending" => "Pendente",
         "Scheduled" or "Confirmed" => "Agendado",
-        "InProgress" => "Em Andamento",
+        "InProgress" => "Em andamento",
         "Completed" => "Concluído",
         "Cancelled" => "Cancelado",
         _ => status
