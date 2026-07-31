@@ -7,7 +7,11 @@ COPY ["src/BabaPlay.Web/BabaPlay.Web.csproj", "src/BabaPlay.Web/"]
 RUN dotnet restore "src/BabaPlay.Web/BabaPlay.Web.csproj"
 
 COPY . .
-RUN dotnet publish "src/BabaPlay.Web/BabaPlay.Web.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+ARG WEB_BLAZOR_API_URL=http://localhost:5050
+RUN dotnet publish "src/BabaPlay.Web/BabaPlay.Web.csproj" -c Release -o /app/publish /p:UseAppHost=false \
+    && printf '{\n  "ApiBaseUrl": "%s"\n}\n' "$WEB_BLAZOR_API_URL" > /app/publish/wwwroot/appsettings.json \
+    && cp /app/publish/wwwroot/appsettings.json /app/publish/wwwroot/appsettings.Production.json
 
 FROM nginx:alpine AS runtime
 COPY --from=build /app/publish/wwwroot /usr/share/nginx/html

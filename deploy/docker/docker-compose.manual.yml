@@ -65,6 +65,8 @@ services:
     build:
       context: ../../Backend
       dockerfile: src/BabaPlay.Web/Dockerfile
+      args:
+        WEB_BLAZOR_API_URL: ${WEB_BLAZOR_API_URL}
     container_name: babaplay-web
     depends_on:
       api:

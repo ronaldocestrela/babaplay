@@ -42,7 +42,7 @@ Edite o arquivo `deploy/docker/.env.manual` com valores reais, principalmente:
 - `MASTER_DB_CONNECTION_STRING`
 - `JWT_SECRET_KEY`
 - `CORS_ALLOWED_ORIGIN`
-- `WEB_VITE_API_URL`
+- `WEB_BLAZOR_API_URL`
 - `RESEND_API_KEY` (se houver envio real de e-mails)
 - `TENANT_LOGO_STORAGE_PROVIDER` (`Local` ou `Cloudinary`)
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
@@ -52,7 +52,7 @@ Observacoes:
 
 - `SQL_EXTERNAL_PORT` altera apenas a porta exposta no host (`<host>:1433`).
 - `MASTER_DB_CONNECTION_STRING` deve apontar para `sqlserver,1433` quando usar o compose fornecido.
-- `WEB_VITE_API_URL` e injetada no build do frontend. Para este stack: `http://localhost:5050`.
+- `WEB_BLAZOR_API_URL` e injetada no build da imagem `web` (gera `appsettings*.json` com `ApiBaseUrl`). Para este stack: `http://localhost:5050`. Alterar este valor exige rebuild da imagem (`docker compose ... build web` ou `up --build`).
 - `CORS_ALLOWED_ORIGIN` deve bater com a URL publica da web. Para este stack: `http://localhost:8080`.
 - Para ativar Cloudinary no logo da associacao, defina `TENANT_LOGO_STORAGE_PROVIDER=Cloudinary` e preencha as variaveis `CLOUDINARY_*`.
 - A aplicacao opera somente em modo single-db com isolamento logico por `TenantId`.
@@ -174,7 +174,8 @@ Sem `down -v`, os dados persistem entre reinicios.
    - valide senha do `sa` e politica de senha forte do SQL Server
   - valide readiness: `curl -i http://localhost:5050/api/v1/ping`
 2. Frontend sem comunicar com API:
-   - confirme `WEB_VITE_API_URL` no arquivo de ambiente
+   - confirme `WEB_BLAZOR_API_URL` no arquivo de ambiente e rebuild da imagem `web`
+   - valide o valor servido: `curl -s http://localhost:8080/appsettings.Production.json`
    - confirme `CORS_ALLOWED_ORIGIN`
 3. SQL Server unhealthy:
    - aguarde mais tempo no primeiro startup

@@ -19,9 +19,8 @@ Centraliza os artefatos de deploy e infraestrutura containerizada do sistema:
 
 O `docker-compose.manual.yml` provavelmente orquestra:
 - **babaplay-api** — Container da API .NET (imagem gerada pelo `Backend/Dockerfile`)
-- **babaplay-web** — Container do frontend Blazor/React (imagem gerada pelos Dockerfiles de `web/`)
-- **postgres** — Banco de dados PostgreSQL
-- **nginx** — Proxy reverso para expor os serviços (API + frontend)
+- **babaplay-web** — Container do frontend Blazor WebAssembly (imagem gerada por `Backend/src/BabaPlay.Web/Dockerfile`, servido por Nginx)
+- **sqlserver** — Banco de dados SQL Server 2022
 
 ## Documentação relacionada
 
