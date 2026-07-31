@@ -204,7 +204,7 @@ flowchart TD
   * `Components/Dashboard/QuickStatsWidget.razor`
   * `Components/Dashboard/RecentAnnouncementsWidget.razor`
 * **Services & DTOs:** `IDashboardApiService`, `DashboardApiService`, `DashboardSummaryDto`, `NextMatchWidgetDto`, `QuickStatsDto`, `RecentAnnouncementDto`
-* **Endpoints API Consumidos:** `GET /api/v1/dashboard/summary`
+* **Endpoints API Consumidos:** `GET /api/v1/dashboard/summary` (dados reais: avisos publicados, scores, mensalidades e check-ins do tenant; zeros/lista vazia quando não houver registros)
 * **Testes bUnit/xUnit:** `NextMatchWidgetTests.cs`, `QuickStatsWidgetTests.cs`, `DashboardPageTests.cs`, `GetDashboardSummaryQueryHandlerTests.cs`.
 
 

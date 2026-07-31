@@ -1,3 +1,5 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using BabaPlay.Application.Common;
@@ -31,7 +33,12 @@ public sealed class DashboardController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetSummary(CancellationToken cancellationToken)
     {
-        var result = await _dashboardQueryHandler.HandleAsync(new GetDashboardSummaryQuery(), cancellationToken);
+        var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+            ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        var result = await _dashboardQueryHandler.HandleAsync(
+            new GetDashboardSummaryQuery(userId),
+            cancellationToken);
 
         if (!result.IsSuccess)
         {
