@@ -1,0 +1,29 @@
+@namespace BabaPlay.Web.Components.Players
+
+<div class="player-list-skeleton" data-testid="player-list-skeleton" aria-hidden="true">
+    <div class="widget-card mb-4">
+        <div class="row g-3">
+            <div class="col-12 col-md-4"><div class="skeleton skeleton-line"></div></div>
+            <div class="col-12 col-sm-6 col-md-3"><div class="skeleton skeleton-line"></div></div>
+            <div class="col-12 col-sm-6 col-md-2"><div class="skeleton skeleton-line"></div></div>
+            <div class="col-12 col-sm-6 col-md-2"><div class="skeleton skeleton-line"></div></div>
+            <div class="col-12 col-sm-6 col-md-1"><div class="skeleton skeleton-line skeleton-line--short"></div></div>
+        </div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4">
+        @for (var i = 0; i < 8; i++)
+        {
+            <div class="col">
+                <div class="player-card player-card--skeleton">
+                    <div class="skeleton skeleton-avatar mx-auto mb-3"></div>
+                    <div class="skeleton skeleton-line mb-2"></div>
+                    <div class="skeleton skeleton-line skeleton-line--short mx-auto mb-3"></div>
+                    <div class="skeleton skeleton-line skeleton-line--tiny mb-2"></div>
+                    <div class="skeleton skeleton-line skeleton-line--tiny mb-2"></div>
+                    <div class="skeleton skeleton-button mx-auto mt-3"></div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

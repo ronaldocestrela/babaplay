@@ -688,3 +688,235 @@ body {
     opacity: 0.55;
     pointer-events: none;
 }
+
+/* --- List pages: refresh state --- */
+
+.list-content {
+    transition: opacity 0.2s ease;
+}
+
+.list-content--refreshing {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+/* --- Form controls (tema escuro) --- */
+
+.content-body .form-control,
+.content-body .form-select {
+    background-color: var(--bg-dark);
+    border-color: var(--border-color);
+    color: var(--text-main);
+}
+
+.content-body .form-control::placeholder {
+    color: var(--text-muted);
+}
+
+.content-body .form-control:focus,
+.content-body .form-select:focus {
+    background-color: var(--bg-dark);
+    border-color: var(--primary-color);
+    color: var(--text-main);
+    box-shadow: 0 0 0 0.2rem rgba(13, 148, 136, 0.25);
+}
+
+.content-body .input-group-text {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-muted);
+}
+
+.content-body .btn-outline-secondary {
+    --bs-btn-color: var(--text-muted);
+    --bs-btn-border-color: var(--border-color);
+    --bs-btn-hover-bg: var(--bg-secondary);
+    --bs-btn-hover-border-color: var(--border-color);
+    --bs-btn-hover-color: var(--text-main);
+}
+
+.filters-toolbar__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.view-mode-toggle .btn.active {
+    background-color: rgba(13, 148, 136, 0.2);
+    border-color: var(--primary-color);
+    color: var(--primary-light);
+}
+
+/* --- Tabelas (tema escuro) --- */
+
+.content-body .players-table thead {
+    background-color: var(--bg-secondary);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.content-body .players-table thead th {
+    border-bottom-color: var(--border-color);
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+}
+
+.content-body .players-table tbody td {
+    border-bottom-color: var(--border-color);
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+}
+
+.content-body .players-table tbody tr:hover {
+    background-color: rgba(13, 148, 136, 0.06);
+}
+
+.players-table__col-jersey {
+    width: 50px;
+}
+
+.player-avatar-sm {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* --- Player card (grid view) --- */
+
+.player-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    padding: 1.25rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.player-card:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.player-card--inactive {
+    opacity: 0.72;
+}
+
+.player-card--skeleton {
+    pointer-events: none;
+}
+
+.player-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.player-card__avatar-wrap {
+    position: relative;
+}
+
+.player-card__avatar,
+.player-card__avatar-fallback {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.player-card__avatar-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.player-card__jersey {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    background: var(--accent-gold);
+    color: #0f172a;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.15rem 0.4rem;
+    border-radius: 9999px;
+    border: 2px solid var(--bg-card);
+}
+
+.player-card__body {
+    flex: 1;
+}
+
+.player-card__name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 0.15rem;
+}
+
+.player-card__nickname {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.player-card__details {
+    margin: 0;
+}
+
+.player-card__detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.85rem;
+}
+
+.player-card__detail:last-child {
+    border-bottom: none;
+}
+
+.player-card__detail dt {
+    color: var(--text-muted);
+    font-weight: 500;
+    margin: 0;
+}
+
+.player-card__detail dd {
+    margin: 0;
+    text-align: right;
+    color: var(--text-main);
+}
+
+.player-card__actions {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.skeleton-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+}

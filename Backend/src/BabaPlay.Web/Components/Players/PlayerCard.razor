@@ -1,61 +1,62 @@
+@namespace BabaPlay.Web.Components.Players
 @using BabaPlay.Web.Models
 
-<div class="player-card @(Player.IsActive ? "" : "inactive")" data-testid="player-card-@Player.Id">
-    <div class="player-card-header">
-        <div class="avatar-container">
+<div class="player-card @(Player.IsActive ? "" : "player-card--inactive")" data-testid="player-card-@Player.Id">
+    <div class="player-card__header">
+        <div class="player-card__avatar-wrap">
             @if (!string.IsNullOrWhiteSpace(Player.PhotoUrl))
             {
-                <img src="@Player.PhotoUrl" alt="@Player.Name" class="player-avatar" />
+                <img src="@Player.PhotoUrl" alt="@Player.Name" class="player-card__avatar" />
             }
             else
             {
-                <div class="player-avatar-fallback">
-                    @GetInitials(Player.Name)
-                </div>
+                <div class="player-card__avatar-fallback">@GetInitials(Player.Name)</div>
             }
             @if (Player.JerseyNumber.HasValue)
             {
-                <span class="jersey-number-badge">#@Player.JerseyNumber.Value</span>
+                <span class="player-card__jersey">#@Player.JerseyNumber.Value</span>
             }
         </div>
 
-        <div class="status-indicator">
-            <span class="badge @(Player.IsActive ? "badge-success" : "badge-secondary")">
-                @(Player.IsActive ? "Ativo" : "Inativo")
-            </span>
-        </div>
+        <span class="badge @(Player.IsActive ? "badge-success" : "badge-secondary")">
+            @(Player.IsActive ? "Ativo" : "Inativo")
+        </span>
     </div>
 
-    <div class="player-card-body">
-        <h3 class="player-name">@Player.Name</h3>
+    <div class="player-card__body">
+        <h3 class="player-card__name">@Player.Name</h3>
         @if (!string.IsNullOrWhiteSpace(Player.Nickname))
         {
-            <p class="player-nickname">"@Player.Nickname"</p>
+            <p class="player-card__nickname">"@Player.Nickname"</p>
         }
 
-        <div class="player-details">
-            <div class="detail-item">
-                <span class="detail-label">Posição:</span>
-                <span class="detail-value position-badge">@(string.IsNullOrWhiteSpace(Player.PrimaryPositionName) ? "Não definida" : Player.PrimaryPositionName)</span>
+        <dl class="player-card__details">
+            <div class="player-card__detail">
+                <dt>Posição</dt>
+                <dd>
+                    <span class="badge badge-secondary">
+                        @(string.IsNullOrWhiteSpace(Player.PrimaryPositionName) ? "Não definida" : Player.PrimaryPositionName)
+                    </span>
+                </dd>
             </div>
-
-            <div class="detail-item">
-                <span class="detail-label">Pé Preferido:</span>
-                <span class="detail-value">@TranslateFoot(Player.PreferredFoot)</span>
+            <div class="player-card__detail">
+                <dt>Pé preferido</dt>
+                <dd>@TranslateFoot(Player.PreferredFoot)</dd>
             </div>
-
-            <div class="detail-item">
-                <span class="detail-label">Perfil:</span>
-                <span class="detail-value role-badge @GetRoleBadgeClass(Player.RoleName)">
-                    @(string.IsNullOrWhiteSpace(Player.RoleName) ? "Atleta" : Player.RoleName)
-                </span>
+            <div class="player-card__detail">
+                <dt>Perfil</dt>
+                <dd>
+                    <span class="badge @GetRoleBadgeClass(Player.RoleName)">
+                        @(string.IsNullOrWhiteSpace(Player.RoleName) ? "Atleta" : Player.RoleName)
+                    </span>
+                </dd>
             </div>
-        </div>
+        </dl>
     </div>
 
-    <div class="player-card-actions">
-        <button class="btn btn-primary btn-sm btn-edit-player" @onclick="() => OnEdit.InvokeAsync(Player)">
-            <i class="bi bi-pencil"></i> Editar Atleta
+    <div class="player-card__actions">
+        <button class="btn btn-outline-primary btn-sm w-100 btn-edit-player" @onclick="() => OnEdit.InvokeAsync(Player)">
+            <i class="bi bi-pencil me-1" aria-hidden="true"></i> Editar atleta
         </button>
     </div>
 </div>
@@ -67,7 +68,7 @@
     [Parameter]
     public EventCallback<PlayerDto> OnEdit { get; set; }
 
-    private string GetInitials(string name)
+    private static string GetInitials(string name)
     {
         if (string.IsNullOrWhiteSpace(name)) return "AP";
         var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -75,7 +76,7 @@
         return $"{parts[0][0]}{parts[^1][0]}".ToUpper();
     }
 
-    private string TranslateFoot(string? foot) => foot switch
+    private static string TranslateFoot(string? foot) => foot switch
     {
         "Right" => "Direito",
         "Left" => "Esquerdo",
@@ -83,10 +84,10 @@
         _ => "Não informado"
     };
 
-    private string GetRoleBadgeClass(string? roleName) => roleName?.ToLower() switch
+    private static string GetRoleBadgeClass(string? roleName) => roleName?.ToLower() switch
     {
-        "admin" or "administrador" => "badge-admin",
-        "treinador" or "coach" => "badge-coach",
-        _ => "badge-player"
+        "admin" or "administrador" => "badge-warning",
+        "treinador" or "coach" => "badge-info",
+        _ => "badge-primary"
     };
 }
