@@ -388,12 +388,17 @@ flowchart TD
 
 ### Fase 6: Configurações do Tenant
 
-#### **[F28] Configurações Gerais do Tenant & Personalização**
+#### **[F28] Configurações Gerais do Tenant & Personalização** ✅ CONCLUÍDO
 * **Objetivo:** Gerenciamento das preferências da associação (dia fixo do baba, limite de jogadores por time, regras de sorteio, upload de escudo e convites por link).
-* **Componentes / Páginas:** `Pages/Settings/TenantSettings.razor`
-* **Services & DTOs:** `ITenantApiService`, `TenantSettingsDto`
-* **Endpoints API Consumidos:** `GET /api/v1/tenants/settings`, `PUT /api/v1/tenants/settings`
-* **Testes bUnit:** Alteração das cores do tema no Blazor e atualização das regras do baba.
+* **Componentes / Páginas:** 
+  * `Pages/Settings/TenantSettings.razor`
+  * `Components/Settings/TenantGeneralSettingsWidget.razor`
+  * `Components/Settings/TenantGameDayOptionsWidget.razor`
+  * `Components/Settings/TenantInviteLinkWidget.razor`
+* **Services & DTOs:** `ITenantApiService`, `TenantApiService`, `TenantSettingsDto`, `UpdateTenantSettingsDto`, `TenantGameDayOptionDto`, `CreateTenantGameDayOptionDto`
+* **Endpoints API Consumidos:** `GET /api/v1/tenant/settings`, `PUT /api/v1/tenant/settings`, `GET /api/v1/tenant/settings/game-day-options`, `POST /api/v1/tenant/settings/game-day-options`, `PUT /api/v1/tenant/settings/game-day-options/{id}/status`
+* **Testes bUnit/xUnit:** `PositionModalTests.cs`, `PositionsManagementTests.cs`, `TenantSettingsPageTests.cs`, `TenantGeneralSettingsWidgetTests.cs`, `TenantGameDayOptionsWidgetTests.cs`.
+
 
 ---
 

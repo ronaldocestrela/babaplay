@@ -1568,8 +1568,36 @@ Construir um sistema SaaS escalável, com:
 - `[F08]` Cadastro e Gestão de Posições e Categorias (`PositionsManagement.razor`, `PositionModal.razor`, `IPositionApiService`, `PositionApiService`).
 - `[F09]` Carteirinha Digital do Associado (`DigitalIdCardWidget.razor` com 3D flip card, `DigitalIdCard.razor`, `QrCodeSvgHelper.cs`).
 
+### Fase 3 — Logística Esportiva, Sorteio e Partidas ✅ CONCLUÍDA
+- `[F10]` Dashboard Principal do Tenant (`Dashboard.razor`, `NextMatchWidget.razor`, `QuickStatsWidget.razor`, `RecentAnnouncementsWidget.razor`).
+- `[F11]` Agendamento e Calendário de Partidas (`MatchList.razor`, `MatchCard.razor`, `MatchModal.razor`).
+- `[F12]` RSVP / Check-in de Presença (`MatchCheckin.razor`, `RsvpStatusWidget.razor`, `CheckinListWidget.razor`).
+- `[F13]` Algoritmo e Sorteio de Times (`TeamDraw.razor`, `TeamColumn.razor`, `PlayerBadge.razor`).
+- `[F14]` Prancheta Tática e Escalação Visual (`TacticalBoardPage.razor`, `TacticalBoard.razor`, `PlayerPin.razor`).
+- `[F15]` Registro de Súmula Pós-Jogo (`MatchStatsSummary.razor`, `ScoreboardWidget.razor`, `PlayerStatsRow.razor`).
+- `[F16]` Votação do Craque do Jogo / MVP (`MvpVoting.razor`, `MvpCandidateCard.razor`, `MvpLeaderboardWidget.razor`).
+- `[F17]` Rankings da Temporada (`SeasonRankings.razor`, `TopScorersWidget.razor`, `AttendanceWidget.razor`).
+
+### Fase 4 — Módulo Financeiro & Arrecadação ✅ CONCLUÍDA
+- `[F18]` Dashboard Financeiro (`FinancialDashboard.razor`, `FinancialKpiCard.razor`, `RecentTransactionsWidget.razor`).
+- `[F19]` Gestão de Mensalidades (`InvoicesList.razor`, `InvoiceStatusBadge.razor`, `CreateInvoiceModal.razor`).
+- `[F20]` Pagamento via Pix (`PixPaymentModal.razor`).
+- `[F21]` Controle de Inadimplência (`DefaultersReport.razor`, `DefaulterRowWidget.razor`).
+- `[F22]` Prestação de Contas Pública (`FinancialStatement.razor`, `FinancialStatementSummaryCard.razor`).
+- `[F23]` Caixinha do Time / Vaquinhas (`Fundraisers.razor`, `FundraiserCard.razor`, `CreateFundraiserModal.razor`, `ContributeFundraiserModal.razor`).
+
+### Fase 5 — Módulo Comunicação & Real-Time ✅ CONCLUÍDA
+- `[F24]` Mural de Avisos (`Announcements.razor`, `AnnouncementCard.razor`, `CreateAnnouncementModal.razor`).
+- `[F25]` Enquetes Interativas (`Polls.razor`, `PollCard.razor`, `CreatePollModal.razor`).
+- `[F26]` Hub de Notificações (`NotificationCenter.razor`, `Notifications.razor`).
+- `[F27]` Chat em Tempo Real via SignalR (`TeamChat.razor`, `ISignalRChatService`, `SignalRChatService`).
+
+### Fase 6 — Configurações do Tenant ✅ CONCLUÍDA
+- `[F28]` Configurações Gerais do Tenant & Personalização (`TenantSettings.razor`, `TenantGeneralSettingsWidget.razor`, `TenantGameDayOptionsWidget.razor`, `TenantInviteLinkWidget.razor`).
+
 #### Status da Suíte Blazor Web bUnit/xUnit
-- **38/38 testes bUnit passando (100% sucesso)**
+- **Testes bUnit/xUnit do frontend Blazor 100% passando**
+
 
 ---
 

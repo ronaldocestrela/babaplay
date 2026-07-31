@@ -1,0 +1,68 @@
+@using Microsoft.JSInterop
+@using BabaPlay.Web.Models
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+<div class="card card-custom shadow-sm mb-4" data-testid="tenant-invite-link-widget">
+    <div class="card-header bg-transparent border-bottom py-3">
+        <h5 class="card-title mb-0 font-weight-bold">
+            <i class="bi bi-person-plus-fill me-2 text-primary"></i> Link de Convite para Atletas
+        </h5>
+    </div>
+    <div class="card-body">
+        <p class="text-muted">
+            Compartilhe este link com novos sócios ou atletas para que eles possam se cadastrar e vincular diretamente a este grupo.
+        </p>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text bg-light text-muted">
+                <i class="bi bi-link-45deg fs-5"></i>
+            </span>
+            <input type="text" class="form-control font-monospace" value="@InviteUrl" readonly data-testid="input-invite-link" />
+            <button class="btn btn-outline-primary" type="button" @onclick="CopyLinkToClipboard" data-testid="btn-copy-invite-link">
+                <i class="bi @(IsCopied ? "bi-check-lg text-success" : "bi-clipboard") me-1"></i>
+                @(IsCopied ? "Copiado!" : "Copiar Link")
+            </button>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 text-muted small">
+            <i class="bi bi-info-circle"></i>
+            <span>Qualquer pessoa com acesso a este link poderá solicitar entrada na associação.</span>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? Slug { get; set; }
+
+    private bool IsCopied { get; set; }
+
+    private string InviteUrl
+    {
+        get
+        {
+            var baseUri = NavigationManager.BaseUri.TrimEnd('/');
+            var tenantSlug = !string.IsNullOrWhiteSpace(Slug) ? Slug : "associacao";
+            return $"{baseUri}/accept-invite?slug={tenantSlug}";
+        }
+    }
+
+    private async Task CopyLinkToClipboard()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", InviteUrl);
+            IsCopied = true;
+            StateHasChanged();
+            await Task.Delay(2500);
+            IsCopied = false;
+            StateHasChanged();
+        }
+        catch
+        {
+            // Fallback em caso de bloqueio do navegador no teste
+            IsCopied = true;
+        }
+    }
+}

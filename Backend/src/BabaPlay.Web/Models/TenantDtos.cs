@@ -55,3 +55,56 @@ public record InviteValidationDto(
     string Email,
     string Role,
     string? ErrorMessage);
+
+public record TenantSettingsDto(
+    Guid Id,
+    string Name,
+    string Slug,
+    int PlayersPerTeam,
+    string? LogoPath,
+    string? Street,
+    string? Number,
+    string? Neighborhood,
+    string? City,
+    string? State,
+    string? ZipCode,
+    double? AssociationLatitude,
+    double? AssociationLongitude);
+
+public record UpdateTenantSettingsDto
+{
+    [Required(ErrorMessage = "O nome da associação é obrigatório.")]
+    [StringLength(100, ErrorMessage = "O nome deve ter no máximo 100 caracteres.")]
+    public string Name { get; set; } = string.Empty;
+
+    [Range(2, 22, ErrorMessage = "O número de jogadores por time deve ser entre 2 e 22.")]
+    public int PlayersPerTeam { get; set; } = 10;
+
+    public string? Street { get; set; }
+    public string? Number { get; set; }
+    public string? Neighborhood { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
+    public string? ZipCode { get; set; }
+    public double? AssociationLatitude { get; set; }
+    public double? AssociationLongitude { get; set; }
+}
+
+public record TenantGameDayOptionDto(
+    Guid Id,
+    Guid TenantId,
+    DayOfWeek DayOfWeek,
+    TimeOnly LocalStartTime,
+    bool IsActive,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt);
+
+public record CreateTenantGameDayOptionDto
+{
+    [Required(ErrorMessage = "O dia da semana é obrigatório.")]
+    public DayOfWeek DayOfWeek { get; set; } = DayOfWeek.Saturday;
+
+    [Required(ErrorMessage = "O horário de início é obrigatório.")]
+    public TimeOnly LocalStartTime { get; set; } = new TimeOnly(8, 0);
+}
+

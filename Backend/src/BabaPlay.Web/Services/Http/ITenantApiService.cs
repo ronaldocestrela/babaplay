@@ -12,4 +12,10 @@ public interface ITenantApiService
     Task<TenantSummaryDto?> CreateTenantAsync(CreateTenantDto dto, IBrowserFile? logoFile, CancellationToken cancellationToken = default);
     Task<InviteValidationDto?> ValidateInviteAsync(string token, CancellationToken cancellationToken = default);
     Task<bool> AcceptInviteAsync(AcceptInviteDto dto, CancellationToken cancellationToken = default);
+    Task<TenantSettingsDto?> GetSettingsAsync(CancellationToken cancellationToken = default);
+    Task<TenantSettingsDto?> UpdateSettingsAsync(UpdateTenantSettingsDto dto, IBrowserFile? logoFile, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TenantGameDayOptionDto>> GetGameDayOptionsAsync(bool? isActive = null, CancellationToken cancellationToken = default);
+    Task<TenantGameDayOptionDto?> CreateGameDayOptionAsync(CreateTenantGameDayOptionDto dto, CancellationToken cancellationToken = default);
+    Task<TenantGameDayOptionDto?> ChangeGameDayOptionStatusAsync(Guid id, bool isActive, CancellationToken cancellationToken = default);
 }
+

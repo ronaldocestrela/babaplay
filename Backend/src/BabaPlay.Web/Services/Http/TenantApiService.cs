@@ -84,4 +84,97 @@ public sealed class TenantApiService : ITenantApiService
         var response = await _httpClient.PostAsJsonAsync("api/v1/association-invite/accept", dto, cancellationToken);
         return response.IsSuccessStatusCode;
     }
+
+    public async Task<TenantSettingsDto?> GetSettingsAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.GetAsync("api/v1/tenant/settings", cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<TenantSettingsDto>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<TenantSettingsDto?> UpdateSettingsAsync(UpdateTenantSettingsDto dto, IBrowserFile? logoFile, CancellationToken cancellationToken = default)
+    {
+        using var content = new MultipartFormDataContent();
+        content.Add(new StringContent(dto.Name), "Name");
+        content.Add(new StringContent(dto.PlayersPerTeam.ToString()), "PlayersPerTeam");
+
+        if (!string.IsNullOrWhiteSpace(dto.Street))
+            content.Add(new StringContent(dto.Street), "Street");
+        if (!string.IsNullOrWhiteSpace(dto.Number))
+            content.Add(new StringContent(dto.Number), "Number");
+        if (!string.IsNullOrWhiteSpace(dto.Neighborhood))
+            content.Add(new StringContent(dto.Neighborhood), "Neighborhood");
+        if (!string.IsNullOrWhiteSpace(dto.City))
+            content.Add(new StringContent(dto.City), "City");
+        if (!string.IsNullOrWhiteSpace(dto.State))
+            content.Add(new StringContent(dto.State), "State");
+        if (!string.IsNullOrWhiteSpace(dto.ZipCode))
+            content.Add(new StringContent(dto.ZipCode), "ZipCode");
+        if (dto.AssociationLatitude.HasValue)
+            content.Add(new StringContent(dto.AssociationLatitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)), "AssociationLatitude");
+        if (dto.AssociationLongitude.HasValue)
+            content.Add(new StringContent(dto.AssociationLongitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)), "AssociationLongitude");
+
+        if (logoFile is not null)
+        {
+            var maxAllowedSize = 5 * 1024 * 1024; // 5 MB
+            var fileStream = logoFile.OpenReadStream(maxAllowedSize, cancellationToken);
+            var streamContent = new StreamContent(fileStream);
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue(logoFile.ContentType);
+            content.Add(streamContent, "Logo", logoFile.Name);
+        }
+
+        var response = await _httpClient.PutAsync("api/v1/tenant/settings", content, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<TenantSettingsDto>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<TenantGameDayOptionDto>> GetGameDayOptionsAsync(bool? isActive = null, CancellationToken cancellationToken = default)
+    {
+        var url = "api/v1/tenant/settings/game-day-options";
+        if (isActive.HasValue)
+        {
+            url += $"?isActive={isActive.Value.ToString().ToLower()}";
+        }
+
+        var response = await _httpClient.GetAsync(url, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return Array.Empty<TenantGameDayOptionDto>();
+        }
+
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<TenantGameDayOptionDto>>(cancellationToken: cancellationToken)
+            ?? Array.Empty<TenantGameDayOptionDto>();
+    }
+
+    public async Task<TenantGameDayOptionDto?> CreateGameDayOptionAsync(CreateTenantGameDayOptionDto dto, CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/v1/tenant/settings/game-day-options", dto, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<TenantGameDayOptionDto>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<TenantGameDayOptionDto?> ChangeGameDayOptionStatusAsync(Guid id, bool isActive, CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.PutAsJsonAsync($"api/v1/tenant/settings/game-day-options/{id}/status", new { IsActive = isActive }, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<TenantGameDayOptionDto>(cancellationToken: cancellationToken);
+    }
 }
+

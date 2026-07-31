@@ -1,0 +1,263 @@
+@using Microsoft.AspNetCore.Components.Forms
+@using BabaPlay.Web.Models
+@using BabaPlay.Web.Services.Http
+@inject ITenantApiService TenantApiService
+
+<div class="card card-custom shadow-sm mb-4" data-testid="tenant-game-day-options-widget">
+    <div class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0 font-weight-bold">
+            <i class="bi bi-calendar-week-fill me-2 text-primary"></i> Dias Fixos do Baba (Agenda Recorrente)
+        </h5>
+        <button class="btn btn-sm btn-outline-primary" @onclick="ToggleAddForm" data-testid="btn-toggle-add-option">
+            <i class="bi @(ShowAddForm ? "bi-x-lg" : "bi-plus-lg") me-1"></i>
+            @(ShowAddForm ? "Cancelar" : "Novo Dia Fixo")
+        </button>
+    </div>
+    <div class="card-body">
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert" data-testid="gameday-options-error-alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                @ErrorMessage
+                <button type="button" class="btn-close" @onclick="() => ErrorMessage = null"></button>
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(SuccessMessage))
+        {
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" data-testid="gameday-options-success-alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                @SuccessMessage
+                <button type="button" class="btn-close" @onclick="() => SuccessMessage = null"></button>
+            </div>
+        }
+
+        @if (ShowAddForm)
+        {
+            <div class="card card-body bg-light mb-4 border" data-testid="add-gameday-option-form">
+                <h6 class="font-weight-bold mb-3">Adicionar Novo Dia Fixo</h6>
+                <EditForm Model="NewOptionModel" OnValidSubmit="HandleCreateOption">
+                    <DataAnnotationsValidator />
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label font-weight-bold">Dia da Semana</label>
+                            <InputSelect @bind-Value="NewOptionModel.DayOfWeek" class="form-select" data-testid="select-day-of-week">
+                                <option value="@DayOfWeek.Sunday">Domingo</option>
+                                <option value="@DayOfWeek.Monday">Segunda-feira</option>
+                                <option value="@DayOfWeek.Tuesday">Terça-feira</option>
+                                <option value="@DayOfWeek.Wednesday">Quarta-feira</option>
+                                <option value="@DayOfWeek.Thursday">Quinta-feira</option>
+                                <option value="@DayOfWeek.Friday">Sexta-feira</option>
+                                <option value="@DayOfWeek.Saturday">Sábado</option>
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label font-weight-bold">Horário de Início</label>
+                            <input type="time" class="form-control" value="@NewOptionTimeInput" @onchange="OnTimeInputChanged" data-testid="input-start-time" />
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-success w-100" disabled="@IsSubmitting" data-testid="btn-submit-gameday-option">
+                                @if (IsSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                    <span>Adicionando...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-plus-circle me-1"></i>
+                                    <span>Adicionar</span>
+                                }
+                            </button>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        }
+
+        @if (IsLoading)
+        {
+            <div class="d-flex justify-content-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+            </div>
+        }
+        else if (Options.Count == 0)
+        {
+            <div class="text-center py-4 text-muted" data-testid="empty-gameday-options">
+                <i class="bi bi-calendar-x display-6 mb-2 d-block"></i>
+                <p class="mb-0">Nenhum dia fixo cadastrado para esta associação.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" data-testid="gameday-options-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Dia da Semana</th>
+                            <th>Horário Local</th>
+                            <th>Status</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Options)
+                        {
+                            <tr data-testid="gameday-option-row-@item.Id">
+                                <td>
+                                    <span class="font-weight-bold">@TranslateDayOfWeek(item.DayOfWeek)</span>
+                                </td>
+                                <td>
+                                    <i class="bi bi-clock me-1 text-muted"></i>
+                                    @item.LocalStartTime.ToString("HH:mm")
+                                </td>
+                                <td>
+                                    @if (item.IsActive)
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" data-testid="status-active-@item.Id">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Ativo
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1" data-testid="status-inactive-@item.Id">
+                                            <i class="bi bi-dash-circle-fill me-1"></i> Inativo
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm @(item.IsActive ? "btn-outline-warning" : "btn-outline-success")"
+                                            @onclick="() => ToggleStatus(item)"
+                                            data-testid="btn-toggle-status-@item.Id">
+                                        <i class="bi @(item.IsActive ? "bi-pause-circle" : "bi-play-circle") me-1"></i>
+                                        @(item.IsActive ? "Desativar" : "Ativar")
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<TenantGameDayOptionDto> Options { get; set; } = new();
+    private CreateTenantGameDayOptionDto NewOptionModel { get; set; } = new();
+    private string NewOptionTimeInput { get; set; } = "08:00";
+    private bool ShowAddForm { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private bool IsSubmitting { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? SuccessMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOptionsAsync();
+    }
+
+    private async Task LoadOptionsAsync()
+    {
+        IsLoading = true;
+        try
+        {
+            var result = await TenantApiService.GetGameDayOptionsAsync();
+            Options = result.ToList();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao carregar dias fixos: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void ToggleAddForm()
+    {
+        ShowAddForm = !ShowAddForm;
+        ErrorMessage = null;
+        SuccessMessage = null;
+    }
+
+    private void OnTimeInputChanged(ChangeEventArgs e)
+    {
+        var val = e.Value?.ToString();
+        if (!string.IsNullOrWhiteSpace(val) && TimeOnly.TryParse(val, out var time))
+        {
+            NewOptionTimeInput = val;
+            NewOptionModel.LocalStartTime = time;
+        }
+    }
+
+    private async Task HandleCreateOption()
+    {
+        IsSubmitting = true;
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        try
+        {
+            var created = await TenantApiService.CreateGameDayOptionAsync(NewOptionModel);
+            if (created != null)
+            {
+                SuccessMessage = "Dia fixo adicionado com sucesso!";
+                ShowAddForm = false;
+                NewOptionModel = new CreateTenantGameDayOptionDto();
+                NewOptionTimeInput = "08:00";
+                await LoadOptionsAsync();
+            }
+            else
+            {
+                ErrorMessage = "Este dia fixo e horário já existe ou não pôde ser cadastrado.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao salvar dia fixo: {ex.Message}";
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+
+    private async Task ToggleStatus(TenantGameDayOptionDto item)
+    {
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        try
+        {
+            var updated = await TenantApiService.ChangeGameDayOptionStatusAsync(item.Id, !item.IsActive);
+            if (updated != null)
+            {
+                SuccessMessage = $"Status alterado para {(updated.IsActive ? "Ativo" : "Inativo")}.";
+                await LoadOptionsAsync();
+            }
+            else
+            {
+                ErrorMessage = "Não foi possível alterar o status da opção.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao alterar status: {ex.Message}";
+        }
+    }
+
+    private string TranslateDayOfWeek(DayOfWeek day) => day switch
+    {
+        DayOfWeek.Sunday => "Domingo",
+        DayOfWeek.Monday => "Segunda-feira",
+        DayOfWeek.Tuesday => "Terça-feira",
+        DayOfWeek.Wednesday => "Quarta-feira",
+        DayOfWeek.Thursday => "Quinta-feira",
+        DayOfWeek.Friday => "Sexta-feira",
+        DayOfWeek.Saturday => "Sábado",
+        _ => day.ToString()
+    };
+}

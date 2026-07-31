@@ -8,6 +8,20 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Blazor (.NET 10) Frontend: Fase F28 (Configurações Gerais do Tenant & Personalização)
+
+- **[F28] Configurações Gerais do Tenant & Personalização**:
+  - `Pages/Settings/TenantSettings.razor`: Página de configurações da associação (`/settings/tenant`) com abas responsivas para dados gerais, dias fixos do baba e link de convite.
+  - `Components/Settings/TenantGeneralSettingsWidget.razor`: Widget formulário com `EditForm` para atualização do nome da associação, upload do escudo/logo (`InputFile`), limite de atletas por time (`PlayersPerTeam`) e localização/endereço completo com coordenadas geográficas.
+  - `Components/Settings/TenantGameDayOptionsWidget.razor`: Widget para gestão da agenda semanal recorrente dos babas, listando opções ativas/inativas com toggle de status e inclusão de novos dias da semana e horários.
+  - `Components/Settings/TenantInviteLinkWidget.razor`: Widget para geração e cópia do link de convite do tenant via JS Interop (`navigator.clipboard`).
+  - `Services/Http/ITenantApiService.cs` & `TenantApiService.cs`: Atualizados com chamadas HTTP aos endpoints `/api/v1/tenant/settings` e `/api/v1/tenant/settings/game-day-options`.
+  - `Components/Layout/NavMenu.razor`: Atualizado o atalho de Configurações para direcionar para `/settings/tenant`.
+- **Suíte de Testes bUnit & xUnit**:
+  - `TenantSettingsPageTests.cs`, `TenantGeneralSettingsWidgetTests.cs`, `TenantGameDayOptionsWidgetTests.cs`.
+  - 100% dos testes da suíte `Web.Settings` aprovados com sucesso (12/12 testes).
+
+
 ### Added — Blazor (.NET 10) Frontend & CQRS Backend: Fase F27 (Chat em Tempo Real via SignalR)
 
 - **[F27] Chat em Tempo Real via SignalR**:

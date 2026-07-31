@@ -1,0 +1,205 @@
+@using Microsoft.AspNetCore.Components.Forms
+@using BabaPlay.Web.Models
+@using BabaPlay.Web.Services.Http
+@inject ITenantApiService TenantApiService
+
+<div class="card card-custom shadow-sm mb-4" data-testid="tenant-general-settings-widget">
+    <div class="card-header bg-transparent border-bottom py-3">
+        <h5 class="card-title mb-0 font-weight-bold">
+            <i class="bi bi-gear-fill me-2 text-primary"></i> Configurações Gerais & Identidade
+        </h5>
+    </div>
+    <div class="card-body">
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert" data-testid="settings-error-alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                @ErrorMessage
+                <button type="button" class="btn-close" @onclick="() => ErrorMessage = null"></button>
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(SuccessMessage))
+        {
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" data-testid="settings-success-alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                @SuccessMessage
+                <button type="button" class="btn-close" @onclick="() => SuccessMessage = null"></button>
+            </div>
+        }
+
+        <EditForm Model="Model" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label font-weight-bold">Nome da Associação <span class="text-danger">*</span></label>
+                    <InputText @bind-Value="Model.Name" class="form-control" placeholder="Ex: Baba das Galáxias FC" data-testid="input-tenant-name" />
+                    <ValidationMessage For="() => Model.Name" class="text-danger small" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label font-weight-bold">Atletas por Time <span class="text-danger">*</span></label>
+                    <InputNumber @bind-Value="Model.PlayersPerTeam" class="form-control" min="2" max="22" data-testid="input-players-per-team" />
+                    <ValidationMessage For="() => Model.PlayersPerTeam" class="text-danger small" />
+                    <small class="text-muted d-block mt-1">Usado como padrão no sorteio de times.</small>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label font-weight-bold">Escudo / Logo da Associação</label>
+                    <div class="d-flex align-items-center gap-3">
+                        @if (!string.IsNullOrWhiteSpace(CurrentLogoUrl))
+                        {
+                            <img src="@CurrentLogoUrl" alt="Escudo Atual" class="rounded-circle border" style="width: 64px; height: 64px; object-fit: cover;" data-testid="tenant-logo-preview" />
+                        }
+                        else
+                        {
+                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center border" style="width: 64px; height: 64px;" data-testid="tenant-logo-placeholder">
+                                <i class="bi bi-shield-fill text-muted fs-3"></i>
+                            </div>
+                        }
+                        <div class="flex-grow-1">
+                            <InputFile OnChange="HandleFileSelected" class="form-control" accept="image/*" data-testid="input-tenant-logo" />
+                            <small class="text-muted d-block mt-1">Formatos aceitos: PNG, JPG ou WEBP. Tamanho máximo: 5 MB.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+                <h6 class="font-weight-bold text-secondary mb-3">
+                    <i class="bi bi-geo-alt-fill me-1"></i> Endereço da Sede / Campo Principal
+                </h6>
+
+                <div class="col-md-8">
+                    <label class="form-label">Logradouro / Rua</label>
+                    <InputText @bind-Value="Model.Street" class="form-control" placeholder="Ex: Av. dos Esportes" data-testid="input-street" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Número</label>
+                    <InputText @bind-Value="Model.Number" class="form-control" placeholder="Ex: 100" data-testid="input-number" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Bairro</label>
+                    <InputText @bind-Value="Model.Neighborhood" class="form-control" placeholder="Ex: Centro" data-testid="input-neighborhood" />
+                </div>
+
+                <div class="col-md-5">
+                    <label class="form-label">Cidade</label>
+                    <InputText @bind-Value="Model.City" class="form-control" placeholder="Ex: Salvador" data-testid="input-city" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">UF / Estado</label>
+                    <InputText @bind-Value="Model.State" class="form-control" placeholder="Ex: BA" data-testid="input-state" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">CEP</label>
+                    <InputText @bind-Value="Model.ZipCode" class="form-control" placeholder="Ex: 40000-000" data-testid="input-zipcode" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Latitude</label>
+                    <InputNumber @bind-Value="Model.AssociationLatitude" class="form-control" placeholder="-12.9714" step="any" data-testid="input-latitude" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Longitude</label>
+                    <InputNumber @bind-Value="Model.AssociationLongitude" class="form-control" placeholder="-38.5014" step="any" data-testid="input-longitude" />
+                </div>
+
+                <div class="col-12 mt-4 text-end">
+                    <button type="submit" class="btn btn-primary px-4" disabled="@IsSubmitting" data-testid="btn-save-general-settings">
+                        @if (IsSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>Salvando...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check-lg me-1"></i>
+                            <span>Salvar Alterações</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public TenantSettingsDto? InitialSettings { get; set; }
+
+    [Parameter]
+    public EventCallback<TenantSettingsDto> OnSettingsUpdated { get; set; }
+
+    private UpdateTenantSettingsDto Model { get; set; } = new();
+    private string? CurrentLogoUrl { get; set; }
+    private IBrowserFile? SelectedLogoFile { get; set; }
+    private bool IsSubmitting { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? SuccessMessage { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (InitialSettings != null)
+        {
+            Model = new UpdateTenantSettingsDto
+            {
+                Name = InitialSettings.Name,
+                PlayersPerTeam = InitialSettings.PlayersPerTeam > 0 ? InitialSettings.PlayersPerTeam : 10,
+                Street = InitialSettings.Street,
+                Number = InitialSettings.Number,
+                Neighborhood = InitialSettings.Neighborhood,
+                City = InitialSettings.City,
+                State = InitialSettings.State,
+                ZipCode = InitialSettings.ZipCode,
+                AssociationLatitude = InitialSettings.AssociationLatitude,
+                AssociationLongitude = InitialSettings.AssociationLongitude
+            };
+            CurrentLogoUrl = InitialSettings.LogoPath;
+        }
+    }
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        SelectedLogoFile = e.File;
+    }
+
+    private async Task HandleSubmit()
+    {
+        IsSubmitting = true;
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        try
+        {
+            var updatedSettings = await TenantApiService.UpdateSettingsAsync(Model, SelectedLogoFile);
+            if (updatedSettings != null)
+            {
+                SuccessMessage = "Configurações salvas com sucesso!";
+                CurrentLogoUrl = updatedSettings.LogoPath;
+                SelectedLogoFile = null;
+                if (OnSettingsUpdated.HasDelegate)
+                {
+                    await OnSettingsUpdated.InvokeAsync(updatedSettings);
+                }
+            }
+            else
+            {
+                ErrorMessage = "Não foi possível salvar as configurações. Verifique os dados e tente novamente.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erro ao salvar configurações: {ex.Message}";
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+}
