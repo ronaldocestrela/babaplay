@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace BabaPlay.Web.Models;
 
@@ -79,6 +80,7 @@ public record UpdatePlayerAdminDto
     public bool IsActive { get; set; } = true;
 }
 
+[method: JsonConstructor]
 public record PositionDto(
     Guid Id,
     string Code,
