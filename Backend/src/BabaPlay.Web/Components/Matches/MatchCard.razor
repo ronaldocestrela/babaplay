@@ -49,6 +49,13 @@
         </div>
 
         <div class="match-actions btn-group btn-group-sm">
+            <a href="/matches/@Match.Id/stats"
+               class="btn btn-outline-success btn-stats-match"
+               title="Súmula e estatísticas"
+               aria-label="Súmula e estatísticas"
+               data-testid="btn-stats-match">
+                <i class="bi bi-journal-check" aria-hidden="true"></i>
+            </a>
             <button class="btn btn-outline-primary btn-edit-match"
                     @onclick="() => OnEdit.InvokeAsync(Match)"
                     title="Editar partida"

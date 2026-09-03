@@ -30,7 +30,7 @@ O Back-end é dividido em Bounded Contexts (Módulos de Domínio) lógicos. Cada
 
 ### 4.1. Módulos de Domínio (Bounded Contexts)
 *   **`BabaPlay.Identity`:** Gestão de Tenants (Inquilinos), usuários, autenticação, autorização (RBAC) e perfis (Admin, Atleta, Técnico).
-*   **`BabaPlay.Sports`:** Motor principal. Gerencia times, estatísticas, convocações (RSVP), escalações, prancheta tática e algoritmo de sorteio de equipes.
+*   **`BabaPlay.Sports`:** Motor principal. Gerencia times, agendamentos futuros e registros retroativos de partidas (histórico esportivo), estatísticas, convocações (RSVP), escalações, prancheta tática, súmulas pós-jogo e algoritmo de sorteio de equipes.
 *   **`BabaPlay.Financial`:** Módulo de cobranças, gestão de mensalidades, integração com gateways de pagamento (Pix, Cartão), controle de inadimplência e prestação de contas.
 *   **`BabaPlay.Communication`:** Envio de notificações push, e-mails, murais de avisos e chat (SignalR).
 

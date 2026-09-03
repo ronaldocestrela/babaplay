@@ -29,6 +29,13 @@ public sealed class RegisterMatchStatsCommandHandler
 
         }
 
+        if (match.Status != BabaPlay.Domain.Enums.MatchStatus.Completed)
+        {
+            match.ChangeStatus(BabaPlay.Domain.Enums.MatchStatus.Completed);
+            await _matchRepository.UpdateAsync(match, ct);
+            await _matchRepository.SaveChangesAsync(ct);
+        }
+
         var result = new RegisterMatchStatsApplicationDto(
             command.MatchId,
             command.HomeScore,

@@ -77,12 +77,24 @@ public class CreateGameDayCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WithCompletedStatus_ShouldReturnInvalidStatus()
+    public async Task Handle_WithCompletedStatus_ShouldCreateCompletedGameDay()
+    {
+        var scheduledAt = DateTime.UtcNow.AddDays(-2);
+
+        var result = await _handler.HandleAsync(
+            new CreateGameDayCommand("Rodada Histórica", scheduledAt, "Campo B", null, 18, GameDayStatus.Completed));
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.Status.Should().Be(GameDayStatus.Completed);
+    }
+
+    [Fact]
+    public async Task Handle_WithCancelledStatus_ShouldReturnInvalidStatus()
     {
         var scheduledAt = DateTime.UtcNow.AddHours(2);
 
         var result = await _handler.HandleAsync(
-            new CreateGameDayCommand("Rodada", scheduledAt, null, null, 18, GameDayStatus.Completed));
+            new CreateGameDayCommand("Rodada Cancelada", scheduledAt, null, null, 18, GameDayStatus.Cancelled));
 
         result.IsSuccess.Should().BeFalse();
         result.ErrorCode.Should().Be("INVALID_STATUS");

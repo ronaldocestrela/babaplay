@@ -44,9 +44,6 @@ public sealed class UpdateMatchCommandHandler
         if (gameDay is null)
             return Result<MatchResponse>.Fail("GAMEDAY_NOT_FOUND", $"Game day '{cmd.GameDayId}' was not found.");
 
-        if (gameDay.ScheduledAt <= DateTime.UtcNow)
-            return Result<MatchResponse>.Fail("GAMEDAY_PAST", "Cannot update match for a past game day.");
-
         bool exists;
         if (hasFixedTeams)
         {

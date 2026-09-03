@@ -179,7 +179,7 @@ public sealed class MatchIntegrationTests : IClassFixture<PlayerWebApplicationFa
     {
         var created = await CreateMatchAsync("Rodada Match Invalid", "Team I", "Team J");
 
-        var response = await _client.PutAsJsonAsync($"/api/v1/match/{created.Id}/status", new { status = MatchStatus.Completed });
+        var response = await _client.PutAsJsonAsync($"/api/v1/match/{created.Id}/status", new { status = MatchStatus.InProgress });
 
         response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
         var problem = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);

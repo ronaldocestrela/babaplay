@@ -64,11 +64,34 @@ public class MatchTests
     }
 
     [Fact]
-    public void ChangeStatus_InvalidTransition_ShouldThrowValidationException()
+    public void Create_WithCompletedInitialStatus_ShouldSucceed()
+    {
+        var match = Match.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Histórico",
+            MatchStatus.Completed);
+
+        match.Status.Should().Be(MatchStatus.Completed);
+    }
+
+    [Fact]
+    public void ChangeStatus_FromPendingToCompleted_ShouldSucceed()
     {
         var match = Match.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null);
+        match.ChangeStatus(MatchStatus.Completed);
 
-        var act = () => match.ChangeStatus(MatchStatus.Completed);
+        match.Status.Should().Be(MatchStatus.Completed);
+    }
+
+    [Fact]
+    public void ChangeStatus_InvalidTransition_ShouldThrowValidationException()
+    {
+        var match = Match.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null, MatchStatus.Completed);
+
+        var act = () => match.ChangeStatus(MatchStatus.InProgress);
 
         act.Should().Throw<ValidationException>();
     }

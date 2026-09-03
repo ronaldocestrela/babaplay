@@ -1570,11 +1570,11 @@ Construir um sistema SaaS escalável, com:
 
 ### Fase 3 — Logística Esportiva, Sorteio e Partidas ✅ CONCLUÍDA
 - `[F10]` Dashboard Principal do Tenant (`Dashboard.razor`, `NextMatchWidget.razor`, `QuickStatsWidget.razor`, `RecentAnnouncementsWidget.razor`).
-- `[F11]` Agendamento e Calendário de Partidas (`MatchList.razor`, `MatchCard.razor`, `MatchModal.razor`).
+- `[F11]` Agendamento e Calendário de Partidas & Histórico Retroativo (`MatchList.razor`, `MatchCard.razor` com atalho de súmula, `MatchModal.razor` com suporte a datas anteriores e status `Completed`).
 - `[F12]` RSVP / Check-in de Presença (`MatchCheckin.razor`, `RsvpStatusWidget.razor`, `CheckinListWidget.razor`).
 - `[F13]` Algoritmo e Sorteio de Times (`TeamDraw.razor`, `TeamColumn.razor`, `PlayerBadge.razor`).
 - `[F14]` Prancheta Tática e Escalação Visual (`TacticalBoardPage.razor`, `TacticalBoard.razor`, `PlayerPin.razor`).
-- `[F15]` Registro de Súmula Pós-Jogo (`MatchStatsSummary.razor`, `ScoreboardWidget.razor`, `PlayerStatsRow.razor`).
+- `[F15]` Registro de Súmula Pós-Jogo em Tempo Real & Retroativa (`MatchStatsSummary.razor`, `ScoreboardWidget.razor`, `PlayerStatsRow.razor`).
 - `[F16]` Votação do Craque do Jogo / MVP (`MvpVoting.razor`, `MvpCandidateCard.razor`, `MvpLeaderboardWidget.razor`).
 - `[F17]` Rankings da Temporada (`SeasonRankings.razor`, `TopScorersWidget.razor`, `AttendanceWidget.razor`).
 

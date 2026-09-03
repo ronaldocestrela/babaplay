@@ -208,12 +208,12 @@ flowchart TD
 * **Testes bUnit/xUnit:** `NextMatchWidgetTests.cs`, `QuickStatsWidgetTests.cs`, `DashboardPageTests.cs`, `GetDashboardSummaryQueryHandlerTests.cs`.
 
 
-#### **[F11] Agendamento e Calendário de Partidas/Treinos** ✅ CONCLUÍDO
-* **Objetivo:** Criar, editar e visualizar o calendário de eventos esportivos (local, data/hora, limite de vagas, valor por atleta se houver).
+#### **[F11] Agendamento e Calendário de Partidas/Treinos & Histórico Retroativo** ✅ CONCLUÍDO
+* **Objetivo:** Criar, editar e visualizar o calendário de eventos esportivos (local, data/hora, limite de vagas, valor por atleta se houver), suportando agendamento futuro ou cadastro de histórico retroativo de partidas já ocorridas com status Concluído (`Completed`).
 * **Componentes / Páginas:** 
   * `Pages/Matches/MatchList.razor`
-  * `Components/Matches/MatchCard.razor`
-  * `Components/Matches/MatchModal.razor`
+  * `Components/Matches/MatchCard.razor` (com atalho direto para preencher/visualizar súmula)
+  * `Components/Matches/MatchModal.razor` (suporte a datas passadas, status `Completed` e alternância dinâmica de botões)
 * **Services & DTOs:** `IMatchApiService`, `MatchApiService`, `MatchDto`, `ScheduleGameDayDto`, `GameDayDto`, `CreateMatchDto`, `UpdateMatchDto`
 * **Endpoints API Consumidos:** `GET /api/v1/match`, `POST /api/v1/match`, `PUT /api/v1/match/{id}`, `DELETE /api/v1/match/{id}`, `GET /api/v1/gameday`, `POST /api/v1/gameday`
 * **Testes bUnit:** `MatchCardTests.cs`, `MatchModalTests.cs`, `MatchListTests.cs`.
@@ -251,8 +251,8 @@ flowchart TD
 * **Testes bUnit:** `PlayerPinTests.cs`, `TacticalBoardTests.cs`, `TacticalBoardPageTests.cs`.
 
 
-#### **[F15] Registro de Súmula Pós-Jogo (Estatísticas em Tempo Real)** ✅ CONCLUÍDO
-* **Objetivo:** Tela para o mesário/administrador registrar o placar, gols, assistências, cartões amarelos/vermelhos e minutos jogados.
+#### **[F15] Registro de Súmula Pós-Jogo (Estatísticas em Tempo Real & Retroativas)** ✅ CONCLUÍDO
+* **Objetivo:** Tela para o mesário/administrador registrar o placar, gols, assistências, cartões amarelos/vermelhos e minutos jogados, com suporte tanto para encerramento em tempo real quanto para lançamento de súmulas de partidas históricas concluídas.
 * **Componentes / Páginas:** 
   * `Pages/Matches/MatchStatsSummary.razor`
   * `Components/Matches/ScoreboardWidget.razor`

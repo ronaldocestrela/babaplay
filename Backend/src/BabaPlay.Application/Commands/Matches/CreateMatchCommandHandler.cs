@@ -44,9 +44,6 @@ public sealed class CreateMatchCommandHandler
         if (gameDay is null)
             return Result<MatchResponse>.Fail("GAMEDAY_NOT_FOUND", $"Game day '{cmd.GameDayId}' was not found.");
 
-        if (gameDay.ScheduledAt <= DateTime.UtcNow)
-            return Result<MatchResponse>.Fail("GAMEDAY_PAST", "Cannot create match for a past game day.");
-
         bool exists;
         if (hasFixedTeams)
         {
@@ -70,12 +67,14 @@ public sealed class CreateMatchCommandHandler
         if (exists)
             return Result<MatchResponse>.Fail("MATCH_ALREADY_EXISTS", "A match for the same game day already exists.");
 
+        var initialStatus = cmd.InitialStatus ?? BabaPlay.Domain.Enums.MatchStatus.Pending;
         var match = Match.Create(
             _tenantContext.TenantId,
             cmd.GameDayId,
             homeTeamId,
             awayTeamId,
-            cmd.Description);
+            cmd.Description,
+            initialStatus);
 
         await _matchRepository.AddAsync(match, ct);
         await _matchRepository.SaveChangesAsync(ct);

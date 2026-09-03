@@ -26,7 +26,8 @@ public sealed class GameDay : EntityBase
         DateTime scheduledAt,
         string? location,
         string? description,
-        int maxPlayers)
+        int maxPlayers,
+        GameDayStatus status = GameDayStatus.Pending)
     {
         if (tenantId == Guid.Empty)
             throw new ValidationException("TenantId", "TenantId is required.");
@@ -34,6 +35,9 @@ public sealed class GameDay : EntityBase
         ValidateName(name);
         ValidateScheduledAt(scheduledAt);
         ValidateMaxPlayers(maxPlayers);
+
+        if (status is not (GameDayStatus.Pending or GameDayStatus.Confirmed or GameDayStatus.Completed))
+            throw new ValidationException("Status", "Initial status must be Pending, Confirmed or Completed.");
 
         var trimmedName = name.Trim();
 
@@ -46,7 +50,7 @@ public sealed class GameDay : EntityBase
             Location = location?.Trim(),
             Description = description?.Trim(),
             MaxPlayers = maxPlayers,
-            Status = GameDayStatus.Pending,
+            Status = status,
             IsActive = true,
         };
     }
@@ -73,7 +77,7 @@ public sealed class GameDay : EntityBase
 
         var isValidTransition = Status switch
         {
-            GameDayStatus.Pending => newStatus is GameDayStatus.Confirmed or GameDayStatus.Cancelled,
+            GameDayStatus.Pending => newStatus is GameDayStatus.Confirmed or GameDayStatus.Completed or GameDayStatus.Cancelled,
             GameDayStatus.Confirmed => newStatus is GameDayStatus.Completed or GameDayStatus.Cancelled,
             GameDayStatus.Cancelled => false,
             GameDayStatus.Completed => false,
@@ -104,8 +108,8 @@ public sealed class GameDay : EntityBase
 
     private static void ValidateScheduledAt(DateTime scheduledAt)
     {
-        if (scheduledAt <= DateTime.UtcNow)
-            throw new ValidationException("ScheduledAt", "ScheduledAt must be in the future.");
+        if (scheduledAt < DateTime.UtcNow.AddYears(-10))
+            throw new ValidationException("ScheduledAt", "ScheduledAt cannot be older than 10 years.");
     }
 
     private static void ValidateMaxPlayers(int maxPlayers)

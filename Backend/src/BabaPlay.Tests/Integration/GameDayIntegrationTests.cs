@@ -81,11 +81,21 @@ public sealed class GameDayIntegrationTests : IClassFixture<PlayerWebApplication
     }
 
     [Fact]
-    public async Task Post_PastScheduledAt_ShouldReturn422()
+    public async Task Post_PastScheduledAt_Recent_ShouldReturn201()
     {
         var response = await _client.PostAsync(
             "/api/v1/gameday",
-            CreateBody("Rodada C", DateTime.UtcNow.AddMinutes(-10)));
+            CreateBody("Rodada Retroativa", DateTime.UtcNow.AddDays(-2)));
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task Post_AncientScheduledAt_ShouldReturn422()
+    {
+        var response = await _client.PostAsync(
+            "/api/v1/gameday",
+            CreateBody("Rodada Antiga Demais", DateTime.UtcNow.AddYears(-11)));
 
         response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
         var problem = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);

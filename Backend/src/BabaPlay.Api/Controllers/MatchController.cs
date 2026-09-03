@@ -115,7 +115,7 @@ public sealed class MatchController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateMatchRequest request, CancellationToken ct)
     {
         var result = await _createHandler.HandleAsync(
-            new CreateMatchCommand(request.GameDayId, request.HomeTeamId, request.AwayTeamId, request.Description),
+            new CreateMatchCommand(request.GameDayId, request.HomeTeamId, request.AwayTeamId, request.Description, request.InitialStatus),
             ct);
 
         if (!result.IsSuccess)
@@ -248,7 +248,8 @@ public sealed record CreateMatchRequest(
     Guid GameDayId,
     Guid? HomeTeamId,
     Guid? AwayTeamId,
-    string? Description);
+    string? Description,
+    MatchStatus? InitialStatus = null);
 
 public sealed record UpdateMatchRequest(
     Guid GameDayId,

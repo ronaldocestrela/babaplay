@@ -31,16 +31,17 @@ Este módulo gerencia quem usa o sistema e a qual associação (Tenant) a pessoa
 O "coração" do aplicativo, responsável pelo engajamento dos atletas e organização dos jogos.
 
 ### Funcionalidades a serem construídas:
-*   **Calendário de Eventos:** Criação de jogos, treinos e eventos sociais.
+*   **Calendário de Eventos & Histórico:** Criação de jogos, treinos, eventos sociais e registro retroativo de partidas de datas anteriores (histórico esportivo).
 *   **RSVP (Confirmação de Presença):** Sistema onde o atleta confirma se vai ou não ao jogo.
 *   **Sorteio Inteligente de Times:** Algoritmo que balanceia os times (coletes) automaticamente com base nas notas prévias e posições dos jogadores confirmados.
 *   **Prancheta Tática:** Definição visual do esquema tático e escalação.
-*   **Registro Pós-Jogo (Súmula):** Inserção de gols, assistências, cartões, e minutos jogados.
+*   **Registro Pós-Jogo (Súmula):** Inserção de gols, assistências, cartões, minutos jogados e finalização de partidas em tempo real ou retroativas.
 *   **Craque do Jogo (MVP):** Sistema de votação aberto aos jogadores após a partida.
 *   **Rankings e Histórico:** Geração de tabelas de artilharia, assistência e assiduidade (ranking da temporada).
 
 ### Exemplos de Mapeamento CQRS:
-*   `ScheduleMatchCommand`: Cria um novo evento esportivo.
+*   `CreateGameDayCommand`: Cria ou registra um novo evento esportivo (agendado ou histórico concluído).
+*   `CreateMatchCommand`: Cria uma partida vinculada ao GameDay (suporta status inicial retroativo).
 *   `SubmitRsvpCommand`: Registra a presença ou ausência de um atleta.
 *   `GenerateBalancedTeamsCommand`: Executa o algoritmo de sorteio e salva os times formados.
 *   `RegisterMatchStatsCommand`: Salva os eventos ocorridos na partida (gols, cartões).

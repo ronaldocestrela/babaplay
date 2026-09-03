@@ -23,16 +23,16 @@ public sealed class CreateGameDayCommandHandler
         if (string.IsNullOrWhiteSpace(cmd.Name))
             return Result<GameDayResponse>.Fail("INVALID_NAME", "Game day name is required.");
 
-        if (cmd.ScheduledAt <= DateTime.UtcNow)
-            return Result<GameDayResponse>.Fail("INVALID_SCHEDULED_AT", "ScheduledAt must be in the future.");
+        if (cmd.ScheduledAt < DateTime.UtcNow.AddYears(-10))
+            return Result<GameDayResponse>.Fail("INVALID_SCHEDULED_AT", "ScheduledAt cannot be older than 10 years.");
 
         if (cmd.MaxPlayers <= 0)
             return Result<GameDayResponse>.Fail("INVALID_MAX_PLAYERS", "MaxPlayers must be greater than zero.");
 
-        if (cmd.Status is not (GameDayStatus.Pending or GameDayStatus.Confirmed))
+        if (cmd.Status is not (GameDayStatus.Pending or GameDayStatus.Confirmed or GameDayStatus.Completed))
             return Result<GameDayResponse>.Fail(
                 "INVALID_STATUS",
-                "Initial status must be Pending or Confirmed.");
+                "Initial status must be Pending, Confirmed or Completed.");
 
         var normalizedName = cmd.Name.Trim().ToUpperInvariant();
         var exists = await _gameDayRepository.ExistsByNormalizedNameAndScheduledAtAsync(normalizedName, cmd.ScheduledAt, ct);
@@ -45,10 +45,8 @@ public sealed class CreateGameDayCommandHandler
             cmd.ScheduledAt,
             cmd.Location,
             cmd.Description,
-            cmd.MaxPlayers);
-
-        if (cmd.Status != GameDayStatus.Pending)
-            gameDay.ChangeStatus(cmd.Status);
+            cmd.MaxPlayers,
+            cmd.Status);
 
         await _gameDayRepository.AddAsync(gameDay, ct);
         await _gameDayRepository.SaveChangesAsync(ct);

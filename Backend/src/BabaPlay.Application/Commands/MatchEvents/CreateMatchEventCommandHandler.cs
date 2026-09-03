@@ -56,7 +56,7 @@ public sealed class CreateMatchEventCommandHandler
         if (match is null)
             return Result<MatchEventResponse>.Fail("MATCH_EVENT_MATCH_NOT_FOUND", "Match was not found.");
 
-        if (match.Status is MatchStatus.Cancelled or MatchStatus.Completed or MatchStatus.Pending)
+        if (match.Status is MatchStatus.Cancelled or MatchStatus.Pending)
             return Result<MatchEventResponse>.Fail("MATCH_EVENT_MATCH_NOT_OPEN", "Match is not open for event registration.");
 
         if (cmd.TeamId != match.HomeTeamId && cmd.TeamId != match.AwayTeamId)

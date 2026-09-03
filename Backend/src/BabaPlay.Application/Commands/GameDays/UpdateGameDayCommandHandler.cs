@@ -21,8 +21,8 @@ public sealed class UpdateGameDayCommandHandler
         if (string.IsNullOrWhiteSpace(cmd.Name))
             return Result<GameDayResponse>.Fail("INVALID_NAME", "Game day name is required.");
 
-        if (cmd.ScheduledAt <= DateTime.UtcNow)
-            return Result<GameDayResponse>.Fail("INVALID_SCHEDULED_AT", "ScheduledAt must be in the future.");
+        if (cmd.ScheduledAt < DateTime.UtcNow.AddYears(-10))
+            return Result<GameDayResponse>.Fail("INVALID_SCHEDULED_AT", "ScheduledAt cannot be older than 10 years.");
 
         if (cmd.MaxPlayers <= 0)
             return Result<GameDayResponse>.Fail("INVALID_MAX_PLAYERS", "MaxPlayers must be greater than zero.");

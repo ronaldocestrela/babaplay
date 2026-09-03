@@ -8,6 +8,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Suporte à inserção de partidas de datas anteriores (histórico retroativo)
+- **Domínio (`GameDay` e `Match`)**:
+  - `GameDay`: remoção da trava `ScheduledAt must be in the future`. Suporte a datas passadas com salvaguarda de integridade de 10 anos. Suporte a status inicial `Completed` na criação e transição direta `Pending -> Completed`.
+  - `Match`: suporte a status inicial opcional (`Completed`, `Scheduled`, `Pending`) na criação e transição flexível para `Completed` em partidas retroativas.
+- **Camada de Aplicação CQRS**:
+  - `CreateGameDayCommandHandler` e `UpdateGameDayCommandHandler`: aceitam datas anteriores e status inicial `Completed`.
+  - `CreateMatchCommandHandler` e `UpdateMatchCommandHandler`: remoção do bloqueio `GAMEDAY_PAST: Cannot create match for a past game day`, viabilizando criação e edição de partidas em dias de jogos passados.
+  - `CreateMatchEventCommandHandler`: flexibilização do registro de eventos (gols, cartões) para partidas em status `Completed` durante lançamento de súmulas históricas.
+  - `RegisterMatchStatsCommandHandler`: marcação automática da partida como `Completed` ao finalizar e registrar a súmula pós-jogo.
+- **Front-end Blazor WASM**:
+  - `MatchModal.razor`: remoção do bloqueio client-side de data no futuro; inclusão da opção "Concluído (já realizado / histórico)" no select de status; adaptação dinâmica do botão para "Registrar histórico" quando a data for anterior ao dia de hoje.
+  - `MatchCard.razor`: inclusão de atalho direto para a súmula pós-jogo e estatísticas da partida.
+- **Testes Automatizados (TDD)**:
+  - Atualização e inclusão de testes unitários (`GameDayTests`, `MatchTests`, `CreateMatchCommandHandlerTests`, `UpdateMatchCommandHandlerTests`, `CreateGameDayCommandHandlerTests`), testes de integração (`GameDayIntegrationTests`, `MatchIntegrationTests`) e testes de UI bUnit (`MatchModalTests`), totalizando 814 testes passando com 100% de sucesso.
+
 ## [0.2.0-beta.1] - 2026-07-31
 
 ### Added — Envio administrativo de alertas e gate CommunicationWrite alinhado ao RBAC

@@ -1,6 +1,7 @@
 using BabaPlay.Application.Commands.Matches;
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Domain.Entities;
+using BabaPlay.Domain.Enums;
 using FluentAssertions;
 using Moq;
 using DomainMatch = BabaPlay.Domain.Entities.Match;
@@ -127,22 +128,26 @@ public class UpdateMatchCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_PastGameDay_ShouldReturnGameDayPast()
+    public async Task Handle_PastGameDay_ShouldAllowMatchUpdate()
     {
         var match = DomainMatch.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null);
-        var cmd = new UpdateMatchCommand(match.Id, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null);
+        var homeTeamId = Guid.NewGuid();
+        var awayTeamId = Guid.NewGuid();
+        var cmd = new UpdateMatchCommand(match.Id, Guid.NewGuid(), homeTeamId, awayTeamId, "Atualizado");
 
-        var pastGameDay = GameDay.Create(Guid.NewGuid(), "Rodada", DateTime.UtcNow.AddHours(2), null, null, 22);
-        typeof(GameDay).GetProperty(nameof(GameDay.ScheduledAt))!
-            .SetValue(pastGameDay, DateTime.UtcNow.AddHours(-1));
+        var pastGameDay = GameDay.Create(Guid.NewGuid(), "Rodada", DateTime.UtcNow.AddDays(-3), null, null, 22, GameDayStatus.Completed);
 
         _matchRepository.Setup(x => x.GetByIdAsync(match.Id, It.IsAny<CancellationToken>())).ReturnsAsync(match);
         _gameDayRepository.Setup(x => x.GetByIdAsync(cmd.GameDayId, It.IsAny<CancellationToken>())).ReturnsAsync(pastGameDay);
+        _teamRepository.Setup(x => x.GetByIdAsync(homeTeamId, It.IsAny<CancellationToken>())).ReturnsAsync(Team.Create(Guid.NewGuid(), "Casa", 11));
+        _teamRepository.Setup(x => x.GetByIdAsync(awayTeamId, It.IsAny<CancellationToken>())).ReturnsAsync(Team.Create(Guid.NewGuid(), "Visitante", 11));
+        _matchRepository.Setup(x => x.ExistsByGameDayAndTeamsAsync(cmd.GameDayId, homeTeamId, awayTeamId, match.Id, It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
         var result = await _handler.HandleAsync(cmd);
 
-        result.IsSuccess.Should().BeFalse();
-        result.ErrorCode.Should().Be("GAMEDAY_PAST");
+        result.IsSuccess.Should().BeTrue();
+        _matchRepository.Verify(x => x.UpdateAsync(match, It.IsAny<CancellationToken>()), Times.Once);
+        _matchRepository.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

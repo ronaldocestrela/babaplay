@@ -1,6 +1,7 @@
 using BabaPlay.Application.Commands.Matches;
 using BabaPlay.Application.Interfaces;
 using BabaPlay.Domain.Entities;
+using BabaPlay.Domain.Enums;
 using FluentAssertions;
 using Moq;
 using DomainMatch = BabaPlay.Domain.Entities.Match;
@@ -106,26 +107,35 @@ public class CreateMatchCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_PastGameDay_ShouldReturnGameDayPast()
+    public async Task Handle_PastGameDay_ShouldAllowMatchCreation()
     {
         var gameDayId = Guid.NewGuid();
         var homeTeamId = Guid.NewGuid();
         var awayTeamId = Guid.NewGuid();
 
-        var pastGameDay = GameDay.Create(Guid.NewGuid(), "Rodada passada", DateTime.UtcNow.AddHours(2), null, null, 22);
-        pastGameDay.Update("Rodada passada", DateTime.UtcNow.AddHours(3), null, null, 22);
-
-        typeof(GameDay).GetProperty(nameof(GameDay.ScheduledAt))!
-            .SetValue(pastGameDay, DateTime.UtcNow.AddHours(-1));
+        var pastGameDay = GameDay.Create(Guid.NewGuid(), "Rodada passada", DateTime.UtcNow.AddDays(-2), null, null, 22, GameDayStatus.Completed);
 
         _gameDayRepository
             .Setup(x => x.GetByIdAsync(gameDayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(pastGameDay);
 
-        var result = await _handler.HandleAsync(new CreateMatchCommand(gameDayId, homeTeamId, awayTeamId, null));
+        _teamRepository
+            .Setup(x => x.GetByIdAsync(homeTeamId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Team.Create(Guid.NewGuid(), "Casa", 11));
+        _teamRepository
+            .Setup(x => x.GetByIdAsync(awayTeamId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Team.Create(Guid.NewGuid(), "Visitante", 11));
 
-        result.IsSuccess.Should().BeFalse();
-        result.ErrorCode.Should().Be("GAMEDAY_PAST");
+        _matchRepository
+            .Setup(x => x.ExistsByGameDayAndTeamsAsync(gameDayId, homeTeamId, awayTeamId, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var result = await _handler.HandleAsync(new CreateMatchCommand(gameDayId, homeTeamId, awayTeamId, "Histórico", BabaPlay.Domain.Enums.MatchStatus.Completed));
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.Status.Should().Be(BabaPlay.Domain.Enums.MatchStatus.Completed);
+        _matchRepository.Verify(x => x.AddAsync(It.IsAny<DomainMatch>(), It.IsAny<CancellationToken>()), Times.Once);
+        _matchRepository.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

@@ -23,9 +23,13 @@ public sealed class Match : EntityBase
         Guid gameDayId,
         Guid homeTeamId,
         Guid awayTeamId,
-        string? description)
+        string? description,
+        MatchStatus initialStatus = MatchStatus.Pending)
     {
         ValidateIds(tenantId, gameDayId, homeTeamId, awayTeamId);
+
+        if (initialStatus is not (MatchStatus.Pending or MatchStatus.Scheduled or MatchStatus.Completed))
+            throw new ValidationException("Status", "Initial status must be Pending, Scheduled or Completed.");
 
         return new Match
         {
@@ -34,7 +38,7 @@ public sealed class Match : EntityBase
             HomeTeamId = homeTeamId,
             AwayTeamId = awayTeamId,
             Description = description?.Trim(),
-            Status = MatchStatus.Pending,
+            Status = initialStatus,
             IsActive = true,
         };
     }
@@ -60,8 +64,8 @@ public sealed class Match : EntityBase
 
         var isValidTransition = Status switch
         {
-            MatchStatus.Pending => newStatus is MatchStatus.Scheduled or MatchStatus.Cancelled,
-            MatchStatus.Scheduled => newStatus is MatchStatus.InProgress or MatchStatus.Cancelled,
+            MatchStatus.Pending => newStatus is MatchStatus.Scheduled or MatchStatus.Completed or MatchStatus.Cancelled,
+            MatchStatus.Scheduled => newStatus is MatchStatus.InProgress or MatchStatus.Completed or MatchStatus.Cancelled,
             MatchStatus.InProgress => newStatus is MatchStatus.Completed,
             MatchStatus.Completed => false,
             MatchStatus.Cancelled => false,

@@ -36,11 +36,21 @@ public class GameDayTests
     }
 
     [Fact]
-    public void Create_PastScheduledAt_ThrowsValidationException()
+    public void Create_PastScheduledAt_Succeeds()
     {
-        var act = () => GameDay.Create(Guid.NewGuid(), "Rodada", DateTime.UtcNow.AddMinutes(-5), null, null, 22);
+        var pastScheduledAt = DateTime.UtcNow.AddDays(-7);
+        var gameDay = GameDay.Create(Guid.NewGuid(), "Rodada", pastScheduledAt, null, null, 22, GameDayStatus.Completed);
 
-        act.Should().Throw<ValidationException>();
+        gameDay.ScheduledAt.Should().Be(pastScheduledAt);
+        gameDay.Status.Should().Be(GameDayStatus.Completed);
+    }
+
+    [Fact]
+    public void Create_AncientScheduledAt_ThrowsValidationException()
+    {
+        var act = () => GameDay.Create(Guid.NewGuid(), "Rodada", DateTime.UtcNow.AddYears(-11), null, null, 22);
+
+        act.Should().Throw<ValidationException>().Where(e => e.Errors.ContainsKey("ScheduledAt"));
     }
 
     [Fact]
