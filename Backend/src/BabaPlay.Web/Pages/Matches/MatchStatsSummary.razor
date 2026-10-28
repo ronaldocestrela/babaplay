@@ -5,6 +5,9 @@
 @using BabaPlay.Web.Components.Common
 @using BabaPlay.Web.Components.Matches
 @inject IMatchApiService MatchApiService
+@inject ITeamApiService TeamApiService
+@inject ICheckinApiService CheckinApiService
+@inject IPlayerApiService PlayerApiService
 
 <PageTitle>Súmula Pós-Jogo & Estatísticas - Baba Play</PageTitle>
 
@@ -44,9 +47,32 @@
             <!-- Tabela Time Mandante -->
             <div class="col-lg-6 mb-4">
                 <div class="card card-custom p-3 shadow-sm">
-                    <h3 class="h6 font-weight-bold text-warning mb-3" data-testid="home-team-title">
-                        🟡 @(Scoreboard?.HomeTeamName ?? "Time Mandante")
-                    </h3>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="h6 font-weight-bold text-warning mb-0" data-testid="home-team-title">
+                            🟡 @(Scoreboard?.HomeTeamName ?? "Time Mandante")
+                        </h3>
+                        <span class="badge bg-warning text-dark">@HomePlayers.Count() atletas</span>
+                    </div>
+
+                    @if (AvailablePlayers.Count > 0)
+                    {
+                        <div class="input-group input-group-sm mb-3">
+                            <select class="form-select form-select-sm" @bind="SelectedHomePlayerId" data-testid="select-add-home-player">
+                                <option value="@Guid.Empty">-- Adicionar atleta ao time mandante --</option>
+                                @foreach (var player in AvailablePlayers)
+                                {
+                                    <option value="@player.Id">@player.Name</option>
+                                }
+                            </select>
+                            <button class="btn btn-outline-warning btn-sm"
+                                    @onclick="() => AddPlayerToTeam(SelectedHomePlayerId, Scoreboard.HomeTeamId)"
+                                    disabled="@(SelectedHomePlayerId == Guid.Empty)"
+                                    data-testid="btn-add-home-player">
+                                <i class="bi bi-person-plus-fill me-1"></i> Adicionar
+                            </button>
+                        </div>
+                    }
+
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0" data-testid="home-team-table">
                             <thead class="table-light">
@@ -59,9 +85,20 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var player in HomePlayers)
+                                @if (!HomePlayers.Any())
                                 {
-                                    <PlayerStatsRow Stats="player" OnStatsChanged="HandlePlayerStatsChanged" />
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-3">
+                                            Nenhum atleta escalado neste time. Selecione acima para adicionar.
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var player in HomePlayers)
+                                    {
+                                        <PlayerStatsRow Stats="player" OnStatsChanged="HandlePlayerStatsChanged" />
+                                    }
                                 }
                             </tbody>
                         </table>
@@ -72,9 +109,32 @@
             <!-- Tabela Time Visitante -->
             <div class="col-lg-6 mb-4">
                 <div class="card card-custom p-3 shadow-sm">
-                    <h3 class="h6 font-weight-bold text-info mb-3" data-testid="away-team-title">
-                        🔵 @(Scoreboard?.AwayTeamName ?? "Time Visitante")
-                    </h3>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="h6 font-weight-bold text-info mb-0" data-testid="away-team-title">
+                            🔵 @(Scoreboard?.AwayTeamName ?? "Time Visitante")
+                        </h3>
+                        <span class="badge bg-info text-dark">@AwayPlayers.Count() atletas</span>
+                    </div>
+
+                    @if (AvailablePlayers.Count > 0)
+                    {
+                        <div class="input-group input-group-sm mb-3">
+                            <select class="form-select form-select-sm" @bind="SelectedAwayPlayerId" data-testid="select-add-away-player">
+                                <option value="@Guid.Empty">-- Adicionar atleta ao time visitante --</option>
+                                @foreach (var player in AvailablePlayers)
+                                {
+                                    <option value="@player.Id">@player.Name</option>
+                                }
+                            </select>
+                            <button class="btn btn-outline-info btn-sm"
+                                    @onclick="() => AddPlayerToTeam(SelectedAwayPlayerId, Scoreboard.AwayTeamId)"
+                                    disabled="@(SelectedAwayPlayerId == Guid.Empty)"
+                                    data-testid="btn-add-away-player">
+                                <i class="bi bi-person-plus-fill me-1"></i> Adicionar
+                            </button>
+                        </div>
+                    }
+
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0" data-testid="away-team-table">
                             <thead class="table-light">
@@ -87,9 +147,20 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var player in AwayPlayers)
+                                @if (!AwayPlayers.Any())
                                 {
-                                    <PlayerStatsRow Stats="player" OnStatsChanged="HandlePlayerStatsChanged" />
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-3">
+                                            Nenhum atleta escalado neste time. Selecione acima para adicionar.
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var player in AwayPlayers)
+                                    {
+                                        <PlayerStatsRow Stats="player" OnStatsChanged="HandlePlayerStatsChanged" />
+                                    }
                                 }
                             </tbody>
                         </table>
@@ -105,12 +176,19 @@
 
     private MatchScoreboardDto Scoreboard { get; set; } = null!;
     private List<PlayerMatchStatsDto> PlayerStats { get; set; } = new();
+    private IReadOnlyList<PlayerDto> AllTenantPlayers { get; set; } = Array.Empty<PlayerDto>();
+    private Guid SelectedHomePlayerId { get; set; } = Guid.Empty;
+    private Guid SelectedAwayPlayerId { get; set; } = Guid.Empty;
     private bool IsLoading { get; set; } = true;
     private string? AlertMessage { get; set; }
     private bool IsAlertError { get; set; }
 
     private IEnumerable<PlayerMatchStatsDto> HomePlayers => PlayerStats.Where(p => p.TeamId == Scoreboard?.HomeTeamId);
     private IEnumerable<PlayerMatchStatsDto> AwayPlayers => PlayerStats.Where(p => p.TeamId == Scoreboard?.AwayTeamId);
+    private List<PlayerDto> AvailablePlayers => AllTenantPlayers
+        .Where(p => p.IsActive && !PlayerStats.Any(ps => ps.PlayerId == p.Id))
+        .OrderBy(p => p.Name)
+        .ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -131,28 +209,161 @@
         IsLoading = true;
         try
         {
+            try
+            {
+                AllTenantPlayers = (await PlayerApiService.GetPlayersAsync()) ?? Array.Empty<PlayerDto>();
+            }
+            catch
+            {
+                AllTenantPlayers = Array.Empty<PlayerDto>();
+            }
+
             var homeTeamId = Guid.NewGuid();
             var awayTeamId = Guid.NewGuid();
+            var homeTeamName = "Time Amarelo 🟡";
+            var awayTeamName = "Time Azul 🔵";
 
-            Scoreboard = new MatchScoreboardDto(
-                MatchId != Guid.Empty ? MatchId : Guid.NewGuid(),
-                homeTeamId,
-                "Time Amarelo 🟡",
-                awayTeamId,
-                "Time Azul 🔵",
-                0,
-                0,
-                "Em Andamento"
-            );
-
-            PlayerStats = new List<PlayerMatchStatsDto>
+            MatchDto? matchInfo = null;
+            if (MatchId != Guid.Empty)
             {
-                new(Guid.NewGuid(), "Zico Santos", null, homeTeamId, 0, 0, 0, 0, 0),
-                new(Guid.NewGuid(), "Pelé Nascimento", null, homeTeamId, 0, 0, 0, 0, 0),
-                new(Guid.NewGuid(), "Romário Farias", null, awayTeamId, 0, 0, 0, 0, 0),
-                new(Guid.NewGuid(), "Ronaldo Nazário", null, awayTeamId, 0, 0, 0, 0, 0)
-            };
+                try
+                {
+                    matchInfo = await MatchApiService.GetMatchByIdAsync(MatchId);
+                }
+                catch
+                {
+                    matchInfo = null;
+                }
+            }
 
+            if (matchInfo != null)
+            {
+                if (!string.IsNullOrWhiteSpace(matchInfo.HomeTeamName)) homeTeamName = matchInfo.HomeTeamName;
+                if (!string.IsNullOrWhiteSpace(matchInfo.AwayTeamName)) awayTeamName = matchInfo.AwayTeamName;
+            }
+
+            var loadedPlayers = new List<PlayerMatchStatsDto>();
+
+            RegisterMatchStatsDto? existingStats = null;
+            if (MatchId != Guid.Empty)
+            {
+                try
+                {
+                    existingStats = await MatchApiService.GetMatchStatsAsync(MatchId);
+                }
+                catch
+                {
+                    existingStats = null;
+                }
+            }
+
+            if (existingStats != null && existingStats.PlayerStats.Count > 0)
+            {
+                loadedPlayers = existingStats.PlayerStats.ToList();
+                var firstTeamId = loadedPlayers.FirstOrDefault()?.TeamId ?? homeTeamId;
+                var secondTeamId = loadedPlayers.FirstOrDefault(p => p.TeamId != firstTeamId)?.TeamId ?? awayTeamId;
+
+                Scoreboard = new MatchScoreboardDto(
+                    MatchId,
+                    firstTeamId,
+                    homeTeamName,
+                    secondTeamId,
+                    awayTeamName,
+                    existingStats.HomeScore,
+                    existingStats.AwayScore,
+                    "Concluído"
+                );
+            }
+            else
+            {
+                var gameDayId = matchInfo?.GameDayId ?? MatchId;
+
+                DrawResultDto? drawnTeams = null;
+                if (gameDayId != Guid.Empty)
+                {
+                    try
+                    {
+                        drawnTeams = await TeamApiService.GetTeamsByGameDayAsync(gameDayId);
+                    }
+                    catch
+                    {
+                        drawnTeams = null;
+                    }
+                }
+
+                if (drawnTeams != null && drawnTeams.Teams.Count >= 2)
+                {
+                    var t1 = drawnTeams.Teams[0];
+                    var t2 = drawnTeams.Teams[1];
+                    homeTeamId = t1.TeamId;
+                    homeTeamName = t1.Name;
+                    awayTeamId = t2.TeamId;
+                    awayTeamName = t2.Name;
+
+                    foreach (var p in t1.Players)
+                    {
+                        loadedPlayers.Add(new PlayerMatchStatsDto(p.PlayerId, p.Name, p.PhotoUrl, homeTeamId));
+                    }
+                    foreach (var p in t2.Players)
+                    {
+                        loadedPlayers.Add(new PlayerMatchStatsDto(p.PlayerId, p.Name, p.PhotoUrl, awayTeamId));
+                    }
+                }
+                else
+                {
+                    IReadOnlyList<CheckinDto> checkins = Array.Empty<CheckinDto>();
+                    if (gameDayId != Guid.Empty)
+                    {
+                        try
+                        {
+                            checkins = (await CheckinApiService.GetCheckinsByGameDayAsync(gameDayId)) ?? Array.Empty<CheckinDto>();
+                        }
+                        catch
+                        {
+                            checkins = Array.Empty<CheckinDto>();
+                        }
+                    }
+
+                    var realPlayersToAllocate = new List<(Guid Id, string Name, string? Photo)>();
+
+                    if (checkins != null && checkins.Count > 0)
+                    {
+                        foreach (var c in checkins)
+                        {
+                            var athlete = AllTenantPlayers.FirstOrDefault(p => p.Id == c.PlayerId);
+                            var name = athlete?.Name ?? (!string.IsNullOrWhiteSpace(c.PlayerName) ? c.PlayerName : "Atleta");
+                            realPlayersToAllocate.Add((c.PlayerId, name, athlete?.PhotoUrl));
+                        }
+                    }
+                    else if (AllTenantPlayers != null && AllTenantPlayers.Count > 0)
+                    {
+                        foreach (var athlete in AllTenantPlayers.Where(p => p.IsActive))
+                        {
+                            realPlayersToAllocate.Add((athlete.Id, athlete.Name, athlete.PhotoUrl));
+                        }
+                    }
+
+                    for (int i = 0; i < realPlayersToAllocate.Count; i++)
+                    {
+                        var playerInfo = realPlayersToAllocate[i];
+                        var targetTeamId = (i % 2 == 0) ? homeTeamId : awayTeamId;
+                        loadedPlayers.Add(new PlayerMatchStatsDto(playerInfo.Id, playerInfo.Name, playerInfo.Photo, targetTeamId));
+                    }
+                }
+
+                Scoreboard = new MatchScoreboardDto(
+                    MatchId != Guid.Empty ? MatchId : Guid.NewGuid(),
+                    homeTeamId,
+                    homeTeamName,
+                    awayTeamId,
+                    awayTeamName,
+                    0,
+                    0,
+                    "Pendente"
+                );
+            }
+
+            PlayerStats = loadedPlayers;
             RecalculateScoreboard();
         }
         catch (Exception ex)
@@ -162,6 +373,36 @@
         finally
         {
             IsLoading = false;
+        }
+    }
+
+    private void AddPlayerToTeam(Guid playerId, Guid teamId)
+    {
+        if (playerId == Guid.Empty || teamId == Guid.Empty) return;
+
+        var player = AllTenantPlayers.FirstOrDefault(p => p.Id == playerId);
+        if (player == null) return;
+
+        PlayerStats.Add(new PlayerMatchStatsDto(player.Id, player.Name, player.PhotoUrl, teamId));
+
+        if (teamId == Scoreboard?.HomeTeamId)
+        {
+            SelectedHomePlayerId = Guid.Empty;
+        }
+        else
+        {
+            SelectedAwayPlayerId = Guid.Empty;
+        }
+
+        RecalculateScoreboard();
+    }
+
+    private void RemovePlayer(Guid playerId)
+    {
+        var removed = PlayerStats.RemoveAll(p => p.PlayerId == playerId);
+        if (removed > 0)
+        {
+            RecalculateScoreboard();
         }
     }
 

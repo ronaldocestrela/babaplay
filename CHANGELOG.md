@@ -8,6 +8,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added — Eliminação de dados mocados na Súmula e Resolução de Atletas Reais ([F15])
+- **Web API & CQRS**:
+  - `GET /api/v1/match/{id}/stats`: novo endpoint de leitura para recuperação de estatísticas e atletas reais de partidas, associado à policy `MatchesRead`.
+  - `GetMatchStatsQuery` e `GetMatchStatsQueryHandler`: consulta desacoplada que carrega a escalação real a partir dos times e atletas ativos do tenant ou eventos prévios da partida.
+  - `RegisterMatchStatsCommandHandler`: suporte a resolução e vinculação automática de partidas a partir do `GameDayId` em cadastros retroativos.
+- **Front-end Blazor WASM**:
+  - `MatchStatsSummary.razor`: remoção definitiva de dados fictícios/mockados ("Zico", "Pelé", "Romário", "Ronaldo"). Integração com `TeamApiService`, `CheckinApiService` e `PlayerApiService` para carregar atletas e times reais do tenant ativo.
+  - Suporte à alocação dinâmica e flexível de atletas reais nos times mandante e visitante diretamente na súmula retroativa.
+- **Testes Automatizados (TDD)**:
+  - Criação de `GetMatchStatsQueryHandlerTests`, novos testes de integração em `MatchIntegrationTests` para `GET /api/v1/match/{id}/stats` e `POST /api/v1/match/{id}/stats`, e ampliação de `MatchStatsSummaryPageTests` no bUnit, totalizando **820 testes passando com 100% de sucesso**.
+
 ### Added — Suporte à inserção de partidas de datas anteriores (histórico retroativo)
 - **Domínio (`GameDay` e `Match`)**:
   - `GameDay`: remoção da trava `ScheduledAt must be in the future`. Suporte a datas passadas com salvaguarda de integridade de 10 anos. Suporte a status inicial `Completed` na criação e transição direta `Pending -> Completed`.
@@ -21,7 +32,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
   - `MatchModal.razor`: remoção do bloqueio client-side de data no futuro; inclusão da opção "Concluído (já realizado / histórico)" no select de status; adaptação dinâmica do botão para "Registrar histórico" quando a data for anterior ao dia de hoje.
   - `MatchCard.razor`: inclusão de atalho direto para a súmula pós-jogo e estatísticas da partida.
 - **Testes Automatizados (TDD)**:
-  - Atualização e inclusão de testes unitários (`GameDayTests`, `MatchTests`, `CreateMatchCommandHandlerTests`, `UpdateMatchCommandHandlerTests`, `CreateGameDayCommandHandlerTests`), testes de integração (`GameDayIntegrationTests`, `MatchIntegrationTests`) e testes de UI bUnit (`MatchModalTests`), totalizando 814 testes passando com 100% de sucesso.
+  - Atualização e inclusão de testes unitários (`GameDayTests`, `MatchTests`, `CreateMatchCommandHandlerTests`, `UpdateMatchCommandHandlerTests`, `CreateGameDayCommandHandlerTests`), testes de integração (`GameDayIntegrationTests`, `MatchIntegrationTests`) e testes de UI bUnit (`MatchModalTests`).
 
 ## [0.2.0-beta.1] - 2026-07-31
 

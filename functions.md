@@ -45,6 +45,7 @@ O "coração" do aplicativo, responsável pelo engajamento dos atletas e organiz
 *   `SubmitRsvpCommand`: Registra a presença ou ausência de um atleta.
 *   `GenerateBalancedTeamsCommand`: Executa o algoritmo de sorteio e salva os times formados.
 *   `RegisterMatchStatsCommand`: Salva os eventos ocorridos na partida (gols, cartões).
+*   `GetMatchStatsQuery`: Recupera a súmula e estatísticas oficiais com a escalação real de atletas e times da partida.
 *   `SubmitMvpVoteCommand`: Registra o voto de um atleta no craque do jogo.
 *   `GetMatchRsvpListQuery`: Retorna a lista de confirmados e ausentes de um jogo.
 *   `GetSeasonRankingQuery`: Retorna a tabela de artilheiros e líderes de assistência.

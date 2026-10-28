@@ -22,6 +22,7 @@ public sealed class MatchController : ControllerBase
     private readonly ICommandHandler<ChangeMatchStatusCommand, Result<MatchResponse>> _changeStatusHandler;
     private readonly ICommandHandler<DeleteMatchCommand, Result> _deleteHandler;
     private readonly ICommandHandler<RegisterMatchStatsCommand, Result<RegisterMatchStatsApplicationDto>> _registerStatsHandler;
+    private readonly IQueryHandler<GetMatchStatsQuery, Result<RegisterMatchStatsApplicationDto>> _getStatsHandler;
     private readonly ICommandHandler<SubmitMvpVoteCommand, Result> _submitMvpVoteHandler;
     private readonly IQueryHandler<GetMvpResultsQuery, Result<MvpResultApplicationDto>> _getMvpResultsHandler;
 
@@ -33,6 +34,7 @@ public sealed class MatchController : ControllerBase
         ICommandHandler<ChangeMatchStatusCommand, Result<MatchResponse>> changeStatusHandler,
         ICommandHandler<DeleteMatchCommand, Result> deleteHandler,
         ICommandHandler<RegisterMatchStatsCommand, Result<RegisterMatchStatsApplicationDto>> registerStatsHandler,
+        IQueryHandler<GetMatchStatsQuery, Result<RegisterMatchStatsApplicationDto>> getStatsHandler,
         ICommandHandler<SubmitMvpVoteCommand, Result> submitMvpVoteHandler,
         IQueryHandler<GetMvpResultsQuery, Result<MvpResultApplicationDto>> getMvpResultsHandler)
     {
@@ -43,6 +45,7 @@ public sealed class MatchController : ControllerBase
         _changeStatusHandler = changeStatusHandler;
         _deleteHandler = deleteHandler;
         _registerStatsHandler = registerStatsHandler;
+        _getStatsHandler = getStatsHandler;
         _submitMvpVoteHandler = submitMvpVoteHandler;
         _getMvpResultsHandler = getMvpResultsHandler;
     }
@@ -77,6 +80,25 @@ public sealed class MatchController : ControllerBase
         return Ok(result.Value);
     }
 
+    [HttpGet("{id:guid}/stats")]
+    [Authorize(Policy = AuthorizationPolicyNames.MatchesRead)]
+    [ProducesResponseType(typeof(RegisterMatchStatsApplicationDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetStats(Guid id, CancellationToken ct)
+    {
+        var result = await _getStatsHandler.HandleAsync(new GetMatchStatsQuery(id), ct);
+        if (!result.IsSuccess)
+        {
+            return NotFound(new ProblemDetails
+            {
+                Status = StatusCodes.Status404NotFound,
+                Title = result.ErrorCode,
+                Detail = result.ErrorMessage,
+            });
+        }
+
+        return Ok(result.Value);
+    }
 
     [HttpPost("{id:guid}/stats")]
     [Authorize(Policy = AuthorizationPolicyNames.MatchesWrite)]

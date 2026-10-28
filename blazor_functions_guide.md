@@ -257,9 +257,9 @@ flowchart TD
   * `Pages/Matches/MatchStatsSummary.razor`
   * `Components/Matches/ScoreboardWidget.razor`
   * `Components/Matches/PlayerStatsRow.razor`
-* **Services & DTOs:** `IMatchApiService`, `MatchApiService`, `PlayerMatchStatsDto`, `MatchScoreboardDto`, `RegisterMatchStatsDto`
-* **Endpoints API Consumidos:** `POST /api/v1/match/{id}/stats` (`RegisterMatchStatsCommand`), `GET /api/v1/match/{id}/stats`
-* **Testes bUnit/xUnit:** `ScoreboardWidgetTests.cs`, `PlayerStatsRowTests.cs`, `MatchStatsSummaryPageTests.cs`, `RegisterMatchStatsCommandHandlerTests.cs`.
+* **Services & DTOs:** `IMatchApiService`, `MatchApiService`, `ITeamApiService`, `ICheckinApiService`, `IPlayerApiService`, `PlayerMatchStatsDto`, `MatchScoreboardDto`, `RegisterMatchStatsDto`
+* **Endpoints API Consumidos:** `POST /api/v1/match/{id}/stats` (`RegisterMatchStatsCommand`), `GET /api/v1/match/{id}/stats` (`GetMatchStatsQuery`), `GET /api/v1/team/gameday/{id}`, `GET /api/v1/checkin/gameday/{id}`, `GET /api/v1/player`
+* **Testes bUnit/xUnit:** `ScoreboardWidgetTests.cs`, `PlayerStatsRowTests.cs`, `MatchStatsSummaryPageTests.cs`, `RegisterMatchStatsCommandHandlerTests.cs`, `GetMatchStatsQueryHandlerTests.cs`, `MatchIntegrationTests.cs`.
 
 
 #### **[F16] Votação do Craque do Jogo (MVP)** ✅ CONCLUÍDO

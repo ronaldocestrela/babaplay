@@ -186,6 +186,41 @@ public sealed class MatchIntegrationTests : IClassFixture<PlayerWebApplicationFa
         problem.GetProperty("title").GetString().Should().Be("INVALID_STATUS_TRANSITION");
     }
 
+    [Fact]
+    public async Task GetStats_WhenMatchExists_ShouldReturn200()
+    {
+        var created = await CreateMatchAsync("Rodada Stats", "Team S1", "Team S2");
+
+        var response = await _client.GetAsync($"/api/v1/match/{created.Id}/stats");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<RegisterMatchStatsApplicationDto>(JsonOptions);
+        body.Should().NotBeNull();
+        body!.MatchId.Should().Be(created.Id);
+    }
+
+    [Fact]
+    public async Task PostStats_WhenMatchExists_ShouldUpdateStatusAndReturn200()
+    {
+        var created = await CreateMatchAsync("Rodada Stats Save", "Team S3", "Team S4");
+
+        var response = await _client.PostAsJsonAsync($"/api/v1/match/{created.Id}/stats", new RegisterMatchStatsApplicationDto(
+            created.Id,
+            3,
+            2,
+            new List<PlayerMatchStatsApplicationDto>()));
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<RegisterMatchStatsApplicationDto>(JsonOptions);
+        body.Should().NotBeNull();
+        body!.HomeScore.Should().Be(3);
+        body.AwayScore.Should().Be(2);
+
+        var matchResponse = await _client.GetAsync($"/api/v1/match/{created.Id}");
+        var matchBody = await matchResponse.Content.ReadFromJsonAsync<MatchResponse>(JsonOptions);
+        matchBody!.Status.Should().Be(MatchStatus.Completed);
+    }
+
     private async Task<GameDayResponse> CreateGameDayAsync(string name)
     {
         var response = await _client.PostAsJsonAsync("/api/v1/gameday", new
